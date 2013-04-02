@@ -55,7 +55,7 @@ Compilation (MacOS/*NIX):
 
     * Using git:
       * 'git submodule init'
-      * 'git submodule upgrade'
+      * 'git submodule update'
 
     * Manual method:
       * Extract a libaudio plugin to audio/
