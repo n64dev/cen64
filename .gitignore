@@ -1,13 +1,5 @@
 # Other projects.
-/audio
-/bus
 /data
-/pif
-/rdram
-/rom
-/rsp
-/video
-/vr4300
 
 # Compiler speak.
 cen64

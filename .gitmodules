@@ -1,0 +1,24 @@
+[submodule "audio"]
+	path = audio
+	url = git://github.com/tj90241/cen64-audio.git
+[submodule "bus"]
+	path = bus
+	url = git://github.com/tj90241/cen64-bus.git
+[submodule "pif"]
+	path = pif
+	url = git://github.com/tj90241/cen64-pif.git
+[submodule "rom"]
+	path = rom
+	url = git://github.com/tj90241/cen64-rom.git
+[submodule "rdram"]
+	path = rdram
+	url = git://github.com/tj90241/cen64-rdram.git
+[submodule "rsp"]
+	path = rsp
+	url = git://github.com/tj90241/cen64-rsp.git
+[submodule "vr4300"]
+	path = vr4300
+	url = git://github.com/tj90241/cen64-vr4300.git
+[submodule "video"]
+	path = video
+	url = git://github.com/tj90241/cen64-video.git
