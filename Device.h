@@ -68,6 +68,7 @@ void DestroyRSP(struct RSP *);
 /* ============================================================================
  *  Component cycle functions.
  * ========================================================================= */
+void CycleAIF(struct AIFController *);
 void CycleVIF(struct VIFController *);
 void CycleVR4300(struct VR4300 *);
 void CycleRSP(struct RSP *);

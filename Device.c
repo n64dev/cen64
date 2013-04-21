@@ -93,6 +93,7 @@ CreateDevice(const char *pifROMPath) {
  * ========================================================================= */
 void
 CycleDevice(struct CEN64Device *device) {
+  CycleAIF(device->aif);
   CycleVIF(device->vif);
   CycleRSP(device->rsp);
 
