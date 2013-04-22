@@ -14,7 +14,7 @@ SOURCES := $(wildcard *.c)
 OBJECTS = $(addprefix $(OBJECT_DIR)/, $(notdir $(SOURCES:.c=.o)))
 
 LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lvideo -Lvr4300
-LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lvideo -lvr4300 -lglfw
+LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lvideo -lvr4300 -lglfw -lm
 
 # =============================================================================
 #  Build variables and settings.
