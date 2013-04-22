@@ -18,17 +18,18 @@
 #include <stdlib.h>
 #endif
 
+#include <GL/glfw.h>
+
 void VR4300RaiseRCPInterrupt(struct VR4300 *, unsigned);
 
 /* ============================================================================
  *  main: Parses arguments and kicks off the application.
  * ========================================================================= */
 int main(int argc, const char *argv[]) {
-  unsigned long long stopCycles;
   struct CEN64Device *device;
 
-  if (argc != 4) {
-    printf("Usage: %s <pifrom> <cart> <cycles>\n", argv[0]);
+  if (argc != 3) {
+    printf("Usage: %s <pifrom> <cart>\n", argv[0]);
     return 0;
   }
 
@@ -44,10 +45,9 @@ int main(int argc, const char *argv[]) {
     return 2;
   }
 
-  stopCycles = strtol(argv[3], NULL, 10);
   debug("== Booting the Console ==");
 
-  while (stopCycles > device->cycles)
+  while (1)
     CycleDevice(device);
 
   DestroyDevice(device);
