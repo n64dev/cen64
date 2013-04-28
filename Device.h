@@ -29,6 +29,7 @@ struct ROMController;
 struct VIFController;
 
 struct VR4300;
+struct RDP;
 struct RSP;
 
 /* ============================================================================
@@ -43,9 +44,11 @@ struct VIFController *CreateVIF(void);
 struct BusController *CreateBus(
   struct AIFController *, struct PIFController *,
   struct RDRAMController *, struct ROMController *,
-  struct RSP *, struct VIFController *, struct VR4300 *);
+  struct VIFController *, struct RDP *, struct RSP *,
+  struct VR4300 *);
 
 struct VR4300 *CreateVR4300(void);
+struct RDP *CreateRDP(void);
 struct RSP *CreateRSP(void);
 
 uint32_t GetCICSeed(const struct ROMController *);
@@ -63,6 +66,7 @@ void DestroyROM(struct ROMController *);
 void DestroyVIF(struct VIFController *);
 
 void DestroyVR4300(struct VR4300 *);
+void DestroyRDP(struct RDP *);
 void DestroyRSP(struct RSP *);
 
 /* ============================================================================
@@ -85,6 +89,7 @@ struct CEN64Device {
   struct ROMController *rom;
   struct VIFController *vif;
 
+  struct RDP *rdp;
   struct RSP *rsp;
   struct VR4300 *vr4300;
   unsigned long long cycles;

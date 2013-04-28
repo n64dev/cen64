@@ -28,9 +28,11 @@ CreateDevice(const char *pifROMPath) {
   struct ROMController *rom;
   struct VIFController *vif;
 
-  struct CEN64Device *device;
   struct VR4300 *vr4300;
+  struct RDP *rdp;
   struct RSP *rsp;
+
+  struct CEN64Device *device;
 
   if ((aif = CreateAIF()) == NULL)
     goto release_out;
@@ -41,11 +43,14 @@ CreateDevice(const char *pifROMPath) {
   if ((rom = CreateROM()) == NULL)
     goto release_pif;
 
+  if ((rdp = CreateRDP()) == NULL)
+    goto release_rom;
+
   if ((rdram = CreateRDRAM()) == NULL)
-    goto release_rdram;
+    goto release_rdp;
 
   if ((rsp = CreateRSP()) == NULL)
-    goto release_rom;
+    goto release_rdram;
 
   if ((vif = CreateVIF()) == NULL)
     goto release_rsp;
@@ -53,7 +58,7 @@ CreateDevice(const char *pifROMPath) {
   if ((vr4300 = CreateVR4300()) == NULL)
     goto release_vif;
 
-  if ((bus = CreateBus(aif, pif, rdram, rom, rsp, vif, vr4300)) == NULL)
+  if ((bus = CreateBus(aif, pif, rdram, rom, vif, rdp, rsp, vr4300)) == NULL)
     goto release_vr4300;
 
   if ((device = (struct CEN64Device*) malloc(
@@ -67,6 +72,7 @@ CreateDevice(const char *pifROMPath) {
   device->pif = pif;
   device->rdram = rdram;
   device->rom = rom;
+  device->rdp = rdp;
   device->rsp = rsp;
   device->vif = vif;
   device->vr4300 = vr4300;
@@ -79,8 +85,9 @@ CreateDevice(const char *pifROMPath) {
   release_vr4300: DestroyVR4300(vr4300);
   release_vif:    DestroyVIF(vif);
   release_rsp:    DestroyRSP(rsp);
-  release_rom:    DestroyROM(rom);
   release_rdram:  DestroyRDRAM(rdram);
+  release_rdp:    DestroyRDP(rdp);
+  release_rom:    DestroyROM(rom);
   release_pif:    DestroyPIF(pif);
   release_aif:    DestroyAIF(aif);
   release_out:
@@ -115,6 +122,8 @@ DestroyDevice(struct CEN64Device *device) {
   DestroyRDRAM(device->rdram);
   DestroyROM(device->rom);
   DestroyVIF(device->vif);
+
+  DestroyRDP(device->rdp);
   DestroyRSP(device->rsp);
   DestroyVR4300(device->vr4300);
 
