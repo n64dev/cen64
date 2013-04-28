@@ -1,4 +1,4 @@
-![CEN64 Banner](/assets/logo.png)
+->![CEN64 Banner](/assets/logo.png)<-
 
 # About:
 This is my pet project. It's something I pick up whenever I get bored. To me,
