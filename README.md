@@ -13,7 +13,7 @@ the (good old) days.
 That being said, I've also grown tired of people complaining that "cycle
 accurate simulation on N-gen consoles is impossible." Not to be a bigot, but
 no, it's not. Is it hard to write a simulator that is capable of running fast
-enough to emulate a 92.5MHz processor on modern machines? Absolutely. Is it
+enough to emulate a 93.75MHz processor on modern machines? Absolutely. Is it
 impossible? No, certainly not. It just takes time. Programming is an art,
 and like anything else, takes time if done well.
 
@@ -46,9 +46,8 @@ way to handle a project of this (intended) scale. I can easily give members
 commit access to individual parts of the project, or, I can also redirect one
 of the default submodules to somebody else's repository altogether.
 
-Compilation (MacOS/*NIX):
-  * Acquire all the submodules:
 
+First, acquire all the sources:
     * Using git:
       * 'git submodule init'
       * 'git submodule update'
@@ -64,11 +63,12 @@ Compilation (MacOS/*NIX):
       * Extract a libvideo plugin to video/
       * Extract a libvr4300 plugin to vr4300/
 
-  * Build the binary/libraries.
+Next, issue a build command:
+  * Using GNU make:
     * Issue a 'make' command.
 
-Compilation (Windows):
-    * TBA.
+  * Other build systems:
+    * Work in progress.
 
 #  Running:
 As of right now, you need ROM dumps from the retail console to run the
