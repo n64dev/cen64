@@ -2,6 +2,8 @@
 #  CEN64: Cycle-Accurate, Efficient Nintendo 64 Simulator.
 # =============================================================================
 
+![CEN64 Banner](/assets/logo.png)
+
 # =============================================================================
 #  About:
 # =============================================================================
@@ -83,11 +85,7 @@ the ROM image and initializes the environment. Please do not consult me on
 regards to obtaining ROM images; this is illegal is most countries.
 
 Once you obtain the images, simply execute:
-cen64 <pifrom> <rom> <cycles>
-
-and the simulator will run for the given number of cycles. The number of
-cycles is the RCP clock cycles; the VR4300 runs at 1.5X that clock. By default,
-the RCP runs at a 62.5MHz frequency.
+cen64 <pifrom> <rom>
 
 All ROM and binary images must be supplied in native (big-endian), or z64
 format. Other formats will fail the CRC check and result in the virtual
