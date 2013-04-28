@@ -48,27 +48,24 @@ of the default submodules to somebody else's repository altogether.
 
 
 First, acquire all the sources:
-    * Using git:
-      * 'git submodule init'
-      * 'git submodule update'
+  * Using git:
+    * 'git submodule init'
+    * 'git submodule update'
 
-    * Manual method:
-      * Extract a libaudio plugin to audio/
-      * Extract a libbus plugin to bus/
-      * Extract a libpif plugin to pif/
-      * Extract a librdp plugin to rdp/
-      * Extract a librdram plugin to rdram/
-      * Extract a librom plugin to rom/
-      * Extract a librsp plugin to rsp/
-      * Extract a libvideo plugin to video/
-      * Extract a libvr4300 plugin to vr4300/
+  * Manual method:
+    * Extract a libaudio plugin to audio/
+    * Extract a libbus plugin to bus/
+    * Extract a libpif plugin to pif/
+    * Extract a librdp plugin to rdp/
+    * Extract a librdram plugin to rdram/
+    * Extract a librom plugin to rom/
+    * Extract a librsp plugin to rsp/
+    * Extract a libvideo plugin to video/
+    * Extract a libvr4300 plugin to vr4300/
 
 Next, issue a build command:
-  * Using GNU make:
-    * Issue a 'make' command.
-
-  * Other build systems:
-    * Work in progress.
+  * Using GNU make: Issue a 'make' command.
+  * Other build systems: Work in progress...
 
 #  Running:
 As of right now, you need ROM dumps from the retail console to run the
