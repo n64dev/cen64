@@ -22,3 +22,9 @@
 [submodule "video"]
 	path = video
 	url = git://github.com/tj90241/cen64-video.git
+[submodule "cen64-rdp"]
+	path = cen64-rdp
+	url = git://github.com/tj90241/cen64-rdp.git
+[submodule "rdp"]
+	path = rdp
+	url = git://github.com/tj90241/cen64-rdp.git

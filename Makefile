@@ -13,8 +13,9 @@ TARGET = cen64
 SOURCES := $(wildcard *.c)
 OBJECTS = $(addprefix $(OBJECT_DIR)/, $(notdir $(SOURCES:.c=.o)))
 
-LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lvideo -Lvr4300
-LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lvideo -lvr4300 -lglfw -lm
+LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lrdp -Lvideo -Lvr4300
+LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lrdp -lvideo -lvr4300 \
+  -lglfw -lm
 
 # =============================================================================
 #  Build variables and settings.
@@ -90,8 +91,8 @@ $(TARGET)-strip: $(TARGET)
 	@$(ECHO) "$(BLUE)Stripping$(YELLOW): $(PURPLE)$<$(TEXTRESET)"
 	@$(STRIP) -s $<
 
-$(TARGET): $(OBJECTS) libaudio libbus \
-  libpif librdram librom librsp libvideo libvr4300
+$(TARGET): $(OBJECTS) libaudio libbus libpif \
+  librdp librdram librom librsp libvideo libvr4300
 	@$(ECHO) "$(BLUE)Linking$(YELLOW): $(PURPLE)$@$(TEXTRESET)"
 	@$(CC) $(CFLAGS) $(LDFLAGS) $(LIBDIRS) $(OBJECTS) $(LIBS) -o $@
 
@@ -102,6 +103,7 @@ clean:
 	@$(MAKE) -s -C bus clean
 	@$(MAKE) -s -C pif clean
 	@$(MAKE) -s -C rdram clean
+	@$(MAKE) -s -C rdp clean
 	@$(MAKE) -s -C rom clean
 	@$(MAKE) -s -C rsp clean
 	@$(MAKE) -s -C video clean
@@ -125,6 +127,10 @@ libbus:
 libpif:
 	@$(ECHO) "$(BLUE)Building$(YELLOW): $(PURPLE)$@$(TEXTRESET)"
 	@$(MAKE) -s -C pif $(TARGETTYPE)  PREFIXDIR=pif/
+
+librdp:
+	@$(ECHO) "$(BLUE)Building$(YELLOW): $(PURPLE)$@$(TEXTRESET)"
+	@$(MAKE) -s -C rdp $(TARGETTYPE)  PREFIXDIR=rdp/
 
 librdram:
 	@$(ECHO) "$(BLUE)Building$(YELLOW): $(PURPLE)$@$(TEXTRESET)"
