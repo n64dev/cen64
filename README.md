@@ -1,4 +1,6 @@
-![CEN64 Banner](/assets/logo.png)
+<p align="center">
+  <img src="/assets/logo.png" />
+</p>
 
 # About:
 This is my pet project. It's something I pick up whenever I get bored. To me,
