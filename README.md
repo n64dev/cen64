@@ -1,12 +1,6 @@
-# =============================================================================
-#  CEN64: Cycle-Accurate, Efficient Nintendo 64 Simulator.
-# =============================================================================
-
 ![CEN64 Banner](/assets/logo.png)
 
-# =============================================================================
-#  About:
-# =============================================================================
+# About:
 This is my pet project. It's something I pick up whenever I get bored. To me,
 what Nintendo and SGI did with this console is nothing short of amazing. The
 ingenuity and design of the hardware was well-ahead of it's time, and it is
@@ -32,9 +26,7 @@ with excellent memories. I'd also like to thank the community on all their
 hard work and effort spend reverse-engineering this little gem. Without
 further ado...
 
-# =============================================================================
-#  Building:
-# =============================================================================
+# Building:
 The build system is, admittedly, a little hacked together. I'd like to get
 something more maintainable and non-Unix friendly in the future (i.e., CMake).
 Until then, I only support Makefiles.
@@ -76,9 +68,7 @@ Compilation (MacOS/*NIX):
 Compilation (Windows):
     * TBA.
 
-# =============================================================================
 #  Running:
-# =============================================================================
 As of right now, you need ROM dumps from the retail console to run the
 simulator. The PIF ("BIOS") image performs checksums and security checks on
 the ROM image and initializes the environment. Please do not consult me on
