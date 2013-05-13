@@ -92,7 +92,6 @@ struct CEN64Device {
   struct RDP *rdp;
   struct RSP *rsp;
   struct VR4300 *vr4300;
-  unsigned long long cycles;
 };
 
 struct CEN64Device *CreateDevice(const char *);

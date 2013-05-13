@@ -76,7 +76,6 @@ CreateDevice(const char *pifROMPath) {
   device->rsp = rsp;
   device->vif = vif;
   device->vr4300 = vr4300;
-  device->cycles = 0;
 
   return device;
 
@@ -105,10 +104,13 @@ CycleDevice(struct CEN64Device *device) {
   CycleRSP(device->rsp);
 
   CycleVR4300(device->vr4300);
-  if (device->cycles & 0x01)
-    CycleVR4300(device->vr4300);
 
-  device->cycles++;
+  CycleAIF(device->aif);
+  CycleVIF(device->vif);
+  CycleRSP(device->rsp);
+
+  CycleVR4300(device->vr4300);
+  CycleVR4300(device->vr4300);
 }
 
 /* ============================================================================
