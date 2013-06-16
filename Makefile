@@ -42,7 +42,8 @@ WARNINGS = -Wall -Wextra -pedantic -Wunsafe-loop-optimizations
 COMMON_CFLAGS = $(CEN64_FLAGS) $(WARNINGS) -std=c99 -march=native -I.
 COMMON_CXXFLAGS = $(CEN64_FLAGS) $(WARNINGS) -std=c++0x -march=native -I.
 OPTIMIZATION_FLAGS = -flto -fwhole-program -fuse-linker-plugin \
-	-fdata-sections -ffunction-sections -funsafe-loop-optimizations
+	-fdata-sections -ffunction-sections -funsafe-loop-optimizations \
+  -finline-limit=128
 
 RELEASE_LDFLAGS = -Wl,-O1 -Wl,-as-needed -Wl,--gc-sections
 RELEASE_CFLAGS = -DNDEBUG -O3 $(OPTIMIZATION_FLAGS)
