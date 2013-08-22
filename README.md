@@ -64,8 +64,20 @@ First, acquire all the sources:
     * Extract a libvr4300 plugin to vr4300/
 
 Next, issue a build command:
-  * Using GNU make: Issue a 'make' command.
-  * Other build systems: Work in progress...
+  * (\*nix/BSD) Using GNU make: Issue a 'make' command.
+
+  * (Windows) Using mingw64: Double-click on the included "cmd" script.
+
+    * Windows users should first download the latest mingw64, here:
+      http://sourceforge.net/projects/mingwbuilds/files/latest/download
+
+    * Windows users will also need to place the libglfw.a built using
+      mingw64 into the root directory of CEN64 prior to linking. Use the
+      win32-mingw target when building.
+
+    * Windows users will also need to place OpenGL32.lib from the Windows
+      SDK into the root directory of CEN64 prior to linking. Note that even
+      though the library is named "OpenGL32.lib", it is x64.
 
 #  Running:
 As of right now, you need ROM dumps from the retail console to run the

@@ -4,7 +4,16 @@
 # Compiler speak.
 cen64
 *.o
+*.a
 
 # Swap files.
 *.swp
 
+# Windows stuff.
+*.exe
+*.Lib
+*.dll
+
+# glfw repository
+/glfw-*
+/include/*
