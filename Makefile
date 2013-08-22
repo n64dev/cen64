@@ -111,7 +111,7 @@ debug-cpp: $(TARGET)
 ifeq ($(OS),windows)
 $(TARGET)-strip: $(TARGET)
 	@$(ECHO) $(BLUE)Stripping$(YELLOW): $(PURPLE)$<$(TEXTRESET)
-	@$(STRIP) -s $<
+	@$(STRIP) -s $<.exe
 else
 $(TARGET)-strip: $(TARGET)
 	@$(ECHO) "$(BLUE)Stripping$(YELLOW): $(PURPLE)$<$(TEXTRESET)"

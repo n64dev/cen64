@@ -12,7 +12,7 @@ cen64
 # Windows stuff.
 *.exe
 *.Lib
-*.dll
+*.dll*
 
 # glfw repository
 /glfw-*
