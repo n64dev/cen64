@@ -66,18 +66,17 @@ First, acquire all the sources:
 Next, issue a build command:
   * (\*nix/BSD) Using GNU make: Issue a 'make' command.
 
-  * (Windows) Using mingw64: Double-click on the included "cmd" script.
+  * (Windows) Using mingw64: Double-click on an included "cmd" script.
+    * Follow the directions that appear after you execute a script.
 
-    * Windows users should first download the latest mingw64, here:
+    * You will need to download the latest version mingw64, here:
       http://sourceforge.net/projects/mingwbuilds/files/latest/download
 
-    * Windows users will also need to place the libglfw.a built using
-      mingw64 into the root directory of CEN64 prior to linking. Use the
-      win32-mingw target when building.
+    * You will also need to obtain GLFW and the Windows SDK, here:
+      http://sourceforge.net/projects/glfw/files/glfw/2.7.9/glfw-2.7.9.bin.WIN64.zip/download
 
-    * Windows users will also need to place OpenGL32.lib from the Windows
-      SDK into the root directory of CEN64 prior to linking. Note that even
-      though the library is named "OpenGL32.lib", it is x64.
+      Win7: http://www.microsoft.com/en-us/download/details.aspx?id=8279
+      Win8: http://msdn.microsoft.com/en-us/library/windows/desktop/hh852363.aspx	 
 
 #  Running:
 As of right now, you need ROM dumps from the retail console to run the
