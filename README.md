@@ -73,7 +73,7 @@ Next, issue a build command:
 
     * You will also need to obtain GLFW2 libraries and headers, here:
     * http://sourceforge.net/projects/glfw/files/glfw/2.7.9/glfw-2.7.9.bin.WIN64.zip/download
-      * Place the "include" directory "lib-mingw/libglfw.a" file in the top-level directory.
+      * Place the "include" directory and "lib-mingw/libglfw.a" file in the top-level (CEN64) directory.
 
 #  Running:
 As of right now, you need ROM dumps from the retail console to run the
