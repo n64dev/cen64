@@ -54,7 +54,6 @@ ECHO=echo
 MAYBE=if not exist
 MKDIR=mkdir
 RM=del /q /s 1>NUL 2>NUL
-STRIP=strip
 endif
 
 CEN64_FLAGS = 
@@ -111,7 +110,7 @@ debug-cpp: $(TARGET)
 ifeq ($(OS),windows)
 $(TARGET)-strip: $(TARGET)
 	@$(ECHO) $(BLUE)Stripping$(YELLOW): $(PURPLE)$<$(TEXTRESET)
-	@$(STRIP) -s $<.exe
+	@$(STRIP) -s $<.exe -o cen64-ready.exe
 else
 $(TARGET)-strip: $(TARGET)
 	@$(ECHO) "$(BLUE)Stripping$(YELLOW): $(PURPLE)$<$(TEXTRESET)"

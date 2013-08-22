@@ -12,5 +12,6 @@ ECHO root directory. You may also find that you need OpenGL32.Lib from the
 ECHO Microsoft SDK in the root directory.
 ECHO.
 mingw32-make -s -C .. OS=windows
-copy /Y 1>NUL ..\cen64.exe .
+move /Y 1>NUL ..\cen64-ready.exe cen64.exe
+del ..\cen64.exe
 
