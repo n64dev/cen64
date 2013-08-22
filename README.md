@@ -67,16 +67,13 @@ Next, issue a build command:
   * (\*nix/BSD) Using GNU make: Issue a 'make' command.
 
   * (Windows) Using mingw64: Double-click on an included "cmd" script.
-    * Follow the directions that appear after you execute a script.
-
     * You will need to download the latest version mingw64, here:
       http://sourceforge.net/projects/mingwbuilds/files/latest/download
 
     * You will also need to obtain GLFW and the Windows SDK, here:
-      http://sourceforge.net/projects/glfw/files/glfw/2.7.9/glfw-2.7.9.bin.WIN64.zip/download
-
-      Win7: http://www.microsoft.com/en-us/download/details.aspx?id=8279
-      Win8: http://msdn.microsoft.com/en-us/library/windows/desktop/hh852363.aspx	 
+    * http://sourceforge.net/projects/glfw/files/glfw/2.7.9/glfw-2.7.9.bin.WIN64.zip/download
+    * Win7: http://www.microsoft.com/en-us/download/details.aspx?id=8279
+    * Win8: http://msdn.microsoft.com/en-us/library/windows/desktop/hh852363.aspx	 
 
 #  Running:
 As of right now, you need ROM dumps from the retail console to run the
