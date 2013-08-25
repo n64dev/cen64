@@ -57,7 +57,7 @@ RM=del /q /s 1>NUL 2>NUL
 endif
 
 CEN64_FLAGS = 
-WARNINGS = -Wall -Wextra -pedantic -Wunsafe-loop-optimizations
+WARNINGS = -Wall -Wextra -pedantic
 
 COMMON_CFLAGS = $(CEN64_FLAGS) $(WARNINGS) -std=c99 -march=native -I. -Iinclude
 COMMON_CXXFLAGS = $(CEN64_FLAGS) $(WARNINGS) -std=c++0x -march=native -I -Iinclude
