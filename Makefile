@@ -19,8 +19,8 @@ OBJECTS = $(addprefix $(OBJECT_DIR)/, $(notdir $(SOURCES:.c=.o)))
 endif
 
 LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lrdp -Lvideo -Lvr4300 -L.
-LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lrdp -lvideo -lvr4300 \
-  -lglfw -lm
+LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lrdp -lvideo -lvr4300 -lm
+PKGCONFIG = `pkg-config --cflags --libs libglfw`
 
 # =============================================================================
 #  Build variables and settings.
@@ -121,7 +121,7 @@ ifeq ($(OS),windows)
 $(TARGET): $(OBJECTS) libaudio libbus libpif \
   librdp librdram librom librsp libvideo libvr4300
 	@$(ECHO) $(BLUE)Linking$(YELLOW): $(PURPLE)$@$(TEXTRESET)
-	@$(CC) $(CFLAGS) $(LDFLAGS) $(LIBDIRS) $(OBJECTS) $(LIBS) -lopengl32 -o $@
+	@$(CC) $(CFLAGS) $(LDFLAGS) $(LIBDIRS) $(OBJECTS) $(LIBS) -lopengl32 -lglfw -o $@
 
 $(OBJECT_DIR)\\%.o: %.c %.h Common.h
 	@$(MAYBE) $(OBJECT_DIR) $(MKDIR) $(OBJECT_DIR)
@@ -131,7 +131,7 @@ else
 $(TARGET): $(OBJECTS) libaudio libbus libpif \
   librdp librdram librom librsp libvideo libvr4300
 	@$(ECHO) "$(BLUE)Linking$(YELLOW): $(PURPLE)$@$(TEXTRESET)"
-	@$(CC) $(CFLAGS) $(LDFLAGS) $(LIBDIRS) $(OBJECTS) $(LIBS) -o $@
+	@$(CC) $(CFLAGS) $(LDFLAGS) $(LIBDIRS) $(OBJECTS) $(LIBS) $(PKGCONFIG) -o $@
 
 $(OBJECT_DIR)/%.o: %.c %.h Common.h
 	@$(MKDIR) $(OBJECT_DIR)
