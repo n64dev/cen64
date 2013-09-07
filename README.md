@@ -67,9 +67,11 @@ Next, issue a build command:
   * (\*nix/BSD) Using GNU make: Issue a 'make' command.
 
   * (Windows) Simply double-click on an included cmd script in "windows".
-    * You will need to download the latest version mingw64 (x64), here:
-      http://sourceforge.net/projects/mingwbuilds/files/latest/download
-      * After installation, update your system path so that it includes the mingw64\bin directory.
+    * You will need to download the latest version of mingw64, here:
+      * http://sourceforge.net/projects/mingwbuilds/files/latest/download
+      * Make sure that it installs the x64 compiler, not the x86 one!
+
+    * After installation, update your system path so that it includes the mingw64\bin directory.
 
     * You will also need to obtain GLFW2 libraries and headers, here:
     * http://sourceforge.net/projects/glfw/files/glfw/2.7.9/glfw-2.7.9.bin.WIN64.zip/download
