@@ -11,5 +11,8 @@
 #ifndef __CEN64__CEN64_H__
 #define __CEN64__CEN64_H__
 
+extern const char *RDPBuildType;
+extern const char *RSPBuildType;
+
 #endif
 

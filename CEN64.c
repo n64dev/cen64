@@ -8,6 +8,7 @@
  *  This file is subject to the terms and conditions defined in
  *  file 'LICENSE', which is part of this source code package.
  * ========================================================================= */
+#include "CEN64.h"
 #include "Device.h"
 
 #ifdef __cplusplus
@@ -29,7 +30,10 @@ int main(int argc, const char *argv[]) {
   struct CEN64Device *device;
 
   if (argc != 3) {
-    printf("Usage: %s <pifrom> <cart>\n", argv[0]);
+    printf("Usage: %s <pifrom> <cart>\n\n", argv[0]);
+    printf("RSP Build Type: %s\nRDP Build Type: %s\n",
+      RSPBuildType, RDPBuildType);
+
     return 0;
   }
 
