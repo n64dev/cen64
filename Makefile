@@ -20,7 +20,8 @@ endif
 
 LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lrdp -Lvideo -Lvr4300 -L.
 LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lrdp -lvideo -lvr4300 -lm
-PKGCONFIG = `pkg-config --cflags --libs libglfw gl`
+PKGCONFIG_GLFW = `pkg-config --cflags --libs libglfw`
+PKGCONFIG_GL=`pkg-config --cflags --libs gl`
 
 # =============================================================================
 #  Build variables and settings.
@@ -131,7 +132,8 @@ else
 $(TARGET): $(OBJECTS) libaudio libbus libpif \
   librdp librdram librom librsp libvideo libvr4300
 	@$(ECHO) "$(BLUE)Linking$(YELLOW): $(PURPLE)$@$(TEXTRESET)"
-	@$(CC) $(CFLAGS) $(LDFLAGS) $(LIBDIRS) $(OBJECTS) $(LIBS) $(PKGCONFIG) -o $@
+	@$(CC) $(CFLAGS) $(LDFLAGS) $(LIBDIRS) $(OBJECTS) $(LIBS) \
+    $(PKGCONFIG_GLFW) $(PKGCONFIG_GL) -o $@
 
 $(OBJECT_DIR)/%.o: %.c %.h Common.h
 	@$(MKDIR) $(OBJECT_DIR)
