@@ -12,16 +12,29 @@
 #include "Device.h"
 
 #ifdef __cplusplus
+#include <csetjmp>
 #include <cstdio>
 #include <cstdlib>
 #else
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #endif
 
 #include <GL/glfw.h>
 
-void VR4300RaiseRCPInterrupt(struct VR4300 *, unsigned);
+/* GLFW seems to like global state. */
+/* We'll jmp back into main at close. */
+static jmp_buf env;
+
+/* ============================================================================
+ *  CloseRequested: GLFW requested a close; jump to saved environment.
+ * ========================================================================= */
+static int
+CloseRequested(void) {
+  longjmp(env, 1);
+  return 0;
+}
 
 /* ============================================================================
  *  main: Parses arguments and kicks off the application.
@@ -37,8 +50,27 @@ int main(int argc, const char *argv[]) {
     return 0;
   }
 
+  if (glfwInit() != GL_TRUE) {
+    printf("Failed to initialize GLFW.\n");
+    return 255;
+  }
+
+  glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
+  if (glfwOpenWindow(640, 480, 5, 6, 5, 0, 8, 0, GLFW_WINDOW) != GL_TRUE) {
+    printf("Failed to open a GLFW window.\n");
+
+    glfwTerminate();
+    return 0;
+  }
+
+  glfwSetWindowTitle("CEN64");
+  glfwSetWindowCloseCallback(CloseRequested);
+  glfwPollEvents();
+
   if ((device = CreateDevice(argv[1])) == NULL) {
     printf("Failed to create a device.\n");
+
+    glfwCloseWindow();
     return 1;
   }
 
@@ -51,10 +83,17 @@ int main(int argc, const char *argv[]) {
 
   debug("== Booting the Console ==");
 
-  while (1)
-    CycleDevice(device);
+  if (setjmp(env) == 0) {
+    while (1)
+      CycleDevice(device);
+  }
+
+  debug("== Destroying the Console ==");
 
   DestroyDevice(device);
+  glfwCloseWindow();
+  glfwTerminate();
+
   return 0;
 }
 
