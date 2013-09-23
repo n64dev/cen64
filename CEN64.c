@@ -15,10 +15,12 @@
 #include <csetjmp>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #else
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #endif
 
 #include <GL/glfw.h>
@@ -37,13 +39,54 @@ CloseRequested(void) {
 }
 
 /* ============================================================================
+ *  ParseArgs: Parses the argument list and performs actions.
+ * ========================================================================= */
+static void
+ParseArgs(int args, const char *argv[], struct CEN64Device *device) {
+  int i;
+
+  /* TODO: getops or something sensible. */
+  for (i = 0; i < args; i++) {
+    const char *arg = argv[i];
+
+    while (*arg == ' ');
+
+    /* Accept -, --, and / */
+    if (*arg == '-') {
+      arg++;
+
+      if (*arg == '-')
+        arg++;
+    }
+
+    else if (*arg == '/')
+      arg++;
+
+    /* Set backing EEPROM file. */
+    if (!strcmp(arg, "eeprom")) {
+      if (++i >= args) {
+        printf("-eeprom: Missing argument; ignoring.\n");
+        continue;
+      }
+
+      SetEEPROMFile(device->pif, argv[i]);
+    }
+  }
+}
+
+/* ============================================================================
  *  main: Parses arguments and kicks off the application.
  * ========================================================================= */
 int main(int argc, const char *argv[]) {
   struct CEN64Device *device;
 
-  if (argc != 3) {
-    printf("Usage: %s <pifrom> <cart>\n\n", argv[0]);
+  if (argc < 3) {
+    printf(
+      "Usage: %s <pifrom> <cart> [options]\n\n"
+      "Options:\n"
+      "  -eeprom <file>\n\n",
+      argv[0]);
+
     printf("RSP Build Type: %s\nRDP Build Type: %s\n",
       RSPBuildType, RDPBuildType);
 
@@ -81,6 +124,10 @@ int main(int argc, const char *argv[]) {
     return 2;
   }
 
+  /* Parse the argument list now that */
+  /* the console is ready for us. */
+  ParseArgs(argc - 3, argv + 3, device);
+
   debug("== Booting the Console ==");
 
   if (setjmp(env) == 0) {
@@ -93,7 +140,6 @@ int main(int argc, const char *argv[]) {
   DestroyDevice(device);
   glfwCloseWindow();
   glfwTerminate();
-
   return 0;
 }
 

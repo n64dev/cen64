@@ -54,6 +54,7 @@ struct RSP *CreateRSP(void);
 uint32_t GetCICSeed(const struct ROMController *);
 int InsertCart(struct ROMController *, const char *);
 void SetCICSeed(struct PIFController *, uint32_t);
+void SetEEPROMFile(struct PIFController *, const char *);
 
 /* ============================================================================
  *  Component destroy functions.
