@@ -2,7 +2,8 @@
   <img src="/assets/logo.png" />
 </p>
 
-# About:
+# About
+
 This is my pet project. It's something I pick up whenever I get bored. To me,
 what Nintendo and SGI did with this console is nothing short of amazing. The
 ingenuity and design of the hardware was well-ahead of it's time, and it is
@@ -28,13 +29,14 @@ with excellent memories. I'd also like to thank the community on all their
 hard work and effort spend reverse-engineering this little gem. Without
 further ado...
 
-# Building:
+# Building
+
 The build system is, admittedly, a little hacked together. I'd like to get
-something more maintainable and non-Unix friendly in the future (i.e., CMake).
-Until then, I only support Makefiles.
+something more maintainable and non-Unix friendly in the future (e.g., `CMake`).
+Until then, I only support `Makefiles`.
 
 For decent performance, your toolchain must absolutely be capable of some
-kind of link-time optimization. If you use gcc/llvm, the default Makefiles
+kind of link-time optimization. If you use `gcc`/`llvm`, the default `Makefiles`
 will already attempt to build with this feature. This is especially true when
 linking all the static library plugins into the final executable; performance
 will nosedive if the LTO isn't performed due to functions haved to be called
@@ -48,43 +50,44 @@ of the default submodules to somebody else's repository altogether.
 
 
 First, acquire all the sources:
-  * Using git:
-    * 'git submodule init'
-    * 'git submodule update'
+* Using Git:
+  ```bash
+  $ git submodule init
+  $ git submodule update
+  ```
 
-  * Manual method:
-    * Extract a libaudio plugin to audio/
-    * Extract a libbus plugin to bus/
-    * Extract a libpif plugin to pif/
-    * Extract a librdp plugin to rdp/
-    * Extract a librdram plugin to rdram/
-    * Extract a librom plugin to rom/
-    * Extract a librsp plugin to rsp/
-    * Extract a libvideo plugin to video/
-    * Extract a libvr4300 plugin to vr4300/
+* Manually:
+  * Extract a `libaudio` plugin to `audio/`
+  * Extract a `libbus` plugin to `bus/`
+  * Extract a `libpif` plugin to `pif/`
+  * Extract a `librdp` plugin to `rdp/`
+  * Extract a `librdram` plugin to `rdram/`
+  * Extract a `librom` plugin to `rom/`
+  * Extract a `librsp` plugin to `rsp/`
+  * Extract a `libvideo` plugin to `video/`
+  * Extract a `libvr4300` plugin to `vr4300/`
 
 Next, issue a build command:
-  * (\*nix/BSD) Using GNU make: Issue a 'make' command.
+* (\*nix/BSD) Using GNU make: Issue a `make` command.
+* (Windows) Simply double-click on an included cmd script in `windows`.
+  * You will need to download the latest version of `mingw64`, [here](http://sourceforge.net/projects/mingwbuilds/files/latest/download).
+    * Make sure that it installs the x64 compiler, not the x86 one!
+  * After installation, update your system path so that it includes the `mingw64\bin` directory.
+  * You will also need to obtain GLFW2 libraries and headers, [here](http://sourceforge.net/projects/glfw/files/glfw/2.7.9/glfw-2.7.9.bin.WIN64.zip/download).
+    * Place the `include` directory and `lib-mingw/libglfw.a` file in the top-level (CEN64) directory.
 
-  * (Windows) Simply double-click on an included cmd script in "windows".
-    * You will need to download the latest version of mingw64, here:
-      * http://sourceforge.net/projects/mingwbuilds/files/latest/download
-      * Make sure that it installs the x64 compiler, not the x86 one!
+# Running
 
-    * After installation, update your system path so that it includes the mingw64\bin directory.
-
-    * You will also need to obtain GLFW2 libraries and headers, here:
-    * http://sourceforge.net/projects/glfw/files/glfw/2.7.9/glfw-2.7.9.bin.WIN64.zip/download
-      * Place the "include" directory and "lib-mingw/libglfw.a" file in the top-level (CEN64) directory.
-
-#  Running:
 As of right now, you need ROM dumps from the retail console to run the
 simulator. The PIF ("BIOS") image performs checksums and security checks on
 the ROM image and initializes the environment. Please do not consult me on
 regards to obtaining ROM images; this is illegal is most countries.
 
 Once you obtain the images, simply execute:
-cen64 <pifrom> <rom>
+
+```bash
+$ cen64 <pifrom> <rom>
+```
 
 All ROM and binary images must be supplied in native (big-endian), or z64
 format. Other formats will fail the CRC check and result in the virtual
