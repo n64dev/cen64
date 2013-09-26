@@ -21,6 +21,7 @@ endif
 LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lrdp -Lvideo -Lvr4300 -L.
 LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lrdp -lvideo -lvr4300 -lm
 PKGCONFIG_GLFW = `pkg-config --cflags --libs libglfw`
+#PKGCONFIG_GLFW = `pkg-config --cflags --libs glfw3`
 PKGCONFIG_GL=`pkg-config --cflags --libs gl`
 
 # =============================================================================

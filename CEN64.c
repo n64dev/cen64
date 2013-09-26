@@ -23,7 +23,15 @@
 #include <string.h>
 #endif
 
+#ifdef GLFW3
+#include <GLFW/glfw3.h>
+#else
 #include <GL/glfw.h>
+#endif
+
+#ifdef GLFW3
+GLFWwindow *window;
+#endif
 
 /* GLFW seems to like global state. */
 /* We'll jmp back into main at close. */
@@ -98,6 +106,25 @@ int main(int argc, const char *argv[]) {
     return 255;
   }
 
+#ifdef GLFW3
+  glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+
+  glfwWindowHint(GLFW_RED_BITS, 5);
+  glfwWindowHint(GLFW_GREEN_BITS, 6);
+  glfwWindowHint(GLFW_BLUE_BITS, 5);
+  glfwWindowHint(GLFW_ALPHA_BITS, 0);
+  glfwWindowHint(GLFW_DEPTH_BITS, 8);
+  glfwWindowHint(GLFW_STENCIL_BITS, 0);
+
+  if ((window = glfwCreateWindow(640, 480, "CEN64", NULL, NULL)) == NULL) {
+    debug("Failed to open a GLFW window.");
+    glfwTerminate();
+    return 0;
+  }
+
+  glfwMakeContextCurrent(window);
+  glfwSetWindowCloseCallback(window, CloseRequested);
+#else
   glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
   if (glfwOpenWindow(640, 480, 5, 6, 5, 0, 8, 0, GLFW_WINDOW) != GL_TRUE) {
     printf("Failed to open a GLFW window.\n");
@@ -108,14 +135,23 @@ int main(int argc, const char *argv[]) {
 
   glfwSetWindowTitle("CEN64");
   glfwSetWindowCloseCallback(CloseRequested);
+#endif
   glfwPollEvents();
 
   if ((device = CreateDevice(argv[1])) == NULL) {
     printf("Failed to create a device.\n");
 
+#ifdef GLFW3
+    glfwDestroyWindow(window);
+    return 1;
+  }
+
+  SetVIFContext(device->vif, window);
+#else
     glfwCloseWindow();
     return 1;
   }
+#endif
 
   if (LoadCartridge(device, argv[2])) {
     printf("Failed to load the ROM.\n");
@@ -138,7 +174,11 @@ int main(int argc, const char *argv[]) {
   debug("== Destroying the Console ==");
 
   DestroyDevice(device);
+#ifdef GLFW3
+  glfwDestroyWindow(window);
+#else
   glfwCloseWindow();
+#endif
   glfwTerminate();
   return 0;
 }

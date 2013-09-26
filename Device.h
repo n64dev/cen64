@@ -12,6 +12,10 @@
 #define __CEN64__DEVICE_H__
 #include "Common.h"
 
+#ifdef GLFW3
+#include <GLFW/glfw3.h>
+#endif
+
 #ifdef __cplusplus
 #include <cstddef>
 #else
@@ -55,6 +59,9 @@ uint32_t GetCICSeed(const struct ROMController *);
 int InsertCart(struct ROMController *, const char *);
 void SetCICSeed(struct PIFController *, uint32_t);
 void SetEEPROMFile(struct PIFController *, const char *);
+#ifdef GLFW3
+void SetVIFContext(struct VIFController *, GLFWwindow *);
+#endif
 
 /* ============================================================================
  *  Component destroy functions.
