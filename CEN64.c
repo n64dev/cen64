@@ -47,6 +47,41 @@ CloseRequested(void) {
 }
 
 /* ============================================================================
+ *  WindowResizeCallback: GLFW window resized; fill window, but maintain
+ *  aspect ratio.
+ * ========================================================================= */
+#ifdef GLFW3
+static void
+WindowResizeCallback(GLFWwindow *window, int width, int height) {
+#else
+static void
+WindowResizeCallback(int width, int height) {
+#endif
+  float aspect = 4.0 / 3.0;
+
+  if (height <= 0)
+    height = 1;
+
+  glViewport(0, 0, width, height);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  if((float)width / (float)height > aspect) {
+    aspect = 3.0 / 4.0;
+    aspect *= (float)width / (float)height;
+    glOrtho(-aspect, aspect, -1, 1, -1, 1);
+  }
+
+  else {
+    aspect *= (float)height / (float)width;
+    glOrtho(-1, 1, -aspect, aspect, -1, 1);
+  }
+
+  glClear(GL_COLOR_BUFFER_BIT);
+}
+
+
+/* ============================================================================
  *  ParseArgs: Parses the argument list and performs actions.
  * ========================================================================= */
 static void
@@ -124,8 +159,9 @@ int main(int argc, const char *argv[]) {
 
   glfwMakeContextCurrent(window);
   glfwSetWindowCloseCallback(window, CloseRequested);
+  glfwSetWindowSizeCallback(window, WindowResizeCallback);
 #else
-  glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
+  glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_FALSE);
   if (glfwOpenWindow(640, 480, 5, 6, 5, 0, 8, 0, GLFW_WINDOW) != GL_TRUE) {
     printf("Failed to open a GLFW window.\n");
 
@@ -135,6 +171,7 @@ int main(int argc, const char *argv[]) {
 
   glfwSetWindowTitle("CEN64");
   glfwSetWindowCloseCallback(CloseRequested);
+  glfwSetWindowSizeCallback(WindowResizeCallback);
 #endif
   glfwPollEvents();
 
