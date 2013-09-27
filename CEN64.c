@@ -135,7 +135,7 @@ int main(int argc, const char *argv[]) {
 
   if (argc < 3) {
     printf(
-      "Usage: %s <pifrom> <cart> [options]\n\n"
+      "Usage: %s [options] <pifrom> <cart>\n\n"
       "Options:\n"
       "  -eeprom <file>\n"
       "  -sram <file>\n\n",
@@ -186,7 +186,7 @@ int main(int argc, const char *argv[]) {
 #endif
   glfwPollEvents();
 
-  if ((device = CreateDevice(argv[1])) == NULL) {
+  if ((device = CreateDevice(argv[argc - 2])) == NULL) {
     printf("Failed to create a device.\n");
 
 #ifdef GLFW3
@@ -201,7 +201,7 @@ int main(int argc, const char *argv[]) {
   }
 #endif
 
-  if (LoadCartridge(device, argv[2])) {
+  if (LoadCartridge(device, argv[argc - 1])) {
     printf("Failed to load the ROM.\n");
 
     DestroyDevice(device);
@@ -210,7 +210,7 @@ int main(int argc, const char *argv[]) {
 
   /* Parse the argument list now that */
   /* the console is ready for us. */
-  ParseArgs(argc - 3, argv + 3, device);
+  ParseArgs(argc - 3, argv + 1, device);
 
   debug("== Booting the Console ==");
 
