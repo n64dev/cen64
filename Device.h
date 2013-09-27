@@ -59,6 +59,7 @@ uint32_t GetCICSeed(const struct ROMController *);
 int InsertCart(struct ROMController *, const char *);
 void SetCICSeed(struct PIFController *, uint32_t);
 void SetEEPROMFile(struct PIFController *, const char *);
+void SetSRAMFile(struct ROMController *, const char *);
 #ifdef GLFW3
 void SetVIFContext(struct VIFController *, GLFWwindow *);
 #endif

@@ -114,6 +114,16 @@ ParseArgs(int args, const char *argv[], struct CEN64Device *device) {
 
       SetEEPROMFile(device->pif, argv[i]);
     }
+
+    /* Set backing SRAM file. */
+    if (!strcmp(arg, "sram")) {
+      if (++i >= args) {
+        printf("-sram: Missing argument; ignoring.\n");
+        continue;
+      }
+
+      SetSRAMFile(device->rom, argv[i]);
+    }
   }
 }
 
@@ -127,7 +137,8 @@ int main(int argc, const char *argv[]) {
     printf(
       "Usage: %s <pifrom> <cart> [options]\n\n"
       "Options:\n"
-      "  -eeprom <file>\n\n",
+      "  -eeprom <file>\n"
+      "  -sram <file>\n\n",
       argv[0]);
 
     printf("RSP Build Type: %s\nRDP Build Type: %s\n",
