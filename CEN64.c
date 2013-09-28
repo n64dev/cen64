@@ -105,6 +105,16 @@ ParseArgs(int args, const char *argv[], struct CEN64Device *device) {
     else if (*arg == '/')
       arg++;
 
+    /* Set Controller Type. */
+    if (!strcmp(arg, "controller")) {
+      if (++i >= args) {
+        printf("-controller: Missing argument; ignoring.\n");
+        continue;
+      }
+
+      SetControlType(device->pif, argv[i]);
+    }
+
     /* Set backing EEPROM file. */
     if (!strcmp(arg, "eeprom")) {
       if (++i >= args) {
@@ -124,16 +134,6 @@ ParseArgs(int args, const char *argv[], struct CEN64Device *device) {
 
       SetSRAMFile(device->rom, argv[i]);
     }
-    
-    /* Set Controller Type. */
-    if (!strcmp(arg, "controller")) {
-      if (++i >= args) {
-        printf("-controller: Missing argument; ignoring.\n");
-        continue;
-      }
-      
-      SetControlType(device->pif, argv[i]);
-    }
   }
 }
 
@@ -147,9 +147,9 @@ int main(int argc, const char *argv[]) {
     printf(
       "Usage: %s [options] <pifrom> <cart>\n\n"
       "Options:\n"
+      "  -controller [keyboard,mayflash64,retrolink,x360]\n"
       "  -eeprom <file>\n"
-      "  -sram <file>\n"
-      "  -controller [keyboard/mayflash64/retrolink/x360]\n\n",
+      "  -sram <file>\n\n",
       argv[0]);
 
     printf("RSP Build Type: %s\nRDP Build Type: %s\n",
