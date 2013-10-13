@@ -87,6 +87,13 @@ void CycleVIF(struct VIFController *);
 void CycleVR4300(struct VR4300 *);
 void CycleRSP(struct RSP *);
 
+/* ============================================================================
+ *  Debugging and statistic functions.
+ * ========================================================================= */
+#ifndef NDEBUG
+void RSPDumpStatistics(struct RSP *);
+void VR4300DumpStatistics(struct VR4300 *);
+#endif
 
 /* ============================================================================
  *  CEN64Device definition.

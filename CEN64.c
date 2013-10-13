@@ -232,12 +232,19 @@ int main(int argc, const char *argv[]) {
 
   debug("== Destroying the Console ==");
 
+#ifndef NDEBUG
+  RSPDumpStatistics(device->rsp);
+  VR4300DumpStatistics(device->vr4300);
+#endif
+
   DestroyDevice(device);
+
 #ifdef GLFW3
   glfwDestroyWindow(window);
 #else
   glfwCloseWindow();
 #endif
+
   glfwTerminate();
   return 0;
 }
