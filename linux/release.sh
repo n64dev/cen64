@@ -22,4 +22,4 @@ cd ../
 git submodule init
 git pull
 git submodule update
-make clean && make
+make
