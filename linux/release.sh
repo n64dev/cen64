@@ -1,11 +1,6 @@
 #!/bin/sh
 #Devin's Cen64 Linux Compile Script.
 
-GetVersionFromFile()
-{
-	VERSION=`cat $1 | tr "\n" ' ' | sed s/.*VERSION.*=\ // `
-}
-
 	if [ -f /etc/redhat-release ] ; then
 		sudo yum install git libglfw-devel libalut-devel
 	elif [ -f /etc/debian_version ] ; then
