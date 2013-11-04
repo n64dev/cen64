@@ -7,16 +7,10 @@ GetVersionFromFile()
 }
 
 	if [ -f /etc/redhat-release ] ; then
-		DIST='RedHat'
+		sudo yum install git libglfw-devel libalut-devel
 	elif [ -f /etc/debian_version ] ; then
-		DIST="Debian"
+		sudo apt-get install git libglfw-dev libalut-dev
 	fi
-
-if [ "${DIST}" = "RedHat" ] ; then
-sudo yum install git libglfw-devel libalut-devel
-elif [ "${DIST}" = "Debian" ] ; then
-sudo apt-get install git libglfw-dev libalut-dev
-fi
 
 cd ../
 git submodule init
