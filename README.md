@@ -16,17 +16,17 @@ accurate simulation on N-gen consoles is impossible." Not to be a bigot, but
 no, it's not. Is it hard to write a simulator that is capable of running fast
 enough to emulate a 93.75MHz processor on modern machines? Absolutely. Is it
 impossible? No, certainly not. It just takes time. Programming is an art,
-and like anything else, takes time if done well.
+and like anything else, it takes time if done well.
 
 Getting back on track: this simulator attempts to be everything that every
 other emulator hoped to be, but never quite attained due to... emulation. My
-hopes are the properly simulating things at the cycle and pixel-accurate level
+hopes are that properly simulating things at the cycle and pixel-accurate level
 will preserve the original fidelity of the work that so many companies put
 out.
 
 Thank you to every single one of you developers for filling my childhood
 with excellent memories. I'd also like to thank the community on all their
-hard work and effort spend reverse-engineering this little gem. Without
+hard work and effort spent reverse-engineering this little gem. Without
 further ado...
 
 # Building
@@ -81,10 +81,10 @@ Next, issue a build command:
 
 # Running
 
-As of right now, you need ROM dumps from the retail console to run the
+As of right now, you will need ROM dumps from the retail console to run the
 simulator. The PIF ("BIOS") image performs checksums and security checks on
 the ROM image and initializes the environment. Please do not consult me on
-regards to obtaining ROM images; this is illegal is most countries.
+regards to obtaining ROM images; this is illegal in most countries.
 
 Once you obtain the images, simply execute:
 
