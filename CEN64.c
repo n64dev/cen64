@@ -147,7 +147,7 @@ int main(int argc, const char *argv[]) {
     printf(
       "Usage: %s [options] <pifrom> <cart>\n\n"
       "Options:\n"
-      "  -controller [keyboard,mayflash64,retrolink,x360]\n"
+      "  -controller [keyboard,mayflash64,retrolink,wiiu,x360]\n"
       "  -eeprom <file>\n"
       "  -sram <file>\n\n",
       argv[0]);
