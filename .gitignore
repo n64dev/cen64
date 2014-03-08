@@ -1,0 +1,9 @@
+# Other data.
+/data
+
+# Build files.
+/build
+
+# Swap files.
+*.swp
+
