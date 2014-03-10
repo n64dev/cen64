@@ -10,21 +10,21 @@
 
 #ifndef __bus_controller_h__
 #define __bus_controller_h__
-#define BUS_REQUEST_QUEUE_SIZE 8
+#include "common.h"
+#include "memorymap.h"
 
 struct bus_request;
 struct vr4300;
 
 struct bus_controller {
-  struct bus_request *rq[BUS_REQUEST_QUEUE_SIZE];
-  unsigned num_requests, rq_head, rq_tail;
-
+  struct memory_map *map;
   struct pif_controller *pif;
   struct vr4300 *vr4300;
 };
 
 int bus_init(struct bus_controller *bus);
-unsigned bus_read_word(struct bus_controller *bus,
+
+int bus_read_word(struct bus_controller *bus,
   uint32_t address, uint32_t *word);
 
 #endif

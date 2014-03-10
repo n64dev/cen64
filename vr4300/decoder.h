@@ -23,10 +23,12 @@
 
 #define OPCODE_INFO_NONE (0)
 #define OPCODE_INFO_BRANCH (1 << 1)
+#define OPCODE_INFO_NEEDRS (1 << 2)
+#define OPCODE_INFO_NEEDRT (1 << 3)
 
 struct vr4300_opcode {
-  uint8_t id;
-  uint8_t flags;
+  uint32_t id;
+  uint32_t flags;
 };
 
 const struct vr4300_opcode* vr4300_decode_instruction(uint32_t);

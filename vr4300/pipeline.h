@@ -11,10 +11,25 @@
 #ifndef __vr4300_pipeline_h__
 #define __vr4300_pipeline_h__
 #include "common.h"
+#include "vr4300/decoder.h"
 #include "vr4300/fault.h"
 #include "vr4300/segment.h"
 
 struct vr4300;
+
+enum vr4300_bus_request_type {
+  VR4300_BUS_REQUEST_NONE,
+  VR4300_BUS_REQUEST_READ,
+  VR4300_BUS_REQUEST_WRITE,
+};
+
+struct vr4300_bus_request {
+  uint64_t address;
+  uint32_t word;
+  unsigned size;
+
+  enum vr4300_bus_request_type type;
+};
 
 struct vr4300_latch {
   uint64_t pc;
@@ -30,15 +45,23 @@ struct vr4300_icrf_latch {
 
 struct vr4300_rfex_latch {
   struct vr4300_latch common;
-  uint32_t iw;
+  struct vr4300_opcode opcode;
+  uint32_t iw, iw_mask;
 };
 
 struct vr4300_exdc_latch {
   struct vr4300_latch common;
+  const struct segment *segment;
+  int64_t result;
+  uint32_t dest;
+
+  struct vr4300_bus_request request;
 };
 
 struct vr4300_dcwb_latch {
   struct vr4300_latch common;
+  int64_t result;
+  uint32_t dest;
 };
 
 struct vr4300_pipeline {

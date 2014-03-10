@@ -82,5 +82,22 @@ typedef char bool;
 #define unused(decl) decl
 #endif
 
+// Byte order swap functions.
+static inline uint32_t byteswap_32(uint32_t word) {
+#ifdef BIG_ENDIAN_HOST
+  return word;
+#elif defined(_MSC_VER)
+  return _byteswap_ulong(word);
+#elif defined(__GNUC__)
+  return __builtin_bswap32(word);
+#else
+  return
+  (((((word) >> 24) & 0x000000FF) | \
+    (((word) >>  8) & 0x0000FF00) | \
+    (((word) <<  8) & 0x00FF0000) | \
+    (((word) << 24) & 0xFF000000));
+#endif
+}
+
 #endif
 

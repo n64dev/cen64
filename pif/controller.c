@@ -9,6 +9,7 @@
 //
 
 #include "common.h"
+#include "bus/address.h"
 #include "bus/controller.h"
 #include "pif/controller.h"
 
@@ -21,11 +22,20 @@ int init_pif(struct pif_controller *pif,
   return 0;
 }
 
-// Reads a word from PIFROM.
-int read_pifrom(struct pif_controller *pif, uint32_t *word, unsigned off) {
-  assert((off & 0x3) == 0 && "read_pifrom: Offset not word aligned.");
+// Reads a word from PIF ROM.
+int read_pif_rom(void *opaque, uint32_t address, uint32_t *word) {
+  struct pif_controller *pif = (struct pif_controller*) opaque;
+  unsigned offset = address - PIF_ROM_BASE_ADDRESS;
 
-  memcpy(word, pif->rom + off, sizeof(*word));
+  memcpy(word, pif->rom + offset, sizeof(*word));
   return 0;
+}
+
+// Writes a word to PIF ROM.
+int write_pif_rom(void unused(*opaque),
+  uint32_t unused(address), uint32_t unused(*word)) {
+  assert("Attempt to write to PIF ROM.");
+
+  return -1;
 }
 

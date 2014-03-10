@@ -10,9 +10,10 @@
 
 #include "common.h"
 #include "vr4300/cp0.h"
+#include "vr4300/cpu.h"
 
 // Initializes the coprocessor.
-void vr4300_cp0_init(struct vr4300_cp0 *cp0) {
-  memset(cp0, 0, sizeof(*cp0));
+void vr4300_cp0_init(struct vr4300 unused(*vr4300)) {
+  memset(vr4300->regs, 0, sizeof(*vr4300->regs) * NUM_VR4300_CP0_REGISTERS);
 }
 

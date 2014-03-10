@@ -9,28 +9,32 @@
 //
 
 #include "common.h"
+#include "bus/address.h"
 #include "bus/controller.h"
+#include "bus/memorymap.h"
 #include "pif/controller.h"
 
 // Initializes the bus component.
 int bus_init(struct bus_controller *bus) {
-  bus->num_requests = 0;
-  bus->rq_head = 0;
-  bus->rq_tail = 0;
+  if ((bus->map = create_memory_map(1)) == NULL)
+    return -1;
+
+  map_address_range(bus->map, PIF_ROM_BASE_ADDRESS, PIF_ROM_ADDRESS_LEN,
+    bus->pif, read_pif_rom, write_pif_rom);
 
   return 0;
 }
 
 // Issues a read request to the bus.
-unsigned bus_read_word(struct bus_controller *bus,
+int bus_read_word(struct bus_controller *bus,
   uint32_t address, uint32_t *word) {
+  const struct memory_mapping *node;
 
-  if (address >= 0x1FC00000 && address < 0x1FC07C00)
-    return read_pifrom(bus->pif, word, address & 0xFFC);
+  if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
+    fprintf(stderr, "bus_read_word: Failed to access: 0x%.8X\n", address);
+    abort();
+  }
 
-  printf("bus_read_word: Failed to access: 0x%.8X\n", address);
-  abort();
-
-  return 0;
+  return node->on_read(node->instance, address, word);
 }
 

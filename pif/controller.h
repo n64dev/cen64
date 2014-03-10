@@ -22,7 +22,8 @@ struct pif_controller {
 int init_pif(struct pif_controller *pif,
   struct bus_controller *bus, const uint8_t *rom);
 
-int read_pifrom(struct pif_controller *pif, uint32_t *word, unsigned off);
+int read_pif_rom(void *opaque, uint32_t address, uint32_t *word);
+int write_pif_rom(void *opaque, uint32_t address, uint32_t *word);
 
 #endif
 

@@ -61,15 +61,15 @@ struct cen64_device *device_create(const char *pifrom) {
   }
 
   // Initialize the bus.
+  device->bus.pif = &device->pif;
+  device->bus.vr4300 = &device->vr4300;
+
   if (bus_init(&device->bus)) {
     printf("create_device: Failed to initialize the bus.\n");
 
     free(device);
     return NULL;
   }
-
-  device->bus.pif = &device->pif;
-  device->bus.vr4300 = &device->vr4300;
 
   // Initialize the VR4300.
   if (vr4300_init(&device->vr4300, &device->bus)) {
