@@ -23,7 +23,7 @@
 //#define PRINT_EXEC
 
 // Instruction cache stage.
-static inline int vr4300_ic_stage (struct vr4300 *vr4300) {
+static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   const struct segment *segment = icrf_latch->segment;
@@ -56,7 +56,7 @@ static inline int vr4300_ic_stage (struct vr4300 *vr4300) {
 }
 
 // Register fetch and decode stage.
-static inline int vr4300_rf_stage (struct vr4300 *vr4300) {
+static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   const struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct segment *segment = icrf_latch->segment;
@@ -72,7 +72,7 @@ static inline int vr4300_rf_stage (struct vr4300 *vr4300) {
 }
 
 // Execution stage.
-static inline int vr4300_ex_stage (struct vr4300 *vr4300) {
+static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   const struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
@@ -117,11 +117,12 @@ static inline int vr4300_ex_stage (struct vr4300 *vr4300) {
   exdc_latch->dest = VR4300_REGISTER_R0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_NONE;
   vr4300_function_table[rfex_latch->opcode.id](vr4300, rs_reg, rt_reg);
+
   return 0;
 }
 
 // Data cache fetch stage.
-static inline int vr4300_dc_stage (struct vr4300 *vr4300) {
+static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   const struct segment *segment = exdc_latch->segment;
@@ -164,7 +165,7 @@ static inline int vr4300_dc_stage (struct vr4300 *vr4300) {
 }
 
 // Writeback stage.
-static inline int vr4300_wb_stage (struct vr4300 *vr4300) {
+static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
   if (dcwb_latch->common.fault != VR4300_FAULT_NONE)
