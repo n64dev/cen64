@@ -54,7 +54,7 @@ int bus_init(struct bus_controller *bus) {
     bus->ri, read_ri_regs, write_ri_regs);
 
   map_address_range(bus->map, ROM_CART_BASE_ADDRESS, ROM_CART_ADDRESS_LEN,
-    bus->si, read_cart_rom, write_cart_rom);
+    bus->pi, read_cart_rom, write_cart_rom);
 
   map_address_range(bus->map, SI_REGS_BASE_ADDRESS, SI_REGS_ADDRESS_LEN,
     bus->si, read_si_regs, write_si_regs);
@@ -81,7 +81,6 @@ int bus_read_word(struct bus_controller *bus,
 
   if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
     fprintf(stderr, "bus_read_word: Failed to access: 0x%.8X\n", address);
-    abort();
     return 0;
   }
 
@@ -95,7 +94,6 @@ int bus_write_word(struct bus_controller *bus,
 
   if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
     fprintf(stderr, "bus_write_word: Failed to access: 0x%.8X\n", address);
-    abort();
     return 0;
   }
 
