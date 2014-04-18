@@ -27,10 +27,14 @@ extern const char *pi_register_mnemonics[NUM_PI_REGISTERS];
 
 struct pi_controller {
   struct bus_controller *bus;
+  const uint8_t *rom;
+
   uint32_t regs[NUM_PI_REGISTERS];
 };
 
-int pi_init(struct pi_controller *pi, struct bus_controller *bus);
+int pi_init(struct pi_controller *pi,
+  struct bus_controller *bus, const uint8_t *rom);
+
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_cart_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);

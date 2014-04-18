@@ -132,7 +132,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the PI.
-  if (pi_init(&device->pi, &device->bus) < 0) {
+  if (pi_init(&device->pi, &device->bus, device->rom) < 0) {
     printf("create_device: Failed to initialize the PI.\n");
     return NULL;
   }
@@ -182,9 +182,7 @@ void device_destroy(struct cen64_device *device) {
 
 // Kicks off threads and starts the device.
 void device_run(struct cen64_device *device) {
-  unsigned i;
-
-  for (i = 0; i < 93750000; i++)
+  while (1)
     vr4300_cycle(&device->vr4300);
 }
 

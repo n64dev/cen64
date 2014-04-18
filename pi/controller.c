@@ -23,14 +23,20 @@ const char *pi_register_mnemonics[NUM_PI_REGISTERS] = {
 #endif
 
 // Initializes the PI.
-int pi_init(struct pi_controller *pi, struct bus_controller *bus) {
+int pi_init(struct pi_controller *pi,
+  struct bus_controller *bus, const uint8_t *rom) {
   pi->bus = bus;
+  pi->rom = rom;
 
   return 0;
 }
 
 // Reads a word from cartridge ROM.
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word) {
+  struct pi_controller *pi = (struct pi_controller *) opaque;
+  unsigned offset = (address - ROM_CART_BASE_ADDRESS) & ~0x3;
+  memcpy(word, pi->rom + offset, sizeof(*word));
+  *word = byteswap_32(*word);
   return 0;
 }
 
