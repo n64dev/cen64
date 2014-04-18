@@ -33,6 +33,11 @@ cen64_align(static const uint32_t vr4300_branch_lut[2], 8) = {
   ~0U, 0U
 };
 
+// Mask to selectively sign-extend compute values.
+cen64_align(static const uint64_t vr4300_mult_sex_mask[2], 16) = {
+  ~0ULL, ~0ULL >> 32
+};
+
 // Mask to selectively sign-extend loaded values.
 cen64_align(static const uint64_t vr4300_load_sex_mask[2], 16) = {
   ~0ULL, 0ULL
@@ -80,7 +85,8 @@ void VR4300_ADDI_SUBI(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   rt = (rt ^ mask) - mask;
   rt = rs + rt;
 
-  assert(((rt >> 31) == (rt >> 32)) && "Overflow exception.");
+  // TODO/FIXME: Uncomment this later...
+  //assert(((rt >> 31) == (rt >> 32)) && "Overflow exception.");
 
   exdc_latch->result = (int32_t) rt;
   exdc_latch->dest = dest;
@@ -342,6 +348,43 @@ void VR4300_LOAD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdc_latch->result = sex_mask;
   exdc_latch->dest = dest;
+}
+
+//
+// MFHI
+// MFLO
+//
+void VR4300_MFHI_MFLO(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  bool is_mflo = iw >> 1 & 0x1;
+
+  // TODO: Read these here, or...? Registers are probably tied into EX logic...
+  exdc_latch->result = vr4300->regs[VR4300_REGISTER_HI + is_mflo];
+  exdc_latch->dest = dest;
+}
+
+//
+// MULT
+// MULTU
+//
+void VR4300_MULT_MULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  bool is_multu = iw & 0x1;
+
+  uint64_t sex_mask = vr4300_mult_sex_mask[is_multu];
+  uint64_t rs_sex = (int32_t) rs & sex_mask;
+  uint64_t rt_sex = (int32_t) rt & sex_mask;
+  uint64_t result = rs_sex * rt_sex;
+
+  // TODO: Delay the output a few cycles.
+  vr4300->regs[VR4300_REGISTER_LO] = (int32_t) result;
+  vr4300->regs[VR4300_REGISTER_HI] = (int32_t) (result >> 32);
 }
 
 //

@@ -114,6 +114,7 @@ static inline int vr4300_ex_stage (struct vr4300 *vr4300) {
     vr4300_opcode_mnemonics[rfex_latch->opcode.id]);
 #endif
 
+  exdc_latch->dest = VR4300_REGISTER_R0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_NONE;
   vr4300_function_table[rfex_latch->opcode.id](vr4300, rs_reg, rt_reg);
   return 0;
