@@ -33,6 +33,20 @@ int si_init(struct si_controller *si,
 
 // Reads a word from PIF RAM.
 int read_pif_ram(void *opaque, uint32_t address, uint32_t *word) {
+  struct si_controller *si = (struct si_controller *) opaque;
+  unsigned offset = (address - PIF_RAM_BASE_ADDRESS) & 0x3F;
+
+  if (offset == 0x24)
+    si->pif_status = 0x80;
+
+  else if (offset == 0x3C)
+    *word = si->pif_status;
+
+  else {
+    memcpy(&word, si->ram + offset, sizeof(word));
+    *word = byteswap_32(*word);
+  }
+
   return 0;
 }
 
@@ -58,16 +72,24 @@ int read_si_regs(void *opaque, uint32_t address, uint32_t *word) {
 
 // Writes a word to PIF RAM.
 int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
-  assert(0 && "Attempt to write to PIF RAM.");
+  struct si_controller *si = (struct si_controller *) opaque;
+  unsigned offset = (address - PIF_RAM_BASE_ADDRESS) & 0x3F;
+  uint32_t orig_word;
 
-  return -1;
+  memcpy(&orig_word, si->ram + offset, sizeof(orig_word));
+  orig_word = byteswap_32(orig_word) & ~dqm;
+  word = byteswap_32(orig_word | word);
+  memcpy(si->ram + offset, &word, sizeof(word));
+
+  // TODO/FIXME: Raise exception.
+  si->regs[SI_STATUS_REG] |= 0x1000;
+  return 0;
 }
 
 // Writes a word to PIF ROM.
 int write_pif_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   assert(0 && "Attempt to write to PIF ROM.");
-
-  return -1;
+  return 0;
 }
 
 // Writes a word to the SI MMIO register space.
