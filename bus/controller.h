@@ -11,7 +11,7 @@
 #ifndef __bus_controller_h__
 #define __bus_controller_h__
 #include "common.h"
-#include "memorymap.h"
+#include "bus/memorymap.h"
 
 struct ai_controller;
 struct pi_controller;
@@ -39,11 +39,18 @@ struct bus_controller {
 
 int bus_init(struct bus_controller *bus);
 
+// General-purpose accesssor functions.
 int bus_read_word(struct bus_controller *bus,
   uint32_t address, uint32_t *word);
 
 int bus_write_word(struct bus_controller *bus,
   uint32_t address, uint32_t word, uint32_t dqm);
+
+// For asserting and deasserting RCP interrupts.
+enum rcp_interrupt_mask;
+
+int raise_rcp_interrupt(struct bus_controller *bus,
+  enum rcp_interrupt_mask mask);
 
 #endif
 

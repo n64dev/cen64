@@ -252,7 +252,7 @@ void VR4300_BGEZAL_BGEZALL_BLTZAL_BLTZALL(
   bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int64_t) rs < 0;
 
-  exdc_latch->result = rfex_latch->common.pc + 4;
+  exdc_latch->result = rfex_latch->common.pc + 8;
   exdc_latch->dest = VR4300_REGISTER_RA;
 
   if (cmp == is_ge) {
@@ -307,6 +307,25 @@ void VR4300_INV(struct vr4300 *vr4300,
 }
 
 //
+// J
+// JAL
+//
+void VR4300_J_JAL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  bool is_jal = rfex_latch->iw >> 26 & 0x1;
+  uint32_t target = (rfex_latch->iw << 2) & 0x0FFFFFFF;
+  uint32_t mask = vr4300_branch_lut[is_jal];
+
+  exdc_latch->result = rfex_latch->common.pc + 8;
+  exdc_latch->dest = VR4300_REGISTER_RA & ~mask;
+
+  icrf_latch->pc = (rfex_latch->common.pc & ~0x0FFFFFFFULL) | target;
+}
+
+//
 // JALR
 // JR
 //
@@ -318,7 +337,7 @@ void VR4300_JALR_JR(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   bool is_jalr = rfex_latch->iw & 0x1;
   uint32_t mask = vr4300_branch_lut[is_jalr];
 
-  exdc_latch->result = rfex_latch->common.pc + 4;
+  exdc_latch->result = rfex_latch->common.pc + 8;
   exdc_latch->dest = VR4300_REGISTER_RA & ~mask;
 
   icrf_latch->pc = rs;
@@ -490,7 +509,7 @@ void VR4300_SRLV(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   unsigned dest = GET_RD(iw);
   unsigned sa = rs & 0x1F;
 
-  exdc_latch->result = (int32_t) (rt >> sa);
+  exdc_latch->result = (int32_t) ((uint32_t) rt >> sa);
   exdc_latch->dest = dest;
 }
 
