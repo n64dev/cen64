@@ -301,6 +301,24 @@ void VR4300_INV(struct vr4300 *vr4300,
 }
 
 //
+// JALR
+// JR
+//
+void VR4300_JALR_JR(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint32_t mask = vr4300_branch_lut[iw & 0x1];
+
+  exdc_latch->result = rfex_latch->common.pc + 4;
+  exdc_latch->dest = VR4300_REGISTER_RA & mask;
+
+  icrf_latch->pc = rs;
+}
+
+//
 // LB
 // LBU
 // LH
