@@ -43,7 +43,7 @@ int read_pif_ram(void *opaque, uint32_t address, uint32_t *word) {
     *word = si->pif_status;
 
   else {
-    memcpy(&word, si->ram + offset, sizeof(word));
+    memcpy(word, si->ram + offset, sizeof(*word));
     *word = byteswap_32(*word);
   }
 
