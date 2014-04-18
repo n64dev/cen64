@@ -436,6 +436,20 @@ void VR4300_SLL(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 }
 
 //
+// SLTU
+//
+void VR4300_SLTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+
+  exdc_latch->result = rs < rt;
+  exdc_latch->dest = dest;
+}
+
+//
 // SRL
 //
 void VR4300_SRL(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
