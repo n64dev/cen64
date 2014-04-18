@@ -31,9 +31,20 @@ const char *ri_register_mnemonics[NUM_RI_REGISTERS] = {
 
 // Initializes the RI.
 int ri_init(struct ri_controller *ri,
-  struct bus_controller *bus) {
+  struct bus_controller *bus, uint8_t *ram) {
   ri->bus = bus;
+  ri->ram = ram;
 
+  return 0;
+}
+
+// Reads a word from RDRAM.
+int read_rdram(void *opaque, uint32_t address, uint32_t *word) {
+  struct ri_controller *ri = (struct ri_controller *) opaque;
+  unsigned offset = address - RDRAM_BASE_ADDRESS;
+
+  memcpy(word, ri->ram + offset, sizeof(*word));
+  *word = byteswap_32(*word);
   return 0;
 }
 
@@ -56,6 +67,19 @@ int read_ri_regs(void *opaque, uint32_t address, uint32_t *word) {
 
   *word = ri->regs[reg];
   debug_mmio_read(ri, ri_register_mnemonics[reg], *word);
+  return 0;
+}
+
+// Writes a word to RDRAM.
+int write_rdram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  struct ri_controller *ri = (struct ri_controller *) opaque;
+  unsigned offset = address - RDRAM_BASE_ADDRESS;
+  uint32_t orig_word;
+
+  memcpy(&orig_word, ri->ram + offset, sizeof(orig_word));
+  orig_word = byteswap_32(orig_word) & ~dqm;
+  word = byteswap_32(orig_word | word);
+  memcpy(ri->ram + offset, &word, sizeof(word));
   return 0;
 }
 

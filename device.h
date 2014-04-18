@@ -37,7 +37,7 @@ struct cen64_device {
   struct vr4300 vr4300;
 
   uint8_t pifrom[PIFROM_SIZE];
-  uint8_t *rom;
+  uint8_t *ram, *rom;
 };
 
 void device_destroy(struct cen64_device *device);

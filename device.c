@@ -95,6 +95,7 @@ static int load_pifrom(const char *file, uint8_t *rom) {
 struct cen64_device *device_create(struct cen64_device *device,
   const char *pifrom, const char *rom) {
   device->rom = malloc(0x2000000);
+  device->ram = malloc(0x800000);
 
   // Read the PIFROM into the device.
   if (load_pifrom(pifrom, device->pifrom) < 0) {
@@ -138,7 +139,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the RI.
-  if (ri_init(&device->ri, &device->bus) < 0) {
+  if (ri_init(&device->ri, &device->bus, device->ram) < 0) {
     printf("create_device: Failed to initialize the RI.\n");
     return NULL;
   }

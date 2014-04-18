@@ -26,7 +26,7 @@
 
 // Initializes the bus component.
 int bus_init(struct bus_controller *bus) {
-  if ((bus->map = create_memory_map(14)) == NULL)
+  if ((bus->map = create_memory_map(15)) == NULL)
     return -1;
 
   map_address_range(bus->map, AI_REGS_BASE_ADDRESS, AI_REGS_ADDRESS_LEN,
@@ -46,6 +46,9 @@ int bus_init(struct bus_controller *bus) {
 
   map_address_range(bus->map, PIF_ROM_BASE_ADDRESS, PIF_ROM_ADDRESS_LEN,
     bus->si, read_pif_rom, write_pif_rom);
+
+  map_address_range(bus->map, RDRAM_BASE_ADDRESS, RDRAM_BASE_ADDRESS_LEN,
+    bus->ri, read_rdram, write_rdram);
 
   map_address_range(bus->map, RDRAM_REGS_BASE_ADDRESS, RDRAM_REGS_ADDRESS_LEN,
     bus->ri, read_rdram_regs, write_rdram_regs);

@@ -35,7 +35,11 @@
 #define PIF_ROM_BASE_ADDRESS      0x1FC00000
 #define PIF_ROM_ADDRESS_LEN       0x000007C0
 
-// RDRAM Registers.
+// Physical memory.
+#define RDRAM_BASE_ADDRESS        0x00000000
+#define RDRAM_BASE_ADDRESS_LEN    0x00800000
+
+// RDRAM registers.
 #define RDRAM_REGS_BASE_ADDRESS   0x03F00000
 #define RDRAM_REGS_ADDRESS_LEN    0x00000028
 

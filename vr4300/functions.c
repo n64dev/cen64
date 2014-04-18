@@ -304,7 +304,9 @@ void VR4300_INV(struct vr4300 *vr4300,
     rfex_latch->common.pc);
 #endif
 
-  assert(0 && "Unimplemented instruction encountered.");
+  // TODO/FIXME: Implement this instruction later.
+  if (opcode != VR4300_OPCODE_CACHE)
+    assert(0 && "Unimplemented instruction encountered.");
 }
 
 //
