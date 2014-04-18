@@ -13,7 +13,7 @@
 #include "common.h"
 
 int read_dp_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_dp_regs(void *opaque, uint32_t address, uint32_t *word);
+int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

@@ -155,7 +155,7 @@ static inline int vr4300_dc_stage (struct vr4300 *vr4300) {
 
       // TODO/FIXME: Not accurate.
       bus_write_word(vr4300->bus, exdc_latch->request.address,
-        &exdc_latch->request.word);
+        exdc_latch->request.word, exdc_latch->request.dqm);
     }
   }
 

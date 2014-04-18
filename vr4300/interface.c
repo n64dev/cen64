@@ -25,13 +25,14 @@ int read_mi_regs(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Writes a word to the MI MMIO register space.
-int write_mi_regs(void *opaque, uint32_t address, uint32_t *word) {
+int write_mi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct vr4300 *vr4300 = (struct vr4300 *) opaque;
   uint32_t offset = address - MI_REGS_BASE_ADDRESS;
   enum mi_register reg = (offset >> 2);
 
-  debug_mmio_write(vr4300, mi_register_mnemonics[reg], *word);
-  vr4300->mi_regs[reg] = *word;
+  debug_mmio_write(vr4300, mi_register_mnemonics[reg], word, dqm);
+  vr4300->mi_regs[reg] &= ~dqm;
+  vr4300->mi_regs[reg] |= word;
   return 0;
 }
 

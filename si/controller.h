@@ -38,9 +38,9 @@ int si_init(struct si_controller *si,
 int read_pif_ram(void *opaque, uint32_t address, uint32_t *word);
 int read_pif_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_si_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_pif_ram(void *opaque, uint32_t address, uint32_t *word);
-int write_pif_rom(void *opaque, uint32_t address, uint32_t *word);
-int write_si_regs(void *opaque, uint32_t address, uint32_t *word);
+int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int write_pif_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

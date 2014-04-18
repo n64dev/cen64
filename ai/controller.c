@@ -41,13 +41,14 @@ int read_ai_regs(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Writes a word to the AI MMIO register space.
-int write_ai_regs(void *opaque, uint32_t address, uint32_t *word) {
+int write_ai_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct ai_controller *ai = (struct ai_controller *) opaque;
   unsigned offset = address - AI_REGS_BASE_ADDRESS;
   enum ai_register reg = (offset >> 2);
 
-  debug_mmio_write(ai, ai_register_mnemonics[reg], *word);
-  ai->regs[reg] = *word;
+  debug_mmio_write(ai, ai_register_mnemonics[reg], word, dqm);
+  ai->regs[reg] &= ~dqm;
+  ai->regs[reg] |= word;
   return 0;
 }
 

@@ -401,11 +401,14 @@ void VR4300_STORE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
+  unsigned request_size = (iw >> 26 & 0x3) + 1;
+  uint32_t mask = (~0U >> (4 - request_size));
 
   exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.dqm = mask << (iw & 0x3);
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
-  exdc_latch->request.size = (iw >> 26 & 0x3) + 1;
-  exdc_latch->request.word = rt;
+  exdc_latch->request.size = request_size;
+  exdc_latch->request.word = rt & mask;
 }
 
 // Function lookup table.

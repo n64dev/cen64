@@ -25,6 +25,7 @@ enum vr4300_bus_request_type {
 
 struct vr4300_bus_request {
   uint64_t address;
+  uint32_t dqm;
   uint32_t word;
   unsigned size;
 

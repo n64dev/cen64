@@ -46,19 +46,20 @@ int read_pi_regs(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Writes a word to cartridge ROM.
-int write_cart_rom(void *opaque, uint32_t address, uint32_t *word) {
+int write_cart_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   assert(0 && "Attempt to write to cart ROM.");
   return 0;
 }
 
 // Writes a word to the PI MMIO register space.
-int write_pi_regs(void *opaque, uint32_t address, uint32_t *word) {
+int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct pi_controller *pi = (struct pi_controller *) opaque;
   unsigned offset = address - PI_REGS_BASE_ADDRESS;
   enum pi_register reg = (offset >> 2);
 
-  debug_mmio_write(pi, pi_register_mnemonics[reg], *word);
-  pi->regs[reg] = *word;
+  debug_mmio_write(pi, pi_register_mnemonics[reg], word, dqm);
+  pi->regs[reg] &= ~dqm;
+  pi->regs[reg] |= word;
   return 0;
 }
 

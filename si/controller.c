@@ -12,6 +12,7 @@
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "si/controller.h"
+#include <assert.h>
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 const char *si_register_mnemonics[NUM_SI_REGISTERS] = {
@@ -56,29 +57,28 @@ int read_si_regs(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Writes a word to PIF RAM.
-int write_pif_ram(void unused(*opaque),
-  uint32_t unused(address), uint32_t unused(*word)) {
-  assert("Attempt to write to PIF RAM.");
+int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  assert(0 && "Attempt to write to PIF RAM.");
 
   return -1;
 }
 
 // Writes a word to PIF ROM.
-int write_pif_rom(void unused(*opaque),
-  uint32_t unused(address), uint32_t unused(*word)) {
-  assert("Attempt to write to PIF ROM.");
+int write_pif_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  assert(0 && "Attempt to write to PIF ROM.");
 
   return -1;
 }
 
 // Writes a word to the SI MMIO register space.
-int write_si_regs(void *opaque, uint32_t address, uint32_t *word) {
+int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct si_controller *si = (struct si_controller *) opaque;
   unsigned offset = address - SI_REGS_BASE_ADDRESS;
   enum si_register reg = (offset >> 2);
 
-  debug_mmio_write(si, si_register_mnemonics[reg], *word);
-  si->regs[reg] = *word;
+  debug_mmio_write(si, si_register_mnemonics[reg], word, dqm);
+  si->regs[reg] &= ~dqm;
+  si->regs[reg] |= word;
   return 0;
 }
 

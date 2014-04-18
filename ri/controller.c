@@ -60,24 +60,26 @@ int read_ri_regs(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Writes a word to the RDRAM MMIO register space.
-int write_rdram_regs(void *opaque, uint32_t address, uint32_t *word) {
+int write_rdram_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct ri_controller *ri = (struct ri_controller *) opaque;
   unsigned offset = address - RDRAM_REGS_BASE_ADDRESS;
   enum rdram_register reg = (offset >> 2);
 
-  debug_mmio_write(rdram, rdram_register_mnemonics[reg], *word);
-  ri->rdram_regs[reg] = *word;
+  debug_mmio_write(rdram, rdram_register_mnemonics[reg], word, dqm);
+  ri->rdram_regs[reg] &= ~dqm;
+  ri->rdram_regs[reg] |= word;
   return 0;
 }
 
 // Writes a word to the RI MMIO register space.
-int write_ri_regs(void *opaque, uint32_t address, uint32_t *word) {
+int write_ri_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct ri_controller *ri = (struct ri_controller *) opaque;
   unsigned offset = address - RI_REGS_BASE_ADDRESS;
   enum ri_register reg = (offset >> 2);
 
-  debug_mmio_write(ri, ri_register_mnemonics[reg], *word);
-  ri->regs[reg] = *word;
+  debug_mmio_write(ri, ri_register_mnemonics[reg], word, dqm);
+  ri->regs[reg] &= ~dqm;
+  ri->regs[reg] |= word;
   return 0;
 }
 

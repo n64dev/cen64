@@ -13,7 +13,8 @@
 #include "common.h"
 
 // Callback functions to handle reads/writes.
-typedef int (*memory_function)(void *, uint32_t, uint32_t *);
+typedef int (*memory_rd_function)(void *, uint32_t, uint32_t *);
+typedef int (*memory_wr_function)(void *, uint32_t, uint32_t, uint32_t);
 
 enum memory_map_color {
   MEMORY_MAP_BLACK,
@@ -23,8 +24,8 @@ enum memory_map_color {
 struct memory_mapping {
   void *instance;
 
-  memory_function on_read;
-  memory_function on_write;
+  memory_rd_function on_read;
+  memory_wr_function on_write;
 
   uint32_t length;
   uint32_t start;
@@ -54,7 +55,7 @@ void destroy_memory_map(struct memory_map *memory_map);
 
 void map_address_range(struct memory_map *memory_map,
   uint32_t start, uint32_t length, void *instance,
-  memory_function on_read, memory_function on_write);
+  memory_rd_function on_read, memory_wr_function on_write);
 
 const struct memory_mapping* resolve_mapped_address(
   const struct memory_map *memory_map, uint32_t address);

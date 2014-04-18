@@ -32,7 +32,7 @@ struct ai_controller {
 
 int ai_init(struct ai_controller *ai, struct bus_controller *bus);
 int read_ai_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_ai_regs(void *opaque, uint32_t address, uint32_t *word);
+int write_ai_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

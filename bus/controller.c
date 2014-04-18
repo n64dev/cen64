@@ -90,7 +90,7 @@ int bus_read_word(struct bus_controller *bus,
 
 // Issues a write request to the bus.
 int bus_write_word(struct bus_controller *bus,
-  uint32_t address, uint32_t *word) {
+  uint32_t address, uint32_t word, uint32_t dqm) {
   const struct memory_mapping *node;
 
   if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
@@ -99,6 +99,6 @@ int bus_write_word(struct bus_controller *bus,
     return 0;
   }
 
-  return node->on_write(node->instance, address, word);
+  return node->on_write(node->instance, address, word, dqm);
 }
 

@@ -109,7 +109,7 @@ static void fixup(struct memory_map *map, struct memory_map_node *node) {
 
 // Inserts a mapping into the tree.
 void map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
-  void *instance, memory_function on_read, memory_function on_write) {
+  void *instance, memory_rd_function on_read, memory_wr_function on_write) {
   struct memory_map_node *check = map->root;
   struct memory_map_node *cur = map->nil;
 	uint32_t end = start + length - 1;

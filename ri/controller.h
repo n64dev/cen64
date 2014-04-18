@@ -45,8 +45,8 @@ struct ri_controller {
 int ri_init(struct ri_controller *ri, struct bus_controller *bus);
 int read_rdram_regs(void *opaque, uint32_t address, uint32_t *word);
 int read_ri_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_rdram_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_ri_regs(void *opaque, uint32_t address, uint32_t *word);
+int write_rdram_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int write_ri_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

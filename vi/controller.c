@@ -41,13 +41,14 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Writes a word to the VI MMIO register space.
-int write_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
+int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct vi_controller *vi = (struct vi_controller *) opaque;
   unsigned offset = address - VI_REGS_BASE_ADDRESS;
   enum vi_register reg = (offset >> 2);
 
-  debug_mmio_write(vi, vi_register_mnemonics[reg], *word);
-  *word = vi->regs[reg];
+  debug_mmio_write(vi, vi_register_mnemonics[reg], word, dqm);
+  vi->regs[reg] &= ~dqm;
+  vi->regs[reg] |= word;
   return 0;
 }
 
