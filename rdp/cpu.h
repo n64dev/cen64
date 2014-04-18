@@ -1,0 +1,30 @@
+//
+// rdp/cpu.h: RDP processor container.
+//
+// CEN64: Cycle-Accurate Nintendo 64 Simulator.
+// Copyright (C) 2014, Tyler J. Stachecki.
+//
+// This file is subject to the terms and conditions defined in
+// 'LICENSE', which is part of this source code package.
+//
+
+#ifndef __rdp_cpu_h__
+#define __rdp_cpu_h__
+#include "common.h"
+
+enum dp_register {
+#define X(reg) reg,
+#include "rdp/registers.md"
+#undef X
+  NUM_DP_REGISTERS
+};
+
+struct rdp {
+  uint32_t regs[NUM_DP_REGISTERS];
+  struct bus_controller *bus;
+};
+
+int rdp_init(struct rdp *rdp, struct bus_controller *bus);
+
+#endif
+

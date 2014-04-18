@@ -13,18 +13,36 @@
 #include "common.h"
 #include "memorymap.h"
 
-struct bus_request;
+struct ai_controller;
+struct pi_controller;
+struct ri_controller;
+struct si_controller;
+struct vi_controller;
+
+struct rdp;
+struct rsp;
 struct vr4300;
 
 struct bus_controller {
   struct memory_map *map;
-  struct pif_controller *pif;
+
+  struct ai_controller *ai;
+  struct pi_controller *pi;
+  struct ri_controller *ri;
+  struct si_controller *si;
+  struct vi_controller *vi;
+
+  struct rdp *rdp;
+  struct rsp *rsp;
   struct vr4300 *vr4300;
 };
 
 int bus_init(struct bus_controller *bus);
 
 int bus_read_word(struct bus_controller *bus,
+  uint32_t address, uint32_t *word);
+
+int bus_write_word(struct bus_controller *bus,
   uint32_t address, uint32_t *word);
 
 #endif

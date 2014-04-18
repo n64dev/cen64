@@ -171,7 +171,6 @@ void VR4300_ANDI_ORI_XORI(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   dest = GET_RT(iw);
   rt = (uint16_t) iw;
   rt = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
-  
 
   exdc_latch->result = rt;
   exdc_latch->dest = dest;
@@ -321,7 +320,7 @@ void VR4300_LOAD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   exdc_latch->request.address = rs + (int16_t) iw;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
-  exdc_latch->request.size = iw >> 26 & 0x3;
+  exdc_latch->request.size = (iw >> 26 & 0x3) + 1;
 
   exdc_latch->result = sex_mask;
   exdc_latch->dest = dest;
@@ -372,6 +371,24 @@ void VR4300_SLLx(struct vr4300 *vr4300,
   exdc_latch->dest = 0;
 }
 
+//
+// SB
+// SH
+// SW
+//
+// TODO/FIXME: Check for unaligned addresses.
+//
+void VR4300_STORE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+
+  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
+  exdc_latch->request.size = (iw >> 26 & 0x3) + 1;
+  exdc_latch->request.word = rt;
+}
 
 // Function lookup table.
 cen64_align(const vr4300_function

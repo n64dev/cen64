@@ -11,22 +11,38 @@
 #ifndef __device_h__
 #define __device_h__
 #include "common.h"
+#include "ai/controller.h"
 #include "bus/controller.h"
-#include "pif/controller.h"
+#include "pi/controller.h"
+#include "ri/controller.h"
+#include "si/controller.h"
+#include "rdp/cpu.h"
+#include "rsp/cpu.h"
+#include "vi/controller.h"
 #include "vr4300/cpu.h"
 
 #define PIFROM_SIZE 2048
 
 struct cen64_device {
   struct bus_controller bus;
-  struct pif_controller pif;
+
+  struct ai_controller ai;
+  struct pi_controller pi;
+  struct ri_controller ri;
+  struct si_controller si;
+  struct vi_controller vi;
+
+  struct rdp rdp;
+  struct rsp rsp;
   struct vr4300 vr4300;
 
   uint8_t pifrom[PIFROM_SIZE];
+  uint8_t *rom;
 };
 
-struct cen64_device *device_create(const char *pifrom);
 void device_destroy(struct cen64_device *device);
+struct cen64_device *device_create(struct cen64_device *device,
+  const char *pifrom, const char *rom);
 
 void device_run(struct cen64_device *device);
 

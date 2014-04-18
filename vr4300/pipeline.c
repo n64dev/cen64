@@ -9,6 +9,7 @@
 //
 
 #include "common.h"
+#include "bus/controller.h"
 #include "vr4300/cp0.h"
 #include "vr4300/cpu.h"
 #include "vr4300/decoder.h"
@@ -148,8 +149,14 @@ static inline int vr4300_dc_stage (struct vr4300 *vr4300) {
       return 1;
     }
 
-    else
-      assert(0 && "Unsupported DC stage request type.");
+    else {
+      assert(exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE &&
+        "Unsupported DC stage request type.");
+
+      // TODO/FIXME: Not accurate.
+      bus_write_word(vr4300->bus, exdc_latch->request.address,
+        &exdc_latch->request.word);
+    }
   }
 
   return 0;
@@ -288,16 +295,19 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
-  uint32_t word = request->word, mask = ~0U;
 
-  mask = mask >> (32 - (request->size << 3));
-  mask = mask << (request->address & 0x3);
-  word &= mask;
+  int maskshift = request->size << 3;
+  int datashift = (8 - request->size) << 3;
+  uint64_t data = (uint32_t) request->word;
+  int64_t sdata = (int32_t) request->word;
+  int64_t mask = exdc_latch->result;
 
   // Shall we sign extend?
-  word = word >> (request->address & 0x3);
-  dcwb_latch->result = exdc_latch->result >> (request->address & 0x3);
-  dcwb_latch->result |= word;
+  mask = (mask >> maskshift) << maskshift;
+  sdata = (sdata << datashift) >> datashift;
+  data = (data << datashift) >> datashift;
+  data = (sdata & mask) | data;
+  dcwb_latch->result = data;
 
   // Continue with the rest of the pipeline.
   if (rfex_latch->common.fault == VR4300_FAULT_NONE) {

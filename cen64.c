@@ -12,21 +12,21 @@
 #include "device.h"
 
 int main(int argc, const char *argv[]) {
-  struct cen64_device *device;
+  struct cen64_device device;
 
-  if (argc < 2) {
-    printf("%s <pifrom.bin>\n", argv[0]);
+  if (argc < 3) {
+    printf("%s <pifrom.bin> <rom>\n", argv[0]);
     return 0;
   }
 
-  if ((device = device_create(argv[1])) == NULL) {
+  if (device_create(&device, argv[1], argv[2]) == NULL) {
     printf("Failed to create a device.\n");
     return 1;
   }
 
-  device_run(device);
+  device_run(&device);
 
-  device_destroy(device);
+  device_destroy(&device);
   return 0;
 }
 
