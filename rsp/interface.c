@@ -15,6 +15,11 @@
 
 // Reads a word from the SP memory MMIO register space.
 int read_sp_mem(void *opaque, uint32_t address, uint32_t *word) {
+  struct rsp *rsp = (struct rsp *) opaque;
+  unsigned offset = address & 0x1FFC;
+
+  memcpy(word, rsp->mem + offset, sizeof(*word));
+  *word = byteswap_32(*word);
   return 0;
 }
 
@@ -42,6 +47,14 @@ int read_sp_regs2(void *opaque, uint32_t address, uint32_t *word) {
 
 // Writes a word to the SP memory MMIO register space.
 int write_sp_mem(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  struct rsp *rsp = (struct rsp *) opaque;
+  unsigned offset = address & 0x1FFC;
+  uint32_t orig_word;
+
+  memcpy(&orig_word, rsp->mem + offset, sizeof(orig_word));
+  orig_word = byteswap_32(orig_word) & ~dqm;
+  word = byteswap_32(orig_word | word);
+  memcpy(rsp->mem + offset, &word, sizeof(word));
   return 0;
 }
 
