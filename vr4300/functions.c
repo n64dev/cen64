@@ -47,7 +47,7 @@ void VR4300_ADD_SUB(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t mask = vr4300_addsub_lut[iw & 0x1];
+  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
 
   unsigned dest;
   uint64_t rd;
@@ -71,7 +71,7 @@ void VR4300_ADDI_SUBI(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t mask = vr4300_addsub_lut[iw & 0x1];
+  uint64_t mask = 0; //vr4300_addsub_lut[iw & 0x1];
 
   unsigned dest;
 
@@ -95,7 +95,7 @@ void VR4300_ADDIU_SUBIU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t mask = vr4300_addsub_lut[iw & 0x1];
+  uint64_t mask = 0; //vr4300_addsub_lut[iw & 0x1];
 
   unsigned dest;
 
@@ -117,7 +117,7 @@ void VR4300_ADDU_SUBU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t mask = vr4300_addsub_lut[iw & 0x1];
+  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
 
   unsigned dest;
   uint64_t rd;
@@ -140,8 +140,8 @@ void VR4300_AND_OR_XOR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t and_mask = vr4300_bitwise_lut[iw >> 26 & 0x3][0];
-  uint64_t xor_mask = vr4300_bitwise_lut[iw >> 26 & 0x3][1];
+  uint64_t and_mask = vr4300_bitwise_lut[iw & 0x3][0];
+  uint64_t xor_mask = vr4300_bitwise_lut[iw & 0x3][1];
 
   unsigned dest;
   uint64_t rd;
@@ -165,17 +165,15 @@ void VR4300_ANDI_ORI_XORI(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint32_t iw = rfex_latch->iw;
   uint64_t and_mask = vr4300_bitwise_lut[iw >> 26 & 0x3][0];
   uint64_t xor_mask = vr4300_bitwise_lut[iw >> 26 & 0x3][1];
-  uint64_t or_mask = and_mask & xor_mask;
 
   unsigned dest;
 
   dest = GET_RT(iw);
   rt = (uint16_t) iw;
-  rs = (or_mask) ? (uint64_t) ((int16_t) rs) : rs;
   rt = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
   
 
-  exdc_latch->result = (uint16_t) rt;
+  exdc_latch->result = rt;
   exdc_latch->dest = dest;
 }
 
@@ -193,10 +191,10 @@ void VR4300_BEQ_BEQL_BNE_BNEL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint32_t mask = vr4300_branch_lut[iw >> 30 & 0x1];
   uint64_t offset = (int16_t) iw << 2;
 
-  bool is_eq = iw >> 26 & 0x1;
+  bool is_ne = iw >> 26 & 0x1;
   bool cmp = rs == rt;
 
-  if (cmp != is_eq) {
+  if (cmp == is_ne) {
     rfex_latch->iw_mask = mask;
     return;
   }
@@ -216,13 +214,13 @@ void VR4300_BGEZ_BGEZL_BLTZ_BLTZL(
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint32_t mask = vr4300_branch_lut[iw >> 27 & 0x1];
+  uint32_t mask = vr4300_branch_lut[iw >> 17 & 0x1];
   uint64_t offset = (int16_t) iw << 2;
 
-  bool is_lt = iw >> 26 & 0x1;
+  bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int64_t) rs < 0;
 
-  if (cmp != is_lt) {
+  if (cmp == is_ge) {
     rfex_latch->iw_mask = mask;
     return;
   }
@@ -243,20 +241,21 @@ void VR4300_BGEZAL_BGEZALL_BLTZAL_BLTZALL(
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint32_t mask = vr4300_branch_lut[iw >> 27 & 0x1];
+  uint32_t mask = vr4300_branch_lut[iw >> 17 & 0x1];
   uint64_t offset = (int16_t) iw << 2;
 
-  bool is_lt = iw >> 26 & 0x1;
+  bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int64_t) rs < 0;
 
-  if (cmp != is_lt) {
+  exdc_latch->result = rfex_latch->common.pc + 4;
+  exdc_latch->dest = VR4300_REGISTER_RA;
+
+  if (cmp == is_ge) {
     rfex_latch->iw_mask = mask;
     return;
   }
 
   icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
-  exdc_latch->result = rfex_latch->common.pc + 4;
-  exdc_latch->dest = VR4300_REGISTER_RA;
 }
 
 //
@@ -274,10 +273,10 @@ void VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
   uint32_t mask = vr4300_branch_lut[iw >> 30 & 0x1];
   uint64_t offset = (int16_t) iw << 2;
 
-  bool is_le = iw >> 26 & 0x1;
+  bool is_gt = iw >> 26 & 0x1;
   bool cmp = (int64_t) rs <= 0;
 
-  if (cmp != is_le) {
+  if (cmp == is_gt) {
     rfex_latch->iw_mask = mask;
     return;
   }
