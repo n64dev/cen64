@@ -21,6 +21,10 @@ enum vi_register {
   NUM_VI_REGISTERS
 };
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *vi_register_mnemonics[NUM_VI_REGISTERS];
+#endif
+
 struct vi_controller {
   struct bus_controller *bus;
   uint32_t regs[NUM_VI_REGISTERS];

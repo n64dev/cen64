@@ -99,5 +99,19 @@ static inline uint32_t byteswap_32(uint32_t word) {
 #endif
 }
 
+#cmakedefine DEBUG_MMIO_REGISTER_ACCESS
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+#ifndef __cplusplus
+#include <stdio.h>
+#else
+#include <cstdio>
+#endif
+#define debug_mmio_read(what, mnemonic, val) fprintf(stderr, #what": READ [%s]: 0x%.8X\n", mnemonic, val)
+#define debug_mmio_write(what, mnemonic, val) fprintf(stderr, #what": WRITE [%s]: 0x%.8X\n", mnemonic, val)
+#else
+#define debug_mmio_read(what, mnemonic, val) do {} while (0)
+#define debug_mmio_write(what, mnemonic, val) do {} while (0)
+#endif
+
 #endif
 

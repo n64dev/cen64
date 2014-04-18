@@ -14,6 +14,14 @@
 #include "vr4300/icache.h"
 #include "vr4300/pipeline.h"
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+const char *mi_register_mnemonics[NUM_MI_REGISTERS] = {
+#define X(reg) #reg,
+#include "vr4300/registers.md"
+#undef X
+};
+#endif
+
 // Sets the opaque pointer used for external accesses.
 static void vr4300_connect_bus(struct vr4300 *vr4300,
   struct bus_controller *bus) {

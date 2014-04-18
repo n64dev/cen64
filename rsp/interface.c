@@ -25,38 +25,45 @@ int write_sp_mem(void *opaque, uint32_t address, uint32_t *word) {
 
 // Reads a word from the SP MMIO register space.
 int read_sp_regs(void *opaque, uint32_t address, uint32_t *word) {
-  uint32_t offset = address - SP_REGS_BASE_ADDRESS;
-  enum sp_register reg = SP_MEM_ADDR_REG + (offset >> 2);
   struct rsp *rsp = (struct rsp *) opaque;
+  uint32_t offset = address - SP_REGS_BASE_ADDRESS;
+  enum sp_register reg = (offset >> 2);
 
-  *word = rsp->regs[reg];
+  *word = rsp->regs[reg + SP_REGISTER_OFFSET];
+  debug_mmio_read(rsp, sp_register_mnemonics[reg], *word);
   return 0;
 }
 
 // Writes a word to the SP MMIO register space.
 int write_sp_regs(void *opaque, uint32_t address, uint32_t *word) {
-  uint32_t offset = address - 0x04040000;
-  enum sp_register reg = SP_MEM_ADDR_REG + (offset >> 2);
   struct rsp *rsp = (struct rsp *) opaque;
+  uint32_t offset = address - SP_REGS_BASE_ADDRESS;
+  enum sp_register reg = (offset >> 2);
 
+  debug_mmio_write(rsp, sp_register_mnemonics[reg], *word);
+  rsp->regs[reg + SP_REGISTER_OFFSET] = *word;
   return 0;
 }
 
 // Reads a word from the (high) SP MMIO register space.
 int read_sp_regs2(void *opaque, uint32_t address, uint32_t *word) {
-  uint32_t offset = address - SP_REGS2_BASE_ADDRESS;
   struct rsp *rsp = (struct rsp *) opaque;
+  uint32_t offset = address - SP_REGS2_BASE_ADDRESS;
+  enum sp_register reg = (offset >> 2) + SP_PC_REG;
 
-  abort();
+  *word = rsp->regs[reg + SP_REGISTER_OFFSET];
+  debug_mmio_read(rsp, sp_register_mnemonics[reg], *word);
   return 0;
 }
 
 // Writes a word to the (high) SP MMIO register space.
 int write_sp_regs2(void *opaque, uint32_t address, uint32_t *word) {
-  uint32_t offset = address - 0x04040000;
-  enum sp_register reg = SP_MEM_ADDR_REG + (offset >> 2);
   struct rsp *rsp = (struct rsp *) opaque;
+  uint32_t offset = address - SP_REGS2_BASE_ADDRESS;
+  enum sp_register reg = (offset >> 2) + SP_PC_REG;
 
+  debug_mmio_write(rsp, sp_register_mnemonics[reg], *word);
+  rsp->regs[reg + SP_REGISTER_OFFSET] = *word;
   return 0;
 }
 

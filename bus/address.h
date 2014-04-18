@@ -19,6 +19,10 @@
 #define DP_REGS_BASE_ADDRESS      0x04100000
 #define DP_REGS_ADDRESS_LEN       0x00000020
 
+// MIPS interface registers.
+#define MI_REGS_BASE_ADDRESS      0x04300000
+#define MI_REGS_ADDRESS_LEN       0x00000010
+
 // Parallel interface regs.
 #define PI_REGS_BASE_ADDRESS      0x04600000
 #define PI_REGS_ADDRESS_LEN       0x00100000

@@ -21,12 +21,20 @@ enum rdram_register {
   NUM_RDRAM_REGISTERS
 };
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *rdram_register_mnemonics[NUM_RDRAM_REGISTERS];
+#endif
+
 enum ri_register {
 #define X(reg) reg,
 #include "ri/registers.md"
 #undef X
   NUM_RI_REGISTERS
 };
+
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *ri_register_mnemonics[NUM_RI_REGISTERS];
+#endif
 
 struct ri_controller {
   struct bus_controller *bus;

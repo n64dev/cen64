@@ -13,6 +13,14 @@
 #include "bus/controller.h"
 #include "vi/controller.h"
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+const char *vi_register_mnemonics[NUM_VI_REGISTERS] = {
+#define X(reg) #reg,
+#include "vi/registers.md"
+#undef X
+};
+#endif
+
 // Initializes the VI.
 int vi_init(struct vi_controller *vi,
   struct bus_controller *bus) {
@@ -23,18 +31,23 @@ int vi_init(struct vi_controller *vi,
 
 // Reads a word from the VI MMIO register space.
 int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
-  unsigned offset = address - VI_REGS_BASE_ADDRESS;
-  enum vi_register reg = VI_STATUS_REG + (offset >> 2);
   struct vi_controller *vi = (struct vi_controller *) opaque;
+  unsigned offset = address - VI_REGS_BASE_ADDRESS;
+  enum vi_register reg = (offset >> 2);
 
   *word = vi->regs[reg];
+  debug_mmio_read(vi, vi_register_mnemonics[reg], *word);
   return 0;
 }
 
 // Writes a word to the VI MMIO register space.
-int write_vi_regs(void unused(*opaque),
-  uint32_t unused(address), uint32_t unused(*word)) {
+int write_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
+  struct vi_controller *vi = (struct vi_controller *) opaque;
+  unsigned offset = address - VI_REGS_BASE_ADDRESS;
+  enum vi_register reg = (offset >> 2);
 
+  debug_mmio_write(vi, vi_register_mnemonics[reg], *word);
+  *word = vi->regs[reg];
   return 0;
 }
 

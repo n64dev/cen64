@@ -9,8 +9,9 @@
 cmake_minimum_required(VERSION 2.6)
 project(cen64)
 
+# If using GCC, configure it accordingly.
 if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
-  set(CMAKE_C_FLAGS "-Wall -Wextra -std=c99 -D_POSIX_SOURCE")
+  set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99 -D_POSIX_SOURCE")
 
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
@@ -31,9 +32,19 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   endif (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 
-include_directories(${PROJECT_SOURCE_DIR})
+# Print out MMIO register accesses?
+option(DEBUG_MMIO_REGISTER_ACCESS "Print message on each MMIO register access?" OFF)
+
+# Configure the common header.
+configure_file(
+  "${PROJECT_SOURCE_DIR}/common.h.in"
+  "${PROJECT_BINARY_DIR}/common.h"
+)
 
 # Glob all the files together.
+include_directories(${PROJECT_BINARY_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
+
 file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
 file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)
 file(GLOB CEN64_SOURCES ${PROJECT_SOURCE_DIR}/*.c)

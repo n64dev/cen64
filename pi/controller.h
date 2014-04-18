@@ -21,13 +21,19 @@ enum pi_register {
   NUM_PI_REGISTERS
 };
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *pi_register_mnemonics[NUM_PI_REGISTERS];
+#endif
+
 struct pi_controller {
   struct bus_controller *bus;
   uint32_t regs[NUM_PI_REGISTERS];
 };
 
 int pi_init(struct pi_controller *pi, struct bus_controller *bus);
+int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);
+int write_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int write_pi_regs(void *opaque, uint32_t address, uint32_t *word);
 
 #endif

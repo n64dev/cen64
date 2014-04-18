@@ -21,6 +21,10 @@ enum ai_register {
   NUM_AI_REGISTERS
 };
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *ap_register_mnemonics[NUM_AI_REGISTERS];
+#endif
+
 struct ai_controller {
   struct bus_controller *bus;
   uint32_t regs[NUM_AI_REGISTERS];

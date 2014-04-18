@@ -11,6 +11,14 @@
 #include "common.h"
 #include "rdp/cpu.h"
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+const char *dp_register_mnemonics[NUM_DP_REGISTERS] = {
+#define X(reg) #reg,
+#include "rdp/registers.md"
+#undef X
+};
+#endif
+
 // Sets the opaque pointer used for external accesses.
 static void rdp_connect_bus(struct rdp *rdp, struct bus_controller *bus) {
   rdp->bus = bus;

@@ -43,11 +43,16 @@ enum rsp_register {
 };
 
 enum sp_register {
-  _SP_CP0_REG_HACK = 31,
 #define X(reg) reg,
 #include "rsp/registers.md"
 #undef X
+  NUM_SP_REGISTERS,
+  SP_REGISTER_OFFSET = RSP_REGISTER_CP0_0
 };
+
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *sp_register_mnemonics[NUM_SP_REGISTERS];
+#endif
 
 struct rsp {
   uint32_t regs[NUM_RSP_REGISTERS];

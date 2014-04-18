@@ -21,6 +21,10 @@ enum si_register {
   NUM_SI_REGISTERS
 };
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *si_register_mnemonics[NUM_SI_REGISTERS];
+#endif
+
 struct si_controller {
   struct bus_controller *bus;
   const uint8_t *rom;
@@ -31,11 +35,9 @@ struct si_controller {
 int si_init(struct si_controller *si,
   struct bus_controller *bus, const uint8_t *rom);
 
-int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pif_ram(void *opaque, uint32_t address, uint32_t *word);
 int read_pif_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_si_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int write_pif_ram(void *opaque, uint32_t address, uint32_t *word);
 int write_pif_rom(void *opaque, uint32_t address, uint32_t *word);
 int write_si_regs(void *opaque, uint32_t address, uint32_t *word);

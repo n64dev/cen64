@@ -19,6 +19,10 @@ enum dp_register {
   NUM_DP_REGISTERS
 };
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *dp_register_mnemonics[NUM_DP_REGISTERS];
+#endif
+
 struct rdp {
   uint32_t regs[NUM_DP_REGISTERS];
   struct bus_controller *bus;

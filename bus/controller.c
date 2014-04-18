@@ -21,10 +21,12 @@
 #include "rsp/cpu.h"
 #include "rsp/interface.h"
 #include "vi/controller.h"
+#include "vr4300/cpu.h"
+#include "vr4300/interface.h"
 
 // Initializes the bus component.
 int bus_init(struct bus_controller *bus) {
-  if ((bus->map = create_memory_map(13)) == NULL)
+  if ((bus->map = create_memory_map(14)) == NULL)
     return -1;
 
   map_address_range(bus->map, AI_REGS_BASE_ADDRESS, AI_REGS_ADDRESS_LEN,
@@ -32,6 +34,9 @@ int bus_init(struct bus_controller *bus) {
 
   map_address_range(bus->map, DP_REGS_BASE_ADDRESS, DP_REGS_ADDRESS_LEN,
     bus->rdp, read_dp_regs, write_dp_regs);
+
+  map_address_range(bus->map, MI_REGS_BASE_ADDRESS, MI_REGS_ADDRESS_LEN,
+    bus->vr4300, read_mi_regs, write_mi_regs);
 
   map_address_range(bus->map, PI_REGS_BASE_ADDRESS, PI_REGS_ADDRESS_LEN,
     bus->pi, read_pi_regs, write_pi_regs);

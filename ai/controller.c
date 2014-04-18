@@ -13,6 +13,14 @@
 #include "bus/controller.h"
 #include "ai/controller.h"
 
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+const char *ai_register_mnemonics[NUM_AI_REGISTERS] = {
+#define X(reg) #reg,
+#include "ai/registers.md"
+#undef X
+};
+#endif
+
 // Initializes the AI.
 int ai_init(struct ai_controller *ai,
   struct bus_controller *bus) {
@@ -23,18 +31,23 @@ int ai_init(struct ai_controller *ai,
 
 // Reads a word from the AI MMIO register space.
 int read_ai_regs(void *opaque, uint32_t address, uint32_t *word) {
-  unsigned offset = address - AI_REGS_BASE_ADDRESS;
-  enum ai_register reg = AI_DRAM_ADDR_REG + (offset >> 2);
   struct ai_controller *ai = (struct ai_controller *) opaque;
+  unsigned offset = address - AI_REGS_BASE_ADDRESS;
+  enum ai_register reg = (offset >> 2);
 
   *word = ai->regs[reg];
+  debug_mmio_read(ai, ai_register_mnemonics[reg], *word);
   return 0;
 }
 
 // Writes a word to the AI MMIO register space.
-int write_ai_regs(void unused(*opaque),
-  uint32_t unused(address), uint32_t unused(*word)) {
+int write_ai_regs(void *opaque, uint32_t address, uint32_t *word) {
+  struct ai_controller *ai = (struct ai_controller *) opaque;
+  unsigned offset = address - AI_REGS_BASE_ADDRESS;
+  enum ai_register reg = (offset >> 2);
 
+  debug_mmio_write(ai, ai_register_mnemonics[reg], *word);
+  ai->regs[reg] = *word;
   return 0;
 }
 

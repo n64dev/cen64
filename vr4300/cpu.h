@@ -66,8 +66,20 @@ enum vr4300_register {
   NUM_VR4300_REGISTERS
 };
 
+enum mi_register {
+#define X(reg) reg,
+#include "vr4300/registers.md"
+#undef X
+  NUM_MI_REGISTERS,
+};
+
+#ifdef DEBUG_MMIO_REGISTER_ACCESS
+extern const char *mi_register_mnemonics[NUM_MI_REGISTERS];
+#endif
+
 struct vr4300 {
   uint64_t regs[NUM_VR4300_REGISTERS];
+  uint32_t mi_regs[NUM_MI_REGISTERS];
 
   struct vr4300_icache icache;
   struct vr4300_pipeline pipeline;
