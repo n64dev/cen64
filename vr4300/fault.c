@@ -118,6 +118,5 @@ void VR4300_UNC(struct vr4300 *vr4300) {
 
   address = icrf_latch->common.pc - segment->offset;
   bus_read_word(vr4300->bus, address, &rfex_latch->iw);
-  rfex_latch->iw = byteswap_32(rfex_latch->iw);
 }
 
