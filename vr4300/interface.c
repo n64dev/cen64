@@ -20,7 +20,7 @@ int read_mi_regs(void *opaque, uint32_t address, uint32_t *word) {
   enum mi_register reg = (offset >> 2);
 
   *word = vr4300->mi_regs[reg];
-  debug_mmio_read(vr4300, mi_register_mnemonics[reg], *word);
+  debug_mmio_read(mi, mi_register_mnemonics[reg], *word);
   return 0;
 }
 
@@ -30,7 +30,7 @@ int write_mi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   uint32_t offset = address - MI_REGS_BASE_ADDRESS;
   enum mi_register reg = (offset >> 2);
 
-  debug_mmio_write(vr4300, mi_register_mnemonics[reg], word, dqm);
+  debug_mmio_write(mi, mi_register_mnemonics[reg], word, dqm);
   vr4300->mi_regs[reg] &= ~dqm;
   vr4300->mi_regs[reg] |= word;
   return 0;
