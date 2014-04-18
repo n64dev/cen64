@@ -61,7 +61,8 @@ void VR4300_ADD_SUB(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   rt = (rt ^ mask) - mask;
   rd = rs + rt;
 
-  assert(((rd >> 31) == (rd >> 32)) && "Overflow exception.");
+  // TODO/FIXME: Uncomment this later...
+  //assert(((rd >> 31) == (rd >> 32)) && "Overflow exception.");
 
   exdc_latch->result = (int32_t) rd;
   exdc_latch->dest = dest;
@@ -466,6 +467,35 @@ void VR4300_SLLV(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   unsigned sa = rs & 0x1F;
 
   exdc_latch->result = (int32_t) (rt << sa);
+  exdc_latch->dest = dest;
+}
+
+//
+// SLT
+//
+void VR4300_SLT(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+
+  exdc_latch->result = (int64_t) rs < (int64_t) rt;
+  exdc_latch->dest = dest;
+}
+
+//
+// SLTI
+//
+void VR4300_SLTI(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RT(iw);
+  int64_t imm = (int16_t) iw;
+
+  exdc_latch->result = (int64_t) rs < imm;
   exdc_latch->dest = dest;
 }
 
