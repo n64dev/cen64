@@ -291,6 +291,33 @@ void VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
 }
 
 //
+// CFC1
+//
+void VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  fprintf(stderr, "Unimplemented instruction: CFC1 [0x%.8X]\n",
+    rfex_latch->iw);
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RT(iw);
+
+  exdc_latch->result = (int32_t) 0;
+  exdc_latch->dest = dest;
+}
+
+//
+// CTC1
+//
+void VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+
+  fprintf(stderr, "Unimplemented instruction: CTC1 [0x%.8X]\n",
+    rfex_latch->iw);
+}
+
+//
 // INV
 //
 void VR4300_INV(struct vr4300 *vr4300,
@@ -305,7 +332,7 @@ void VR4300_INV(struct vr4300 *vr4300,
 #endif
 
   // TODO/FIXME: Implement this instruction later.
-  if (opcode != VR4300_OPCODE_CACHE)
+  if (opcode != VR4300_OPCODE_CACHE && opcode != VR4300_OPCODE_TLB)
     assert(0 && "Unimplemented instruction encountered.");
 }
 
@@ -422,6 +449,22 @@ void VR4300_LUI(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
 
   exdc_latch->result = imm;
+  exdc_latch->dest = dest;
+}
+
+//
+// MFC0
+// TODO/FIXME: Combine with MFC{1,2}?
+//
+void VR4300_MFCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned src = GET_RD(iw) + 32;
+  unsigned dest = GET_RT(iw);
+
+  exdc_latch->result = (int32_t) vr4300->regs[src];
   exdc_latch->dest = dest;
 }
 
