@@ -396,7 +396,7 @@ void VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   int32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-  if (status & 0x1) {
+  if (status & 0x4) {
     icrf_latch->pc = vr4300->regs[VR4300_CP0_REGISTER_ERROREPC];
     status &= ~0x4;
   }

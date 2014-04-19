@@ -86,7 +86,38 @@ void VR4300_IADE(unused(struct vr4300 *vr4300)) {
 
 // INTR: Interrupt exception.
 void VR4300_INTR(unused(struct vr4300 *vr4300)) {
-  abort(); // Hammertime!
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_latch *common = &pipeline->dcwb_latch.common;
+
+  bool in_bd_slot = common->cause_data >> 31;
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+  uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
+
+  // Are we in a branch delay slot?
+  if (in_bd_slot && !(status & 0x2)) {
+    cause |= 0x80000000U;
+    epc = common->pc - 4;
+  }
+
+  // Do we not have to check for multiple excps?
+  else if (!in_bd_slot && !(status & 0x2)) {
+    cause &= ~0x80000000U;
+    epc = common->pc;
+  }
+
+  // TODO/FIXME: Check for XTLB/TLB miss exceptions.
+  // For now, we're just hard-coding the vector offset.
+
+  // Prepare pipeline for restart.
+  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
+  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = cause & ~0x7C;
+  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
+
+  vr4300_dc_fault(pipeline, VR4300_FAULT_INTR);
+  vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
+    ? 0xFFFFFFFFBFC00280ULL
+    : 0xFFFFFFFF80000080ULL;
 }
 
 // LDI: Load delay interlock.

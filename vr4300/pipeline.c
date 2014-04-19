@@ -26,16 +26,25 @@
 static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+
   const struct segment *segment = icrf_latch->segment;
+  struct vr4300_opcode *opcode = &rfex_latch->opcode;
   uint64_t pc = icrf_latch->pc;
   uint32_t decode_iw;
 
-  icrf_latch->common.pc = pc;
-
   // Finish decoding instruction in RF.
   decode_iw = rfex_latch->iw &= rfex_latch->iw_mask;
-  rfex_latch->opcode = *vr4300_decode_instruction(decode_iw);
+  *opcode = *vr4300_decode_instruction(decode_iw);
   rfex_latch->iw_mask = ~0U;
+
+  // Latch common pipeline values.
+  icrf_latch->common.pc = pc;
+  //icrf_latch->common.fault = ...;
+
+  // If decoding of prior instruction indicates this is a BD slot...
+  icrf_latch->common.cause_data = (opcode->flags & OPCODE_INFO_BRANCH)
+    ? 0x80000000
+    : 0x00000000;
 
   // Look up the segment that we're in.
   if ((pc - segment->start) > segment->length) {
@@ -126,8 +135,8 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
-  uint64_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  uint64_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
   const struct segment *segment = exdc_latch->segment;
   uint64_t address = exdc_latch->request.address;
 
