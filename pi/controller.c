@@ -69,7 +69,11 @@ int read_pi_regs(void *opaque, uint32_t address, uint32_t *word) {
   unsigned offset = address - PI_REGS_BASE_ADDRESS;
   enum pi_register reg = (offset >> 2);
 
-  *word = pi->regs[reg];
+  // TODO/FIXME: Hacky...
+  *word = reg != PI_STATUS_REG
+    ? pi->regs[reg]
+    : 0x00000000U;
+
   debug_mmio_read(pi, pi_register_mnemonics[reg], *word);
   return 0;
 }
@@ -92,8 +96,10 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     if (word & 0x1)
       pi->regs[reg] = 0;
 
-    else if (word & 0x2)
+    else if (word & 0x2) {
+      clear_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
       pi->regs[reg] &= ~0x8;
+    }
   }
 
   else {

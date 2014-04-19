@@ -107,8 +107,16 @@ int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   enum si_register reg = (offset >> 2);
 
   debug_mmio_write(si, si_register_mnemonics[reg], word, dqm);
-  si->regs[reg] &= ~dqm;
-  si->regs[reg] |= word;
+
+  if (reg == SI_STATUS_REG) {
+    clear_rcp_interrupt(si->bus->vr4300, MI_INTR_SI);
+    si->regs[SI_STATUS_REG] &= ~0x1000;
+  }
+
+  else {
+    si->regs[reg] &= ~dqm;
+    si->regs[reg] |= word;
+  }
   return 0;
 }
 

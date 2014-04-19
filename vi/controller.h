@@ -11,6 +11,7 @@
 #ifndef __vi_controller_h__
 #define __vi_controller_h__
 #include "common.h"
+#include "GL/glfw.h"
 
 struct bus_controller *bus;
 
@@ -25,10 +26,34 @@ enum vi_register {
 extern const char *vi_register_mnemonics[NUM_VI_REGISTERS];
 #endif
 
+struct render_area {
+  struct {
+    unsigned start;
+    unsigned end;
+  } x;
+
+  struct {
+    unsigned start;
+    unsigned end;
+  } y;
+
+  unsigned height;
+  unsigned width;
+  int hskip;
+};
+
 struct vi_controller {
   struct bus_controller *bus;
   uint32_t regs[NUM_VI_REGISTERS];
+
+  double start_time;
   uint32_t counter;
+
+  float viuv[8];
+  float quad[8];
+  unsigned frame_count;
+  GLuint frame_texture;
+  struct render_area render_area;
 };
 
 void vi_cycle(struct vi_controller *vi);

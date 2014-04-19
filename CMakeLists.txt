@@ -68,3 +68,5 @@ add_executable(cen64 ${CEN64_SOURCES}
   ${AI_SOURCES} ${PI_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
   ${BUS_SOURCES} ${RDP_SOURCES} ${RSP_SOURCES} ${VR4300_SOURCES})
 
+target_link_libraries(cen64 GL glfw)
+
