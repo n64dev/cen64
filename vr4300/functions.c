@@ -297,8 +297,10 @@ void VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
+#ifndef NDEBUG
   fprintf(stderr, "Unimplemented instruction: CFC1 [0x%.8X]\n",
     rfex_latch->iw);
+#endif
 
   uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RT(iw);
@@ -313,8 +315,10 @@ void VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 void VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 
+#ifndef NDEBUG
   fprintf(stderr, "Unimplemented instruction: CTC1 [0x%.8X]\n",
     rfex_latch->iw);
+#endif
 }
 
 //
