@@ -12,6 +12,9 @@
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "vi/controller.h"
+#include "vr4300/interface.h"
+
+#define VI_COUNTER_START (62500000.0 / 60.0) + 1;
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 const char *vi_register_mnemonics[NUM_VI_REGISTERS] = {
@@ -21,10 +24,19 @@ const char *vi_register_mnemonics[NUM_VI_REGISTERS] = {
 };
 #endif
 
+// Advances the controller by one clock cycle.
+void vi_cycle(struct vi_controller *vi) {
+  if (unlikely(vi->counter-- == 0)) {
+    signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
+    vi->counter = VI_COUNTER_START;
+  }
+}
+
 // Initializes the VI.
 int vi_init(struct vi_controller *vi,
   struct bus_controller *bus) {
   vi->bus = bus;
+  vi->counter = VI_COUNTER_START;
 
   return 0;
 }

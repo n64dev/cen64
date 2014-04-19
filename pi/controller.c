@@ -13,6 +13,7 @@
 #include "bus/controller.h"
 #include "pi/controller.h"
 #include "ri/controller.h"
+#include "vr4300/interface.h"
 #include <assert.h>
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
@@ -40,7 +41,7 @@ static int pi_dma_write(struct pi_controller *pi) {
   pi->regs[PI_STATUS_REG] &= ~0x1;
   pi->regs[PI_STATUS_REG] |= 0x8;
 
-  // TODO/FIXME: Raise interrupt.
+  signal_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
   return 0;
 }
 

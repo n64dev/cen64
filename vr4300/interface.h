@@ -24,5 +24,8 @@ enum rcp_interrupt_mask {
 int read_mi_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_mi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
+void clear_rcp_interrupt(struct vr4300 *vr4300, enum rcp_interrupt_mask mask);
+void signal_rcp_interrupt(struct vr4300 *vr4300, enum rcp_interrupt_mask mask);
+
 #endif
 

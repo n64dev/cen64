@@ -12,6 +12,7 @@
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "si/controller.h"
+#include "vr4300/interface.h"
 #include <assert.h>
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
@@ -88,8 +89,8 @@ int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   word = byteswap_32(orig_word | word);
   memcpy(si->ram + offset, &word, sizeof(word));
 
-  // TODO/FIXME: Raise interrupt.
   si->regs[SI_STATUS_REG] |= 0x1000;
+  signal_rcp_interrupt(si->bus->vr4300, MI_INTR_SI);
   return 0;
 }
 

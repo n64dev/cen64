@@ -28,11 +28,14 @@ extern const char *vi_register_mnemonics[NUM_VI_REGISTERS];
 struct vi_controller {
   struct bus_controller *bus;
   uint32_t regs[NUM_VI_REGISTERS];
+  uint32_t counter;
 };
+
+void vi_cycle(struct vi_controller *vi);
+int vi_init(struct vi_controller *vi, struct bus_controller *bus);
 
 int read_vi_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-int vi_init(struct vi_controller *vi, struct bus_controller *bus);
 
 #endif
 

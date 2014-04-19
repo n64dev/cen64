@@ -183,7 +183,9 @@ void device_destroy(struct cen64_device *device) {
 
 // Kicks off threads and starts the device.
 void device_run(struct cen64_device *device) {
-  while (1)
+  while (1) {
+    vi_cycle(&device->vi);
     vr4300_cycle(&device->vr4300);
+  }
 }
 
