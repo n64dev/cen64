@@ -322,6 +322,30 @@ void VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// DMULTU
+//
+// TODO: Add a version that works on MSVC.
+//
+void VR4300_DMULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  uint64_t lo, hi;
+
+#ifdef __GNUC__
+  __uint128_t rsx = rs;
+  __uint128_t rtx = rt;
+  __uint128_t result;
+
+  result = rsx * rtx;
+
+  lo = result;
+  hi = result >> 64;
+#endif
+
+  // TODO: Delay the output a few cycles.
+  vr4300->regs[VR4300_REGISTER_LO] = lo;
+  vr4300->regs[VR4300_REGISTER_HI] = hi;
+}
+
+//
 // INV
 //
 void VR4300_INV(struct vr4300 *vr4300,
