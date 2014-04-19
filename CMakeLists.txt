@@ -14,21 +14,28 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99 -D_POSIX_SOURCE")
 
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
-  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
-  set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -s")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
+  SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
+  # Enable processor-specific optimizations?
+  option(NATIVE_BUILD "Build binary for native architecture?" OFF)
+
+  if (NATIVE_BUILD)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+  endif (NATIVE_BUILD)
+
+  # Enable link time optimization on recent versions.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
     OUTPUT_VARIABLE GCC_VERSION)
 
   if (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
-    set(GCC_FLTO_FLAGS "-flto -flto-partition=none -fuse-linker-plugin -fdata-sections -ffunction-sections")
+    set(GCC_FLTO_FLAGS "-flto -fuse-linker-plugin -flto-partition=none -fdata-sections -ffunction-sections")
 
     # When compiling with -flto, need to pass CFLAGS to the linker.
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${GCC_FLTO_FLAGS}")
     set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} ${GCC_FLTO_FLAGS}")
-    set(CMAKE_LINKER_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${CMAKE_LINKER_FLAGS_RELEASE}")
-    set(CMAKE_LINKER_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} ${CMAKE_LINKER_FLAGS_MINSIZEREL}")
   endif (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 
