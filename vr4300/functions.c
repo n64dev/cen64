@@ -322,6 +322,20 @@ void VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// DDIVU
+//
+void VR4300_DDIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  if (likely(rt != 0)) {
+    uint64_t div = rs / rt;
+    uint64_t mod = rs % rt;
+
+    // TODO: Delay the output a few cycles.
+    vr4300->regs[VR4300_REGISTER_LO] = div;
+    vr4300->regs[VR4300_REGISTER_HI] = mod;
+  }
+}
+
+//
 // DMULTU
 //
 // TODO: Add a version that works on MSVC.
