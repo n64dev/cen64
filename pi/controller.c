@@ -12,6 +12,7 @@
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "pi/controller.h"
+#include "ri/controller.h"
 #include <assert.h>
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
@@ -21,6 +22,27 @@ const char *pi_register_mnemonics[NUM_PI_REGISTERS] = {
 #undef X
 };
 #endif
+
+static int pi_dma_write(struct pi_controller *pi);
+
+// Copies data from the the PI into RDRAM.
+static int pi_dma_write(struct pi_controller *pi) {
+  uint32_t dest = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
+  uint32_t source = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFF;
+  uint32_t length = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF) + 1;
+
+  if (length & 7)
+    length = (length + 7) & ~7;
+
+  memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
+  pi->regs[PI_DRAM_ADDR_REG] += length;
+  pi->regs[PI_CART_ADDR_REG] += length;
+  pi->regs[PI_STATUS_REG] &= ~0x1;
+  pi->regs[PI_STATUS_REG] |= 0x8;
+
+  // TODO/FIXME: Raise interrupt.
+  return 0;
+}
 
 // Initializes the PI.
 int pi_init(struct pi_controller *pi,
@@ -64,8 +86,23 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   enum pi_register reg = (offset >> 2);
 
   debug_mmio_write(pi, pi_register_mnemonics[reg], word, dqm);
-  pi->regs[reg] &= ~dqm;
-  pi->regs[reg] |= word;
+
+  if (reg == PI_STATUS_REG) {
+    if (word & 0x1)
+      pi->regs[reg] = 0;
+
+    else if (word & 0x2)
+      pi->regs[reg] &= ~0x8;
+  }
+
+  else {
+    pi->regs[reg] &= ~dqm;
+    pi->regs[reg] |= word;
+
+    if (reg == PI_WR_LEN_REG)
+      return pi_dma_write(pi);
+  }
+
   return 0;
 }
 

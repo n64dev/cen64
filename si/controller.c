@@ -88,7 +88,7 @@ int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   word = byteswap_32(orig_word | word);
   memcpy(si->ram + offset, &word, sizeof(word));
 
-  // TODO/FIXME: Raise exception.
+  // TODO/FIXME: Raise interrupt.
   si->regs[SI_STATUS_REG] |= 0x1000;
   return 0;
 }

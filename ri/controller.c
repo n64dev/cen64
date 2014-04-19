@@ -35,6 +35,12 @@ int ri_init(struct ri_controller *ri,
   ri->bus = bus;
   ri->ram = ram;
 
+  // MESS uses these, so we will too?
+  ri->regs[RI_MODE_REG] = 0xE;
+  ri->regs[RI_CONFIG_REG] = 0x40;
+  ri->regs[RI_SELECT_REG] = 0x14;
+  ri->regs[RI_REFRESH_REG] = 0x63634;
+
   return 0;
 }
 
