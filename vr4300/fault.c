@@ -67,9 +67,8 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   request->data = (int32_t) word;
 
   if (request->size <= 4) {
-    unsigned rshiftamt = (4 - request->size + (request->address & 0x3)) << 3;
+    unsigned rshiftamt = (4 - request->size) << 3;
     unsigned lshiftamt = (request->address & 0x3) << 3;
-
     request->data = ((int32_t) (word << lshiftamt)) >> rshiftamt;
   }
 
