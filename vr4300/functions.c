@@ -471,7 +471,7 @@ void VR4300_JALR_JR(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-void VR4300_LD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+void VR4300_LD(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
@@ -611,6 +611,26 @@ void VR4300_MTCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   exdc_latch->result = (int32_t) rt;
   exdc_latch->dest = dest;
 }
+
+//
+// SD
+//
+// TODO/FIXME: Check for unaligned addresses.
+//
+void VR4300_SD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+
+  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
+  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.data = rt;
+  exdc_latch->request.dqm = ~0U;
+  exdc_latch->request.size = 8;
+}
+
+// Function lookup table.
 
 //
 // SLL

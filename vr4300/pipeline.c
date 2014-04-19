@@ -182,6 +182,13 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         "Unsupported DC stage request type.");
 
       // TODO/FIXME: Not accurate.
+      if (exdc_latch->request.size > 4) {
+        bus_write_word(vr4300->bus, exdc_latch->request.address,
+          exdc_latch->request.data >> 32, exdc_latch->request.dqm);
+
+        exdc_latch->request.address += 4;
+      }
+
       bus_write_word(vr4300->bus, exdc_latch->request.address,
         exdc_latch->request.data, exdc_latch->request.dqm);
     }
