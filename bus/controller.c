@@ -84,6 +84,7 @@ int bus_read_word(struct bus_controller *bus,
 
   if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
     fprintf(stderr, "bus_read_word: Failed to access: 0x%.8X\n", address);
+    *word = 0x00000000U;
     return 0;
   }
 

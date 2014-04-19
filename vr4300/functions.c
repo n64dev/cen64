@@ -723,13 +723,13 @@ void VR4300_STORE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   uint32_t iw = rfex_latch->iw;
   unsigned request_size = (iw >> 26 & 0x3) + 1;
-  uint32_t mask = (~0U >> (4 - request_size));
+  unsigned shiftamt = (4 - request_size + (iw & 0x3)) << 3;
 
   exdc_latch->request.address = rs + (int16_t) iw;
-  exdc_latch->request.dqm = mask << (iw & 0x3);
+  exdc_latch->request.data = rt << shiftamt;
+  exdc_latch->request.dqm = ~0U << shiftamt;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = request_size;
-  exdc_latch->request.data = rt & mask;
 }
 
 // Function lookup table.

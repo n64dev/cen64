@@ -66,7 +66,14 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   bus_read_word(vr4300->bus, request->address & ~0x3U, &word);
   request->data = (int32_t) word;
 
-  if (request->size > 4) {
+  if (request->size <= 4) {
+    unsigned rshiftamt = (4 - request->size + (request->address & 0x3)) << 3;
+    unsigned lshiftamt = (request->address & 0x3) << 3;
+
+    request->data = ((int32_t) (word << lshiftamt)) >> rshiftamt;
+  }
+
+  else {
     bus_read_word(vr4300->bus, (request->address & ~0x3U) + 4, &word);
     request->data <<= 32;
     request->data |= word;
