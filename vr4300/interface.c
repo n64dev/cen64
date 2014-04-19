@@ -36,12 +36,12 @@ void clear_rcp_interrupt(struct vr4300 *vr4300, enum rcp_interrupt_mask mask) {
 
 // Deasserts the interrupt signal from the RCP.
 static void lower_rcp_interrupt(struct vr4300 *vr4300) {
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x1000;
+  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x400;
 }
 
 // Asserts the interrupt signal from the RCP.
 static void raise_rcp_interrupt(struct vr4300 *vr4300) {
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x1000;
+  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x400;
 }
 
 // Callback: An RCP component is signaling an interrupt.
