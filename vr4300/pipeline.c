@@ -125,12 +125,29 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
 static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
+
+  uint64_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint64_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
   const struct segment *segment = exdc_latch->segment;
   uint64_t address = exdc_latch->request.address;
 
   dcwb_latch->common = exdc_latch->common;
   dcwb_latch->result = exdc_latch->result;
   dcwb_latch->dest = exdc_latch->dest;
+
+  // The reset exception has a very high priority and will abort basically
+  // anything that's active, even if we have an interlock or something that's
+  // current active. Thus, we check for it here and handle it early.
+  if (unlikely(vr4300->signals & VR4300_SIGNAL_COLDRESET)) {
+    VR4300_RST(vr4300);
+    return 1;
+  }
+
+  // Check if we should squash this instruction and raise an interrupt instead.
+  if (unlikely(cause & status & 0xFF00) && (status & 0x1) && !(status & 0x6)) {
+    VR4300_INTR(vr4300);
+    return 1;
+  }
 
   // Look up the segment that we're in.
   if (exdc_latch->request.type != VR4300_BUS_REQUEST_NONE) {
@@ -376,18 +393,11 @@ static const pipeline_function pipeline_function_lut[6] = {
 void vr4300_cycle(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
 
-  // We're stalling for an interlock,
-  // or we just took an exception...
+  // We're stalling for something...
   if (pipeline->cycles_to_stall > 0) {
     pipeline->cycles_to_stall--;
     return;
   }
-
-  // The reset exception has a very high priority and will abort basically
-  // anything that's active, even if we have an interlock or something that's
-  // current active. Thus, we check for it here and handle it early.
-  if (unlikely(vr4300->signals & VR4300_SIGNAL_COLDRESET))
-    VR4300_RST(vr4300);
 
   // Ordinarily, we would need to check every pipeline stage to see if it is
   // aborted, and conditionally not execute it. Since faults are rare, we'll

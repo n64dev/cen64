@@ -79,8 +79,13 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   }
 }
 
-// IADE: Instruction address error exception
+// IADE: Instruction address error exception.
 void VR4300_IADE(unused(struct vr4300 *vr4300)) {
+  abort(); // Hammertime!
+}
+
+// INTR: Interrupt exception.
+void VR4300_INTR(unused(struct vr4300 *vr4300)) {
   abort(); // Hammertime!
 }
 
