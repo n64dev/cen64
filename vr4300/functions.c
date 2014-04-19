@@ -395,6 +395,7 @@ void VR4300_DSRA32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 void VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   int32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   if (status & 0x4) {
@@ -407,8 +408,10 @@ void VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     status &= ~0x2;
   }
 
+  // TODO/FIXME: Look into safely doing this!
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
-  rfex_latch->common.fault = VR4300_FAULT_KILLED;
+  exdc_latch->common.fault = VR4300_FAULT_KILLED;
+  icrf_latch->common.fault = VR4300_FAULT_KILLED;
   rfex_latch->iw_mask = 0;
 
   // vr4300->llbit = 0;
@@ -429,7 +432,10 @@ void VR4300_INV(struct vr4300 *vr4300,
 #endif
 
   // TODO/FIXME: Implement this instruction later.
-  if (opcode != VR4300_OPCODE_CACHE && opcode != VR4300_OPCODE_TLBWI)
+  if (opcode != VR4300_OPCODE_CACHE &&
+    opcode != VR4300_OPCODE_TLBWI &&
+    opcode != VR4300_OPCODE_TLBR &&
+    opcode != VR4300_OPCODE_TLBP)
     assert(0 && "Unimplemented instruction encountered.");
 }
 
