@@ -68,7 +68,8 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
   if (request->size > 4) {
     bus_read_word(vr4300->bus, (request->address & ~0x3U) + 4, &word);
-    request->data |= (uint64_t) word << 32;
+    request->data <<= 32;
+    request->data |= word;
   }
 }
 
