@@ -152,8 +152,9 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     return 1;
   }
 
-  // Check if we should squash this instruction and raise an interrupt instead.
-  if (unlikely(cause & status & 0xFF00) && (status & 0x1) && !(status & 0x6)) {
+  // Check if we should raise an interrupt exception.
+  if (unlikely(cause & status & 0xFF00) && (status & 0x1)
+    && !(status & 0x6) && dcwb_latch->common.fault == 0) {
     VR4300_INTR(vr4300);
     return 1;
   }

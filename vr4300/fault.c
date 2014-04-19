@@ -94,16 +94,17 @@ void VR4300_INTR(unused(struct vr4300 *vr4300)) {
   uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
   uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
 
-  // Are we in a branch delay slot?
-  if (in_bd_slot && !(status & 0x2)) {
-    cause |= 0x80000000U;
-    epc = common->pc - 4;
-  }
+  // Record branch delay slot?
+  if (!(status & 0x2)) {
+    if (in_bd_slot) {
+      cause |= 0x80000000U;
+      epc = common->pc - 4;
+    }
 
-  // Do we not have to check for multiple excps?
-  else if (!in_bd_slot && !(status & 0x2)) {
-    cause &= ~0x80000000U;
-    epc = common->pc;
+    else {
+      cause &= ~0x80000000U;
+      epc = common->pc;
+    }
   }
 
   // TODO/FIXME: Check for XTLB/TLB miss exceptions.

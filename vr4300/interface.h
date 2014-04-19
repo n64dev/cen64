@@ -11,6 +11,7 @@
 #ifndef __vr4300_interface_h__
 #define __vr4300_interface_h__
 #include "common.h"
+#include "vr4300/cpu.h"
 
 enum rcp_interrupt_mask {
   MI_INTR_SP = 0x01,
