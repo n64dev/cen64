@@ -60,9 +60,16 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
   struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
+  uint32_t word;
 
   vr4300_common_interlocks(pipeline, MEMORY_CYCLE_DELAY, 5);
-  bus_read_word(vr4300->bus, request->address & ~0x3U, &request->word);
+  bus_read_word(vr4300->bus, request->address & ~0x3U, &word);
+  request->data = (int32_t) word;
+
+  if (request->size > 4) {
+    bus_read_word(vr4300->bus, (request->address & ~0x3U) + 4, &word);
+    request->data |= (uint64_t) word << 32;
+  }
 }
 
 // IADE: Instruction address error exception

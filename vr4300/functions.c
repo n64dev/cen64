@@ -374,6 +374,26 @@ void VR4300_JALR_JR(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 }
 
 //
+// LD
+//
+// TODO/FIXME: Check for unaligned addresses.
+//
+void VR4300_LD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RT(iw);
+
+  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
+  exdc_latch->request.size = 8;
+
+  exdc_latch->result = ~0ULL;
+  exdc_latch->dest = dest;
+}
+
+//
 // LB
 // LBU
 // LH
@@ -396,6 +416,22 @@ void VR4300_LOAD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdc_latch->request.size = (iw >> 26 & 0x3) + 1;
 
   exdc_latch->result = sex_mask;
+  exdc_latch->dest = dest;
+}
+
+//
+// LUI
+//
+void VR4300_LUI(struct vr4300 *vr4300,
+  uint64_t unused(rs), uint64_t unused(rt)) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t imm = (int16_t) iw << 16;
+  unsigned dest = GET_RT(iw);
+
+  exdc_latch->result = imm;
   exdc_latch->dest = dest;
 }
 
@@ -434,22 +470,6 @@ void VR4300_MULT_MULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   // TODO: Delay the output a few cycles.
   vr4300->regs[VR4300_REGISTER_LO] = (int32_t) result;
   vr4300->regs[VR4300_REGISTER_HI] = (int32_t) (result >> 32);
-}
-
-//
-// LUI
-//
-void VR4300_LUI(struct vr4300 *vr4300,
-  uint64_t unused(rs), uint64_t unused(rt)) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  uint64_t imm = (int16_t) iw << 16;
-  unsigned dest = GET_RT(iw);
-
-  exdc_latch->result = imm;
-  exdc_latch->dest = dest;
 }
 
 //
@@ -607,7 +627,7 @@ void VR4300_STORE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdc_latch->request.dqm = mask << (iw & 0x3);
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = request_size;
-  exdc_latch->request.word = rt & mask;
+  exdc_latch->request.data = rt & mask;
 }
 
 // Function lookup table.

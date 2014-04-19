@@ -157,7 +157,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
       // TODO/FIXME: Not accurate.
       bus_write_word(vr4300->bus, exdc_latch->request.address,
-        exdc_latch->request.word, exdc_latch->request.dqm);
+        exdc_latch->request.data, exdc_latch->request.dqm);
     }
   }
 
@@ -298,11 +298,11 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
 
+  int64_t mask = exdc_latch->result;
   int maskshift = request->size << 3;
   int datashift = (8 - request->size) << 3;
-  uint64_t data = (uint32_t) request->word;
-  int64_t sdata = (int32_t) request->word;
-  int64_t mask = exdc_latch->result;
+  uint64_t data = (uint32_t) request->data;
+  int64_t sdata = request->data;
 
   // Shall we sign extend?
   mask = (mask >> maskshift) << maskshift;
