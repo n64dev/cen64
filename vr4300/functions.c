@@ -525,6 +525,20 @@ void VR4300_MFHI_MFLO(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// MTHI
+// MTLO
+//
+void VR4300_MTHI_MTLO(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  bool is_mtlo = iw >> 1 & 0x1;
+
+  // TODO: Write these here, or...? Registers are probably tied into EX logic...
+  vr4300->regs[VR4300_REGISTER_HI + is_mtlo] = rs;
+}
+
+//
 // MULT
 // MULTU
 //
