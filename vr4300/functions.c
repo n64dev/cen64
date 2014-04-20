@@ -336,8 +336,8 @@ void VR4300_DIV_DIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   bool is_divu = iw & 0x1;
 
   uint64_t sex_mask = vr4300_mult_sex_mask[is_divu];
-  uint64_t rs_sex = (int32_t) rs & sex_mask;
-  uint64_t rt_sex = (int32_t) rt & sex_mask;
+  int64_t rs_sex = (int32_t) rs & sex_mask;
+  int64_t rt_sex = (int32_t) rt & sex_mask;
 
   if (likely(rt_sex != 0)) {
     int32_t div = rs_sex / rt_sex;
@@ -560,10 +560,26 @@ void VR4300_LUI(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t imm = (int16_t) iw << 16;
+  int32_t imm = (int16_t) iw << 16;
   unsigned dest = GET_RT(iw);
 
   exdc_latch->result = imm;
+  exdc_latch->dest = dest;
+}
+
+//
+// MFC0
+// TODO/FIXME: Combine with MFC{1,2}?
+//
+void VR4300_MFCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned src = GET_RD(iw) + 32;
+  unsigned dest = GET_RT(iw);
+
+  exdc_latch->result = (int32_t) vr4300->regs[src];
   exdc_latch->dest = dest;
 }
 
@@ -599,42 +615,6 @@ void VR4300_MTHI_MTLO(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
-// MULT
-// MULTU
-//
-void VR4300_MULT_MULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  bool is_multu = iw & 0x1;
-
-  uint64_t sex_mask = vr4300_mult_sex_mask[is_multu];
-  uint64_t rs_sex = (int32_t) rs & sex_mask;
-  uint64_t rt_sex = (int32_t) rt & sex_mask;
-  uint64_t result = rs_sex * rt_sex;
-
-  // TODO: Delay the output a few cycles.
-  vr4300->regs[VR4300_REGISTER_LO] = (int32_t) result;
-  vr4300->regs[VR4300_REGISTER_HI] = (int32_t) (result >> 32);
-}
-
-//
-// MFC0
-// TODO/FIXME: Combine with MFC{1,2}?
-//
-void VR4300_MFCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  unsigned src = GET_RD(iw) + 32;
-  unsigned dest = GET_RT(iw);
-
-  exdc_latch->result = (int32_t) vr4300->regs[src];
-  exdc_latch->dest = dest;
-}
-
-//
 // MTC0
 // TODO/FIXME: Combine with MTC{1,2}?
 //
@@ -655,6 +635,26 @@ void VR4300_MTCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 }
 
 //
+// MULT
+// MULTU
+//
+void VR4300_MULT_MULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  bool is_multu = iw & 0x1;
+
+  uint64_t sex_mask = vr4300_mult_sex_mask[is_multu];
+  uint64_t rs_sex = (int32_t) rs & sex_mask;
+  uint64_t rt_sex = (int32_t) rt & sex_mask;
+  uint64_t result = rs_sex * rt_sex;
+
+  // TODO: Delay the output a few cycles.
+  vr4300->regs[VR4300_REGISTER_LO] = (int32_t) result;
+  vr4300->regs[VR4300_REGISTER_HI] = (int32_t) (result >> 32);
+}
+
+//
 // SD
 //
 // TODO/FIXME: Check for unaligned addresses.
@@ -671,8 +671,6 @@ void VR4300_SD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdc_latch->request.dqm = ~0U;
   exdc_latch->request.size = 8;
 }
-
-// Function lookup table.
 
 //
 // SLL
@@ -744,7 +742,7 @@ void VR4300_SLTIU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   unsigned dest = GET_RT(iw);
   uint64_t imm = (int16_t) iw;
 
-  exdc_latch->result = (uint64_t) rs < imm;
+  exdc_latch->result = rs < imm;
   exdc_latch->dest = dest;
 }
 
@@ -819,11 +817,12 @@ void VR4300_STORE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
+  uint64_t address = rs + (int16_t) iw;
   unsigned request_size = (iw >> 26 & 0x3) + 1;
   unsigned lshiftamt = (4 - request_size) << 3;
-  unsigned rshiftamt = (iw & 0x3) << 3;
+  unsigned rshiftamt = (address & 0x3) << 3;
 
-  exdc_latch->request.address = (rs + (int16_t) iw) & ~0x3ULL;
+  exdc_latch->request.address = address & ~0x3ULL;
   exdc_latch->request.data = (rt << lshiftamt) >> rshiftamt;
   exdc_latch->request.dqm = (~0U << lshiftamt) >> rshiftamt;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
@@ -838,10 +837,11 @@ void VR4300_SWL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  unsigned shiftamt = (iw & 0x3) >> 3;
+  uint64_t address = (rs + (int16_t) iw);
+  unsigned shiftamt = (address & 0x3) << 3;
   uint64_t mask = ~0U;
 
-  exdc_latch->request.address = (rs + (int16_t) iw) & ~0x3ULL;
+  exdc_latch->request.address = address & ~0x3ULL;
   exdc_latch->request.data = rt >> shiftamt; // or (iw & 0x7) >> 3?
   exdc_latch->request.dqm = mask >> shiftamt;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
@@ -856,10 +856,11 @@ void VR4300_SWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  unsigned shiftamt = (3 - (iw & 0x3)) >> 3;
+  uint64_t address = (rs + (int16_t) iw);
+  unsigned shiftamt = (3 - (address & 0x3)) << 3;
   uint64_t mask = ~0U;
 
-  exdc_latch->request.address = (rs + (int16_t) iw) & ~0x3ULL;
+  exdc_latch->request.address = address & ~0x3ULL;
   exdc_latch->request.data = rt << shiftamt; // or (iw & 0x7) >> 3?
   exdc_latch->request.dqm = mask << shiftamt;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
