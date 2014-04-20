@@ -54,7 +54,6 @@ void vi_cycle(struct vi_controller *vi) {
     vres = ra->height =((ra->y.end - ra->y.start) >> 1) * vcoeff;
     hres = ra->width = ((ra->x.end - ra->x.start)) * hcoeff;
     hskip = ra->hskip = vi->regs[VI_WIDTH_REG] - ra->width;
-    //printf("Frame: %dx%d\n", hres, vres);
 
     if (hres > 0 && vres > 0) {
       if (hres > 640) {
@@ -85,7 +84,6 @@ void vi_cycle(struct vi_controller *vi) {
       }
 
       vi->viuv[2] = vi->viuv[4] = (float) hres / (hres + hskip);
-
       glDrawArrays(GL_QUADS, 0, 4);
       glfwSwapBuffers();
     }
@@ -140,14 +138,12 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
   enum vi_register reg = (offset >> 2);
 
   // TODO: Possibly a giant hack.
-  if (reg == VI_V_SYNC_REG) {
-    if (vi->regs[VI_V_SYNC_REG] > 0) {
-      vi->regs[VI_CURRENT_REG] =
-        (((62500000.0f / 60.0f) + 1) - (vi->counter)) /
-        (((62500000.0f / 60.0f) + 1) / vi->regs[VI_V_SYNC_REG]);
+  if (vi->regs[VI_V_SYNC_REG] > 0) {
+    vi->regs[VI_CURRENT_REG] =
+      (((62500000.0f / 60.0f) + 1) - (vi->counter)) /
+      (((62500000.0f / 60.0f) + 1) / vi->regs[VI_V_SYNC_REG]);
 
-      vi->regs[VI_CURRENT_REG] &= ~0x1;
-    }
+    vi->regs[VI_CURRENT_REG] &= ~0x1;
   }
 
   else

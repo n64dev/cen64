@@ -645,6 +645,9 @@ void VR4300_MTCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RD(iw) + 32;
 
+  if (dest == VR4300_CP0_REGISTER_COMPARE)
+    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
+
   // TODO/FIXME: Sign extend, or...?
   // Would make sense for EPC, etc.
   exdc_latch->result = (int32_t) rt;

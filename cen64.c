@@ -41,7 +41,7 @@ static int create_glfw_window() {
   glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_FALSE);
 
   if (glfwOpenWindow(640, 480, 5, 6, 5, 0, 8, 0, GLFW_WINDOW) != GL_TRUE)
-    return -2;
+    return -1;
 
   glfwSetWindowTitle("CEN64 [ALPHA]");
   glfwSetWindowSizeCallback(window_resize_cb);
@@ -57,18 +57,18 @@ int main(int argc, const char *argv[]) {
     return 0;
   }
 
-  if (device_create(&device, argv[1], argv[2]) == NULL) {
-    printf("Failed to create a device.\n");
-    return 1;
-  }
-
   if (glfwInit() != GL_TRUE) {
     printf("Failed to initialize GLFW.\n");
-    return 2;
+    return 1;
   }
 
   if (create_glfw_window() < 0) {
     printf("Failed to create a window.\n");
+    return 2;
+  }
+
+  if (device_create(&device, argv[1], argv[2]) == NULL) {
+    printf("Failed to create a device.\n");
     return 3;
   }
 

@@ -11,7 +11,6 @@
 #ifndef __vi_controller_h__
 #define __vi_controller_h__
 #include "common.h"
-#include "GL/glfw.h"
 
 struct bus_controller *bus;
 
@@ -52,7 +51,6 @@ struct vi_controller {
   float viuv[8];
   float quad[8];
   unsigned frame_count;
-  GLuint frame_texture;
   struct render_area render_area;
 };
 

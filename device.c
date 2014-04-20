@@ -186,6 +186,10 @@ void device_run(struct cen64_device *device) {
   while (1) {
     vi_cycle(&device->vi);
     vr4300_cycle(&device->vr4300);
+
+    vi_cycle(&device->vi);
+    vr4300_cycle(&device->vr4300);
+    vr4300_cycle(&device->vr4300);
   }
 }
 
