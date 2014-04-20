@@ -29,7 +29,6 @@ const char *vi_register_mnemonics[NUM_VI_REGISTERS] = {
 // Advances the controller by one clock cycle.
 void vi_cycle(struct vi_controller *vi) {
   if (unlikely(vi->counter-- == 0)) {
-    float vis = (float) 1 / (glfwGetTime() - vi->start_time);
     struct render_area *ra = &vi->render_area;
     int hskip, vres, hres;
     float hcoeff, vcoeff;
@@ -37,9 +36,13 @@ void vi_cycle(struct vi_controller *vi) {
     uint32_t offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
     const uint8_t *buffer = vi->bus->ri->ram + offset;
 
-    //printf("VI/s: %.2f\n", vis);
-    vi->start_time = glfwGetTime();
-    vi->frame_count = 0;
+    if (vi->frame_count++ == 9) {
+      float vis = (float) 10 / (glfwGetTime() - vi->start_time);
+
+      printf("VI/s: %.2f\n", vis);
+      vi->start_time = glfwGetTime();
+      vi->frame_count = 0;
+    }
 
     // Calculate the bounding positions.
     ra->x.start = vi->regs[VI_H_START_REG] >> 16 & 0x3FF;

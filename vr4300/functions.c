@@ -830,6 +830,42 @@ void VR4300_STORE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdc_latch->request.size = request_size;
 }
 
+//
+// SWL
+//
+void VR4300_SWL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned shiftamt = (iw & 0x3) >> 3;
+  uint64_t mask = ~0U;
+
+  exdc_latch->request.address = (rs + (int16_t) iw) & ~0x3ULL;
+  exdc_latch->request.data = rt >> shiftamt; // or (iw & 0x7) >> 3?
+  exdc_latch->request.dqm = mask >> shiftamt;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
+  exdc_latch->request.size = 4;
+}
+
+//
+// SWR
+//
+void VR4300_SWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned shiftamt = (3 - (iw & 0x3)) >> 3;
+  uint64_t mask = ~0U;
+
+  exdc_latch->request.address = (rs + (int16_t) iw) & ~0x3ULL;
+  exdc_latch->request.data = rt << shiftamt; // or (iw & 0x7) >> 3?
+  exdc_latch->request.dqm = mask << shiftamt;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
+  exdc_latch->request.size = 4;
+}
+
 // Function lookup table.
 cen64_align(const vr4300_function
   vr4300_function_table[NUM_VR4300_OPCODES], CACHE_LINE_SIZE) = {

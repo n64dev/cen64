@@ -16,7 +16,7 @@
 #include "vr4300/pipeline.h"
 
 // Currently used a fixed value...
-#define MEMORY_CYCLE_DELAY 50
+#define MEMORY_CYCLE_DELAY 0
 
 const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #define X(fault) #fault,
