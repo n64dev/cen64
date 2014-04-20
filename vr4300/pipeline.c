@@ -38,8 +38,8 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   rfex_latch->iw_mask = ~0U;
 
   // Latch common pipeline values.
+  icrf_latch->common.fault = VR4300_FAULT_NONE;
   icrf_latch->common.pc = pc;
-  //icrf_latch->common.fault = ...;
 
   // If decoding of prior instruction indicates this is a BD slot...
   icrf_latch->common.cause_data = (opcode->flags & OPCODE_INFO_BRANCH)
@@ -58,8 +58,6 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
     icrf_latch->segment = segment;
   }
 
-  // We didn't have an IADE, so reset the status vector.
-  icrf_latch->common.fault = VR4300_FAULT_NONE;
   icrf_latch->pc += 4;
   return 0;
 }
@@ -152,9 +150,14 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     return 1;
   }
 
-  // Check if we should raise an interrupt exception.
-  if (unlikely(cause & status & 0xFF00) && (status & 0x1)
-    && !(status & 0x6) && dcwb_latch->common.fault == 0) {
+  // In both in DC and WB, we have to make sure that
+  // don't make the actions of squashed insns visible.
+  if (exdc_latch->common.fault != VR4300_FAULT_NONE)
+    return 0;
+
+  // Check if we should raise an interrupt.
+  if (unlikely(cause & status & 0xFF00) &&
+    (status & 0x1) && !(status & 0x6)) {
     VR4300_INTR(vr4300);
     return 1;
   }
@@ -409,6 +412,10 @@ static const pipeline_function pipeline_function_lut[6] = {
 // Advances the processor pipeline by one pclock.
 void vr4300_cycle(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+
+  // Increment counters.
+  vr4300->regs[VR4300_CP0_REGISTER_COUNT] += vr4300->cycles & 1;
+  vr4300->cycles++;
 
   // We're stalling for something...
   if (pipeline->cycles_to_stall > 0) {

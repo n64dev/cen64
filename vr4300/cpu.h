@@ -85,6 +85,7 @@ struct vr4300 {
   struct vr4300_pipeline pipeline;
 
   struct bus_controller *bus;
+  unsigned long long cycles;
   unsigned signals;
 };
 
