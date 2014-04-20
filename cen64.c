@@ -12,13 +12,39 @@
 #include "device.h"
 #include <GL/glfw.h>
 
+static void window_resize_cb(int width, int height) {
+  float aspect = 4.0 / 3.0;
+
+  if (height <= 0)
+    height = 1;
+
+  glViewport(0, 0, width, height);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  if((float) width / (float) height > aspect) {
+    aspect = 3.0 / 4.0;
+    aspect *= (float)width / (float)height;
+    glOrtho(-aspect, aspect, -1, 1, -1, 1);
+  }
+
+  else {
+    aspect *= (float)height / (float)width;
+    glOrtho(-1, 1, -aspect, aspect, -1, 1);
+  }
+
+  glClear(GL_COLOR_BUFFER_BIT);
+}
+
+
 static int create_glfw_window() {
-  glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
+  glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_FALSE);
 
   if (glfwOpenWindow(640, 480, 5, 6, 5, 0, 8, 0, GLFW_WINDOW) != GL_TRUE)
     return -2;
 
   glfwSetWindowTitle("CEN64 [ALPHA]");
+  glfwSetWindowSizeCallback(window_resize_cb);
   glfwPollEvents();
   return 0;
 }
