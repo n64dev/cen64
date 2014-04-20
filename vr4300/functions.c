@@ -336,8 +336,8 @@ void VR4300_DIV_DIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint64_t rt_sex = (int32_t) rt & sex_mask;
 
   if (likely(rt_sex != 0)) {
-    int32_t div = rs / rt;
-    int32_t mod = rs % rt;
+    int32_t div = rs_sex / rt_sex;
+    int32_t mod = rs_sex % rt_sex;
 
     // TODO: Delay the output a few cycles.
     vr4300->regs[VR4300_REGISTER_LO] = div;
@@ -419,7 +419,6 @@ void VR4300_DSRA32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 void VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   int32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   if (status & 0x4) {
@@ -432,12 +431,13 @@ void VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
     status &= ~0x2;
   }
 
+  // Until we delay CP0 writes, we have to kill ourselves
+  // to prevent squashing this instruction the next cycle.
+  rfex_latch->common.fault = VR4300_FAULT_KILLED;
+
   // TODO/FIXME: Look into safely doing this!
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
-  exdc_latch->common.fault = VR4300_FAULT_KILLED;
-  icrf_latch->common.fault = VR4300_FAULT_KILLED;
   rfex_latch->iw_mask = 0;
-
   // vr4300->llbit = 0;
 }
 

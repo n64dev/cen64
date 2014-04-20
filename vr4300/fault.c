@@ -16,7 +16,7 @@
 #include "vr4300/pipeline.h"
 
 // Currently used a fixed value...
-#define MEMORY_CYCLE_DELAY 50
+#define MEMORY_CYCLE_DELAY 0
 
 const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #define X(fault) #fault,
@@ -87,7 +87,7 @@ void VR4300_IADE(unused(struct vr4300 *vr4300)) {
 // INTR: Interrupt exception.
 void VR4300_INTR(unused(struct vr4300 *vr4300)) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_latch *common = &pipeline->dcwb_latch.common;
+  struct vr4300_latch *common = &pipeline->exdc_latch.common;
 
   bool in_bd_slot = common->cause_data >> 31;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
