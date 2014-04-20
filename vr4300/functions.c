@@ -322,6 +322,30 @@ void VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// DIV
+// DIVU
+//
+void VR4300_DIV_DIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  bool is_divu = iw & 0x1;
+
+  uint64_t sex_mask = vr4300_mult_sex_mask[is_divu];
+  uint64_t rs_sex = (int32_t) rs & sex_mask;
+  uint64_t rt_sex = (int32_t) rt & sex_mask;
+
+  if (likely(rt_sex != 0)) {
+    int32_t div = rs / rt;
+    int32_t mod = rs % rt;
+
+    // TODO: Delay the output a few cycles.
+    vr4300->regs[VR4300_REGISTER_LO] = div;
+    vr4300->regs[VR4300_REGISTER_HI] = mod;
+  }
+}
+
+//
 // DDIVU
 //
 void VR4300_DDIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
