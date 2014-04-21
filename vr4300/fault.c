@@ -27,6 +27,7 @@ const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 // Sets attributes common to all exceptions.
 static void vr4300_common_exceptions(struct vr4300_pipeline *pipeline) {
   pipeline->icrf_latch.segment = get_default_segment();
+  pipeline->exdc_latch.segment = get_default_segment();
 
   pipeline->exception_history = 0;
   pipeline->fault_present = true;
@@ -45,6 +46,7 @@ static void vr4300_common_interlocks(struct vr4300_pipeline *pipeline,
 static void vr4300_dc_fault(struct vr4300_pipeline *pipeline,
   enum vr4300_fault_id fault) {
   vr4300_common_exceptions(pipeline);
+  pipeline->dcwb_latch.common.fault = fault;
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
   pipeline->icrf_latch.common.fault = fault;
@@ -93,9 +95,6 @@ void VR4300_INTR(unused(struct vr4300 *vr4300)) {
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
   uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
-
-  // Kill our output.
-  common->fault = ~0;
 
   // Record branch delay slot?
   if (!(status & 0x2)) {
