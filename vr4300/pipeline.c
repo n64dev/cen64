@@ -335,19 +335,15 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
 
-  // Results in undefined behaviour...
-  int64_t mask = exdc_latch->result;
-  int maskshift = (request->size << 3);
-  int datashift = ((8 - request->size) << 3);
-  uint64_t data = (uint32_t) request->data;
+  uint64_t smask = exdc_latch->result;
   int64_t sdata = request->data;
+  uint64_t data = request->data;
 
   // Shall we sign extend?
-  mask = (mask >> maskshift) << maskshift;
-  sdata = (sdata << datashift) >> datashift;
-  data = (data << datashift) >> datashift;
-  data = (sdata & mask) | data;
-  dcwb_latch->result = data;
+  int datashift = (8 - request->size) << 3;
+  sdata = (int64_t) ((uint64_t) sdata << datashift) >> datashift;
+  data = (uint64_t) ((uint64_t) data << datashift) >> datashift;
+  dcwb_latch->result = (sdata & smask) | data;
 
   // Continue with the rest of the pipeline.
   if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
