@@ -202,7 +202,6 @@ void VR4300_BEQ_BEQL_BNE_BNEL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   bool cmp = rs == rt;
 
   if (cmp == is_ne) {
-    icrf_latch->common.fault |= ~mask;
     rfex_latch->iw_mask = mask;
     return;
   }
@@ -229,7 +228,6 @@ void VR4300_BGEZ_BGEZL_BLTZ_BLTZL(
   bool cmp = (int64_t) rs < 0;
 
   if (cmp == is_ge) {
-    icrf_latch->common.fault |= ~mask;
     rfex_latch->iw_mask = mask;
     return;
   }
@@ -260,7 +258,6 @@ void VR4300_BGEZAL_BGEZALL_BLTZAL_BLTZALL(
   exdc_latch->dest = VR4300_REGISTER_RA;
 
   if (cmp == is_ge) {
-    icrf_latch->common.fault |= ~mask;
     rfex_latch->iw_mask = mask;
     return;
   }
@@ -287,7 +284,6 @@ void VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
   bool cmp = (int64_t) rs <= 0;
 
   if (cmp == is_gt) {
-    icrf_latch->common.fault |= ~mask;
     rfex_latch->iw_mask = mask;
     return;
   }
@@ -423,8 +419,9 @@ void VR4300_DSRA32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 //
 void VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+
   int32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   if (status & 0x4) {
@@ -440,10 +437,13 @@ void VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   // Until we delay CP0 writes, we have to kill ourselves
   // to prevent squashing this instruction the next cycle.
   exdc_latch->common.fault = ~0;
+  icrf_latch->common.fault = ~0;
+
+  pipeline->exception_history = 0;
+  pipeline->fault_present = true;
+  pipeline->skip_stages = 0;
 
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
-  icrf_latch->common.fault = ~0;
-  rfex_latch->iw_mask = 0;
   // vr4300->llbit = 0;
 }
 

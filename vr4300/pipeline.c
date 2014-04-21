@@ -150,14 +150,8 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     return 1;
   }
 
-  // In both in DC and WB, we have to make sure that
-  // don't make the actions of squashed insns visible.
-  if (exdc_latch->common.fault != VR4300_FAULT_NONE)
-    return 0;
-
-  // Check if we should raise an interrupt.
-  if (unlikely(cause & status & 0xFF00) &&
-    (status & 0x1) && !(status & 0x6)) {
+  // Check if we should raise an interrupt (and effectively kill this insn).
+  if (unlikely(cause & status & 0xFF00) && (status & 0x1) && !(status & 0x6)) {
     VR4300_INTR(vr4300);
     return 1;
   }
@@ -204,9 +198,6 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 // Writeback stage.
 static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
-
-  if (dcwb_latch->common.fault != VR4300_FAULT_NONE)
-    return 0;
 
   vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
   vr4300->regs[VR4300_REGISTER_R0] = 0x0000000000000000ULL;
@@ -354,9 +345,10 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   else
     rfex_latch->common = icrf_latch->common;
 
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE)
+  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
+  }
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -427,7 +419,7 @@ void vr4300_cycle(struct vr4300 *vr4300) {
   // Ordinarily, we would need to check every pipeline stage to see if it is
   // aborted, and conditionally not execute it. Since faults are rare, we'll
   // only bother checking for aborted stages when we know they can be present.
-  if (pipeline->fault_present || pipeline->skip_stages) {
+  if (pipeline->fault_present + pipeline->skip_stages) {
     pipeline_function_lut[pipeline->skip_stages](vr4300);
     return;
   }
