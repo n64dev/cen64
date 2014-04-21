@@ -39,8 +39,9 @@ cen64_align(static const uint64_t vr4300_mult_sex_mask[2], 16) = {
 };
 
 // Mask to selectively sign-extend loaded values.
-cen64_align(static const uint64_t vr4300_load_sex_mask[2], 16) = {
-  ~0ULL, 0ULL
+cen64_align(static const uint64_t vr4300_load_sex_mask[2][4], 16) = {
+  {~0ULL,   ~0ULL,     0ULL, ~0ULL},          // sex
+  {0xFFULL, 0xFFFFULL, 0ULL, 0xFFFFFFFFULL},  // zex
 };
 
 //
@@ -518,10 +519,11 @@ void VR4300_LD(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   unsigned dest = GET_RT(iw);
 
   exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.dqm = ~0ULL;
+  exdc_latch->request.postshift = 0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
   exdc_latch->request.size = 8;
 
-  exdc_latch->result = ~0ULL;
   exdc_latch->dest = dest;
 }
 
@@ -540,14 +542,16 @@ void VR4300_LOAD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t sex_mask = vr4300_load_sex_mask[iw >> 28 & 0x1];
+  unsigned request_size = (iw >> 26 & 0x3);
+  uint64_t dqm = vr4300_load_sex_mask[iw >> 28 & 0x1][request_size];
   unsigned dest = GET_RT(iw);
 
   exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.dqm = dqm;
+  exdc_latch->request.postshift = 0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
-  exdc_latch->request.size = (iw >> 26 & 0x3) + 1;
+  exdc_latch->request.size = request_size + 1;
 
-  exdc_latch->result = sex_mask;
   exdc_latch->dest = dest;
 }
 
@@ -564,6 +568,52 @@ void VR4300_LUI(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
 
   exdc_latch->result = imm;
+  exdc_latch->dest = dest;
+}
+
+//
+// LWL
+//
+// TODO/FIXME: Check for correctness.
+//
+void VR4300_LWL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t address = (rs + (int16_t) iw);
+  int postshift = (address & 0x3) << 3;
+  unsigned dest = GET_RT(iw);
+
+  exdc_latch->request.address = address;
+  exdc_latch->request.dqm = ~0ULL << postshift;
+  exdc_latch->request.postshift = postshift;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
+  exdc_latch->request.size = 4 - (address & 0x3);
+
+  exdc_latch->dest = dest;
+}
+
+//
+// LWR
+//
+// TODO/FIXME: Check for correctness.
+//
+void VR4300_LWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t address = (rs + (int16_t) iw);
+  int postshift = (address & 0x3) << 3;
+  unsigned dest = GET_RT(iw);
+
+  exdc_latch->request.address = address & ~0x3ULL;
+  exdc_latch->request.dqm = ~0ULL << postshift;
+  exdc_latch->request.postshift = postshift;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
+  exdc_latch->request.size = 4;
+
   exdc_latch->dest = dest;
 }
 

@@ -11,6 +11,7 @@
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
+#include "ri/controller.h"
 #include "si/controller.h"
 #include "vr4300/interface.h"
 #include <assert.h>
@@ -114,6 +115,9 @@ int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   }
 
   else if (reg == SI_PIF_ADDR_RD64B_REG) {
+    uint32_t offset = si->regs[SI_DRAM_ADDR_REG] & 0x1FFFFFFF;
+    memset(si->bus->ri->ram + offset, 0, 64);
+
     signal_rcp_interrupt(si->bus->vr4300, MI_INTR_SI);
     si->regs[SI_STATUS_REG] |= 0x1000;
   }
@@ -127,6 +131,7 @@ int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     si->regs[reg] &= ~dqm;
     si->regs[reg] |= word;
   }
+
   return 0;
 }
 
