@@ -454,7 +454,7 @@ void VR4300_INV(struct vr4300 *vr4300,
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   enum vr4300_opcode_id opcode = rfex_latch->opcode.id;
 
-#ifdef NDEBUG
+#ifndef NDEBUG
   fprintf(stderr, "Unimplemented instruction: %s [0x%.8X] @ 0x%.16llX\n",
     vr4300_opcode_mnemonics[opcode], rfex_latch->iw, (long long unsigned)
     rfex_latch->common.pc);

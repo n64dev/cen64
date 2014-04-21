@@ -335,9 +335,10 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
 
+  // Results in undefined behaviour...
   int64_t mask = exdc_latch->result;
-  int maskshift = request->size << 3;
-  int datashift = (8 - request->size) << 3;
+  int maskshift = (request->size << 3);
+  int datashift = ((8 - request->size) << 3);
   uint64_t data = (uint32_t) request->data;
   int64_t sdata = request->data;
 
