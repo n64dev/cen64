@@ -195,7 +195,7 @@ void VR4300_BEQ_BEQL_BNE_BNEL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   uint32_t iw = rfex_latch->iw;
   uint32_t mask = vr4300_branch_lut[iw >> 30 & 0x1];
-  uint64_t offset = (int16_t) iw << 2;
+  uint64_t offset = (uint64_t) ((int16_t) iw) << 2;
 
   bool is_ne = iw >> 26 & 0x1;
   bool cmp = rs == rt;
@@ -222,7 +222,7 @@ void VR4300_BGEZ_BGEZL_BLTZ_BLTZL(
 
   uint32_t iw = rfex_latch->iw;
   uint32_t mask = vr4300_branch_lut[iw >> 17 & 0x1];
-  uint64_t offset = (int16_t) iw << 2;
+  uint64_t offset = (uint64_t) ((int16_t) iw) << 2;
 
   bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int64_t) rs < 0;
@@ -250,7 +250,7 @@ void VR4300_BGEZAL_BGEZALL_BLTZAL_BLTZALL(
 
   uint32_t iw = rfex_latch->iw;
   uint32_t mask = vr4300_branch_lut[iw >> 17 & 0x1];
-  uint64_t offset = (int16_t) iw << 2;
+  uint64_t offset = (uint64_t) ((int16_t) iw) << 2;
 
   bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int64_t) rs < 0;
@@ -280,7 +280,7 @@ void VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
 
   uint32_t iw = rfex_latch->iw;
   uint32_t mask = vr4300_branch_lut[iw >> 30 & 0x1];
-  uint64_t offset = (int16_t) iw << 2;
+  uint64_t offset = (uint64_t) ((int16_t) iw) << 2;
 
   bool is_gt = iw >> 26 & 0x1;
   bool cmp = (int64_t) rs <= 0;
@@ -454,7 +454,7 @@ void VR4300_INV(struct vr4300 *vr4300,
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   enum vr4300_opcode_id opcode = rfex_latch->opcode.id;
 
-#ifndef NDEBUG
+#ifdef NDEBUG
   fprintf(stderr, "Unimplemented instruction: %s [0x%.8X] @ 0x%.16llX\n",
     vr4300_opcode_mnemonics[opcode], rfex_latch->iw, (long long unsigned)
     rfex_latch->common.pc);
@@ -560,7 +560,7 @@ void VR4300_LUI(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  int32_t imm = (int16_t) iw << 16;
+  int32_t imm = iw << 16;
   unsigned dest = GET_RT(iw);
 
   exdc_latch->result = imm;
