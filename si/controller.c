@@ -113,6 +113,16 @@ int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     si->regs[SI_STATUS_REG] &= ~0x1000;
   }
 
+  else if (reg == SI_PIF_ADDR_RD64B_REG) {
+    signal_rcp_interrupt(si->bus->vr4300, MI_INTR_SI);
+    si->regs[SI_STATUS_REG] |= 0x1000;
+  }
+
+  else if (reg == SI_PIF_ADDR_WR64B_REG) {
+    signal_rcp_interrupt(si->bus->vr4300, MI_INTR_SI);
+    si->regs[SI_STATUS_REG] |= 0x1000;
+  }
+
   else {
     si->regs[reg] &= ~dqm;
     si->regs[reg] |= word;
