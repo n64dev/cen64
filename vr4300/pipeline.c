@@ -110,8 +110,8 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
   vr4300->regs[VR4300_REGISTER_R0] = 0x0000000000000000ULL;
 
-  rs_reg = vr4300->regs[GET_RS(iw)];
-  rt_reg = vr4300->regs[GET_RT(iw)];
+  rs_reg = vr4300->regs[rs];
+  rt_reg = vr4300->regs[rt];
 
   vr4300->regs[dcwb_latch->dest] = temp;
 
@@ -251,9 +251,10 @@ static void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
   else
     rfex_latch->common = icrf_latch->common;
 
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE)
+  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
+  }
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -285,9 +286,10 @@ static void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
   else
     rfex_latch->common = icrf_latch->common;
 
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE)
+  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
+  }
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -312,9 +314,10 @@ static void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
   else
     rfex_latch->common = icrf_latch->common;
 
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE)
+  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
+  }
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -372,9 +375,10 @@ static void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
   struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
 
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE)
+  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
+  }
 
   if (vr4300_ic_stage(vr4300))
     return;

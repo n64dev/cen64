@@ -842,7 +842,7 @@ void VR4300_SWL(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint64_t mask = ~0U;
 
   exdc_latch->request.address = address & ~0x3ULL;
-  exdc_latch->request.data = rt >> shiftamt; // or (iw & 0x7) >> 3?
+  exdc_latch->request.data = rt >> shiftamt;
   exdc_latch->request.dqm = mask >> shiftamt;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 4;
@@ -861,7 +861,7 @@ void VR4300_SWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint64_t mask = ~0U;
 
   exdc_latch->request.address = address & ~0x3ULL;
-  exdc_latch->request.data = rt << shiftamt; // or (iw & 0x7) >> 3?
+  exdc_latch->request.data = rt << shiftamt;
   exdc_latch->request.dqm = mask << shiftamt;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 4;

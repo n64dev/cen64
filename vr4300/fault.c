@@ -110,6 +110,8 @@ void VR4300_INTR(unused(struct vr4300 *vr4300)) {
     }
   }
 
+  else assert(0);
+
   // TODO/FIXME: Check for XTLB/TLB miss exceptions.
   // For now, we're just hard-coding the vector offset.
 
