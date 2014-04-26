@@ -39,7 +39,7 @@ cen64_align(static const uint64_t vr4300_mult_sex_mask[2], 16) = {
 };
 
 // Mask to selectively sign-extend loaded values.
-cen64_align(static const uint64_t vr4300_load_sex_mask[2][4], 16) = {
+cen64_align(static const uint64_t vr4300_load_sex_mask[2][4], CACHE_LINE_SIZE) = {
   {~0ULL,   ~0ULL,     0ULL, ~0ULL},          // sex
   {0xFFULL, 0xFFFFULL, 0ULL, 0xFFFFFFFFULL},  // zex
 };
@@ -680,8 +680,9 @@ void VR4300_MTCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
   // TODO/FIXME: Sign extend, or...?
   // Would make sense for EPC, etc.
-  exdc_latch->result = (int32_t) rt;
-  exdc_latch->dest = dest;
+  //exdc_latch->result = (int32_t) rt;
+  //exdc_latch->dest = dest;
+  vr4300->regs[dest] = (int32_t) rt;
 }
 
 //
@@ -718,7 +719,7 @@ void VR4300_SD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.address = rs + (int16_t) iw;
   exdc_latch->request.data = rt;
-  exdc_latch->request.dqm = ~0U;
+  exdc_latch->request.dqm = ~0ULL;
   exdc_latch->request.size = 8;
 }
 
@@ -923,11 +924,11 @@ void VR4300_SWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint32_t iw = rfex_latch->iw;
   uint64_t address = (rs + (int16_t) iw);
   unsigned shiftamt = (3 - (address & 0x3)) << 3;
-  uint64_t mask = ~0U;
+  uint32_t mask = ~0U;
 
   exdc_latch->request.address = address & ~0x3ULL;
   exdc_latch->request.data = rt << shiftamt;
-  exdc_latch->request.dqm = mask << shiftamt;
+  exdc_latch->request.dqm = (uint64_t) (mask << shiftamt);
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 4;
 }

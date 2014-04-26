@@ -66,14 +66,14 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
 static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   const struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  const struct segment *segment = icrf_latch->segment;
+  //const struct segment *segment = icrf_latch->segment;
 
   rfex_latch->common = icrf_latch->common;
 
-  if (!segment->cached) {
+  //if (!segment->cached) {
     VR4300_UNC(vr4300);
     return 1;
-  }
+  //}
 
   return 0;
 }
@@ -97,23 +97,32 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   rt = GET_RT(iw);
   rs = GET_RS(iw);
 
+#if 0
   // Check to see if we should hold off execution due to a LDI.
   if (((dcwb_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
     ((dcwb_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT))) {
     VR4300_LDI(vr4300);
     return 1;
   }
+#endif
 
   // No LDI, so we just need to forward results from DC/WB.
   // This is done to preserve RF state and fwd without branching.
-  temp = vr4300->regs[dcwb_latch->dest];
-  vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
-  vr4300->regs[VR4300_REGISTER_R0] = 0x0000000000000000ULL;
+  if (!dcwb_latch->common.fault) {
+    temp = vr4300->regs[dcwb_latch->dest];
+    vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
+    vr4300->regs[VR4300_REGISTER_R0] = 0x0000000000000000ULL;
 
-  rs_reg = vr4300->regs[rs];
-  rt_reg = vr4300->regs[rt];
+    rs_reg = vr4300->regs[rs];
+    rt_reg = vr4300->regs[rt];
 
-  vr4300->regs[dcwb_latch->dest] = temp;
+    vr4300->regs[dcwb_latch->dest] = temp;
+  }
+
+  else {
+    rs_reg = vr4300->regs[rs];
+    rt_reg = vr4300->regs[rt];
+  }
 
   // Finally, execute the instruction.
 #ifdef PRINT_EXEC
@@ -184,6 +193,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         bus_write_word(vr4300->bus, exdc_latch->request.address,
           exdc_latch->request.data >> 32, exdc_latch->request.dqm);
 
+        exdc_latch->request.dqm >>= 32;
         exdc_latch->request.address += 4;
       }
 
@@ -223,16 +233,13 @@ static void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
       return;
   }
 
-  else
-    dcwb_latch->common = exdc_latch->common;
-
   if (exdc_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_dc_stage(vr4300))
       return;
   }
 
   else
-    exdc_latch->common = rfex_latch->common;
+    dcwb_latch->common = exdc_latch->common;
 
   if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_ex_stage(vr4300))
@@ -240,12 +247,15 @@ static void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
   }
 
   else
-    rfex_latch->common = icrf_latch->common;
+    exdc_latch->common = rfex_latch->common;
 
   if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
   }
+
+  else
+    rfex_latch->common = icrf_latch->common;
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -257,6 +267,7 @@ static void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
 // Starts from DC stage (WB resolved an interlock).
 static void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
   struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
@@ -267,7 +278,7 @@ static void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
   }
 
   else
-    exdc_latch->common = rfex_latch->common;
+    dcwb_latch->common = exdc_latch->common;
 
   if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_ex_stage(vr4300))
@@ -275,12 +286,15 @@ static void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
   }
 
   else
-    rfex_latch->common = icrf_latch->common;
+    exdc_latch->common = rfex_latch->common;
 
   if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
   }
+
+  else
+    rfex_latch->common = icrf_latch->common;
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -294,6 +308,7 @@ static void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
 // Starts from EX stage (DC resolved an interlock).
 static void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
   struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
 
@@ -303,12 +318,15 @@ static void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
   }
 
   else
-    rfex_latch->common = icrf_latch->common;
+    exdc_latch->common = rfex_latch->common;
 
   if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
   }
+
+  else
+    rfex_latch->common = icrf_latch->common;
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -343,12 +361,15 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   }
 
   else
-    rfex_latch->common = icrf_latch->common;
+    exdc_latch->common = rfex_latch->common;
 
   if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
   }
+
+  else
+    rfex_latch->common = icrf_latch->common;
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -362,12 +383,16 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
 // Starts from RF stage (EX resolved an interlock).
 static void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
 
   if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
     if (vr4300_rf_stage(vr4300))
       return;
   }
+
+  else
+    rfex_latch->common = icrf_latch->common;
 
   if (vr4300_ic_stage(vr4300))
     return;
@@ -406,8 +431,8 @@ void vr4300_cycle(struct vr4300 *vr4300) {
   // Increment counters.
   vr4300->regs[VR4300_CP0_REGISTER_COUNT] += ++(vr4300->cycles) & 0x1;
 
-  if (vr4300->regs[VR4300_CP0_REGISTER_COUNT] ==
-    vr4300->regs[VR4300_CP0_REGISTER_COMPARE])
+  if ((uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COUNT] ==
+    (uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COMPARE])
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
 
   // We're stalling for something...
