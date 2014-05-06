@@ -22,8 +22,6 @@ struct vr4300_icache {
 };
 
 void vr4300_icache_init(struct vr4300_icache *icache);
-int vr4300_icache_serialize(struct vr4300_icache *icache, FILE *f);
-int vr4300_icache_unserialize(struct vr4300_icache *icache, FILE *f);
 
 void vr4300_icache_fill(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t paddr, const void *data);

@@ -66,15 +66,30 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
 static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   const struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  //const struct segment *segment = icrf_latch->segment;
+
+  const struct segment *segment = icrf_latch->segment;
+  const struct vr4300_icache_line *line;
+  uint32_t paddr;
 
   rfex_latch->common = icrf_latch->common;
 
-  //if (!segment->cached) {
+  if (!segment->cached) {
     VR4300_UNC(vr4300);
     return 1;
-  //}
+  }
 
+  // TODO: Implement the TLB.
+  assert(segment->mapped == 0);
+
+  // Probe the instruction cache for the data.
+  paddr = icrf_latch->common.pc - segment->offset;
+  if ((line = vr4300_icache_probe(&vr4300->icache,
+    icrf_latch->common.pc, paddr)) == NULL) {
+    VR4300_ICB(vr4300);
+    return 1;
+  }
+
+  memcpy(&rfex_latch->iw, line->data + (paddr & 0x1C), sizeof(rfex_latch->iw));
   return 0;
 }
 

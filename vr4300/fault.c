@@ -52,7 +52,7 @@ static void vr4300_dc_fault(struct vr4300_pipeline *pipeline,
   pipeline->icrf_latch.common.fault = fault;
 }
 
-// DADE: Data address error exception
+// DADE: Data address error exception.
 void VR4300_DADE(unused(struct vr4300 *vr4300)) {
   abort(); // Hammertime!
 }
@@ -83,6 +83,11 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
 // IADE: Instruction address error exception.
 void VR4300_IADE(unused(struct vr4300 *vr4300)) {
+  abort(); // Hammertime!
+}
+
+// ICB: Instruction cache busy interlock.
+void VR4300_ICB(unused(struct vr4300 *vr4300)) {
   abort(); // Hammertime!
 }
 

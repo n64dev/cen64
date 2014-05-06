@@ -79,7 +79,6 @@ uint32_t vr4300_icache_get_tag(const struct vr4300_icache *icache,
 // Initializes the instruction cache.
 void vr4300_icache_init(struct vr4300_icache *icache) {
   memset(icache->lines, 0, sizeof(icache->lines));
-
 }
 
 // Invalidates an instruction cache line (regardless if hit or miss).
