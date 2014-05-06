@@ -12,6 +12,7 @@
 #define __vr4300_cpu_h__
 #include "common.h"
 #include "vr4300/cp0.h"
+#include "vr4300/dcache.h"
 #include "vr4300/icache.h"
 #include "vr4300/pipeline.h"
 
@@ -81,6 +82,7 @@ struct vr4300 {
   uint64_t regs[NUM_VR4300_REGISTERS];
   uint32_t mi_regs[NUM_MI_REGISTERS];
 
+  struct vr4300_dcache dcache;
   struct vr4300_icache icache;
   struct vr4300_pipeline pipeline;
 
