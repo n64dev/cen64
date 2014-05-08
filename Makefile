@@ -18,8 +18,8 @@ else
 OBJECTS = $(addprefix $(OBJECT_DIR)/, $(notdir $(SOURCES:.c=.o)))
 endif
 
-LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lrdp -Lvideo -Lvr4300 -L.
-LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lrdp -lvideo -lvr4300 -lm
+LIBDIRS = -Laudio -Lbus -Lpif -Lrdram -Lrom -Lrsp -Lrdp -Lvideo -Lvr4300 -LX11 -L.
+LIBS = -laudio -lbus -lpif -lrdram -lrom -lrsp -lrdp -lvideo -lvr4300 -lm -lX11 -lXrandr
 PKGCONFIG_AL = `pkg-config --cflags --libs openal`
 PKGCONFIG_GLFW = `pkg-config --cflags --libs libglfw`
 #PKGCONFIG_GLFW = `pkg-config --cflags --libs glfw3`
