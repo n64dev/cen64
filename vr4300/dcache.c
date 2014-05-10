@@ -136,3 +136,12 @@ void vr4300_dcache_set_tag(struct vr4300_dcache *dcache,
   set_tag(line, tag);
 }
 
+// Writes back the block if the line is valid, then invalidates the line.
+void vr4300_dcache_wb_invalidate(struct vr4300_dcache *dcache, uint64_t vaddr) {
+  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
+
+  // TODO: Writeback.
+  if (is_valid(line))
+    invalidate_line(line);
+}
+

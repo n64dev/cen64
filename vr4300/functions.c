@@ -292,6 +292,41 @@ void VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
 }
 
 //
+// CACHE
+//
+void VR4300_CACHE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  uint32_t iw = rfex_latch->iw;
+
+  uint64_t vaddr = rs + (int16_t) iw;
+  unsigned code = iw >> 16 & 0x3;
+  unsigned op = iw >> 18 & 0x7;
+
+  switch(code) {
+    case 0: // Instruction cache
+      printf("Unimplemented DCACHE operation: %u\n", op);
+      break;
+
+    case 1: // Data cache
+      switch(op) {
+        case 0:
+          vr4300_dcache_wb_invalidate(&vr4300->dcache, vaddr);
+          break;
+
+        default:
+          printf("Unimplemented DCACHE operation: %u\n", op);
+          break;
+      }
+
+      break;
+
+    default:
+      break;
+  }
+}
+
+//
 // CFC1
 //
 void VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
@@ -462,8 +497,7 @@ void VR4300_INV(struct vr4300 *vr4300,
 #endif
 
   // TODO/FIXME: Implement this instruction later.
-  if (opcode != VR4300_OPCODE_CACHE &&
-    opcode != VR4300_OPCODE_TLBWI &&
+  if (opcode != VR4300_OPCODE_TLBWI &&
     opcode != VR4300_OPCODE_TLBR &&
     opcode != VR4300_OPCODE_TLBP)
     assert(0 && "Unimplemented instruction encountered.");

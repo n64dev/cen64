@@ -34,6 +34,7 @@ const struct vr4300_dcache_line* vr4300_dcache_probe(
   const struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr);
 void vr4300_dcache_set_tag(struct vr4300_dcache *dcache,
   uint64_t vaddr, uint32_t tag);
+void vr4300_dcache_wb_invalidate(struct vr4300_dcache *dcache, uint64_t vaddr);
 
 #endif
 

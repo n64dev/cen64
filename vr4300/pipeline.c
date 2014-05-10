@@ -112,14 +112,12 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   rt = GET_RT(iw);
   rs = GET_RS(iw);
 
-#if 0
   // Check to see if we should hold off execution due to a LDI.
   if (((dcwb_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
     ((dcwb_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT))) {
     VR4300_LDI(vr4300);
     return 1;
   }
-#endif
 
   // No LDI, so we just need to forward results from DC/WB.
   // This is done to preserve RF state and fwd without branching.
@@ -192,16 +190,42 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     exdc_latch->segment = segment;
-    exdc_latch->request.address -= segment->offset;
 
     if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-      VR4300_DCB(vr4300); // TODO/FIXME: Not accurate.
-      return 1;
+      struct vr4300_bus_request *request = &exdc_latch->request;
+      const struct vr4300_dcache_line *line;
+      uint64_t vaddr = request->address;
+      uint32_t paddr = vaddr - segment->offset;
+
+      int datashift = (8 - request->size) << 3;
+      unsigned rshiftamt, lshiftamt;
+      uint64_t data;
+      int64_t sdata;
+
+      // Index the data cache; on a miss, stall until the data is available.
+      if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)) == NULL) {
+        request->address -= segment->offset;
+        VR4300_DCB(vr4300);
+        return 1;
+      }
+
+      // Otherwise, copy and sign extend the data.
+      memcpy(&data, line->data + (vaddr & 0x8), sizeof(data));
+      rshiftamt = (8 - request->size) << 3;
+      lshiftamt = (request->address & 0x7) << 3;
+
+      data = ((int64_t) (data << lshiftamt)) >> rshiftamt;
+      sdata = (int64_t) ((uint64_t) data << datashift) >> datashift;
+      dcwb_latch->result = sdata & request->dqm;
+
+      return 0;
     }
 
     else {
       assert(exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE &&
         "Unsupported DC stage request type.");
+
+      exdc_latch->request.address -= segment->offset;
 
       // TODO/FIXME: Not accurate.
       if (exdc_latch->request.size > 4) {
