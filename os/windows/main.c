@@ -10,7 +10,7 @@
 #include <windows.h>
 #include <tchar.h>
 
-int cen64_main(void);
+int cen64_main(int argc, const char **argv[]);
 static WPARAM message_loop(void);
 
 DWORD event_thread_id;
@@ -32,7 +32,7 @@ DWORD WINAPI thread_main(LPVOID lpParam) {
   int status;
 
   event_thread_id = *((DWORD *) lpParam);
-  status = cen64_main();
+  status = cen64_main(__argc, __argv);
 
   PostThreadMessage(event_thread_id, WM_QUIT, 0, 0);
   return status;
