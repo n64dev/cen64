@@ -12,6 +12,7 @@
 
 #ifdef _MSC_VER
 #include <windows.h>
+#define GL_UNSIGNED_SHORT_5_5_5_1 0x8034
 #endif
 
 #include <GL/gl.h>

@@ -10,7 +10,6 @@
 
 #include "common.h"
 #include "device.h"
-#include <GL/glfw.h>
 
 static void window_resize_cb(int width, int height) {
   float aspect = 4.0 / 3.0;
