@@ -51,20 +51,20 @@ int cen64_main(int argc, const char *argv[]) {
     return 0;
   }
 
-  if (device_create(&device, argv[1], argv[2]) == NULL) {
-    printf("Failed to create a device.\n");
+  if (create_gl_window("CEN64", &device.vi.gl_window, &hints)) {
+    printf("Failed to create a window.\n");
     return 1;
   }
 
-  if (create_gl_window("CEN64", &device.vi.gl_window, &hints)) {
-    printf("Failed to create a window.\n");
+  if (device_create(&device, argv[1], argv[2]) == NULL) {
+    printf("Failed to create a device.\n");
     return 2;
   }
 
   device_run(&device);
 
-  destroy_gl_window(&device.vi.gl_window);
   device_destroy(&device);
+  destroy_gl_window(&device.vi.gl_window);
   return 0;
 }
 
