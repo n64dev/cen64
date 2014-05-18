@@ -11,6 +11,7 @@
 #ifndef __vi_controller_h__
 #define __vi_controller_h__
 #include "common.h"
+#include "os/gl_window.h"
 
 struct bus_controller *bus;
 
@@ -42,6 +43,8 @@ struct render_area {
 };
 
 struct vi_controller {
+  struct gl_window gl_window;
+
   struct bus_controller *bus;
   uint32_t regs[NUM_VI_REGISTERS];
 

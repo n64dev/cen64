@@ -9,9 +9,11 @@
 cmake_minimum_required(VERSION 2.6)
 project(cen64)
 
+find_package(OpenGL)
+
 # If using GCC, configure it accordingly.
 if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
-  set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99 -D_POSIX_SOURCE")
+  set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
 
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
@@ -41,7 +43,7 @@ endif ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 
 # If using Clang, configure it accordingly.
 if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
-  set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99 -D_POSIX_SOURCE")
+  set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
 
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -flto")
@@ -74,6 +76,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 
 file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
 file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)
+file(GLOB COMMON_SOURCES ${PROJECT_SOURCE_DIR}/common/*.c)
 file(GLOB CEN64_SOURCES ${PROJECT_SOURCE_DIR}/*.c)
 file(GLOB PI_SOURCES ${PROJECT_SOURCE_DIR}/pi/*.c)
 file(GLOB RI_SOURCES ${PROJECT_SOURCE_DIR}/ri/*.c)
@@ -83,10 +86,33 @@ file(GLOB RSP_SOURCES ${PROJECT_SOURCE_DIR}/rsp/*.c)
 file(GLOB VI_SOURCES ${PROJECT_SOURCE_DIR}/vi/*.c)
 file(GLOB VR4300_SOURCES ${PROJECT_SOURCE_DIR}/vr4300/*.c)
 
-# Create the executable.
-add_executable(cen64 ${CEN64_SOURCES}
-  ${AI_SOURCES} ${PI_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
-  ${BUS_SOURCES} ${RDP_SOURCES} ${RSP_SOURCES} ${VR4300_SOURCES})
+#
+# Glob all the files together.
+#
+if (DEFINED UNIX)
+  find_package(X11)
 
-target_link_libraries(cen64 GL glfw)
+  if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang)
+    set(CMAKE_C_FLAGS "-D_POSIX_SOURCE")
+  endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang)
+
+  include_directories(${X11_xf86vmode_INCLUDE_PATH})
+  file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
+  set(EXTRA_OS_LIBS ${X11_Xxf86vm_LIB})
+  set(EXTRA_OS_EXE "")
+endif (DEFINED UNIX)
+
+if (DEFINED WIN32)
+  file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
+  set(EXTRA_OS_LIBS ws2_32 Opengl32)
+  set(EXTRA_OS_EXE WIN32)
+endif (DEFINED WIN32)
+
+# Create the executable.
+add_executable(cen64 ${OS_SOURCES} ${COMMON_SOURCES} ${CEN64_SOURCES}
+  ${AI_SOURCES} ${PI_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
+  ${BUS_SOURCES} ${RDP_SOURCES} ${RSP_SOURCES} ${VR4300_SOURCES}
+  ${EXTRA_OS_EXE})
+
+target_link_libraries(cen64 ${EXTRA_OS_LIBS} ${OPENGL_LIBRARIES})
 

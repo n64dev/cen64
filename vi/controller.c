@@ -11,10 +11,10 @@
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
+#include "os/gl_window.h"
 #include "ri/controller.h"
 #include "vi/controller.h"
 #include "vr4300/interface.h"
-#include <GL/glfw.h>
 
 #define VI_COUNTER_START (62500000.0 / 60.0) + 1;
 
@@ -36,13 +36,15 @@ void vi_cycle(struct vi_controller *vi) {
     uint32_t offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
     const uint8_t *buffer = vi->bus->ri->ram + offset;
 
+#if 0
     if (vi->frame_count++ == 9) {
       float vis = (float) 10 / (glfwGetTime() - vi->start_time);
 
       printf("VI/s: %.2f\n", vis);
-      vi->start_time = glfwGetTime();
+      //vi->start_time = glfwGetTime();
       vi->frame_count = 0;
     }
+#endif
 
     // Calculate the bounding positions.
     ra->x.start = vi->regs[VI_H_START_REG] >> 16 & 0x3FF;
@@ -88,7 +90,7 @@ void vi_cycle(struct vi_controller *vi) {
 
       vi->viuv[2] = vi->viuv[4] = (float) hres / (hres + hskip);
       glDrawArrays(GL_QUADS, 0, 4);
-      glfwSwapBuffers();
+      gl_swap_buffers(&vi->gl_window);
     }
 
     // Raise an interrupt to indicate refresh.

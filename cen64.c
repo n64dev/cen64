@@ -36,46 +36,35 @@ static void window_resize_cb(int width, int height) {
   glClear(GL_COLOR_BUFFER_BIT);
 }
 
-
-static int create_glfw_window() {
-  glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_FALSE);
-
-  if (glfwOpenWindow(640, 480, 5, 6, 5, 0, 8, 0, GLFW_WINDOW) != GL_TRUE)
-    return -1;
-
-  glfwSetWindowTitle("CEN64 [ALPHA]");
-  glfwSetWindowSizeCallback(window_resize_cb);
-  glfwPollEvents();
-  return 0;
-}
-
-int main(int argc, const char *argv[]) {
+int cen64_main(int argc, const char *argv[]) {
   struct cen64_device device;
+  struct gl_window_hints hints;
+
+  get_default_gl_window_hints(&hints);
+
+  hints.width = 640;
+  hints.height = 480;
+  hints.fullscreen = 0;
 
   if (argc < 3) {
     printf("%s <pifrom.bin> <rom>\n", argv[0]);
     return 0;
   }
 
-  if (glfwInit() != GL_TRUE) {
-    printf("Failed to initialize GLFW.\n");
+  if (device_create(&device, argv[1], argv[2]) == NULL) {
+    printf("Failed to create a device.\n");
     return 1;
   }
 
-  if (create_glfw_window() < 0) {
+  if (create_gl_window("CEN64", &device.vi.gl_window, &hints)) {
     printf("Failed to create a window.\n");
     return 2;
   }
 
-  if (device_create(&device, argv[1], argv[2]) == NULL) {
-    printf("Failed to create a device.\n");
-    return 3;
-  }
-
   device_run(&device);
 
+  destroy_gl_window(&device.vi.gl_window);
   device_destroy(&device);
-  glfwTerminate();
   return 0;
 }
 
