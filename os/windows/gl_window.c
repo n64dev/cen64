@@ -29,18 +29,25 @@ struct winapi_window {
   HGLRC h_glrc;
 };
 
+void gl_window_resize_cb(int width, int height);
+
 static int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc);
 
 static int get_matching_pixel_format(struct winapi_window *winapi_window,
   const struct gl_window_hints *hints);
 
-/* Callback function to handle message sent to the window. */
+// Callback function to handle message sent to the window.
 LRESULT CALLBACK WndProc(HWND hWnd,
   UINT message, WPARAM wParam, LPARAM lParam) {
   switch(message) {
     case WM_DESTROY:
       PostThreadMessage(event_thread_id, WM_QUIT, 0, 0);
       PostQuitMessage(0);
+      ExitThread(0);
+      break;
+
+    case WM_SIZE:
+      gl_window_resize_cb(LOWORD(lParam), HIWORD(lParam));
       break;
 
     default:
@@ -50,7 +57,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
   return 0;
 }
 
-/* Creates a new rendering context. */
+// Creates a new rendering context.
 int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc) {
   if ((*h_rc = wglCreateContext(winapi_window->h_dc)) == NULL) {
     debug("create_gl_context: wglCreateContext returned NULL.");
@@ -60,7 +67,7 @@ int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc) {
   return 0;
 }
 
-/* Creates a new rendering window. */
+// Creates a new rendering window.
 int create_gl_window(const char *window_title, struct gl_window *gl_window,
   const struct gl_window_hints *hints) {
   struct winapi_window *winapi_window;
@@ -78,7 +85,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   window_rect.top = 0;
   window_rect.bottom = hints->height;
 
-  /* Allocate memory for the opaque handle inside thw window. */
+  // Allocate memory for the opaque handle inside thw window.
   if ((gl_window->window = malloc(sizeof(*winapi_window))) == NULL) {
     debug("create_gl_window: Could not allocate enough memory.\n");
     return 1;
@@ -109,7 +116,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   AdjustWindowRectEx(&window_rect, dw_style, FALSE, dw_ex_style);
 
   if (!(winapi_window->h_wnd = CreateWindowEx(dw_ex_style,
-    CLASS_NAME, CLASS_NAME, dw_style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
+    CLASS_NAME, window_title, dw_style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
     window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
     NULL, NULL, winapi_window->h_instance, NULL))) {
     debug("create_gl_window: Failed to create the window.\n");
@@ -146,7 +153,7 @@ create_out_destroy:
   return 1;
 }
 
-/* Destroys an existing rendering window. */
+// Destroys an existing rendering window.
 int destroy_gl_window(struct gl_window *window) {
   struct winapi_window *winapi_window;
 
@@ -178,7 +185,7 @@ int destroy_gl_window(struct gl_window *window) {
   return 0;
 }
 
-/* Packs hints with a reasonable set of default hints. */
+// Packs hints with a reasonable set of default hints.
 void get_default_gl_window_hints(struct gl_window_hints *hints) {
   memset(hints, 0, sizeof(*hints));
 
@@ -187,7 +194,7 @@ void get_default_gl_window_hints(struct gl_window_hints *hints) {
   hints->double_buffered = 1;
 }
 
-/* Generates a pixel format descriptor that matches the hints. */
+// Generates a pixel format descriptor that matches the hints.
 int get_matching_pixel_format(struct winapi_window *winapi_window,
   const struct gl_window_hints *hints) {
   GLuint pixel_format;
@@ -226,11 +233,21 @@ int get_matching_pixel_format(struct winapi_window *winapi_window,
   return 0;
 }
 
-/* Promotes the contents of the back buffer to the front buffer. */
+// Promotes the contents of the back buffer to the front buffer.
 void gl_swap_buffers(const struct gl_window *window) {
   struct winapi_window *winapi_window;
 
   winapi_window = (struct winapi_window *) (window->window);
   SwapBuffers(winapi_window->h_dc);
+}
+
+// Handles events that come from X11.
+void gl_poll_events(struct gl_window *gl_window) {
+  MSG msg;
+
+  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
 }
 

@@ -7,15 +7,18 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+#include "device.h"
 #include <windows.h>
 #include <tchar.h>
 
-int cen64_main(int argc, const char **argv[]);
-static WPARAM message_loop(void);
+void cen64_cleanup(struct cen64_device *device);
+int cen64_main(struct cen64_device *device, int argc, const char *argv[]);
 
 DWORD event_thread_id;
+static WPARAM message_loop(void);
+static DWORD WINAPI thread_main(LPVOID lpParam);
 
-/* Main application event loop. */
+// Main application event loop.
 WPARAM message_loop(void) {
   MSG msg;
 
@@ -27,26 +30,25 @@ WPARAM message_loop(void) {
   return msg.wParam;
 }
 
-/* Thread in which the engine runs. */
+// Thread in which the engine runs.
 DWORD WINAPI thread_main(LPVOID lpParam) {
+  struct cen64_device *device = (struct cen64_device *) lpParam;
   int status;
 
-  event_thread_id = *((DWORD *) lpParam);
-  status = cen64_main(__argc, __argv);
-
+  status = cen64_main(device, __argc, __argv);
   PostThreadMessage(event_thread_id, WM_QUIT, 0, 0);
   return status;
 }
 
-/* Windows application entry point. */
+// Windows application entry point.
 int WINAPI WinMain(HINSTANCE hInstance,
   HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+  struct cen64_device device;
+
   WSADATA wsa_data = {0};
+  DWORD thread_id;
   HANDLE thread;
   WPARAM status;
-
-  DWORD my_thread_id = GetCurrentThreadId();
-  DWORD thread_id;
 
   if (WSAStartup(MAKEWORD(2, 2), &wsa_data)) {
     MessageBox(NULL, L"Failed to initialize WinSock.", L"Error",
@@ -55,8 +57,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
     return 1;
   }
 
+  event_thread_id = GetCurrentThreadId();
+
   if ((thread = CreateThread(
-    NULL, 0, thread_main, &my_thread_id, 0, &thread_id)) == NULL) {
+    NULL, 0, thread_main, &device, 0, &thread_id)) == NULL) {
     MessageBox(NULL, L"Failed to create the application thread.", L"Error",
       MB_OK | MB_ICONEXCLAMATION);
 
@@ -65,11 +69,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
   }
 
   status = message_loop();
-
-  WaitForSingleObject(thread, INFINITE);
   CloseHandle(thread);
-  WSACleanup();
 
+  cen64_cleanup(&device);
+  WSACleanup();
   return status;
 }
 
