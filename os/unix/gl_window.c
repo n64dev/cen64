@@ -37,7 +37,7 @@ struct glx_window {
 
 void gl_window_resize_cb(int width, int height);
 
-/* Functions to assist in taming X11. */
+// Functions to assist in taming X11.
 static int create_glx_context(
   struct glx_window *glx_window, GLXContext *context);
 
@@ -53,7 +53,7 @@ static int get_matching_window_mode(struct glx_window *glx_window,
 static int switch_to_fullscreen(struct glx_window *glx_window,
   const struct gl_window_hints *hints);
 
-/* Creates a new rendering context. */
+// Creates a new rendering context.
 int create_glx_context(struct glx_window *glx_window, GLXContext *context) {
   GLXContext check_context = glXCreateContext(glx_window->display,
     glx_window->visual_info, 0, GL_TRUE);
@@ -82,25 +82,25 @@ int create_glx_context(struct glx_window *glx_window, GLXContext *context) {
   return 0;
 }
 
-/* Creates a new rendering window. */
+// Creates a new rendering window.
 int create_gl_window(const char *window_title, struct gl_window *gl_window,
   const struct gl_window_hints *hints) {
   struct glx_window *glx_window;
   int window_valuemask;
   Window root_window;
 
-  /* We may set this to false if we fail */
-  /* to change active the windowing mode. */
+  // We may set this to false if we fail
+  // to change active the windowing mode.
   int fullscreen = hints->fullscreen;
 
   debug("create_glx_window: Creating window...\n");
 
-  /* Magic number was chosen based on the glXChooseFBConfig man page. */
-  /* It is at least large enough to hold the supported attributes, as */
-  /* well as a few additional ones. Expand it at your convenience. */
+  // Magic number was chosen based on the glXChooseFBConfig man page.
+  // It is at least large enough to hold the supported attributes, as
+  // well as a few additional ones. Expand it at your convenience.
   int attribute_list[64];
 
-  /* Allocate memory for the opaque handle inside thw window. */
+  // Allocate memory for the opaque handle inside thw window.
   if ((gl_window->window = malloc(sizeof(*glx_window))) == NULL) {
     debug("create_glx_window: Could not allocate enough memory.\n");
     goto create_out_destroy;
@@ -109,7 +109,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   glx_window = (struct glx_window *) (gl_window->window);
   memset(glx_window, 0, sizeof(*glx_window));
 
-  /* Open a connection and get the default screen number. */
+  // Open a connection and get the default screen number.
   if ((glx_window->display = XOpenDisplay(NULL)) == NULL) {
     debug("create_gl_window: Could not open connection to server.\n");
     return 1;
@@ -118,7 +118,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   glx_window->screen = DefaultScreen(glx_window->display);
   root_window = RootWindow(glx_window->display, glx_window->screen);
 
-  /* Use hints to create a window, then bind the GL context .*/
+  // Use hints to create a window, then bind the GL context.
   generate_attribute_list(attribute_list, hints);
 
   if (get_matching_visual_info(glx_window,
@@ -143,7 +143,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
 
   window_valuemask = CWBorderPixel | CWColormap | CWEventMask;
 
-  /* If going fullscreen, tell XF86 to set the mode. */
+  // If going fullscreen, tell XF86 to set the mode.
   if (fullscreen) {
     if (!switch_to_fullscreen(glx_window, hints)) {
       glx_window->went_fullscreen = 1;
@@ -170,7 +170,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   XSetWMProtocols(glx_window->display, glx_window->window,
     &glx_window->wm_delete_message, 1);
 
-  /* If going fullscreen, hide the pointer, trap input devices, etc. */
+  // If going fullscreen, hide the pointer, trap input devices, etc.
   if (fullscreen) {
     XWarpPointer(glx_window->display, None,
       glx_window->window, 0, 0, 0, 0, 0, 0);
@@ -201,7 +201,7 @@ create_out_destroy:
   return 1;
 }
 
-/* Destroys an existing rendering window. */
+// Destroys an existing rendering window.
 int destroy_gl_window(struct gl_window *window) {
   struct glx_window *glx_window = (struct glx_window *) window->window;
 
@@ -245,7 +245,7 @@ int destroy_gl_window(struct gl_window *window) {
   return 0;
 }
 
-/* Fills the array with attributes that best match the hints. */
+// Fills the array with attributes that best match the hints.
 void generate_attribute_list(int *attribute_list,
   const struct gl_window_hints *hints) {
   int idx = 0;
@@ -290,7 +290,7 @@ void generate_attribute_list(int *attribute_list,
   attribute_list[idx++] = None;
 }
 
-/* Packs hints with a reasonable set of default hints. */
+// Packs hints with a reasonable set of default hints.
 void get_default_gl_window_hints(struct gl_window_hints *hints) {
   memset(hints, 0, sizeof(*hints));
 
@@ -299,7 +299,7 @@ void get_default_gl_window_hints(struct gl_window_hints *hints) {
   hints->double_buffered = 1;
 }
 
-/* Generates a XVisualInfo that matches the attributes. */
+// Generates a XVisualInfo that matches the attributes.
 int get_matching_visual_info(struct glx_window *window,
   int *attribute_list, XVisualInfo **visual_info) {
   XVisualInfo *check_visual_info = NULL;
@@ -325,7 +325,7 @@ int get_matching_visual_info(struct glx_window *window,
   return status;
 }
 
-/* Finds a windowing most at least as big as desired resolution. */
+// Finds a windowing most at least as big as desired resolution.
 int get_matching_window_mode(struct glx_window *glx_window,
   const struct gl_window_hints *hints, XF86VidModeModeInfo *mode) {
   XF86VidModeModeInfo **modes;
@@ -357,7 +357,7 @@ int get_matching_window_mode(struct glx_window *glx_window,
   return not_found;
 }
 
-/* Promotes the contents of the back buffer to the front buffer. */
+// Promotes the contents of the back buffer to the front buffer.
 void gl_swap_buffers(const struct gl_window *window) {
   const struct glx_window *glx_window;
 
@@ -365,13 +365,13 @@ void gl_swap_buffers(const struct gl_window *window) {
   glXSwapBuffers(glx_window->display, glx_window->window);
 }
 
-/* Attempts to switch to fullscreen mode. */
+// Attempts to switch to fullscreen mode.
 int switch_to_fullscreen(struct glx_window *glx_window,
   const struct gl_window_hints *hints) {
   XF86VidModeModeInfo mode, **modes;
   int num_modes;
 
-  /* Get the current mode (so we can switch back later). */
+  // Get the current mode (so we can switch back later).
   if (!XF86VidModeGetAllModeLines(glx_window->display,
     glx_window->screen, &num_modes, &modes)) {
     debug("switch_to_fullscreen: Failed to query current mode.\n");
@@ -381,7 +381,7 @@ int switch_to_fullscreen(struct glx_window *glx_window,
   glx_window->old_mode = *modes[0];
   XFree(modes);
 
-  /* Try to switch the mode, possibly falling back to windowed mode. */
+  // Try to switch the mode, possibly falling back to windowed mode.
   if (get_matching_window_mode(glx_window, hints, &mode) ||
     !XF86VidModeSwitchToMode(glx_window->display, glx_window->screen, &mode)) {
     return 1;
@@ -391,7 +391,7 @@ int switch_to_fullscreen(struct glx_window *glx_window,
   return 0;
 }
 
-/* Handles events that come from X11. */
+// Handles events that come from X11.
 void gl_poll_events(struct gl_window *gl_window) {
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
   XEvent event;
