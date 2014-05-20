@@ -24,6 +24,11 @@
 #include "vr4300/cpu.h"
 #include "vr4300/interface.h"
 
+// Releases resources acquired by the bus component.
+void bus_cleanup(struct bus_controller *bus) {
+  destroy_memory_map(bus->map);
+}
+
 // Initializes the bus component.
 int bus_init(struct bus_controller *bus) {
   if ((bus->map = create_memory_map(15)) == NULL)

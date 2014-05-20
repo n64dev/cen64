@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <GL/glx.h>
+#include <pthread.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -24,6 +25,8 @@ struct glx_window {
   Display *display;
   XVisualInfo *visual_info;
   XF86VidModeModeInfo old_mode;
+
+  Atom wm_delete_message;
   XSetWindowAttributes attr;
   Window window;
   int screen;
@@ -31,6 +34,8 @@ struct glx_window {
   GLXContext context;
   char went_fullscreen;
 };
+
+void gl_window_resize_cb(int width, int height);
 
 /* Functions to assist in taming X11. */
 static int create_glx_context(
@@ -110,8 +115,6 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
     return 1;
   }
 
-  XSetCloseDownMode(glx_window->display, DestroyAll);
-
   glx_window->screen = DefaultScreen(glx_window->display);
   root_window = RootWindow(glx_window->display, glx_window->screen);
 
@@ -161,6 +164,11 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
     debug("create_glx_window: Failed to create a window.\n");
     goto create_out_destroy;
   }
+
+  glx_window->wm_delete_message = XInternAtom(
+    glx_window->display, "WM_DELETE_WINDOW", False);
+  XSetWMProtocols(glx_window->display, glx_window->window,
+    &glx_window->wm_delete_message, 1);
 
   /* If going fullscreen, hide the pointer, trap input devices, etc. */
   if (fullscreen) {
@@ -381,5 +389,26 @@ int switch_to_fullscreen(struct glx_window *glx_window,
 
   XF86VidModeSetViewPort(glx_window->display, glx_window->screen, 0, 0);
   return 0;
+}
+
+/* Handles events that come from X11. */
+void gl_poll_events(struct gl_window *gl_window) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+  XEvent event;
+
+  while (XPending(glx_window->display)) {
+    XNextEvent(glx_window->display, &event);
+
+    switch (event.type) {
+      case ClientMessage:
+        if (event.xclient.data.l[0] == glx_window->wm_delete_message)
+          pthread_exit(NULL);
+        break;
+
+      case ConfigureNotify:
+        gl_window_resize_cb(event.xconfigure.width, event.xconfigure.height);
+        break;
+    }
+  }
 }
 

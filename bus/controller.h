@@ -37,6 +37,7 @@ struct bus_controller {
   struct vr4300 *vr4300;
 };
 
+void bus_cleanup(struct bus_controller *bus);
 int bus_init(struct bus_controller *bus);
 
 // General-purpose accesssor functions.

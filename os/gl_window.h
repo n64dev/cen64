@@ -43,6 +43,7 @@ int destroy_gl_window(struct gl_window *window);
 int create_gl_window(const char *, struct gl_window *,
   const struct gl_window_hints *);
 
+void gl_poll_events(struct gl_window *gl_window);
 void gl_swap_buffers(const struct gl_window *window); 
 
 #endif

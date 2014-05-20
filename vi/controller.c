@@ -26,6 +26,30 @@ const char *vi_register_mnemonics[NUM_VI_REGISTERS] = {
 };
 #endif
 
+// Reads a word from the VI MMIO register space.
+int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
+  struct vi_controller *vi = (struct vi_controller *) opaque;
+  unsigned offset = address - VI_REGS_BASE_ADDRESS;
+  enum vi_register reg = (offset >> 2);
+
+  // TODO: Possibly a giant hack.
+  if (vi->regs[VI_V_SYNC_REG] > 0) {
+    vi->regs[VI_CURRENT_REG] =
+      (((62500000.0f / 60.0f) + 1) - (vi->counter)) /
+      (((62500000.0f / 60.0f) + 1) / vi->regs[VI_V_SYNC_REG]);
+
+    vi->regs[VI_CURRENT_REG] &= ~0x1;
+  }
+
+  else
+    vi->regs[VI_CURRENT_REG] = 0;
+
+  *word = vi->regs[reg];
+  debug_mmio_read(vi, vi_register_mnemonics[reg], *word);
+  return 0;
+}
+
+
 // Advances the controller by one clock cycle.
 void vi_cycle(struct vi_controller *vi) {
   if (unlikely(vi->counter-- == 0)) {
@@ -35,6 +59,9 @@ void vi_cycle(struct vi_controller *vi) {
 
     uint32_t offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
     const uint8_t *buffer = vi->bus->ri->ram + offset;
+
+    // Poll for window events: resize, close, etc.
+    gl_poll_events(&vi->gl_window);
 
 #if 0
     if (vi->frame_count++ == 9) {
@@ -136,27 +163,29 @@ int vi_init(struct vi_controller *vi,
   return 0;
 }
 
-// Reads a word from the VI MMIO register space.
-int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
-  struct vi_controller *vi = (struct vi_controller *) opaque;
-  unsigned offset = address - VI_REGS_BASE_ADDRESS;
-  enum vi_register reg = (offset >> 2);
+// Called when the window was resized.
+void gl_window_resize_cb(int width, int height) {
+  float aspect = 4.0 / 3.0;
 
-  // TODO: Possibly a giant hack.
-  if (vi->regs[VI_V_SYNC_REG] > 0) {
-    vi->regs[VI_CURRENT_REG] =
-      (((62500000.0f / 60.0f) + 1) - (vi->counter)) /
-      (((62500000.0f / 60.0f) + 1) / vi->regs[VI_V_SYNC_REG]);
+  if (height <= 0)
+    height = 1;
 
-    vi->regs[VI_CURRENT_REG] &= ~0x1;
+  glViewport(0, 0, width, height);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  if((float) width / (float) height > aspect) {
+    aspect = 3.0 / 4.0;
+    aspect *= (float)width / (float)height;
+    glOrtho(-aspect, aspect, -1, 1, -1, 1);
   }
 
-  else
-    vi->regs[VI_CURRENT_REG] = 0;
+  else {
+    aspect *= (float)height / (float)width;
+    glOrtho(-1, 1, -aspect, aspect, -1, 1);
+  }
 
-  *word = vi->regs[reg];
-  debug_mmio_read(vi, vi_register_mnemonics[reg], *word);
-  return 0;
+  glClear(GL_COLOR_BUFFER_BIT);
 }
 
 // Writes a word to the VI MMIO register space.

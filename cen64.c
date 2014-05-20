@@ -11,32 +11,14 @@
 #include "common.h"
 #include "device.h"
 
-static void window_resize_cb(int width, int height) {
-  float aspect = 4.0 / 3.0;
-
-  if (height <= 0)
-    height = 1;
-
-  glViewport(0, 0, width, height);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-
-  if((float) width / (float) height > aspect) {
-    aspect = 3.0 / 4.0;
-    aspect *= (float)width / (float)height;
-    glOrtho(-aspect, aspect, -1, 1, -1, 1);
-  }
-
-  else {
-    aspect *= (float)height / (float)width;
-    glOrtho(-1, 1, -aspect, aspect, -1, 1);
-  }
-
-  glClear(GL_COLOR_BUFFER_BIT);
+// Called when a simulation instance is terminating.
+void cen64_cleanup(struct cen64_device *device) {
+  destroy_gl_window(&device->vi.gl_window);
+  device_destroy(device);
 }
 
-int cen64_main(int argc, const char *argv[]) {
-  struct cen64_device device;
+// Called when another simulation instance is desired.
+int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
   struct gl_window_hints hints;
 
   get_default_gl_window_hints(&hints);
@@ -50,20 +32,17 @@ int cen64_main(int argc, const char *argv[]) {
     return 0;
   }
 
-  if (create_gl_window("CEN64", &device.vi.gl_window, &hints)) {
+  if (create_gl_window("CEN64", &device->vi.gl_window, &hints)) {
     printf("Failed to create a window.\n");
     return 1;
   }
 
-  if (device_create(&device, argv[1], argv[2]) == NULL) {
+  if (device_create(device, argv[1], argv[2]) == NULL) {
     printf("Failed to create a device.\n");
     return 2;
   }
 
-  device_run(&device);
-
-  device_destroy(&device);
-  destroy_gl_window(&device.vi.gl_window);
+  device_run(device);
   return 0;
 }
 
