@@ -101,7 +101,7 @@ if (DEFINED UNIX)
 
   include_directories(${X11_xf86vmode_INCLUDE_PATH})
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
-  set(EXTRA_OS_LIBS ${X11_Xxf86vm_LIB})
+  set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
   set(EXTRA_OS_EXE "")
 endif (DEFINED UNIX)
 
@@ -117,5 +117,5 @@ add_executable(cen64 ${EXTRA_OS_EXE} ${OS_SOURCES} ${COMMON_SOURCES} ${CEN64_SOU
   ${BUS_SOURCES} ${RDP_SOURCES} ${RSP_SOURCES} ${VR4300_SOURCES})
 
 target_link_libraries(cen64 ${EXTRA_OS_LIBS}
-  ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
