@@ -52,6 +52,54 @@ static void vr4300_dc_fault(struct vr4300_pipeline *pipeline,
   pipeline->icrf_latch.common.fault = fault;
 }
 
+// Raise a fault that originated in the EX stage.
+static void vr4300_ex_fault(struct vr4300_pipeline *pipeline,
+  enum vr4300_fault_id fault) {
+  vr4300_common_exceptions(pipeline);
+  pipeline->exdc_latch.common.fault = fault;
+  pipeline->rfex_latch.common.fault = fault;
+  pipeline->icrf_latch.common.fault = fault;
+}
+
+// CPU: Coprocessor unusable exception.
+void VR4300_CPU(unused(struct vr4300 *vr4300)) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_latch *common = &pipeline->exdc_latch.common;
+
+  bool in_bd_slot = common->cause_data >> 31;
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+  uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
+
+  // Record branch delay slot?
+  if (!(status & 0x2)) {
+    if (in_bd_slot) {
+      cause |= 0x80000000U;
+      epc = common->pc - 4;
+    }
+
+    else {
+      cause &= ~0x80000000U;
+      epc = common->pc;
+    }
+  }
+
+  else assert(0);
+
+  // TODO/FIXME: Check for XTLB/TLB miss exceptions.
+  // For now, we're just hard-coding the vector offset.
+
+  // Prepare pipeline for restart.
+  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
+  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0x7C) | 0x2C;
+  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
+
+  vr4300_ex_fault(pipeline, VR4300_FAULT_CPU);
+  vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
+    ? 0xFFFFFFFFBFC00280ULL
+    : 0xFFFFFFFF80000080ULL;
+}
+
 // DADE: Data address error exception.
 void VR4300_DADE(unused(struct vr4300 *vr4300)) {
   abort(); // Hammertime!

@@ -33,6 +33,7 @@ int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus) {
   vr4300_connect_bus(vr4300, bus);
 
   vr4300_cp0_init(vr4300);
+  vr4300_cp1_init(vr4300);
   vr4300_dcache_init(&vr4300->dcache);
   vr4300_icache_init(&vr4300->icache);
   vr4300_pipeline_init(&vr4300->pipeline);

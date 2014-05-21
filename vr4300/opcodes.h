@@ -20,7 +20,7 @@ enum vr4300_opcode_id {
 };
 
 struct vr4300;
-typedef void (*const vr4300_function)(struct vr4300 *, uint64_t, uint64_t);
+typedef int (*const vr4300_function)(struct vr4300 *, uint64_t, uint64_t);
 
 extern const vr4300_function vr4300_function_table[NUM_VR4300_OPCODES];
 extern const char *vr4300_opcode_mnemonics[NUM_VR4300_OPCODES];
@@ -133,7 +133,7 @@ extern const char *vr4300_opcode_mnemonics[NUM_VR4300_OPCODES];
 #define LUI VR4300_BUILD_OP(LUI, LUI, INFO1(NONE))
 #define LW VR4300_BUILD_OP(LW, LOAD, INFO1(NEEDRS))
 #define LWC0 VR4300_BUILD_OP(LWC0, INV, INFO1(NONE))
-#define LWC1 VR4300_BUILD_OP(LWC1, INV, INFO1(NONE))
+#define LWC1 VR4300_BUILD_OP(LWC1, LWC1, INFO2(NEEDRS, NEEDRT))
 #define LWC2 VR4300_BUILD_OP(LWC2, INV, INFO1(NONE))
 #define LWL VR4300_BUILD_OP(LWL, LWL, INFO1(NEEDRS))
 #define LWR VR4300_BUILD_OP(LWR, LWR, INFO1(NEEDRS))
