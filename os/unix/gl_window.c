@@ -83,7 +83,7 @@ int create_glx_context(struct glx_window *glx_window, GLXContext *context) {
 }
 
 // Creates a new rendering window.
-int create_gl_window(const char *window_title, struct gl_window *gl_window,
+int create_gl_window(struct gl_window *gl_window,
   const struct gl_window_hints *hints) {
   struct glx_window *glx_window;
   int window_valuemask;
@@ -93,7 +93,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   // to change active the windowing mode.
   int fullscreen = hints->fullscreen;
 
-  debug("create_glx_window: Creating window...\n");
+  debug("create_gl_window: Creating window...\n");
 
   // Magic number was chosen based on the glXChooseFBConfig man page.
   // It is at least large enough to hold the supported attributes, as
@@ -102,7 +102,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
 
   // Allocate memory for the opaque handle inside thw window.
   if ((gl_window->window = malloc(sizeof(*glx_window))) == NULL) {
-    debug("create_glx_window: Could not allocate enough memory.\n");
+    debug("create_gl_window: Could not allocate enough memory.\n");
     goto create_out_destroy;
   }
 
@@ -128,7 +128,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   } 
 
   if (create_glx_context(glx_window, &glx_window->context)) {
-    debug("create_glx_window: Failed to acquire a GL context.\n");
+    debug("create_gl_window: Failed to acquire a GL context.\n");
     goto create_out_destroy;
   }
 
@@ -137,7 +137,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
 
   if (!(glx_window->attr.colormap = XCreateColormap(glx_window->display,
     root_window, glx_window->visual_info->visual, AllocNone))) {
-    debug("create_glx_window: Failed to create a colormap.\n");
+    debug("create_gl_window: Failed to create a colormap.\n");
     goto create_out_destroy;
   }
 
@@ -152,7 +152,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
     }
 
     else {
-      debug("create_glx_window: Failed to to go fullscreen; falling back.\n");
+      debug("create_gl_window: Failed to to go fullscreen; falling back.\n");
       fullscreen = 0;
     }
   }
@@ -161,7 +161,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
     0, 0, hints->width, hints->height, 0, glx_window->visual_info->depth,
     InputOutput, glx_window->visual_info->visual, window_valuemask,
     &glx_window->attr))) {
-    debug("create_glx_window: Failed to create a window.\n");
+    debug("create_gl_window: Failed to create a window.\n");
     goto create_out_destroy;
   }
 
@@ -184,13 +184,13 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   }
 
   XSetStandardProperties(glx_window->display, glx_window->window,
-    window_title, window_title, None, NULL, 0, NULL);
+    "CEN64", "CEN64", None, NULL, 0, NULL);
 
   XMapRaised(glx_window->display, glx_window->window);
 
   if (!glXMakeCurrent(glx_window->display,
     glx_window->window, glx_window->context)) {
-    debug("create_glx_window: Could not attach rendering context.\n");
+    debug("create_gl_window: Could not attach rendering context.\n");
     goto create_out_destroy;
   }
 
@@ -294,8 +294,10 @@ void generate_attribute_list(int *attribute_list,
 void get_default_gl_window_hints(struct gl_window_hints *hints) {
   memset(hints, 0, sizeof(*hints));
 
-  hints->width = 800;
-  hints->height = 600;
+  hints->width = 640;
+  hints->height = 480;
+
+  hints->fullscreen = 1;
   hints->double_buffered = 1;
 }
 
@@ -358,11 +360,33 @@ int get_matching_window_mode(struct glx_window *glx_window,
 }
 
 // Promotes the contents of the back buffer to the front buffer.
-void gl_swap_buffers(const struct gl_window *window) {
+int gl_swap_buffers(const struct gl_window *window) {
   const struct glx_window *glx_window;
 
   glx_window = (const struct glx_window *) window->window;
   glXSwapBuffers(glx_window->display, glx_window->window);
+  return 0;
+}
+
+// Handles events that come from X11.
+void os_poll_events(struct gl_window *gl_window) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+  XEvent event;
+
+  while (XPending(glx_window->display)) {
+    XNextEvent(glx_window->display, &event);
+
+    switch (event.type) {
+      case ClientMessage:
+        if (event.xclient.data.l[0] == glx_window->wm_delete_message)
+          pthread_exit(NULL);
+        break;
+
+      case ConfigureNotify:
+        gl_window_resize_cb(event.xconfigure.width, event.xconfigure.height);
+        break;
+    }
+  }
 }
 
 // Attempts to switch to fullscreen mode.
@@ -389,26 +413,5 @@ int switch_to_fullscreen(struct glx_window *glx_window,
 
   XF86VidModeSetViewPort(glx_window->display, glx_window->screen, 0, 0);
   return 0;
-}
-
-// Handles events that come from X11.
-void gl_poll_events(struct gl_window *gl_window) {
-  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
-  XEvent event;
-
-  while (XPending(glx_window->display)) {
-    XNextEvent(glx_window->display, &event);
-
-    switch (event.type) {
-      case ClientMessage:
-        if (event.xclient.data.l[0] == glx_window->wm_delete_message)
-          pthread_exit(NULL);
-        break;
-
-      case ConfigureNotify:
-        gl_window_resize_cb(event.xconfigure.width, event.xconfigure.height);
-        break;
-    }
-  }
 }
 

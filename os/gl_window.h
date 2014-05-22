@@ -10,7 +10,7 @@
 #ifndef __os_gl_window_h__
 #define __os_gl_window_h__
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <windows.h>
 #define GL_UNSIGNED_SHORT_5_5_5_1 0x8034
 #endif
@@ -40,11 +40,11 @@ struct gl_window_hints {
 void get_default_gl_window_hints(struct gl_window_hints *hints);
 
 int destroy_gl_window(struct gl_window *window);
-int create_gl_window(const char *, struct gl_window *,
-  const struct gl_window_hints *);
+int create_gl_window(struct gl_window *window,
+  const struct gl_window_hints *hints);
 
-void gl_poll_events(struct gl_window *gl_window);
-void gl_swap_buffers(const struct gl_window *window); 
+int gl_swap_buffers(const struct gl_window *window); 
+void os_poll_events(struct gl_window *gl_window);
 
 #endif
 

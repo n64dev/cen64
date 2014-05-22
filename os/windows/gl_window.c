@@ -19,7 +19,7 @@
 #include <GL/gl.h>
 
 extern DWORD event_thread_id;
-static const wchar_t CLASS_NAME[] = L"lekki";
+static const wchar_t CLASSNAME[] = L"CEN64";
 
 struct winapi_window {
   HINSTANCE h_instance;
@@ -41,9 +41,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
   UINT message, WPARAM wParam, LPARAM lParam) {
   switch(message) {
     case WM_DESTROY:
-      PostThreadMessage(event_thread_id, WM_QUIT, 0, 0);
       PostQuitMessage(0);
-      ExitThread(0);
       break;
 
     case WM_SIZE:
@@ -68,7 +66,7 @@ int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc) {
 }
 
 // Creates a new rendering window.
-int create_gl_window(const char *window_title, struct gl_window *gl_window,
+int create_gl_window(struct gl_window *gl_window,
   const struct gl_window_hints *hints) {
   struct winapi_window *winapi_window;
   int fullscreen;
@@ -104,7 +102,7 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = NULL;
   wc.lpszMenuName = NULL;
-  wc.lpszClassName = CLASS_NAME;
+  wc.lpszClassName = CLASSNAME;
 
   if (!RegisterClass(&wc)) {
     debug("create_gl_window: Failed to register the window class.\n");
@@ -116,30 +114,30 @@ int create_gl_window(const char *window_title, struct gl_window *gl_window,
   AdjustWindowRectEx(&window_rect, dw_style, FALSE, dw_ex_style);
 
   if (!(winapi_window->h_wnd = CreateWindowEx(dw_ex_style,
-    CLASS_NAME, window_title, dw_style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
+    CLASSNAME, "CEN64", dw_style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
     window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
     NULL, NULL, winapi_window->h_instance, NULL))) {
-    debug("create_gl_window: Failed to create the window.\n");
+    debug("create_gl_window: Failed to create a window.\n");
     goto create_out_destroy;
   }
 
   if ((winapi_window->h_dc = GetDC(winapi_window->h_wnd)) == NULL) {
-    debug("create_gl_window: Failed get an OpenGL device context.\n");
+    debug("create_gl_window: Failed get an GL device context.\n");
     goto create_out_destroy;
   }
 
   if (get_matching_pixel_format(winapi_window, hints)) {
-    debug("create_gl_window: Failed to match window hints.\n");
+    debug("create_gl_window: Failed to match GL window hints.\n");
     goto create_out_destroy;
   }
 
   if (create_gl_context(winapi_window, &winapi_window->h_glrc)) {
-    debug("create_gl_window: Failed to acquire a GL context.\n");
+    debug("create_gl_window: Failed to acquire a GL rendering context.\n");
     goto create_out_destroy;
   }
 
   if (!wglMakeCurrent(winapi_window->h_dc, winapi_window->h_glrc)) {
-    debug("create_glx_window: Could not attach rendering context.\n");
+    debug("create_glx_window: Could not attach the GL rendering context.\n");
     goto create_out_destroy;
   }
 
@@ -176,7 +174,7 @@ int destroy_gl_window(struct gl_window *window) {
   }
 
   if (winapi_window->h_instance) {
-    UnregisterClass(CLASS_NAME, winapi_window->h_instance);
+    UnregisterClass(CLASSNAME, winapi_window->h_instance);
     winapi_window->h_instance = NULL;
   }
 
@@ -189,8 +187,10 @@ int destroy_gl_window(struct gl_window *window) {
 void get_default_gl_window_hints(struct gl_window_hints *hints) {
   memset(hints, 0, sizeof(*hints));
 
-  hints->width = 800;
-  hints->height = 600;
+  hints->width = 640;
+  hints->height = 480;
+
+  hints->fullscreen = 0;
   hints->double_buffered = 1;
 }
 
@@ -234,18 +234,23 @@ int get_matching_pixel_format(struct winapi_window *winapi_window,
 }
 
 // Promotes the contents of the back buffer to the front buffer.
-void gl_swap_buffers(const struct gl_window *window) {
+int gl_swap_buffers(const struct gl_window *window) {
   struct winapi_window *winapi_window;
 
   winapi_window = (struct winapi_window *) (window->window);
-  SwapBuffers(winapi_window->h_dc);
+  return SwapBuffers(winapi_window->h_dc) != TRUE;
 }
 
-// Handles events that come from X11.
-void gl_poll_events(struct gl_window *gl_window) {
+// Handles events that get sent to the window thread.
+void os_poll_events(struct gl_window *gl_window) {
   MSG msg;
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (msg.message == WM_QUIT) {
+      PostThreadMessage(event_thread_id, WM_QUIT, 0, 0);
+      ExitThread(0);
+    }
+
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }

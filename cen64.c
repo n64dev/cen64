@@ -20,19 +20,14 @@ void cen64_cleanup(struct cen64_device *device) {
 // Called when another simulation instance is desired.
 int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
   struct gl_window_hints hints;
-
   get_default_gl_window_hints(&hints);
-
-  hints.width = 640;
-  hints.height = 480;
-  hints.fullscreen = 0;
 
   if (argc < 3) {
     printf("%s <pifrom.bin> <rom>\n", argv[0]);
     return 0;
   }
 
-  if (create_gl_window("CEN64", &device->vi.gl_window, &hints)) {
+  if (create_gl_window(&device->vi.gl_window, &hints)) {
     printf("Failed to create a window.\n");
     return 1;
   }
