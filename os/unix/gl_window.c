@@ -297,7 +297,7 @@ void get_default_gl_window_hints(struct gl_window_hints *hints) {
   hints->width = 640;
   hints->height = 480;
 
-  hints->fullscreen = 1;
+  hints->fullscreen = 0;
   hints->double_buffered = 1;
 }
 
