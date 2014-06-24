@@ -381,6 +381,104 @@ int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// DADD
+// DSUB
+//
+int VR4300_DADD_DSUB(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
+
+  unsigned dest;
+  uint64_t rd;
+
+  dest = GET_RD(iw);
+  rt = (rt ^ mask) - mask;
+  rd = rs + rt;
+
+  // TODO/FIXME: Uncomment this later...
+  //assert(((rd >> 63) == (rd >> 64)) && "Overflow exception.");
+
+  exdc_latch->result = (int64_t) rd;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DADDI
+// DSUBI
+//
+int VR4300_DADDI_DSUBI(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t mask = 0; //vr4300_addsub_lut[iw & 0x1];
+
+  unsigned dest;
+
+  dest = GET_RT(iw);
+  rt = (int16_t) iw;
+  rt = (rt ^ mask) - mask;
+  rt = rs + rt;
+
+  // TODO/FIXME: Uncomment this later...
+  //assert(((rt >> 63) == (rt >> 64)) && "Overflow exception.");
+
+  exdc_latch->result = (int64_t) rt;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DADDIU
+// DSUBIU
+//
+int VR4300_DADDIU_DSUBIU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t mask = 0; //vr4300_addsub_lut[iw & 0x1];
+
+  unsigned dest;
+
+  dest = GET_RT(iw);
+  rt = (int16_t) iw;
+  rt = (rt ^ mask) - mask;
+  rt = rs + rt;
+
+  exdc_latch->result = (int64_t) rt;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DADDU
+// DSUBU
+//
+int VR4300_DADDU_DSUBU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
+
+  unsigned dest;
+  uint64_t rd;
+
+  dest = GET_RD(iw);
+  rt = (rt ^ mask) - mask;
+  rd = rs + rt;
+
+  exdc_latch->result = (int64_t) rd;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // DIV
 // DIVU
 //
@@ -407,6 +505,25 @@ int VR4300_DIV_DIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// DDIV
+//
+int VR4300_DDIV(struct vr4300 *vr4300, uint64_t _rs, uint64_t _rt) {
+  if (likely(_rt != 0)) {
+    int64_t rs = _rs;
+    int64_t rt = _rt;
+
+    uint64_t div = rs / rt;
+    uint64_t mod = rs % rt;
+
+    // TODO: Delay the output a few cycles.
+    vr4300->regs[VR4300_REGISTER_LO] = div;
+    vr4300->regs[VR4300_REGISTER_HI] = mod;
+  }
+
+  return 0;
+}
+
+//
 // DDIVU
 //
 int VR4300_DDIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
@@ -419,6 +536,31 @@ int VR4300_DDIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     vr4300->regs[VR4300_REGISTER_HI] = mod;
   }
 
+  return 0;
+}
+
+//
+// DMULT
+//
+// TODO: Add a version that works on MSVC.
+//
+int VR4300_DMULT(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  uint64_t lo, hi;
+
+#ifdef __GNUC__
+  __uint128_t rsx = (int64_t) rs;
+  __uint128_t rtx = (int64_t) rt;
+  __uint128_t result;
+
+  result = rsx * rtx;
+
+  lo = result;
+  hi = result >> 64;
+#endif
+
+  // TODO: Delay the output a few cycles.
+  vr4300->regs[VR4300_REGISTER_LO] = lo;
+  vr4300->regs[VR4300_REGISTER_HI] = hi;
   return 0;
 }
 
@@ -448,6 +590,38 @@ int VR4300_DMULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// DSLL
+//
+int VR4300_DSLL(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  unsigned sa = iw >> 6 & 0x1F;
+
+  exdc_latch->result = rt << sa;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DSLLV
+//
+int VR4300_DSLLV(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  unsigned sa = rs & 0x3F;
+
+  exdc_latch->result = rt << sa;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // DSLL32
 //
 int VR4300_DSLL32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
@@ -464,6 +638,38 @@ int VR4300_DSLL32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 }
 
 //
+// DSRA
+//
+int VR4300_DSRA(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  unsigned sa = iw >> 6 & 0x1F;
+
+  exdc_latch->result = (int64_t) rt >> sa;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DSRAV
+//
+int VR4300_DSRAV(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  unsigned sa = rs & 0x3F;
+
+  exdc_latch->result = (int64_t) rt >> sa;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // DSRA32
 //
 int VR4300_DSRA32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
@@ -475,6 +681,54 @@ int VR4300_DSRA32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   unsigned sa = (iw >> 6 & 0x1F) + 32;
 
   exdc_latch->result = (int64_t) rt >> sa;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DSRL
+//
+int VR4300_DSRL(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  unsigned sa = iw >> 6 & 0x1F;
+
+  exdc_latch->result = rt >> sa;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DSRLV
+//
+int VR4300_DSRLV(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  unsigned sa = rs & 0x3F;
+
+  exdc_latch->result = rt >> sa;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DSRL32
+//
+int VR4300_DSRL32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+  unsigned sa = (iw >> 6 & 0x1F) + 32;
+
+  exdc_latch->result = rt >> sa;
   exdc_latch->dest = dest;
   return 0;
 }
@@ -793,6 +1047,21 @@ int VR4300_MULT_MULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   // TODO: Delay the output a few cycles.
   vr4300->regs[VR4300_REGISTER_LO] = (int32_t) result;
   vr4300->regs[VR4300_REGISTER_HI] = (int32_t) (result >> 32);
+  return 0;
+}
+
+//
+// NOR
+//
+int VR4300_NOR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
+
+  exdc_latch->result = ~(rs | rt);
+  exdc_latch->dest = dest;
   return 0;
 }
 
