@@ -11,6 +11,9 @@
 #ifndef __common_h__
 #define __common_h__
 
+#define tostring(s)	#s
+#define stringify(s)	tostring(s)
+
 #ifdef _MSC_VER
 #define inline _inline
 #endif
@@ -50,6 +53,34 @@ typedef char bool;
 #else
 #include <cstdio>
 #endif
+#endif
+
+#ifdef __llvm__
+#define CEN64_COMPILER "llvm-"stringify(__clang_major__)"." \
+  stringify(__clang_minor__)"."stringify(__clang_patchlevel__)
+#elif defined(__GNUC__)
+#define CEN64_COMPILER "gcc-"stringify(__GNUC__)"." \
+  stringify(__GNUC_MINOR__)"."stringify(__GNUC_PATCHLEVEL__)
+#elif defined(_MSC_VER)
+#if _MSC_VER < 1300
+#define CEN64_COMPILER "MSVC 6.0"
+#elif _MSC_VER < 1500
+#define CEN64_COMPILER "MSVC 2005"
+#elif _MSC_VER < 1600
+#define CEN64_COMPILER "MSVC 2008"
+#elif _MSC_VER < 1700
+#define CEN64_COMPILER "MSVC 2010"
+#elif _MSC_VER < 1800
+#define CEN64_COMPILER "MSVC 2012"
+#elif _MSC_VER < 1900
+#define CEN64_COMPILER "MSVC 2013"
+#elif _MSC_VER < 2000
+#define CEN64_COMPILER "MSVC 2014"
+#else
+#define CEN64_COMPILER "MSVC"
+#endif
+#else
+#define CEN64_COMPILER "Unknown"
 #endif
 
 #define CACHE_LINE_SIZE 64

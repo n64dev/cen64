@@ -7,6 +7,7 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+#include "common.h"
 #include "common/debug.h"
 #include "os/gl_window.h"
 
@@ -114,7 +115,8 @@ int create_gl_window(struct gl_window *gl_window,
   AdjustWindowRectEx(&window_rect, dw_style, FALSE, dw_ex_style);
 
   if (!(winapi_window->h_wnd = CreateWindowEx(dw_ex_style,
-    CLASSNAME, "CEN64", dw_style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
+    CLASSNAME, "CEN64 ["CEN64_COMPILER"]",
+    dw_style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
     window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
     NULL, NULL, winapi_window->h_instance, NULL))) {
     debug("create_gl_window: Failed to create a window.\n");

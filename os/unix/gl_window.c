@@ -7,6 +7,7 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+#include "common.h"
 #include "common/debug.h"
 #include "os/gl_window.h"
 
@@ -184,7 +185,7 @@ int create_gl_window(struct gl_window *gl_window,
   }
 
   XSetStandardProperties(glx_window->display, glx_window->window,
-    "CEN64", "CEN64", None, NULL, 0, NULL);
+    "CEN64 ["CEN64_COMPILER"]", "CEN64", None, NULL, 0, NULL);
 
   XMapRaised(glx_window->display, glx_window->window);
 
