@@ -8,6 +8,7 @@
 //
 
 #include "device.h"
+#include "os/main.h"
 #include <pthread.h>
 
 struct cen64_args {

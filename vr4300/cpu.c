@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "vr4300/cp0.h"
+#include "vr4300/cp1.h"
 #include "vr4300/cpu.h"
 #include "vr4300/icache.h"
 #include "vr4300/pipeline.h"
