@@ -901,11 +901,25 @@ int VR4300_LUI(struct vr4300 *vr4300,
 // LWC1
 //
 int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
+  uint32_t iw = rfex_latch->iw;
+  uint64_t address = (rs + (int16_t) iw);
+  unsigned dest = VR4300_REGISTER_CP1_0 + GET_RT(iw);
+
+  exdc_latch->request.address = address;
+  exdc_latch->request.dqm = ~0U;
+  exdc_latch->request.postshift = 0;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
+  exdc_latch->request.size = 4;
+
+  exdc_latch->dest = dest;
   return 0;
 }
 

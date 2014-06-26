@@ -135,7 +135,7 @@ cen64_align(static const struct vr4300_opcode
 };
 
 // ============================================================================
-//  Escaped opcode table: COP1.
+//  Escaped opcode table: COP1/1.
 //
 //      31--------26-25------21 ----------------------------------------0
 //      |  COP1/6   |  FMT/5  |                                         |
@@ -148,15 +148,48 @@ cen64_align(static const struct vr4300_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 // ============================================================================
 cen64_align(static const struct vr4300_opcode
-  vr4300_cop1_opcode_table[32], CACHE_LINE_SIZE) = {
+  vr4300_cop1_opcode_table_1[16], CACHE_LINE_SIZE) = {
   {MFC1},    {DMFC1},   {CFC1},    {INVALID},
   {MTC1},    {DMTC1},   {CTC1},    {INVALID},
   {BC1},     {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {FPUS},    {FPUD},    {INVALID}, {INVALID},
-  {FPUW},    {FPUL},    {INVALID}, {INVALID},
+};
+
+// ============================================================================
+//  Escaped opcode table: COP1/2.
+//
+//      31--------26-25 -24-----------------------------------5---------0
+//      |   COP0/6  | 1 |                                     |  FMT/6  |
+//      ------6-------1--------------------------------------------6-----
+//      |--000--|--001--|--010--|--011--|--100--|--101--|--110--|--111--|
+//  000 |  ---  | TLBR  | TLBWI |  ---  |  ---  |  ---  | TLBWR |  ---  |
+//  001 | TLBP  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//  010 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//  011 | ERET  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//  100 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//  101 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//  110 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//  111 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//      |-------|-------|-------|-------|-------|-------|-------|-------|
+// ========================================================================= */
+cen64_align(static const struct vr4300_opcode
+  vr4300_cop1_opcode_table_2[64], CACHE_LINE_SIZE) = {
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 };
 
 // ============================================================================
@@ -257,7 +290,7 @@ cen64_align(static const struct vr4300_opcode_escape
  {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
 
  {vr4300_cop0_opcode_table_1, 21, 0x0F}, {vr4300_cop0_opcode_table_2,  0, 0x3F},
- {vr4300_cop1_opcode_table,   21, 0x1F}, {vr4300_cop1_opcode_table,   21, 0x1F},
+ {vr4300_cop1_opcode_table_1, 21, 0x0F}, {vr4300_cop1_opcode_table_2,  0, 0x3F},
  {vr4300_cop2_opcode_table,   21, 0x1F}, {vr4300_cop2_opcode_table,   21, 0x1F},
  {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
  {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
