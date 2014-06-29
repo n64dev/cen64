@@ -105,7 +105,7 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   exdc_latch->common = rfex_latch->common;
 
   flags = rfex_latch->opcode.flags;
-  if (exdc_latch->request.type == VR4300_BUS_REQUEST_NONE)
+  if (exdc_latch->request.type != VR4300_BUS_REQUEST_READ)
     flags &= ~(OPCODE_INFO_NEEDRS | OPCODE_INFO_NEEDRT);
 
   iw = rfex_latch->iw;
