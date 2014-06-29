@@ -91,7 +91,7 @@ void VR4300_CPU(unused(struct vr4300 *vr4300)) {
 
   // Prepare pipeline for restart.
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0x7C) | 0x2C;
+  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0xFF) | 0x2C;
   vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
 
   vr4300_ex_fault(pipeline, VR4300_FAULT_CPU);
@@ -169,7 +169,7 @@ void VR4300_INTR(unused(struct vr4300 *vr4300)) {
 
   // Prepare pipeline for restart.
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = cause & ~0x7C;
+  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = cause & ~0xFF;
   vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
 
   vr4300_dc_fault(pipeline, VR4300_FAULT_INTR);
