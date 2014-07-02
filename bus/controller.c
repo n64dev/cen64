@@ -106,6 +106,6 @@ int bus_write_word(struct bus_controller *bus,
     return 0;
   }
 
-  return node->on_write(node->instance, address, word, dqm);
+  return node->on_write(node->instance, address, word & dqm, dqm);
 }
 
