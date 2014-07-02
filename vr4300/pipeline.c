@@ -389,7 +389,7 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
 
   // Shall we sign extend?
   sdata = (int64_t) ((uint64_t) sdata << datashift) >> datashift;
-  dcwb_latch->result = sdata & request->dqm;
+  dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
 
   // Continue with the rest of the pipeline.
   if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
