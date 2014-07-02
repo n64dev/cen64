@@ -42,9 +42,6 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE ${CMAKE_EXE_LINKER_FLAGS_RELEASE} "-Wl,--gc-sections")
     set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL ${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} "-Wl,--gc-sections")
   endif (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
-
-  set (CEN64_COMPILER "gcc-${GCC_VERSION}")
-  STRING(REGEX REPLACE "(\r?\n)+$" "" CEN64_COMPILER "${CEN64_COMPILER}")
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 
 # If using Clang, configure it accordingly.
@@ -66,8 +63,6 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
   if (NATIVE_BUILD)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
   endif (NATIVE_BUILD)
-
-  set (CEN64_COMPILER "llvm-" __clang_major____clang_minor____clang_patchlevel__)
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 
 # Print out MMIO register accesses?
