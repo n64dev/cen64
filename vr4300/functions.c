@@ -782,9 +782,13 @@ int VR4300_INV(struct vr4300 *vr4300,
 #endif
 
   // TODO/FIXME: Implement this instruction later.
-  if (opcode != VR4300_OPCODE_TLBWI &&
-    opcode != VR4300_OPCODE_TLBR &&
-    opcode != VR4300_OPCODE_TLBP)
+  if (opcode == VR4300_OPCODE_TLBP) {
+    assert(0 && "Unimplemented instruction encountered.");
+    vr4300->regs[VR4300_CP0_REGISTER_INDEX] = (int32_t) 0x80000000;
+  }
+
+  else if (opcode != VR4300_OPCODE_TLBWI &&
+    opcode != VR4300_OPCODE_TLBR)
     assert(0 && "Unimplemented instruction encountered.");
 
   return 0;
