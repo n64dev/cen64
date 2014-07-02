@@ -353,13 +353,13 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-#ifndef NDEBUG
-  fprintf(stderr, "Unimplemented instruction: CFC1 [0x%.8X]\n",
-    rfex_latch->iw);
-#endif
-
   uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RT(iw);
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
 
   exdc_latch->result = (int32_t) 0;
   exdc_latch->dest = dest;
@@ -372,10 +372,10 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 
-#ifndef NDEBUG
-  fprintf(stderr, "Unimplemented instruction: CTC1 [0x%.8X]\n",
-    rfex_latch->iw);
-#endif
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
 
   return 0;
 }
@@ -782,13 +782,10 @@ int VR4300_INV(struct vr4300 *vr4300,
 #endif
 
   // TODO/FIXME: Implement this instruction later.
-  if (opcode == VR4300_OPCODE_TLBP) {
-    assert(0 && "Unimplemented instruction encountered.");
+  if (opcode == VR4300_OPCODE_TLBP)
     vr4300->regs[VR4300_CP0_REGISTER_INDEX] = (int32_t) 0x80000000;
-  }
 
-  else if (opcode != VR4300_OPCODE_TLBWI &&
-    opcode != VR4300_OPCODE_TLBR)
+  else if (opcode != VR4300_OPCODE_TLBWI && opcode != VR4300_OPCODE_TLBR)
     assert(0 && "Unimplemented instruction encountered.");
 
   return 0;
