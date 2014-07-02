@@ -1072,6 +1072,22 @@ int VR4300_MTCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 }
 
 //
+// MTC1
+// TODO/FIXME: Combine with MTC{0,2}?
+//
+int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw) + VR4300_REGISTER_CP1_0;
+
+  // TODO/FIXME: Sign extend, or...?
+  vr4300->regs[dest] = (int32_t) rt;
+  return 0;
+}
+
+//
 // MULT
 // MULTU
 //
