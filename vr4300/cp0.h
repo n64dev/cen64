@@ -44,6 +44,10 @@ enum vr4300_cp0_register {
   NUM_VR4300_CP0_REGISTERS = 32,
 };
 
+int VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt);
+int VR4300_MFC0(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt);
+int VR4300_MTC0(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt);
+
 void vr4300_cp0_init(struct vr4300 *vr4300);
 
 #endif

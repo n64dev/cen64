@@ -11,6 +11,8 @@
 #define VR4300_BUILD_FUNCS
 
 #include "common.h"
+#include "cp0.h"
+#include "cp1.h"
 #include "cpu.h"
 #include "decoder.h"
 #include "opcodes.h"
@@ -44,13 +46,6 @@ cen64_align(static const uint64_t vr4300_load_sex_mask[2][4], CACHE_LINE_SIZE) =
   {~0ULL,   ~0ULL,     0ULL, ~0ULL},          // sex
   {0xFFULL, 0xFFFFULL, 0ULL, 0xFFFFFFFFULL},  // zex
 };
-
-static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
-
-// Determines if the coprocessor was used yet.
-bool vr4300_cp1_usable(const struct vr4300 *vr4300) {
-  return (vr4300->regs[VR4300_CP0_REGISTER_STATUS] & 0x20000000) != 0;
-}
 
 //
 // ADD
@@ -341,40 +336,6 @@ int VR4300_CACHE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
     default:
       break;
-  }
-
-  return 0;
-}
-
-//
-// CFC1
-//
-int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  unsigned dest = GET_RT(iw);
-
-  if (!vr4300_cp1_usable(vr4300)) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  exdc_latch->result = (int32_t) 0;
-  exdc_latch->dest = dest;
-  return 0;
-}
-
-//
-// CTC1
-//
-int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-
-  if (!vr4300_cp1_usable(vr4300)) {
-    VR4300_CPU(vr4300);
-    return 1;
   }
 
   return 0;
@@ -734,40 +695,6 @@ int VR4300_DSRL32(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 }
 
 //
-// ERET
-//
-int VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-
-  int32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
-  if (status & 0x4) {
-    icrf_latch->pc = vr4300->regs[VR4300_CP0_REGISTER_ERROREPC];
-    status &= ~0x4;
-  }
-
-  else {
-    icrf_latch->pc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
-    status &= ~0x2;
-  }
-
-  // Until we delay CP0 writes, we have to kill ourselves
-  // to prevent squashing this instruction the next cycle.
-  exdc_latch->common.fault = ~0;
-  icrf_latch->common.fault = ~0;
-
-  pipeline->exception_history = 0;
-  pipeline->fault_present = true;
-  pipeline->skip_stages = 0;
-
-  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
-  // vr4300->llbit = 0;
-  return 0;
-}
-
-//
 // INV
 //
 int VR4300_INV(struct vr4300 *vr4300,
@@ -855,35 +782,6 @@ int VR4300_LD(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
-// LDC1
-//
-// TODO/FIXME: Check for unaligned addresses.
-//
-int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  unsigned dest = VR4300_REGISTER_CP1_0 + GET_RT(iw);
-
-  if (!vr4300_cp1_usable(vr4300)) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  exdc_latch->request.address = rs + (int16_t) iw;
-  exdc_latch->request.dqm = ~0ULL;
-  exdc_latch->request.postshift = 0;
-  exdc_latch->request.preshift = 0;
-  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
-  exdc_latch->request.size = 8;
-
-  exdc_latch->dest = dest;
-  exdc_latch->result = 0;
-  return 0;
-}
-
-//
 // LB
 // LBU
 // LH
@@ -927,49 +825,6 @@ int VR4300_LUI(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
 
   exdc_latch->result = imm;
-  exdc_latch->dest = dest;
-  return 0;
-}
-
-//
-// LWC1
-//
-// TODO/FIXME: Check for unaligned addresses.
-//
-int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  if (!vr4300_cp1_usable(vr4300)) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  uint32_t iw = rfex_latch->iw;
-  uint64_t address = (rs + (int16_t) iw);
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
-  uint64_t result = 0;
-  unsigned dest = VR4300_REGISTER_CP1_0 + GET_RT(iw);
-  unsigned postshift = 0;
-
-  if (!(status & 0x04000000)) {
-    result = dest & 0x1
-      ? vr4300->regs[dest & ~0x1] & 0x00000000FFFFFFFFULL
-      : vr4300->regs[dest & ~0x1] & 0xFFFFFFFF00000000ULL;
-
-    postshift = 32;
-    dest &= ~0x1;
-  }
-
-  exdc_latch->request.address = address;
-  exdc_latch->request.dqm = ~0U;
-  exdc_latch->request.postshift = postshift;
-  exdc_latch->request.preshift = 0;
-  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
-  exdc_latch->request.size = 4;
-
-  exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
 }
@@ -1027,23 +882,6 @@ int VR4300_LWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
-// MFC0
-// TODO/FIXME: Combine with MFC{1,2}?
-//
-int VR4300_MFCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  unsigned src = GET_RD(iw) + 32;
-  unsigned dest = GET_RT(iw);
-
-  exdc_latch->result = (int32_t) vr4300->regs[src];
-  exdc_latch->dest = dest;
-  return 0;
-}
-
-//
 // MFHI
 // MFLO
 //
@@ -1073,57 +911,6 @@ int VR4300_MTHI_MTLO(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   // TODO: Write these here, or...? Registers are probably tied into EX logic...
   vr4300->regs[VR4300_REGISTER_HI + is_mtlo] = rs;
-  return 0;
-}
-
-//
-// MTC0
-// TODO/FIXME: Combine with MTC{1,2}?
-//
-int VR4300_MTCx(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  unsigned dest = GET_RD(iw) + 32;
-
-  if (dest == VR4300_CP0_REGISTER_COMPARE)
-    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
-
-  // TODO/FIXME: Sign extend, or...?
-  // Would make sense for EPC, etc.
-  //exdc_latch->result = (int32_t) rt;
-  //exdc_latch->dest = dest;
-  vr4300->regs[dest] = (int32_t) rt;
-  return 0;
-}
-
-//
-// MTC1
-// TODO/FIXME: Combine with MTC{0,2}?
-//
-int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
-  unsigned dest = GET_FS(iw) + VR4300_REGISTER_CP1_0;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
-  // TODO/FIXME: Err... forward here?
-  if (!(status & 0x04000000)) {
-    uint64_t fs = vr4300->regs[dest & ~0x1];
-
-    if (dest & 0x1)
-      vr4300->regs[dest & ~0x1] = ((uint32_t) fs) | (rt << 32);
-    else
-      vr4300->regs[dest & ~0x1] = (fs << 32) | ((uint32_t) rt);
-
-    return 0;
-  }
-
-  // TODO/FIXME: Sign extend, or...?
-  vr4300->regs[dest] = (int32_t) rt;
   return 0;
 }
 
