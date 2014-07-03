@@ -159,7 +159,7 @@ cen64_align(static const struct vr4300_opcode
 //  Escaped opcode table: COP1/2.
 //
 //      31--------26-25 -24-----------------------------------5---------0
-//      |   COP0/6  | 1 |                                     |  FMT/6  |
+//      |   COP1/6  | 1 |                                     |  FMT/6  |
 //      ------6-------1--------------------------------------------6-----
 //      |--000--|--001--|--010--|--011--|--100--|--101--|--110--|--111--|
 //  000 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
@@ -174,22 +174,22 @@ cen64_align(static const struct vr4300_opcode
 // ========================================================================= */
 cen64_align(static const struct vr4300_opcode
   vr4300_cop1_opcode_table_2[64], CACHE_LINE_SIZE) = {
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID},
+  {CP1_ADD},     {CP1_SUB},     {CP1_MUL},     {CP1_DIV},
+  {CP1_SQRT},    {CP1_ABS},     {CP1_MOV},     {CP1_NEG},
+  {CP1_ROUND_L}, {CP1_TRUNC_L}, {CP1_CEIL_L},  {CP1_FLOOR_L},
+  {CP1_ROUND_W}, {CP1_TRUNC_W}, {CP1_CEIL_W},  {CP1_FLOOR_W},
+  {INVALID},     {INVALID},     {INVALID},     {INVALID},
+  {INVALID},     {INVALID},     {INVALID},     {INVALID},
+  {INVALID},     {INVALID},     {INVALID},     {INVALID},
+  {INVALID},     {INVALID},     {INVALID},     {INVALID},
+  {CP1_CVT_S},   {CP1_CVT_D},   {INVALID},     {INVALID},
+  {CP1_CVT_W},   {CP1_CVT_L},   {INVALID},     {INVALID},
+  {INVALID},     {INVALID},     {INVALID},     {INVALID},
+  {INVALID},     {INVALID},     {INVALID},     {INVALID},
+  {CP1_C_F},     {CP1_C_UN},    {CP1_C_EQ},    {CP1_C_UEQ},
+  {CP1_C_OLT},   {CP1_C_ULT},   {CP1_C_OLE},   {CP1_C_ULE},
+  {CP1_C_SF},    {CP1_C_NGLE},  {CP1_C_SEQ},   {CP1_C_NGL},
+  {CP1_C_LT},    {CP1_C_NGE},   {CP1_C_LE},    {CP1_C_NGT}
 };
 
 // ============================================================================
