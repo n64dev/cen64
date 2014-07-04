@@ -23,7 +23,7 @@ bool vr4300_cp1_usable(const struct vr4300 *vr4300) {
 }
 
 //
-// CVT.ADD.fmt
+// ADD.fmt
 //
 int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
@@ -233,7 +233,7 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 }
 
 //
-// CVT.DIV.fmt
+// DIV.fmt
 //
 int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
@@ -296,7 +296,7 @@ int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  unsigned dest = VR4300_REGISTER_CP1_0 + GET_RT(iw);
+  unsigned dest = GET_FT(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -359,7 +359,7 @@ int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 }
 
 //
-// CVT.MUL.fmt
+// MUL.fmt
 //
 int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
@@ -459,6 +459,34 @@ int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// SDC1
+//
+// TODO/FIXME: Check for unaligned addresses.
+//
+int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.data = ft;
+  exdc_latch->request.dqm = ~0ULL;
+  exdc_latch->request.postshift = 0;
+  exdc_latch->request.preshift = 0;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
+  exdc_latch->request.size = 8;
+
+  exdc_latch->result = 0;
   return 0;
 }
 
