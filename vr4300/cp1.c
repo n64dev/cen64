@@ -57,6 +57,20 @@ int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 }
 
 //
+// CVT.s.fmt
+//
+int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RT(iw);
+  enum vr4300_fmt fmt = GET_FMT(iw);
+
+  return 0;
+}
+
+//
 // LDC1
 //
 // TODO/FIXME: Check for unaligned addresses.
@@ -134,10 +148,10 @@ int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   uint32_t iw = rfex_latch->iw;
-  unsigned dest = GET_FS(iw) + VR4300_REGISTER_CP1_0;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  unsigned dest = GET_FS(iw);
 
   // TODO/FIXME: Err... forward here?
   if (!(status & 0x04000000)) {
@@ -158,7 +172,5 @@ int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
 // Initializes the coprocessor.
 void vr4300_cp1_init(struct vr4300 *vr4300) {
-  memset(vr4300->regs + VR4300_REGISTER_CP1_0, 0,
-    sizeof(*vr4300->regs) * NUM_VR4300_CP1_REGISTERS);
 }
 

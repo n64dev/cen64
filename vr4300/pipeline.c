@@ -98,9 +98,21 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   const struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  // Used to select either rs/fs, rt/ft.
+  cen64_align(static const unsigned rs_select_lut[4], CACHE_LINE_SIZE / 2) = {
+    0, VR4300_REGISTER_CP1_0, // Source indexes
+    21, 11                    // Shift amounts
+  };
+
+  cen64_align(static const unsigned rt_select_lut[4], CACHE_LINE_SIZE / 2) = {
+    0, 0,                     // Padding (unused)
+    VR4300_REGISTER_CP1_0, 0, // Source indexes
+  };
+
+  unsigned rs, rt, rslutidx, rtlutidx;
   uint64_t rs_reg, rt_reg, temp;
   uint32_t flags, iw;
-  unsigned rs, rt;
 
   exdc_latch->common = rfex_latch->common;
 
@@ -108,9 +120,12 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   if (exdc_latch->request.type != VR4300_BUS_REQUEST_READ)
     flags &= ~(OPCODE_INFO_NEEDRS | OPCODE_INFO_NEEDRT);
 
+  rslutidx = flags & 0x1;
+  rtlutidx = flags & 0x2;
+
   iw = rfex_latch->iw;
-  rt = GET_RT(iw);
-  rs = GET_RS(iw);
+  rs = (iw >> rs_select_lut[2 + rslutidx] & 0x1F) + rs_select_lut[rslutidx];
+  rt = (iw >> 16 & 0x1F) + rt_select_lut[rtlutidx];
 
   // Check to see if we should hold off execution due to a LDI.
   if (((dcwb_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
