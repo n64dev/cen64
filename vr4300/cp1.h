@@ -29,7 +29,9 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_MOV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 
 void vr4300_cp1_init(struct vr4300 *vr4300);

@@ -575,6 +575,27 @@ int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt)) {
 }
 
 //
+// MOV.fmt
+//
+int VR4300_CP1_MOV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_FD(iw);
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+
+  exdc_latch->result = fs;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // MTC1
 //
 int VR4300_MTC1(struct vr4300 *vr4300, uint64_t fs, uint64_t rt) {
@@ -629,6 +650,65 @@ int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   exdc_latch->request.size = 8;
 
   exdc_latch->result = 0;
+  return 0;
+}
+
+//
+// SUB.fmt
+//
+int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint64_t result;
+  uint32_t fs32 = fs;
+  uint32_t ft32 = ft;
+  uint32_t fd32;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  if (fmt == VR4300_FMT_S) {
+    __asm__ volatile(
+      "flds %1\n\t"
+      "flds %2\n\t"
+      "fsubrp\n\t"
+      "fstps %0\n\t"
+
+      : "=m" (fd32)
+      : "m" (fs32),
+        "m" (ft32)
+      : "st"
+    );
+
+    result = fd32;
+  }
+
+  else if (fmt == VR4300_FMT_D) {
+    __asm__ volatile(
+      "fldl %1\n\t"
+      "fldl %2\n\t"
+      "fsubrp\n\t"
+      "fstpl %0\n\t"
+
+      : "=m" (result)
+      : "m" (fs),
+        "m" (ft)
+      : "st"
+    );
+  }
+
+  else
+    assert(0 && "Invalid instruction.");
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
   return 0;
 }
 
