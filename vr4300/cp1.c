@@ -16,10 +16,10 @@
 static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 
 //
-// Determines if the coprocessor was used yet.
+// Clears out any pending FPU exceptions.
 //
-bool vr4300_cp1_usable(const struct vr4300 *vr4300) {
-  return (vr4300->regs[VR4300_CP0_REGISTER_STATUS] & 0x20000000) != 0;
+static void clear_cpu_exceptions(void) {
+  __asm__ volatile("fclex\n\t");
 }
 
 //
@@ -644,12 +644,9 @@ int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   exdc_latch->request.address = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0ULL;
-  exdc_latch->request.postshift = 0;
-  exdc_latch->request.preshift = 0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 8;
 
-  exdc_latch->result = 0;
   return 0;
 }
 
@@ -736,12 +733,9 @@ int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   exdc_latch->request.address = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0U;
-  exdc_latch->request.postshift = 0;
-  exdc_latch->request.preshift = 0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 4;
 
-  exdc_latch->result = 0;
   return 0;
 }
 
@@ -802,5 +796,10 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
 // Initializes the coprocessor.
 void vr4300_cp1_init(struct vr4300 *vr4300) {
+}
+
+// Determines if the coprocessor was used yet.
+bool vr4300_cp1_usable(const struct vr4300 *vr4300) {
+  return (vr4300->regs[VR4300_CP0_REGISTER_STATUS] & 0x20000000) != 0;
 }
 
