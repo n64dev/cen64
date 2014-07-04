@@ -172,6 +172,56 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 }
 
 //
+// CVT.l.fmt
+//
+int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_FD(iw);
+  enum vr4300_fmt fmt = GET_FMT(iw);
+
+  uint32_t fs32 = fs;
+  uint64_t result;
+
+  switch (fmt) {
+    case VR4300_FMT_D:
+      __asm__ volatile(
+        "fldl %1\n\t"
+        "fistpq %0\n\t"
+
+        : "=m" (result)
+        : "m" (fs)
+        : "st"
+      );
+
+      break;
+
+    case VR4300_FMT_S:
+      __asm__ volatile(
+        "flds %1\n\t"
+        "fistpq %0\n\t"
+
+        : "=m" (result)
+        : "m" (fs32)
+        : "st"
+      );
+
+      break;
+
+    case VR4300_FMT_L:
+    case VR4300_FMT_W:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // CVT.s.fmt
 //
 int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
@@ -224,6 +274,56 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "st"
       );
 
+      break;
+  }
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// CVT.w.fmt
+//
+int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_FD(iw);
+  enum vr4300_fmt fmt = GET_FMT(iw);
+
+  uint32_t fs32 = fs;
+  uint32_t result;
+
+  switch (fmt) {
+    case VR4300_FMT_D:
+      __asm__ volatile(
+        "fldl %1\n\t"
+        "fistpl %0\n\t"
+
+        : "=m" (result)
+        : "m" (fs)
+        : "st"
+      );
+
+      break;
+
+    case VR4300_FMT_S:
+      __asm__ volatile(
+        "flds %1\n\t"
+        "fistpl %0\n\t"
+
+        : "=m" (result)
+        : "m" (fs32)
+        : "st"
+      );
+
+      break;
+
+    case VR4300_FMT_L:
+    case VR4300_FMT_W:
+      assert(0 && "Invalid instruction.");
       break;
   }
 
@@ -437,7 +537,7 @@ int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt)) {
 //
 // MTC1
 //
-int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+int VR4300_MTC1(struct vr4300 *vr4300, uint64_t fs, uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
@@ -447,9 +547,6 @@ int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   unsigned dest = GET_FS(iw);
 
   if (!(status & 0x04000000)) {
-    // TODO/FIXME: Err... forward here?
-    uint64_t fs = vr4300->regs[dest & ~0x1];
-
     result = (dest & 0x1)
       ? ((uint32_t) fs) | (rt << 32)
       : (fs << 32) | ((uint32_t) rt);
@@ -485,6 +582,39 @@ int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   exdc_latch->request.preshift = 0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 8;
+
+  exdc_latch->result = 0;
+  return 0;
+}
+
+//
+// SWC1
+//
+// TODO/FIXME: Check for unaligned addresses.
+//
+int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned ft_reg = GET_FT(iw);
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  if (!(status & 0x04000000))
+    ft >>= ((ft_reg & 0x1) << 5);
+
+  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.data = ft;
+  exdc_latch->request.dqm = ~0U;
+  exdc_latch->request.postshift = 0;
+  exdc_latch->request.preshift = 0;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
+  exdc_latch->request.size = 4;
 
   exdc_latch->result = 0;
   return 0;
