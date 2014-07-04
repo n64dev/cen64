@@ -18,9 +18,15 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);
 int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);
 int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);
 int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt));
+int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt));
 int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt);
 
-int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);
+int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 
 void vr4300_cp1_init(struct vr4300 *vr4300);
 

@@ -23,11 +23,11 @@
 #define GET_FMT(iw) ((iw) >> 21 & 0x1F)
 
 #define OPCODE_INFO_NONE (0)
-#define OPCODE_INFO_BRANCH (1 << 3)
-#define OPCODE_INFO_NEEDRS (1 << 4)
-#define OPCODE_INFO_NEEDFS ((1 << 4) | (1 << 1))
-#define OPCODE_INFO_NEEDRT (1 << 5)
-#define OPCODE_INFO_NEEDFT ((1 << 5) | (1 << 2))
+#define OPCODE_INFO_BRANCH (1 << 2)
+#define OPCODE_INFO_NEEDRS (1 << 3)
+#define OPCODE_INFO_NEEDFS ((1 << 3) | (1 << 0))
+#define OPCODE_INFO_NEEDRT (1 << 4)
+#define OPCODE_INFO_NEEDFT ((1 << 4) | (1 << 1))
 
 enum vr4300_fmt {
   VR4300_FMT_S = 16,

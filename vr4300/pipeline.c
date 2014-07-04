@@ -115,6 +115,7 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   uint32_t flags, iw;
 
   exdc_latch->common = rfex_latch->common;
+  iw = rfex_latch->iw;
 
   flags = rfex_latch->opcode.flags;
   if (exdc_latch->request.type != VR4300_BUS_REQUEST_READ)
@@ -123,7 +124,6 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   rslutidx = flags & 0x1;
   rtlutidx = flags & 0x2;
 
-  iw = rfex_latch->iw;
   rs = (iw >> rs_select_lut[2 + rslutidx] & 0x1F) + rs_select_lut[rslutidx];
   rt = (iw >> 16 & 0x1F) + rt_select_lut[rtlutidx];
 
