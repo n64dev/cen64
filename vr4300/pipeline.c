@@ -98,6 +98,7 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   const struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   // Used to select either rs/fs, rt/ft.
   cen64_align(static const unsigned rs_select_lut[4], CACHE_LINE_SIZE / 2) = {
@@ -110,22 +111,28 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
     VR4300_REGISTER_CP1_0, 0, // Source indexes
   };
 
-  unsigned rs, rt, rslutidx, rtlutidx;
+  unsigned rs, rt, rslutidx, rtlutidx, fr;
   uint64_t rs_reg, rt_reg, temp;
   uint32_t flags, iw;
 
   exdc_latch->common = rfex_latch->common;
+  fr = (status >> 26 & 0x1) ^ 1;
   iw = rfex_latch->iw;
 
   flags = rfex_latch->opcode.flags;
   if (exdc_latch->request.type != VR4300_BUS_REQUEST_READ)
     flags &= ~(OPCODE_INFO_NEEDRS | OPCODE_INFO_NEEDRT);
 
+  // CP1 register, or no?
   rslutidx = flags & 0x1;
   rtlutidx = flags & 0x2;
 
   rs = (iw >> rs_select_lut[2 + rslutidx] & 0x1F) + rs_select_lut[rslutidx];
   rt = (iw >> 16 & 0x1F) + rt_select_lut[rtlutidx];
+
+  // If FR bit is set, we depend on even registers only.
+  rt &= ~((rtlutidx >> 1) & fr);
+  rs &= ~(rslutidx & fr);
 
   // Check to see if we should hold off execution due to a LDI.
   if (((dcwb_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
