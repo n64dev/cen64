@@ -3,7 +3,7 @@ fpu_div_32 proc
   fclex
   fld DWORD PTR [rcx]
   fld DWORD PTR [rdx]
-  fdivrp
+  fdivp
   fstp DWORD PTR [r8]
   fstsw ax
   ret
