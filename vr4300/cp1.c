@@ -10,12 +10,9 @@
 
 #include "common.h"
 #include "decoder.h"
+#include "fpu.h"
 #include "vr4300/cp1.h"
 #include "vr4300/cpu.h"
-
-#ifndef __GNUC__
-#include "fpu.h"
-#endif
 
 static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 
@@ -29,11 +26,8 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-
   uint64_t result;
-  uint32_t fs32 = fs;
-  uint32_t ft32 = ft;
-  uint32_t fd32;
+
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -41,44 +35,16 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "fclex\n\t"
-      "flds %1\n\t"
-      "flds %2\n\t"
-      "faddp\n\t"
-      "fstps %0\n\t"
+    uint32_t fs32 = fs;
+    uint32_t ft32 = ft;
+    uint32_t fd32;
 
-      : "=m" (fd32)
-      : "m" (fs32),
-        "m" (ft32)
-      : "st"
-    );
-#else
     fpu_add_32(&fs32, &ft32, &fd32);
-#endif
-
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "fclex\n\t"
-      "fldl %1\n\t"
-      "fldl %2\n\t"
-      "faddp\n\t"
-      "fstpl %0\n\t"
-
-      : "=m" (result)
-      : "m" (fs),
-        "m" (ft)
-      : "st"
-    );
-#else
+  else if (fmt == VR4300_FMT_D)
     fpu_add_64(&fs, &ft, &result);
-#endif
-  }
 
   else
     assert(0 && "Invalid instruction.");
@@ -404,11 +370,7 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-
   uint64_t result;
-  uint32_t fs32 = fs;
-  uint32_t ft32 = ft;
-  uint32_t fd32;
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -416,42 +378,16 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "flds %1\n\t"
-      "flds %2\n\t"
-      "fdivrp\n\t"
-      "fstps %0\n\t"
+    uint32_t fs32 = fs;
+    uint32_t ft32 = ft;
+    uint32_t fd32;
 
-      : "=m" (fd32)
-      : "m" (fs32),
-        "m" (ft32)
-      : "st"
-    );
-#else
     fpu_div_32(&fs32, &ft32, &fd32);
-#endif
-
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "fldl %1\n\t"
-      "fldl %2\n\t"
-      "fdivrp\n\t"
-      "fstpl %0\n\t"
-
-      : "=m" (result)
-      : "m" (fs),
-        "m" (ft)
-      : "st"
-    );
-#else
+  else if (fmt == VR4300_FMT_D)
     fpu_div_64(&fs, &ft, &result);
-#endif
-  }
 
   else
     assert(0 && "Invalid instruction.");
@@ -543,11 +479,7 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-
   uint64_t result;
-  uint32_t fs32 = fs;
-  uint32_t ft32 = ft;
-  uint32_t fd32;
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -555,42 +487,16 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "flds %1\n\t"
-      "flds %2\n\t"
-      "fmulp\n\t"
-      "fstps %0\n\t"
+    uint32_t fs32 = fs;
+    uint32_t ft32 = ft;
+    uint32_t fd32;
 
-      : "=m" (fd32)
-      : "m" (fs32),
-        "m" (ft32)
-      : "st"
-    );
-#else
     fpu_mul_32(&fs32, &ft32, &fd32);
-#endif
-
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "fldl %1\n\t"
-      "fldl %2\n\t"
-      "fmulp\n\t"
-      "fstpl %0\n\t"
-
-      : "=m" (result)
-      : "m" (fs),
-        "m" (ft)
-      : "st"
-    );
-#else
+  else if (fmt == VR4300_FMT_D)
     fpu_mul_64(&fs, &ft, &result);
-#endif
-  }
 
   else
     assert(0 && "Invalid instruction.");
@@ -712,11 +618,7 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-
   uint64_t result;
-  uint32_t fs32 = fs;
-  uint32_t ft32 = ft;
-  uint32_t fd32;
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -724,42 +626,16 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "flds %1\n\t"
-      "flds %2\n\t"
-      "fsubrp\n\t"
-      "fstps %0\n\t"
+    uint32_t fs32 = fs;
+    uint32_t ft32 = ft;
+    uint32_t fd32;
 
-      : "=m" (fd32)
-      : "m" (fs32),
-        "m" (ft32)
-      : "st"
-    );
-#else
     fpu_sub_32(&fs32, &ft32, &fd32);
-#endif
-
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D) {
-#ifdef __GNUC__
-    __asm__ volatile(
-      "fldl %1\n\t"
-      "fldl %2\n\t"
-      "fsubrp\n\t"
-      "fstpl %0\n\t"
-
-      : "=m" (result)
-      : "m" (fs),
-        "m" (ft)
-      : "st"
-    );
-#else
+  else if (fmt == VR4300_FMT_D)
     fpu_sub_64(&fs, &ft, &result);
-#endif
-  }
 
   else
     assert(0 && "Invalid instruction.");
