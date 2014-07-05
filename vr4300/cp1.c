@@ -152,8 +152,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#else
+      fpu_cvt_f64_f32(&fs32, &result);
 #endif
-
       break;
 
     case VR4300_FMT_D:
@@ -170,8 +171,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#else
+      fpu_cvt_f64_i32(&fs32, &result);
 #endif
-
       break;
 
     case VR4300_FMT_L:
@@ -184,8 +186,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#else
+      fpu_cvt_f64_i64(&fs, &result);
 #endif
-
       break;
   }
 
@@ -224,8 +227,9 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#else
+      fpu_cvt_i64_f64(&fs, &result);
 #endif
-
       break;
 
     case VR4300_FMT_S:
@@ -238,8 +242,9 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#else
+      fpu_cvt_i64_f32(&fs32, &result);
 #endif
-
       break;
 
     case VR4300_FMT_L:
@@ -287,8 +292,9 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#else
+      fpu_cvt_f32_f64(&fs, &result);
 #endif
-
       break;
 
     case VR4300_FMT_W:
@@ -301,8 +307,9 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#else
+      fpu_cvt_f32_i32(&fs32, &result);
 #endif
-
       break;
 
     case VR4300_FMT_L:
@@ -315,8 +322,9 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#else
+      fpu_cvt_f32_i64(&fs, &result);
 #endif
-
       break;
   }
 
@@ -355,8 +363,9 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#else
+      fpu_cvt_i32_f64(&fs, &result);
 #endif
-
       break;
 
     case VR4300_FMT_S:
@@ -369,8 +378,9 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#else
+      fpu_cvt_i32_f32(&fs32, &result);
 #endif
-
       break;
 
     case VR4300_FMT_L:
@@ -820,8 +830,9 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#else
+      fpu_trunc_i32_f32(&fs32, &result);
 #endif
-
       break;
 
     case VR4300_FMT_D:
@@ -834,8 +845,9 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#else
+      fpu_trunc_i32_f64(&fs, &result);
 #endif
-
       break;
 
     case VR4300_FMT_W:
