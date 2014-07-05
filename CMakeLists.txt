@@ -65,6 +65,14 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
   endif (NATIVE_BUILD)
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 
+# If using MSVC, configure it accordingly.
+if (MSVC)
+  enable_language(ASM_MASM) # Are you kidding me? Really?
+
+  file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/fpu/x86_64/*.asm)
+  include_directories(${PROJECT_SOURCE_DIR}/os/windows/fpu/x86_64)
+endif (MSVC)
+
 # Print out MMIO register accesses?
 option(DEBUG_MMIO_REGISTER_ACCESS "Print message on each MMIO register access?" OFF)
 
@@ -113,9 +121,10 @@ if (DEFINED WIN32)
 endif (DEFINED WIN32)
 
 # Create the executable.
-add_executable(cen64 ${EXTRA_OS_EXE} ${OS_SOURCES} ${COMMON_SOURCES} ${CEN64_SOURCES}
-  ${AI_SOURCES} ${PI_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
-  ${BUS_SOURCES} ${RDP_SOURCES} ${RSP_SOURCES} ${VR4300_SOURCES})
+add_executable(cen64 ${EXTRA_OS_EXE} ${ASM_SOURCES} ${OS_SOURCES}
+  ${COMMON_SOURCES} ${CEN64_SOURCES} ${AI_SOURCES} ${BUS_SOURCES} ${PI_SOURCES}
+  ${RDP_SOURCES} ${RSP_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
+  ${VR4300_SOURCES})
 
 target_link_libraries(cen64 ${EXTRA_OS_LIBS}
   ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})

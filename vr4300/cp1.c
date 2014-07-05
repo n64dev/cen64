@@ -13,14 +13,11 @@
 #include "vr4300/cp1.h"
 #include "vr4300/cpu.h"
 
-static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
+#ifndef __GNUC__
+#include "fpu.h"
+#endif
 
-//
-// Clears out any pending FPU exceptions.
-//
-static void clear_cpu_exceptions(void) {
-  __asm__ volatile("fclex\n\t");
-}
+static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 
 //
 // ADD.fmt
@@ -44,7 +41,9 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
+#ifdef __GNUC__
     __asm__ volatile(
+      "fclex\n\t"
       "flds %1\n\t"
       "flds %2\n\t"
       "faddp\n\t"
@@ -55,12 +54,17 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft32)
       : "st"
     );
+#else
+    fpu_add_32(&fs32, &ft32, &fd32);
+#endif
 
     result = fd32;
   }
 
   else if (fmt == VR4300_FMT_D) {
+#ifdef __GNUC__
     __asm__ volatile(
+      "fclex\n\t"
       "fldl %1\n\t"
       "fldl %2\n\t"
       "faddp\n\t"
@@ -71,6 +75,9 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft)
       : "st"
     );
+#else
+    fpu_add_64(&fs, &ft, &result);
+#endif
   }
 
   else
@@ -136,6 +143,7 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   switch (fmt) {
     case VR4300_FMT_S:
+#ifdef __GNUC__
       __asm__ volatile(
         "flds %1\n\t"
         "fstpl %0\n\t"
@@ -144,6 +152,7 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#endif
 
       break;
 
@@ -152,6 +161,7 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
 
     case VR4300_FMT_W:
+#ifdef __GNUC__
       __asm__ volatile(
         "fildl %1\n\t"
         "fstpl %0\n\t"
@@ -160,10 +170,12 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#endif
 
       break;
 
     case VR4300_FMT_L:
+#ifdef __GNUC__
       __asm__ volatile(
         "fildq %1\n\t"
         "fstpl %0\n\t"
@@ -172,6 +184,7 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#endif
 
       break;
   }
@@ -202,6 +215,7 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   switch (fmt) {
     case VR4300_FMT_D:
+#ifdef __GNUC__
       __asm__ volatile(
         "fldl %1\n\t"
         "fistpq %0\n\t"
@@ -210,10 +224,12 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#endif
 
       break;
 
     case VR4300_FMT_S:
+#ifdef __GNUC__
       __asm__ volatile(
         "flds %1\n\t"
         "fistpq %0\n\t"
@@ -222,6 +238,7 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#endif
 
       break;
 
@@ -261,6 +278,7 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
 
     case VR4300_FMT_D:
+#ifdef __GNUC__
       __asm__ volatile(
         "fldl %1\n\t"
         "fstps %0\n\t"
@@ -269,10 +287,12 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#endif
 
       break;
 
     case VR4300_FMT_W:
+#ifdef __GNUC__
       __asm__ volatile(
         "fildl %1\n\t"
         "fstps %0\n\t"
@@ -281,10 +301,12 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#endif
 
       break;
 
     case VR4300_FMT_L:
+#ifdef __GNUC__
       __asm__ volatile(
         "fildq %1\n\t"
         "fstps %0\n\t"
@@ -293,6 +315,7 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#endif
 
       break;
   }
@@ -323,6 +346,7 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   switch (fmt) {
     case VR4300_FMT_D:
+#ifdef __GNUC__
       __asm__ volatile(
         "fldl %1\n\t"
         "fistpl %0\n\t"
@@ -331,10 +355,12 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#endif
 
       break;
 
     case VR4300_FMT_S:
+#ifdef __GNUC__
       __asm__ volatile(
         "flds %1\n\t"
         "fistpl %0\n\t"
@@ -343,6 +369,7 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#endif
 
       break;
 
@@ -379,6 +406,7 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
+#ifdef __GNUC__
     __asm__ volatile(
       "flds %1\n\t"
       "flds %2\n\t"
@@ -390,11 +418,15 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft32)
       : "st"
     );
+#else
+    fpu_div_32(&fs32, &ft32, &fd32);
+#endif
 
     result = fd32;
   }
 
   else if (fmt == VR4300_FMT_D) {
+#ifdef __GNUC__
     __asm__ volatile(
       "fldl %1\n\t"
       "fldl %2\n\t"
@@ -406,6 +438,9 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft)
       : "st"
     );
+#else
+    fpu_div_64(&fs, &ft, &result);
+#endif
   }
 
   else
@@ -510,6 +545,7 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
+#ifdef __GNUC__
     __asm__ volatile(
       "flds %1\n\t"
       "flds %2\n\t"
@@ -521,11 +557,15 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft32)
       : "st"
     );
+#else
+    fpu_mul_32(&fs32, &ft32, &fd32);
+#endif
 
     result = fd32;
   }
 
   else if (fmt == VR4300_FMT_D) {
+#ifdef __GNUC__
     __asm__ volatile(
       "fldl %1\n\t"
       "fldl %2\n\t"
@@ -537,6 +577,9 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft)
       : "st"
     );
+#else
+    fpu_mul_64(&fs, &ft, &result);
+#endif
   }
 
   else
@@ -588,7 +631,6 @@ int VR4300_CP1_MOV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     VR4300_CPU(vr4300);
     return 1;
   }
-
 
   exdc_latch->result = fs;
   exdc_latch->dest = dest;
@@ -672,6 +714,7 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   if (fmt == VR4300_FMT_S) {
+#ifdef __GNUC__
     __asm__ volatile(
       "flds %1\n\t"
       "flds %2\n\t"
@@ -683,11 +726,15 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft32)
       : "st"
     );
+#else
+    fpu_sub_32(&fs32, &ft32, &fd32);
+#endif
 
     result = fd32;
   }
 
   else if (fmt == VR4300_FMT_D) {
+#ifdef __GNUC__
     __asm__ volatile(
       "fldl %1\n\t"
       "fldl %2\n\t"
@@ -699,6 +746,9 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         "m" (ft)
       : "st"
     );
+#else
+    fpu_sub_64(&fs, &ft, &result);
+#endif
   }
 
   else
@@ -761,6 +811,7 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   switch (fmt) {
     case VR4300_FMT_S:
+#ifdef __GNUC__
       __asm__ volatile(
         "flds %1\n\t"
         "fisttpl %0\n\t"
@@ -769,10 +820,12 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs32)
         : "st"
       );
+#endif
 
       break;
 
     case VR4300_FMT_D:
+#ifdef __GNUC__
       __asm__ volatile(
         "fldl %1\n\t"
         "fisttpl %0\n\t"
@@ -781,6 +834,7 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
         : "m" (fs)
         : "st"
       );
+#endif
 
       break;
 

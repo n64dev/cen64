@@ -101,12 +101,12 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   // Used to select either rs/fs, rt/ft.
-  cen64_align(static const unsigned rs_select_lut[4], CACHE_LINE_SIZE / 2) = {
+  cen64_align(static const unsigned rs_select_lut[4], 16) = {
     0, VR4300_REGISTER_CP1_0, // Source indexes
     21, 11                    // Shift amounts
   };
 
-  cen64_align(static const unsigned rt_select_lut[4], CACHE_LINE_SIZE / 2) = {
+  cen64_align(static const unsigned rt_select_lut[4], 16) = {
     0, 0,                     // Padding (unused)
     VR4300_REGISTER_CP1_0, 0, // Source indexes
   };
