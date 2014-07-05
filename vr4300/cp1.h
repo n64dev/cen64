@@ -17,7 +17,7 @@ struct vr4300;
 int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);
 int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);
 int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);
-int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt));
+int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft);
 int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt));
 int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt);
 int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft);

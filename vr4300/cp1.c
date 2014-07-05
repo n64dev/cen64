@@ -450,7 +450,7 @@ int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
+int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
@@ -469,8 +469,8 @@ int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
 
   if (!(status & 0x04000000)) {
     result = dest & 0x1
-      ? vr4300->regs[dest & ~0x1] & 0x00000000FFFFFFFFULL
-      : vr4300->regs[dest & ~0x1] & 0xFFFFFFFF00000000ULL;
+      ? ft & 0x00000000FFFFFFFFULL
+      : ft & 0xFFFFFFFF00000000ULL;
 
     postshift = (dest & 0x1) << 5;
     dest &= ~0x1;
@@ -730,6 +730,7 @@ int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   if (!(status & 0x04000000))
     ft >>= ((ft_reg & 0x1) << 5);
 
+  fprintf(stderr, "swc1 addr: 0x%.16llX\n", rs + (int16_t) iw);
   exdc_latch->request.address = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0U;
