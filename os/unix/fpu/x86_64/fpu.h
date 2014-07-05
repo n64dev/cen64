@@ -13,12 +13,24 @@
 
 #include "os/unix/fpu/x86_64/fpu_add_32.h"
 #include "os/unix/fpu/x86_64/fpu_add_64.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_f32_f64.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_f32_i32.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_f32_i64.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_f64_f32.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_f64_i32.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_f64_i64.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_i32_f32.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_i32_f64.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_i64_f32.h"
+#include "os/unix/fpu/x86_64/fpu_cvt_i64_f64.h"
 #include "os/unix/fpu/x86_64/fpu_div_32.h"
 #include "os/unix/fpu/x86_64/fpu_div_64.h"
 #include "os/unix/fpu/x86_64/fpu_mul_32.h"
 #include "os/unix/fpu/x86_64/fpu_mul_64.h"
 #include "os/unix/fpu/x86_64/fpu_sub_32.h"
 #include "os/unix/fpu/x86_64/fpu_sub_64.h"
+#include "os/unix/fpu/x86_64/fpu_trunc_i32_f32.h"
+#include "os/unix/fpu/x86_64/fpu_trunc_i32_f64.h"
 
 #endif
 

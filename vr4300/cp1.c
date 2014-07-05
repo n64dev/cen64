@@ -28,7 +28,6 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   unsigned dest = GET_FD(iw);
   uint64_t result;
 
-
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
     return 1;
@@ -108,54 +107,10 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   switch (fmt) {
-    case VR4300_FMT_S:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "flds %1\n\t"
-        "fstpl %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs32)
-        : "st"
-      );
-#else
-      fpu_cvt_f64_f32(&fs32, &result);
-#endif
-      break;
-
-    case VR4300_FMT_D:
-      assert(0 && "Invalid instruction.");
-      break;
-
-    case VR4300_FMT_W:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fildl %1\n\t"
-        "fstpl %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs32)
-        : "st"
-      );
-#else
-      fpu_cvt_f64_i32(&fs32, &result);
-#endif
-      break;
-
-    case VR4300_FMT_L:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fildq %1\n\t"
-        "fstpl %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs)
-        : "st"
-      );
-#else
-      fpu_cvt_f64_i64(&fs, &result);
-#endif
-      break;
+    case VR4300_FMT_S: fpu_cvt_f64_f32(&fs32, &result); break;
+    case VR4300_FMT_D: assert(0 && "Invalid instruction."); break;
+    case VR4300_FMT_W: fpu_cvt_f64_i32(&fs32, &result); break;
+    case VR4300_FMT_L: fpu_cvt_f64_i64(&fs, &result); break;
   }
 
   exdc_latch->result = result;
@@ -183,38 +138,11 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   switch (fmt) {
-    case VR4300_FMT_D:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fldl %1\n\t"
-        "fistpq %0\n\t"
+    case VR4300_FMT_S: fpu_cvt_i64_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_cvt_i64_f64(&fs, &result); break;
 
-        : "=m" (result)
-        : "m" (fs)
-        : "st"
-      );
-#else
-      fpu_cvt_i64_f64(&fs, &result);
-#endif
-      break;
-
-    case VR4300_FMT_S:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "flds %1\n\t"
-        "fistpq %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs32)
-        : "st"
-      );
-#else
-      fpu_cvt_i64_f32(&fs32, &result);
-#endif
-      break;
-
-    case VR4300_FMT_L:
     case VR4300_FMT_W:
+    case VR4300_FMT_L:
       assert(0 && "Invalid instruction.");
       break;
   }
@@ -244,54 +172,10 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   switch (fmt) {
-    case VR4300_FMT_S:
-      assert(0 && "Invalid instruction.");
-      break;
-
-    case VR4300_FMT_D:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fldl %1\n\t"
-        "fstps %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs)
-        : "st"
-      );
-#else
-      fpu_cvt_f32_f64(&fs, &result);
-#endif
-      break;
-
-    case VR4300_FMT_W:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fildl %1\n\t"
-        "fstps %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs32)
-        : "st"
-      );
-#else
-      fpu_cvt_f32_i32(&fs32, &result);
-#endif
-      break;
-
-    case VR4300_FMT_L:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fildq %1\n\t"
-        "fstps %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs)
-        : "st"
-      );
-#else
-      fpu_cvt_f32_i64(&fs, &result);
-#endif
-      break;
+    case VR4300_FMT_S: assert(0 && "Invalid instruction."); break;
+    case VR4300_FMT_D: fpu_cvt_f32_f64(&fs, &result); break;
+    case VR4300_FMT_W: fpu_cvt_f32_i32(&fs32, &result); break;
+    case VR4300_FMT_L: fpu_cvt_f32_i64(&fs, &result); break;
   }
 
   exdc_latch->result = result;
@@ -319,38 +203,11 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   switch (fmt) {
-    case VR4300_FMT_D:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fldl %1\n\t"
-        "fistpl %0\n\t"
+    case VR4300_FMT_S: fpu_cvt_i32_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_cvt_i32_f64(&fs, &result); break;
 
-        : "=m" (result)
-        : "m" (fs)
-        : "st"
-      );
-#else
-      fpu_cvt_i32_f64(&fs, &result);
-#endif
-      break;
-
-    case VR4300_FMT_S:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "flds %1\n\t"
-        "fistpl %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs32)
-        : "st"
-      );
-#else
-      fpu_cvt_i32_f32(&fs32, &result);
-#endif
-      break;
-
-    case VR4300_FMT_L:
     case VR4300_FMT_W:
+    case VR4300_FMT_L:
       assert(0 && "Invalid instruction.");
       break;
   }
@@ -666,7 +523,6 @@ int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   if (!(status & 0x04000000))
     ft >>= ((ft_reg & 0x1) << 5);
 
-  fprintf(stderr, "swc1 addr: 0x%.16llX\n", rs + (int16_t) iw);
   exdc_latch->request.address = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0U;
@@ -696,35 +552,8 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   switch (fmt) {
-    case VR4300_FMT_S:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "flds %1\n\t"
-        "fisttpl %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs32)
-        : "st"
-      );
-#else
-      fpu_trunc_i32_f32(&fs32, &result);
-#endif
-      break;
-
-    case VR4300_FMT_D:
-#ifdef __GNUC__
-      __asm__ volatile(
-        "fldl %1\n\t"
-        "fisttpl %0\n\t"
-
-        : "=m" (result)
-        : "m" (fs)
-        : "st"
-      );
-#else
-      fpu_trunc_i32_f64(&fs, &result);
-#endif
-      break;
+    case VR4300_FMT_S: fpu_trunc_i32_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_trunc_i32_f64(&fs, &result); break;
 
     case VR4300_FMT_W:
     case VR4300_FMT_L:
