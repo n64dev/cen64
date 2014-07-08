@@ -90,6 +90,52 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 }
 
 //
+// BC1F
+// BC1FL
+// BC1T
+// BC1TL
+//
+int VR4300_BC1(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned opcode = (iw >> 16) & 0x3;
+
+  uint64_t offset = (uint64_t) ((int16_t) iw) << 2;
+  uint64_t taken_pc = rfex_latch->common.pc + (offset + 4);
+  uint32_t cond = vr4300->regs[VR4300_CP1_FCR31];
+
+  switch (opcode) {
+    case 0x0: // BC1F
+      if (!(cond >> 23 & 0x1))
+        icrf_latch->pc = taken_pc;
+      break;
+
+    case 0x1: // BC1T
+      if (cond >> 23 & 0x1)
+        icrf_latch->pc = taken_pc;
+      break;
+
+    case 0x2: // BC1FL
+      if (!(cond >> 23 & 0x1))
+        icrf_latch->pc = taken_pc;
+      else
+        rfex_latch->iw_mask = 0;
+      break;
+
+    case 0x3: // BC1TL
+      if (cond >> 23 & 0x1)
+        icrf_latch->pc = taken_pc;
+      else
+        rfex_latch->iw_mask = 0;
+      break;
+  }
+
+  return 0;
+}
+
+//
 // C.le.fmt
 //
 int VR4300_CP1_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
