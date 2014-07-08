@@ -15,6 +15,8 @@
 #include "os/unix/fpu/x86_64/fpu_abs_64.h"
 #include "os/unix/fpu/x86_64/fpu_add_32.h"
 #include "os/unix/fpu/x86_64/fpu_add_64.h"
+#include "os/unix/fpu/x86_64/fpu_cmp_le_32.h"
+#include "os/unix/fpu/x86_64/fpu_cmp_le_64.h"
 #include "os/unix/fpu/x86_64/fpu_cvt_f32_f64.h"
 #include "os/unix/fpu/x86_64/fpu_cvt_f32_i32.h"
 #include "os/unix/fpu/x86_64/fpu_cvt_f32_i64.h"
