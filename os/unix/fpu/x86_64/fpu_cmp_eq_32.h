@@ -26,7 +26,7 @@ static inline uint16_t fpu_cmp_eq_32(
       "=a" (sw)
     : "m" (*fs),
       "m" (*ft)
-    : "st"
+    : "cc", "st"
   );
 
   // XXX: Check; blindly copied from old core.
