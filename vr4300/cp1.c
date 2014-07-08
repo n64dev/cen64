@@ -62,13 +62,27 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RT(iw);
+  unsigned src = GET_RD(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  exdc_latch->result = (int32_t) 0;
+  switch (src) {
+    case 0: src = VR4300_CP1_FCR0; break;
+    case 31: src = VR4300_CP1_FCR31; break;
+
+    default:
+      src = 0;
+
+      assert(0 && "CFC1: Read reserved FCR.");
+      break;
+  }
+
+  // Undefined while the next instruction
+  // executes, so we can cheat and use the RF.
+  exdc_latch->result = (int32_t) vr4300->regs[src];
   exdc_latch->dest = dest;
   return 0;
 }
@@ -76,14 +90,35 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 //
 // CTC1
 //
+// XXX: Raise exception on cause/enable.
+// XXX: In such cases, ensure write occurs.
+//
 int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  unsigned dest = GET_RD(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
+  if (dest == 31)
+    dest = VR4300_CP1_FCR31;
+
+  else {
+    assert(0 && "CTC1: Write to fixed/reserved FCR.");
+
+    dest = 0;
+    rt = 0;
+  }
+
+  // Undefined while the next instruction
+  // executes, so we can cheat and use WB.
+  exdc_latch->result = rt;
+  exdc_latch->dest = dest;
   return 0;
 }
 
