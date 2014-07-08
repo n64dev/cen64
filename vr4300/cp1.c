@@ -17,6 +17,42 @@
 static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 
 //
+// ABS.fmt
+//
+int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+  uint64_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  if (fmt == VR4300_FMT_S) {
+    uint32_t fs32 = fs;
+    uint32_t fd32;
+
+    fpu_abs_32(&fs32, &fd32);
+    result = fd32;
+  }
+
+  else if (fmt == VR4300_FMT_D)
+    fpu_abs_64(&fs, &result);
+
+  else
+    assert(0 && "Invalid instruction.");
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // ADD.fmt
 //
 int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
@@ -47,6 +83,84 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   else
     assert(0 && "Invalid instruction.");
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// CEIL.l.fmt
+//
+int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint32_t fs32 = fs;
+  uint64_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  int oldround = fegetround();
+  fesetround(FE_UPWARD);
+
+  switch (fmt) {
+    case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_round_i64_f64(&fs, &result); break;
+
+    case VR4300_FMT_W:
+    case VR4300_FMT_L:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  fesetround(oldround);
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// CEIL.w.fmt
+//
+int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint32_t fs32 = fs;
+  uint32_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  int oldround = fegetround();
+  fesetround(FE_UPWARD);
+
+  switch (fmt) {
+    case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_round_i32_f64(&fs, &result); break;
+
+    case VR4300_FMT_W:
+    case VR4300_FMT_L:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  fesetround(oldround);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -255,6 +369,84 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 }
 
 //
+// FLOOR.l.fmt
+//
+int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint32_t fs32 = fs;
+  uint64_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  int oldround = fegetround();
+  fesetround(FE_DOWNWARD);
+
+  switch (fmt) {
+    case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_round_i64_f64(&fs, &result); break;
+
+    case VR4300_FMT_W:
+    case VR4300_FMT_L:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  fesetround(oldround);
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// FLOOR.w.fmt
+//
+int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint32_t fs32 = fs;
+  uint32_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  int oldround = fegetround();
+  fesetround(FE_DOWNWARD);
+
+  switch (fmt) {
+    case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_round_i32_f64(&fs, &result); break;
+
+    case VR4300_FMT_W:
+    case VR4300_FMT_L:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  fesetround(oldround);
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // LDC1
 //
 // TODO/FIXME: Check for unaligned addresses.
@@ -441,6 +633,110 @@ int VR4300_MTC1(struct vr4300 *vr4300, uint64_t fs, uint64_t rt) {
 }
 
 //
+// NEG.fmt
+//
+int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+  uint64_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  if (fmt == VR4300_FMT_S) {
+    uint32_t fs32 = fs;
+    uint32_t fd32;
+
+    fpu_neg_32(&fs32, &fd32);
+    result = fd32;
+  }
+
+  else if (fmt == VR4300_FMT_D)
+    fpu_neg_64(&fs, &result);
+
+  else
+    assert(0 && "Invalid instruction.");
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// ROUND.l.fmt
+//
+int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint32_t fs32 = fs;
+  uint64_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  switch (fmt) {
+    case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_round_i64_f64(&fs, &result); break;
+
+    case VR4300_FMT_W:
+    case VR4300_FMT_L:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// ROUND.w.fmt
+//
+int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint32_t fs32 = fs;
+  uint32_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  switch (fmt) {
+    case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_round_i32_f64(&fs, &result); break;
+
+    case VR4300_FMT_W:
+    case VR4300_FMT_L:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // SDC1
 //
 // TODO/FIXME: Check for unaligned addresses.
@@ -462,6 +758,42 @@ int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 8;
 
+  return 0;
+}
+
+//
+// SQRT.fmt
+//
+int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+  uint64_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  if (fmt == VR4300_FMT_S) {
+    uint32_t fs32 = fs;
+    uint32_t fd32;
+
+    fpu_sqrt_32(&fs32, &fd32);
+    result = fd32;
+  }
+
+  else if (fmt == VR4300_FMT_D)
+    fpu_sqrt_64(&fs, &result);
+
+  else
+    assert(0 && "Invalid instruction.");
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
   return 0;
 }
 
@@ -529,6 +861,40 @@ int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 4;
 
+  return 0;
+}
+
+//
+// TRUNC.l.fmt
+//
+int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = GET_FD(iw);
+
+  uint32_t fs32 = fs;
+  uint64_t result;
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  switch (fmt) {
+    case VR4300_FMT_S: fpu_trunc_i64_f32(&fs32, &result); break;
+    case VR4300_FMT_D: fpu_trunc_i64_f64(&fs, &result); break;
+
+    case VR4300_FMT_W:
+    case VR4300_FMT_L:
+      assert(0 && "Invalid instruction.");
+      break;
+  }
+
+  exdc_latch->result = result;
+  exdc_latch->dest = dest;
   return 0;
 }
 

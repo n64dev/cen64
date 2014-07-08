@@ -11,6 +11,8 @@
 #define __os_fpu_h__
 #include "common.h"
 
+#include "os/unix/fpu/x86_64/fpu_abs_32.h"
+#include "os/unix/fpu/x86_64/fpu_abs_64.h"
 #include "os/unix/fpu/x86_64/fpu_add_32.h"
 #include "os/unix/fpu/x86_64/fpu_add_64.h"
 #include "os/unix/fpu/x86_64/fpu_cvt_f32_f64.h"
@@ -27,10 +29,20 @@
 #include "os/unix/fpu/x86_64/fpu_div_64.h"
 #include "os/unix/fpu/x86_64/fpu_mul_32.h"
 #include "os/unix/fpu/x86_64/fpu_mul_64.h"
+#include "os/unix/fpu/x86_64/fpu_neg_32.h"
+#include "os/unix/fpu/x86_64/fpu_neg_64.h"
+#include "os/unix/fpu/x86_64/fpu_round_i32_f32.h"
+#include "os/unix/fpu/x86_64/fpu_round_i32_f64.h"
+#include "os/unix/fpu/x86_64/fpu_round_i64_f32.h"
+#include "os/unix/fpu/x86_64/fpu_round_i64_f64.h"
+#include "os/unix/fpu/x86_64/fpu_sqrt_32.h"
+#include "os/unix/fpu/x86_64/fpu_sqrt_64.h"
 #include "os/unix/fpu/x86_64/fpu_sub_32.h"
 #include "os/unix/fpu/x86_64/fpu_sub_64.h"
 #include "os/unix/fpu/x86_64/fpu_trunc_i32_f32.h"
 #include "os/unix/fpu/x86_64/fpu_trunc_i32_f64.h"
+#include "os/unix/fpu/x86_64/fpu_trunc_i64_f32.h"
+#include "os/unix/fpu/x86_64/fpu_trunc_i64_f64.h"
 
 #endif
 

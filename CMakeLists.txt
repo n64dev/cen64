@@ -114,7 +114,7 @@ if (DEFINED UNIX)
 
   include_directories(${X11_xf86vmode_INCLUDE_PATH})
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
-  set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
+  set(EXTRA_OS_LIBS m ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
   set(EXTRA_OS_EXE "")
 endif (DEFINED UNIX)
 

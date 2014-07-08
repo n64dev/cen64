@@ -23,15 +23,25 @@ int VR4300_MTC1(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt);
 int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft);
 int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft);
 
+int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_MOV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
+int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 
 void vr4300_cp1_init(struct vr4300 *vr4300);
