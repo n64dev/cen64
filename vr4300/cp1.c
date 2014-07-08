@@ -136,6 +136,41 @@ int VR4300_BC1(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 }
 
 //
+// C.eq.fmt
+//
+int VR4300_CP1_C_EQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint32_t iw = rfex_latch->iw;
+  enum vr4300_fmt fmt = GET_FMT(iw);
+  unsigned dest = VR4300_CP1_FCR31;
+  uint64_t result = vr4300->regs[dest];
+  uint8_t flag;
+
+  // Clear out C bit.
+  result &= ~(1 << 23);
+
+  if (fmt == VR4300_FMT_S) {
+    uint32_t fs32 = fs;
+    uint32_t ft32 = ft;
+
+    fpu_cmp_eq_32(&fs32, &ft32, &flag);
+  }
+
+  else if (fmt == VR4300_FMT_D)
+    fpu_cmp_eq_64(&fs, &ft, &flag);
+
+  else
+    assert(0 && "Invalid instruction.");
+
+
+  exdc_latch->result = result | (flag << 23);
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // C.le.fmt
 //
 int VR4300_CP1_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
