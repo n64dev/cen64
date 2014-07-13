@@ -106,6 +106,13 @@ int VR4300_BC1(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint64_t taken_pc = rfex_latch->common.pc + (offset + 4);
   uint32_t cond = vr4300->regs[VR4300_CP1_FCR31];
 
+  // XXX: The VR4300 manual says that the results of a FPU
+  // FCR writes aren't ready on the next cycle, but it seems
+  // that this might actually not be a limitiation of the real
+  // hardware?
+  if (vr4300->pipeline.dcwb_latch.dest == VR4300_CP1_FCR31)
+    cond = vr4300->pipeline.dcwb_latch.result;
+
   switch (opcode) {
     case 0x0: // BC1F
       if (!(cond >> 23 & 0x1))
@@ -293,6 +300,7 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RT(iw);
   unsigned src = GET_RD(iw);
+  uint64_t result;
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -310,9 +318,18 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
       break;
   }
 
+  result = vr4300->regs[src];
+
+  // XXX: The VR4300 manual says that the results of a FPU
+  // FCR writes aren't ready on the next cycle, but it seems
+  // that this might actually not be a limitiation of the real
+  // hardware?
+  if (vr4300->pipeline.dcwb_latch.dest == VR4300_CP1_FCR31)
+    result = vr4300->pipeline.dcwb_latch.result;
+
   // Undefined while the next instruction
   // executes, so we can cheat and use the RF.
-  exdc_latch->result = (int32_t) vr4300->regs[src];
+  exdc_latch->result = (int32_t) result;
   exdc_latch->dest = dest;
   return 0;
 }
