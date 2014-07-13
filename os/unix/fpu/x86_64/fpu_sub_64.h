@@ -14,7 +14,7 @@ static inline uint16_t fpu_sub_64(
     "fclex\n\t"
     "fldl %2\n\t"
     "fldl %3\n\t"
-    "fsubp\n\t"
+    "fsubrp\n\t"
     "fstpl %1\n\t"
     "fstsw %%ax\n\t"
 
