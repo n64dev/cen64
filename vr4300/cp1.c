@@ -465,7 +465,7 @@ int VR4300_MTC1(struct vr4300 *vr4300, uint64_t fs, uint64_t rt) {
   if (!(status & 0x04000000)) {
     result = (dest & 0x1)
       ? ((uint32_t) fs) | (rt << 32)
-      : (fs << 32) | ((uint32_t) rt);
+      : (fs & ~0xFFFFFFFFULL) | ((uint32_t) rt);
 
     dest &= ~0x1;
   }
