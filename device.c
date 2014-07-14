@@ -38,6 +38,7 @@ static int load_cart(const char *file, uint8_t *rom) {
     return -2;
   }
 
+  status = size;
   rewind(f);
 
   for (i = 0; i < (unsigned long int) size; i += last) {
@@ -94,6 +95,8 @@ static int load_pifrom(const char *file, uint8_t *rom) {
 // Creates and initializes a device.
 struct cen64_device *device_create(struct cen64_device *device,
   const char *pifrom, const char *rom) {
+  size_t rom_size;
+
   device->rom = malloc(0x2000000);
   device->ram = malloc(0x800000);
 
@@ -104,7 +107,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Read the ROM into the device.
-  if (load_cart(rom, device->rom) < 0) {
+  if ((rom_size = load_cart(rom, device->rom)) < 0) {
     printf("create_device: Failed to load cart.\n");
     return NULL;
   }
@@ -133,7 +136,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the PI.
-  if (pi_init(&device->pi, &device->bus, device->rom) < 0) {
+  if (pi_init(&device->pi, &device->bus, device->rom, rom_size) < 0) {
     printf("create_device: Failed to initialize the PI.\n");
     return NULL;
   }

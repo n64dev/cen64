@@ -32,10 +32,24 @@ static int pi_dma_write(struct pi_controller *pi) {
   uint32_t source = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFF;
   uint32_t length = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF) + 1;
 
+  if (pi->regs[PI_DRAM_ADDR_REG] == 0xFFFFFFFF) {
+    pi->regs[PI_STATUS_REG] &= ~0x1;
+    pi->regs[PI_STATUS_REG] |= 0x8;
+
+    signal_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
+    return 0;
+  }
+
   if (length & 7)
     length = (length + 7) & ~7;
 
-  memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
+  if (!(source & 0x0E000000)) {
+    if (source + length > pi->rom_size)
+      length = pi->rom_size - source;
+
+     memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
+  }
+
   pi->regs[PI_DRAM_ADDR_REG] += length;
   pi->regs[PI_CART_ADDR_REG] += length;
   pi->regs[PI_STATUS_REG] &= ~0x1;
@@ -46,10 +60,11 @@ static int pi_dma_write(struct pi_controller *pi) {
 }
 
 // Initializes the PI.
-int pi_init(struct pi_controller *pi,
-  struct bus_controller *bus, const uint8_t *rom) {
+int pi_init(struct pi_controller *pi, struct bus_controller *bus,
+  const uint8_t *rom, size_t rom_size) {
   pi->bus = bus;
   pi->rom = rom;
+  pi->rom_size = rom_size;
 
   return 0;
 }
@@ -96,7 +111,7 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     if (word & 0x1)
       pi->regs[reg] = 0;
 
-    else if (word & 0x2) {
+    if (word & 0x2) {
       clear_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
       pi->regs[reg] &= ~0x8;
     }
