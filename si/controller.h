@@ -28,6 +28,7 @@ extern const char *si_register_mnemonics[NUM_SI_REGISTERS];
 struct si_controller {
   struct bus_controller *bus;
   const uint8_t *rom;
+  uint8_t command[64];
   uint8_t ram[64];
 
   uint32_t regs[NUM_SI_REGISTERS];

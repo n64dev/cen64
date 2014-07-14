@@ -24,6 +24,10 @@ const char *si_register_mnemonics[NUM_SI_REGISTERS] = {
 };
 #endif
 
+static void pif_process(struct si_controller *si);
+static int pif_perform_command(struct si_controller *si, unsigned channel,
+  uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes);
+
 // Initializes the SI.
 int si_init(struct si_controller *si,
   struct bus_controller *bus, const uint8_t *rom) {
@@ -33,6 +37,111 @@ int si_init(struct si_controller *si,
   si->ram[0x26] = 0x3F;
   si->ram[0x27] = 0x3F;
   return 0;
+}
+
+// Handles a single PIF command.
+int pif_perform_command(struct si_controller *si,
+  unsigned channel, uint8_t *send_buf, uint8_t send_bytes,
+  uint8_t *recv_buf, uint8_t recv_bytes) {
+  uint8_t command = send_buf[0];
+  uint16_t address, offset;
+
+  switch(command) {
+    // Read status/reset.
+    case 0x00:
+    case 0xFF:
+      switch(channel) {
+        case 0:
+          recv_buf[0] = 0x05;
+          recv_buf[1] = 0x00;
+          recv_buf[2] = 0x01;
+          break;
+
+        case 1:
+        case 2:
+        case 3:
+          return 1;
+
+        case 4:
+          recv_buf[0] = 0x00;
+          recv_buf[1] = 0x80;
+          recv_buf[2] = 0x00;
+          break;
+
+        default:
+          assert(0 && "Invalid channel.");
+          return 1;
+      }
+
+      break;
+
+    // Read from controller.
+    case 0x01:
+      switch(channel) {
+        case 0:
+          memset(recv_buf, 0, 4);
+          break;
+
+        default:
+          return 1;
+      }
+
+      break;
+
+    // Unimplemented command:
+    default:
+      break;
+  }
+
+  return 0;
+}
+
+// Emulates the PIF operation.
+void pif_process(struct si_controller *si) {
+  unsigned channel = 0;
+  int ptr = 0;
+
+  if (si->command[0x3F] != 0x1)
+    return;
+
+  // Logic ripped from MAME.
+  while (ptr < 0x3F) {
+    int8_t send_bytes = si->command[ptr++];
+
+    if (send_bytes == -2)
+      break;
+
+    if (send_bytes < 0)
+      continue;
+
+    if (send_bytes > 0 && (send_bytes & 0xC0) == 0) {
+      int8_t recv_bytes = si->command[ptr++];
+      uint8_t recv_buf[0x40];
+      uint8_t send_buf[0x40];
+      int result;
+
+      if (recv_bytes == -2)
+        break;
+
+      memcpy(send_buf, si->command + ptr, send_bytes);
+      ptr += send_bytes;
+
+      result = pif_perform_command(si, channel,
+        send_buf, send_bytes, recv_buf, recv_bytes);
+
+      if (result == 0) {
+        memcpy(si->ram + ptr, recv_buf, recv_bytes);
+        ptr += recv_bytes;
+      }
+
+      else
+        si->ram[ptr - 2] |= 0x80;
+    }
+
+    channel++;
+  }
+
+  si->ram[0x3F] = 0;
 }
 
 // Reads a word from PIF RAM.
@@ -116,13 +225,21 @@ int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
   else if (reg == SI_PIF_ADDR_RD64B_REG) {
     uint32_t offset = si->regs[SI_DRAM_ADDR_REG] & 0x1FFFFFFF;
-    memset(si->bus->ri->ram + offset, 0, 64);
+
+    pif_process(si);
+    memcpy(si->bus->ri->ram + offset,
+      si->ram, sizeof(si->ram));
 
     signal_rcp_interrupt(si->bus->vr4300, MI_INTR_SI);
     si->regs[SI_STATUS_REG] |= 0x1000;
   }
 
   else if (reg == SI_PIF_ADDR_WR64B_REG) {
+    uint32_t offset = si->regs[SI_DRAM_ADDR_REG] & 0x1FFFFFFF;
+
+    memcpy(si->ram, si->bus->ri->ram + offset, sizeof(si->ram));
+    memcpy(si->command, si->ram, sizeof(si->command));
+
     signal_rcp_interrupt(si->bus->vr4300, MI_INTR_SI);
     si->regs[SI_STATUS_REG] |= 0x1000;
   }
