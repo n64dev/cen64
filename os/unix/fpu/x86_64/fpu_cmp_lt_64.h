@@ -10,7 +10,6 @@ static inline uint16_t fpu_cmp_lt_64(
   uint8_t un, lt;
   uint16_t sw;
 
-  // XXX: Check; blindly copied from old core.
   __asm__ volatile(
     "fclex\n\t"
     "fldl %4\n\t"
@@ -29,7 +28,6 @@ static inline uint16_t fpu_cmp_lt_64(
     : "cc", "st"
   );
 
-  // XXX: Check; blindly copied from old core.
   if (un)
     lt = 0;
 

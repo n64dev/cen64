@@ -10,7 +10,6 @@ static inline uint16_t fpu_cmp_eq_32(
   uint8_t not_un, eq;
   uint16_t sw;
 
-  // XXX: Check; blindly copied from old core.
   __asm__ volatile(
     "fclex\n\t"
     "flds %4\n\t"
@@ -29,7 +28,6 @@ static inline uint16_t fpu_cmp_eq_32(
     : "cc", "st"
   );
 
-  // XXX: Check; blindly copied from old core.
   *flag = not_un & eq;
   return sw;
 }
