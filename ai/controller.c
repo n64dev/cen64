@@ -37,6 +37,10 @@ int read_ai_regs(void *opaque, uint32_t address, uint32_t *word) {
 
   *word = ai->regs[reg];
   debug_mmio_read(ai, ai_register_mnemonics[reg], *word);
+
+  if (reg == AI_STATUS_REG)
+    *word = 0x80000001;
+
   return 0;
 }
 
