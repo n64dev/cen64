@@ -29,7 +29,6 @@ struct vr4300_bus_request {
   uint64_t dqm;
   unsigned size;
   int postshift;
-  int preshift;
 
   enum vr4300_bus_request_type type;
 };
