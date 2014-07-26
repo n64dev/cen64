@@ -97,7 +97,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   const char *pifrom, const char *rom) {
   size_t rom_size;
 
-  device->rom = malloc(0x2000000);
+  device->rom = malloc(0x4000000);
   device->ram = malloc(0x800000);
 
   // Read the PIFROM into the device.
