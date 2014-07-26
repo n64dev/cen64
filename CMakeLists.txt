@@ -16,18 +16,18 @@ find_package(Threads REQUIRED)
 if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
 
-  set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
-  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
-  set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
-  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-
   # Enable processor-specific optimizations?
   option(NATIVE_BUILD "Build binary for native architecture?" OFF)
 
   if (NATIVE_BUILD)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
   endif (NATIVE_BUILD)
+
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -ggdb3 -g3 -O0")
+  set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -Os -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O2 -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -Og")
+  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
   # Enable link time optimization on recent versions.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
@@ -50,21 +50,21 @@ endif ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
 
-  set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
-  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -flto")
-  set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -flto")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
-  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")
-  set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-s")
-
-  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-
   # Enable processor-specific optimizations?
   option(NATIVE_BUILD "Build binary for native architecture?" OFF)
 
   if (NATIVE_BUILD)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
   endif (NATIVE_BUILD)
+
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -ggdb3 -g3 -O0 -fsanitize=undefined")
+  set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -Os -DNDEBUG -flto")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O3 -DNDEBUG -flto")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -Og")
+  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_C_FLAGS} -s")
+  set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -s")
+
+  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
   include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/x86_64)
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
