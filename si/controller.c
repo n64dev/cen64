@@ -90,7 +90,7 @@ int pif_perform_command(struct si_controller *si,
 
     // Unimplemented command:
     default:
-      break;
+      return 1;
   }
 
   return 0;
