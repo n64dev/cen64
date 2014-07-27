@@ -11,8 +11,14 @@
 #ifndef __vr4300_cp1_h__
 #define __vr4300_cp1_h__
 #include "common.h"
+#include "fpu.h"
 
 struct vr4300;
+
+struct vr4300_cp1 {
+  fpu_state_t native_state;
+  fpu_state_t native_enables;
+};
 
 int VR4300_BC1(struct vr4300 *vr4300, uint64_t fs, uint64_t ft);
 int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt);

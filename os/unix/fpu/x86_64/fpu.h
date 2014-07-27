@@ -10,6 +10,22 @@
 #ifndef __os_fpu_h__
 #define __os_fpu_h__
 #include "common.h"
+#include <emmintrin.h>
+
+typedef unsigned int fpu_state_t;
+
+#define FPU_ROUND_NEAREST 0x0000
+#define FPU_ROUND_NEGINF  0x2000
+#define FPU_ROUND_POSINF  0x4000
+#define FPU_ROUND_TOZERO  0x6000
+
+static inline fpu_state_t fpu_get_state(void) {
+  return _mm_getcsr();
+}
+
+static inline void fpu_set_state(fpu_state_t state) {
+  _mm_setcsr(state);
+}
 
 #include "os/unix/fpu/x86_64/fpu_abs_32.h"
 #include "os/unix/fpu/x86_64/fpu_abs_64.h"

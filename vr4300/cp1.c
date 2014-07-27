@@ -26,12 +26,22 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
     return 1;
   }
+
+  if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
 
   if (fmt == VR4300_FMT_S) {
     uint32_t fs32 = fs;
@@ -41,11 +51,11 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D)
+  else
     fpu_abs_64(&fs, &result);
 
-  else
-    assert(0 && "Invalid instruction.");
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -62,7 +72,10 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -83,6 +96,9 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   else
     assert(0 && "Invalid instruction.");
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -153,7 +169,10 @@ int VR4300_CP1_C_EQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -171,6 +190,9 @@ int VR4300_CP1_C_EQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -187,7 +209,10 @@ int VR4300_CP1_C_F(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -197,6 +222,9 @@ int VR4300_CP1_C_F(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   else
     assert(0 && "Invalid instruction.");
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -214,7 +242,10 @@ int VR4300_CP1_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -232,6 +263,9 @@ int VR4300_CP1_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -248,7 +282,10 @@ int VR4300_CP1_C_LT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -266,6 +303,9 @@ int VR4300_CP1_C_LT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -282,7 +322,10 @@ int VR4300_CP1_C_NGE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -300,6 +343,9 @@ int VR4300_CP1_C_NGE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -316,7 +362,10 @@ int VR4300_CP1_C_NGL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -334,6 +383,9 @@ int VR4300_CP1_C_NGL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -350,7 +402,10 @@ int VR4300_CP1_C_NGLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -368,6 +423,9 @@ int VR4300_CP1_C_NGLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -384,7 +442,10 @@ int VR4300_CP1_C_NGT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -402,6 +463,9 @@ int VR4300_CP1_C_NGT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -418,7 +482,10 @@ int VR4300_CP1_C_OLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -436,6 +503,9 @@ int VR4300_CP1_C_OLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -452,7 +522,10 @@ int VR4300_CP1_C_OLT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -470,6 +543,9 @@ int VR4300_CP1_C_OLT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -486,7 +562,10 @@ int VR4300_CP1_C_SEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -504,6 +583,9 @@ int VR4300_CP1_C_SEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -520,7 +602,10 @@ int VR4300_CP1_C_SF(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -538,6 +623,9 @@ int VR4300_CP1_C_SF(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -554,7 +642,10 @@ int VR4300_CP1_C_UEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -572,6 +663,9 @@ int VR4300_CP1_C_UEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -588,7 +682,10 @@ int VR4300_CP1_C_ULE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -606,6 +703,9 @@ int VR4300_CP1_C_ULE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -622,7 +722,10 @@ int VR4300_CP1_C_ULT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -640,6 +743,9 @@ int VR4300_CP1_C_ULT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -656,7 +762,10 @@ int VR4300_CP1_C_UN(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
+  fpu_state_t saved_state;
   uint8_t flag;
+
+  saved_state = fpu_get_state();
 
   // Clear out C bit.
   result &= ~(1 << 23);
@@ -674,6 +783,9 @@ int VR4300_CP1_C_UN(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
   return 0;
@@ -689,9 +801,12 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -713,6 +828,9 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   fesetround(oldround);
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -728,9 +846,12 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint32_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -751,6 +872,9 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   fesetround(oldround);
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -846,9 +970,12 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -861,6 +988,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     case VR4300_FMT_W: fpu_cvt_f64_i32(&fs32, &result); break;
     case VR4300_FMT_L: fpu_cvt_f64_i64(&fs, &result); break;
   }
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -877,9 +1007,12 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -896,6 +1029,9 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -911,9 +1047,12 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint32_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -926,6 +1065,9 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     case VR4300_FMT_W: fpu_cvt_f32_i32(&fs32, &result); break;
     case VR4300_FMT_L: fpu_cvt_f32_i64(&fs, &result); break;
   }
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -942,9 +1084,12 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint32_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -961,6 +1106,9 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -976,7 +1124,10 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -998,6 +1149,9 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1013,9 +1167,12 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1037,6 +1194,9 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   fesetround(oldround);
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1052,9 +1212,12 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint32_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1075,6 +1238,9 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   }
 
   fesetround(oldround);
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1163,7 +1329,10 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1185,6 +1354,9 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1196,11 +1368,9 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt)) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   uint64_t result;
   uint32_t iw = rfex_latch->iw;
-  unsigned fs_reg = GET_FS(iw);
   unsigned dest = GET_RT(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
@@ -1277,7 +1447,10 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1298,6 +1471,9 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1313,9 +1489,12 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1332,6 +1511,9 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1347,9 +1529,12 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint32_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1365,6 +1550,9 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       assert(0 && "Invalid instruction.");
       break;
   }
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1406,7 +1594,10 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1427,6 +1618,9 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   else
     assert(0 && "Invalid instruction.");
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1442,7 +1636,10 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1463,6 +1660,9 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   else
     assert(0 && "Invalid instruction.");
+
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1509,9 +1709,12 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint64_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1528,6 +1731,9 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1543,9 +1749,12 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
+  fpu_state_t saved_state;
 
   uint32_t fs32 = fs;
   uint32_t result;
+
+  saved_state = fpu_get_state();
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1562,6 +1771,9 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
+  vr4300->cp1.native_state = fpu_get_state();
+  fpu_set_state(saved_state);
+
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return 0;
@@ -1569,6 +1781,7 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
 // Initializes the coprocessor.
 void vr4300_cp1_init(struct vr4300 *vr4300) {
+  vr4300->cp1.native_state = FPU_ROUND_NEAREST;
 }
 
 // Determines if the coprocessor was used yet.
