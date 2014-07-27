@@ -5,27 +5,24 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_sub_64(
+#include <emmintrin.h>
+#include <string.h>
+
+static inline void fpu_sub_64(
   uint64_t *fs, uint64_t *ft, uint64_t *fd) {
-  uint64_t res;
-  uint16_t sw;
+  double fs_double, ft_double, fd_double;
+  __m128d fs_reg, ft_reg, fd_reg;
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "fldl %2\n\t"
-    "fldl %3\n\t"
-    "fsubrp\n\t"
-    "fstpl %1\n\t"
-    "fstsw %%ax\n\t"
+  // Prevent aliasing.
+  memcpy(&fs_double, fs, sizeof(fs_double));
+  memcpy(&ft_double, ft, sizeof(ft_double));
 
-    : "=a" (sw),
-      "=m" (res)
-    : "m" (*fs),
-      "m" (*ft)
-    : "st"
-  );
+  fs_reg = _mm_load_sd(&fs_double);
+  ft_reg = _mm_load_sd(&ft_double);
+  fd_reg = _mm_sub_sd(fs_reg, ft_reg);
+  _mm_store_sd(&fd_double, fd_reg);
 
-  *fd = res;
-  return sw;
+  // Prevent aliasing.
+  memcpy(fd, &fd_double, sizeof(fd_double));
 }
 

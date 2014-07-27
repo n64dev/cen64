@@ -1151,6 +1151,7 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -1587,7 +1588,7 @@ int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt)) {
   }
 
   // TODO/FIXME: XXX
-  assert(!(fs_reg & 0x1));
+  assert(!(GET_FS(iw) & 0x1));
   result = (int32_t) fs;
 
   exdc_latch->result = result;
@@ -2025,7 +2026,7 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
 // Initializes the coprocessor.
 void vr4300_cp1_init(struct vr4300 *vr4300) {
-  vr4300->cp1.native_state = FPU_ROUND_NEAREST;
+  vr4300->cp1.native_state = FPU_ROUND_NEAREST | FPU_MASK_EXCPS;
 }
 
 // Determines if the coprocessor was used yet.

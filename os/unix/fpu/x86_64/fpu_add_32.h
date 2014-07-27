@@ -5,27 +5,24 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_add_32(
+#include <emmintrin.h>
+#include <string.h>
+
+static inline void fpu_add_32(
   uint32_t *fs, uint32_t *ft, uint32_t *fd) {
-  uint32_t res;
-  uint16_t sw;
+  float fs_float, ft_float, fd_float;
+  __m128 fs_reg, ft_reg, fd_reg;
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "flds %2\n\t"
-    "flds %3\n\t"
-    "faddp\n\t"
-    "fstps %1\n\t"
-    "fstsw %%ax\n\t"
+  // Prevent aliasing.
+  memcpy(&fs_float, fs, sizeof(fs_float));
+  memcpy(&ft_float, ft, sizeof(ft_float));
 
-    : "=a" (sw),
-      "=m" (res)
-    : "m" (*fs),
-      "m" (*ft)
-    : "st"
-  );
+  fs_reg = _mm_load_ss(&fs_float);
+  ft_reg = _mm_load_ss(&ft_float);
+  fd_reg = _mm_add_ss(fs_reg, ft_reg);
+  _mm_store_ss(&fd_float, fd_reg);
 
-  *fd = res;
-  return sw;
+  // Prevent aliasing.
+  memcpy(fd, &fd_float, sizeof(fd_float));
 }
 
