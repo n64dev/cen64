@@ -17,6 +17,8 @@
 
 #include <GL/gl.h>
 
+struct bus_controller;
+
 struct gl_window {
   void *window;
 };
@@ -44,7 +46,8 @@ int create_gl_window(struct gl_window *window,
   const struct gl_window_hints *hints);
 
 int gl_swap_buffers(const struct gl_window *window); 
-void os_poll_events(struct gl_window *gl_window);
+void os_poll_events(struct bus_controller *bus,
+  struct gl_window *gl_window);
 
 #endif
 

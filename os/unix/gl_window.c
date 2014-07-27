@@ -16,7 +16,6 @@
 #include <string.h>
 
 #include <GL/glx.h>
-#include <pthread.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -370,7 +369,7 @@ int gl_swap_buffers(const struct gl_window *window) {
 }
 
 // Handles events that come from X11.
-void os_poll_events(struct gl_window *gl_window) {
+void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
   XEvent event;
 
@@ -380,7 +379,7 @@ void os_poll_events(struct gl_window *gl_window) {
     switch (event.type) {
       case ClientMessage:
         if (event.xclient.data.l[0] == glx_window->wm_delete_message)
-          pthread_exit(NULL);
+          cen64_return(bus);
         break;
 
       case ConfigureNotify:

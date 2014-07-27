@@ -61,7 +61,7 @@ void vi_cycle(struct vi_controller *vi) {
     const uint8_t *buffer = vi->bus->ri->ram + offset;
 
     // Poll for window events: resize, close, etc.
-    os_poll_events(&vi->gl_window);
+    os_poll_events(vi->bus, &vi->gl_window);
 
 #if 0
     if (vi->frame_count++ == 9) {

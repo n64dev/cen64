@@ -115,6 +115,9 @@ typedef char bool;
 #define unused(decl) decl
 #endif
 
+// Forward declarations.
+struct bus_controller;
+
 // Byte order swap functions.
 static inline uint32_t byteswap_32(uint32_t word) {
 #ifdef BIG_ENDIAN_HOST
@@ -131,6 +134,13 @@ static inline uint32_t byteswap_32(uint32_t word) {
     (((word) << 24) & 0xFF000000));
 #endif
 }
+
+// Return from simulation function.
+void cen64_return(struct bus_controller *bus)
+#ifdef __GNUC__
+ __attribute__ ((noreturn))
+#endif
+;
 
 #cmakedefine DEBUG_MMIO_REGISTER_ACCESS
 #ifdef DEBUG_MMIO_REGISTER_ACCESS

@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "device.h"
+#include <setjmp.h>
 
 // Called when a simulation instance is terminating.
 void cen64_cleanup(struct cen64_device *device) {
@@ -39,5 +40,11 @@ int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
 
   device_run(device);
   return 0;
+}
+
+// Called to temporary (or permanently) leave simulation.
+// After calling this function, we return to device_run.
+void cen64_return(struct bus_controller *bus) {
+  longjmp(bus->unwind_data, 1);
 }
 

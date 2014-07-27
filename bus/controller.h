@@ -12,6 +12,7 @@
 #define __bus_controller_h__
 #include "common.h"
 #include "bus/memorymap.h"
+#include <setjmp.h>
 
 struct ai_controller;
 struct pi_controller;
@@ -35,6 +36,11 @@ struct bus_controller {
   struct rdp *rdp;
   struct rsp *rsp;
   struct vr4300 *vr4300;
+
+  // Allows to to pop back out into device_run during simulation.
+  // Kind of a hack to put this in with the device "bus", but at
+  // least everyone gets access to it this way.
+  jmp_buf unwind_data;
 };
 
 void bus_cleanup(struct bus_controller *bus);
