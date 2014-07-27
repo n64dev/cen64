@@ -5,30 +5,20 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_cmp_ule_32(
-  uint32_t *fs, uint32_t *ft, uint8_t *flag) {
-  uint8_t un, le;
-  uint16_t sw;
+#include <emmintrin.h>
+#include <string.h>
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "flds %4\n\t"
-    "flds %3\n\t"
-    "fcomip\n\t"
-    "setp %0\n\t"
-    "setbe %1\n\t"
-    "fstsw %%ax\n\t"
-    "fstp %%st(0)\n\t"
+static inline void fpu_cmp_ule_32(
+  const uint32_t *fs, const uint32_t *ft, uint8_t *condition) {
+  float fs_float, ft_float;
+  __m128 fs_reg, ft_reg;
 
-    : "=m" (un),
-      "=m" (le),
-      "=a" (sw)
-    : "m" (*fs),
-      "m" (*ft)
-    : "cc", "st"
-  );
+  // Prevent aliasing.
+  memcpy(&fs_float, fs, sizeof(fs_float));
+  memcpy(&ft_float, ft, sizeof(ft_float));
 
-  *flag = un | le;
-  return sw;
+  fs_reg = _mm_load_ss(&fs_float);
+  ft_reg = _mm_load_ss(&ft_float);
+  *condition = _mm_ucomile_ss(fs_reg, ft_reg);
 }
 

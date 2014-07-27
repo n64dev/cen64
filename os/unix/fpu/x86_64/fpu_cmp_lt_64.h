@@ -5,33 +5,20 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_cmp_lt_64(
-  uint64_t *fs, uint64_t *ft, uint8_t *flag) {
-  uint8_t un, lt;
-  uint16_t sw;
+#include <emmintrin.h>
+#include <string.h>
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "fldl %4\n\t"
-    "fldl %3\n\t"
-    "fcomip\n\t"
-    "setp %0\n\t"
-    "setb %1\n\t"
-    "fstsw %%ax\n\t"
-    "fstp %%st(0)\n\t"
+static inline void fpu_cmp_lt_64(
+  const uint64_t *fs, const uint64_t *ft, uint8_t *condition) {
+  double fs_double, ft_double;
+  __m128d fs_reg, ft_reg;
 
-    : "=m" (un),
-      "=m" (lt),
-      "=a" (sw)
-    : "m" (*fs),
-      "m" (*ft)
-    : "cc", "st"
-  );
+  // Prevent aliasing.
+  memcpy(&fs_double, fs, sizeof(fs_double));
+  memcpy(&ft_double, ft, sizeof(ft_double));
 
-  if (un)
-    lt = 0;
-
-  *flag = lt;
-  return sw;
+  fs_reg = _mm_load_sd(&fs_double);
+  ft_reg = _mm_load_sd(&ft_double);
+  *condition = _mm_comilt_sd(fs_reg, ft_reg);
 }
 
