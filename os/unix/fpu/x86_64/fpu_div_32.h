@@ -9,7 +9,7 @@
 #include <string.h>
 
 static inline void fpu_div_32(
-  uint32_t *fs, uint32_t *ft, uint32_t *fd) {
+  const uint32_t *fs, const uint32_t *ft, uint32_t *fd) {
   float fs_float, ft_float, fd_float;
   __m128 fs_reg, ft_reg, fd_reg;
 

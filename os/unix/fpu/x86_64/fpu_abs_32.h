@@ -5,24 +5,21 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_abs_32(uint32_t *fs, uint32_t *fd) {
-  uint32_t res;
-  uint16_t sw;
+#include <emmintrin.h>
+#include <string.h>
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "flds %2\n\t"
-    "fabs\n\t"
-    "fstps %1\n\t"
-    "fstsw %%ax\n\t"
+static inline void fpu_abs_32(const uint32_t *fs, uint32_t *fd) {
+  float fs_float, fd_float;
+  __m128 fs_reg, fd_reg;
 
-    : "=a" (sw),
-      "=m" (res)
-    : "m" (*fs)
-    : "st"
-  );
+  // Prevent aliasing.
+  memcpy(&fs_float, fs, sizeof(fs_float));
 
-  *fd = res;
-  return sw;
+  fs_reg = _mm_load_ss(&fs_float);
+  fd_reg = _mm_andnot_ps(_mm_set_ss(-0.0f), fs_reg);
+  _mm_store_ss(&fd_float, fd_reg);
+
+  // Prevent aliasing.
+  memcpy(fd, &fd_float, sizeof(fd_float));
 }
 

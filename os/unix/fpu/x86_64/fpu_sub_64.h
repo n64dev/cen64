@@ -9,7 +9,7 @@
 #include <string.h>
 
 static inline void fpu_sub_64(
-  uint64_t *fs, uint64_t *ft, uint64_t *fd) {
+  const uint64_t *fs, const uint64_t *ft, uint64_t *fd) {
   double fs_double, ft_double, fd_double;
   __m128d fs_reg, ft_reg, fd_reg;
 
