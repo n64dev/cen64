@@ -1101,6 +1101,7 @@ int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdc_latch->request.address = rs + (int16_t) iw;
   exdc_latch->request.dqm = ~0ULL;
   exdc_latch->request.postshift = 0;
+  exdc_latch->request.two_words = 1;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
   exdc_latch->request.size = 8;
 
@@ -1143,6 +1144,7 @@ int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   exdc_latch->request.address = address;
   exdc_latch->request.dqm = ~0U;
   exdc_latch->request.postshift = postshift;
+  exdc_latch->request.two_words = 0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
   exdc_latch->request.size = 4;
 

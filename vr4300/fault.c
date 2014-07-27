@@ -115,17 +115,21 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   vr4300_common_interlocks(pipeline, MEMORY_CYCLE_DELAY, 5);
   bus_read_word(vr4300->bus, request->address & ~0x3ULL, &word);
 
-
-  if (request->size <= 4) {
+  if (!request->two_words) {
     unsigned rshiftamt = (4 - request->size) << 3;
     unsigned lshiftamt = (request->address & 0x3) << 3;
+
     request->data = ((int64_t) (word << lshiftamt)) >> rshiftamt;
   }
 
   else {
+    unsigned rshiftamt = (8 - request->size) << 3;
+    unsigned lshiftamt = (request->address & 0x7) << 3;
+
     request->data = (uint64_t) word << 32;
-    bus_read_word(vr4300->bus, (request->address & ~0x3ULL) + 4, &word);
-    request->data |= word;
+    bus_read_word(vr4300->bus, (request->address & ~0x7ULL) + 4, &word);
+    request->data = (int64_t) ((request->data | word) << lshiftamt) >>
+      rshiftamt;
   }
 }
 

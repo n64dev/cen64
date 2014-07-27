@@ -29,6 +29,7 @@ struct vr4300_bus_request {
   uint64_t dqm;
   unsigned size;
   int postshift;
+  char two_words;
 
   enum vr4300_bus_request_type type;
 };
