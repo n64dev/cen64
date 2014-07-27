@@ -16,7 +16,7 @@ static inline void fpu_abs_64(const uint64_t *fs, uint64_t *fd) {
   memcpy(&fs_double, fs, sizeof(fs_double));
 
   fs_reg = _mm_load_sd(&fs_double);
-  fd_reg = _mm_andnot_pd(_mm_set_sd(-0.0f), fs_reg);
+  fd_reg = _mm_andnot_pd(_mm_set_sd(-0.0), fs_reg);
   _mm_store_sd(&fd_double, fd_reg);
 
   // Prevent aliasing.
