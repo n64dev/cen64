@@ -17,6 +17,11 @@
 static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 
 //
+// Invalid operation exception.
+//
+void VR4300_INV(struct vr4300 *vr4300);
+
+//
 // ABS.fmt
 //
 int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
@@ -36,7 +41,7 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
-  if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -82,6 +87,13 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   if (fmt == VR4300_FMT_S) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
@@ -91,11 +103,8 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_add_64(&fs, &ft, &result);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_add_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -174,6 +183,18 @@ int VR4300_CP1_C_EQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -184,11 +205,8 @@ int VR4300_CP1_C_EQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_eq_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_eq_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_eq_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -209,22 +227,21 @@ int VR4300_CP1_C_F(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
   uint8_t flag;
 
-  saved_state = fpu_get_state();
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
 
   // Clear out C bit.
   result &= ~(1 << 23);
-
-  if (fmt == VR4300_FMT_S || fmt == VR4300_FMT_D)
-    flag = 0;
-
-  else
-    assert(0 && "Invalid instruction.");
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
+  flag = 0;
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -247,6 +264,18 @@ int VR4300_CP1_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -257,11 +286,8 @@ int VR4300_CP1_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_le_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_le_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_le_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -287,6 +313,18 @@ int VR4300_CP1_C_LT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -297,11 +335,8 @@ int VR4300_CP1_C_LT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_lt_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_lt_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_lt_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -327,6 +362,18 @@ int VR4300_CP1_C_NGE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -337,11 +384,8 @@ int VR4300_CP1_C_NGE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_nge_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_nge_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_nge_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -367,6 +411,18 @@ int VR4300_CP1_C_NGL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -377,11 +433,8 @@ int VR4300_CP1_C_NGL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_ngl_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_ngl_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_ngl_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -407,6 +460,18 @@ int VR4300_CP1_C_NGLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -417,11 +482,8 @@ int VR4300_CP1_C_NGLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_ngle_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_ngle_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_ngle_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -447,6 +509,18 @@ int VR4300_CP1_C_NGT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -457,11 +531,8 @@ int VR4300_CP1_C_NGT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_ngt_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_ngt_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_ngt_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -487,6 +558,18 @@ int VR4300_CP1_C_OLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -497,11 +580,8 @@ int VR4300_CP1_C_OLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_ole_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_ole_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_ole_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -527,6 +607,18 @@ int VR4300_CP1_C_OLT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -537,11 +629,8 @@ int VR4300_CP1_C_OLT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_olt_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_olt_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_olt_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -567,6 +656,18 @@ int VR4300_CP1_C_SEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -577,11 +678,8 @@ int VR4300_CP1_C_SEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_seq_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_seq_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_seq_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -607,6 +705,18 @@ int VR4300_CP1_C_SF(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -617,11 +727,8 @@ int VR4300_CP1_C_SF(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_sf_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_sf_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_sf_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -647,6 +754,18 @@ int VR4300_CP1_C_UEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -657,11 +776,8 @@ int VR4300_CP1_C_UEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_ueq_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_ueq_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_ueq_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -687,6 +803,18 @@ int VR4300_CP1_C_ULE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -697,11 +825,8 @@ int VR4300_CP1_C_ULE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_ule_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_ule_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_ule_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -727,6 +852,18 @@ int VR4300_CP1_C_ULT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -737,11 +874,8 @@ int VR4300_CP1_C_ULT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_ult_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_ult_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_ult_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -767,6 +901,18 @@ int VR4300_CP1_C_UN(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   saved_state = fpu_get_state();
 
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   // Clear out C bit.
   result &= ~(1 << 23);
 
@@ -777,11 +923,8 @@ int VR4300_CP1_C_UN(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     fpu_cmp_un_32(&fs32, &ft32, &flag);
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_cmp_un_64(&fs, &ft, &flag);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_cmp_un_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -813,6 +956,13 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   int oldround = fegetround();
   fesetround(FE_UPWARD);
 
@@ -820,9 +970,8 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_round_i64_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -858,6 +1007,13 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   int oldround = fegetround();
   fesetround(FE_UPWARD);
 
@@ -865,9 +1021,8 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_round_i32_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -982,11 +1137,21 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt == VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
     case VR4300_FMT_S: fpu_cvt_f64_f32(&fs32, &result); break;
-    case VR4300_FMT_D: assert(0 && "Invalid instruction."); break;
     case VR4300_FMT_W: fpu_cvt_f64_i32(&fs32, &result); break;
     case VR4300_FMT_L: fpu_cvt_f64_i64(&fs, &result); break;
+
+    default:
+      assert(0 && "Unknown case?");
+      break;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
@@ -1019,13 +1184,19 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
     case VR4300_FMT_S: fpu_cvt_i64_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_cvt_i64_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -1059,11 +1230,22 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt == VR4300_FMT_S) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
-    case VR4300_FMT_S: assert(0 && "Invalid instruction."); break;
     case VR4300_FMT_D: fpu_cvt_f32_f64(&fs, &result); break;
     case VR4300_FMT_W: fpu_cvt_f32_i32(&fs32, &result); break;
     case VR4300_FMT_L: fpu_cvt_f32_i64(&fs, &result); break;
+
+    default:
+      assert(0 && "Unknown case?");
+      result = 0;
+      break;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
@@ -1096,13 +1278,19 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
     case VR4300_FMT_S: fpu_cvt_i32_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_cvt_i32_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -1134,6 +1322,13 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   if (fmt == VR4300_FMT_S) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
@@ -1143,11 +1338,8 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_div_64(&fs, &ft, &result);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_div_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1179,6 +1371,13 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   int oldround = fegetround();
   fesetround(FE_DOWNWARD);
 
@@ -1186,9 +1385,8 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_round_i64_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -1224,6 +1422,13 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   int oldround = fegetround();
   fesetround(FE_DOWNWARD);
 
@@ -1231,9 +1436,8 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_round_i32_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -1339,6 +1543,13 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   if (fmt == VR4300_FMT_S) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
@@ -1348,11 +1559,8 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_mul_64(&fs, &ft, &result);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_mul_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1457,6 +1665,13 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   if (fmt == VR4300_FMT_S) {
     uint32_t fs32 = fs;
     uint32_t fd32;
@@ -1465,11 +1680,8 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_neg_64(&fs, &result);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_neg_64(&fs, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1501,13 +1713,19 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
     case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_round_i64_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -1541,13 +1759,19 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
     case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_round_i32_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -1604,6 +1828,13 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   if (fmt == VR4300_FMT_S) {
     uint32_t fs32 = fs;
     uint32_t fd32;
@@ -1612,11 +1843,8 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_sqrt_64(&fs, &result);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_sqrt_64(&fs, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1646,6 +1874,13 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   if (fmt == VR4300_FMT_S) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
@@ -1655,11 +1890,8 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     result = fd32;
   }
 
-  else if (fmt == VR4300_FMT_D)
-    fpu_sub_64(&fs, &ft, &result);
-
   else
-    assert(0 && "Invalid instruction.");
+    fpu_sub_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1721,13 +1953,19 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
     case VR4300_FMT_S: fpu_trunc_i64_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_trunc_i64_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
@@ -1761,13 +1999,19 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
+  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+    VR4300_INV(vr4300);
+    return 1;
+  }
+
+  fpu_set_state(vr4300->cp1.native_state);
+
   switch (fmt) {
     case VR4300_FMT_S: fpu_trunc_i32_f32(&fs32, &result); break;
     case VR4300_FMT_D: fpu_trunc_i32_f64(&fs, &result); break;
 
-    case VR4300_FMT_W:
-    case VR4300_FMT_L:
-      assert(0 && "Invalid instruction.");
+    default:
+      assert(0 && "Unknown case?");
       break;
   }
 
