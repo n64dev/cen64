@@ -16,8 +16,9 @@
 #include "vr4300/pipeline.h"
 
 // Currently used a fixed value...
-#define MEMORY_CYCLE_DELAY 25
-#define ICACHE_ACCESS_DELAY 25
+#define MEMORY_CODE_CYCLE_DELAY 50
+#define MEMORY_DATA_CYCLE_DELAY 5
+#define ICACHE_ACCESS_DELAY 50
 
 const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #define X(fault) #fault,
@@ -113,7 +114,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   struct vr4300_bus_request *request = &exdc_latch->request;
   uint32_t word;
 
-  vr4300_common_interlocks(pipeline, MEMORY_CYCLE_DELAY, 5);
+  vr4300_common_interlocks(pipeline, MEMORY_DATA_CYCLE_DELAY, 5);
   bus_read_word(vr4300->bus, request->address & ~0x3ULL, &word);
 
   if (!request->two_words) {
@@ -251,7 +252,7 @@ void VR4300_UNC(struct vr4300 *vr4300) {
   const struct segment *segment = icrf_latch->segment;
   uint64_t address;
 
-  vr4300_common_interlocks(pipeline, MEMORY_CYCLE_DELAY, 4);
+  vr4300_common_interlocks(pipeline, MEMORY_CODE_CYCLE_DELAY, 4);
 
   address = icrf_latch->common.pc - segment->offset;
   bus_read_word(vr4300->bus, address, &rfex_latch->iw);
