@@ -283,11 +283,11 @@ int VR4300_CP1_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_le_32(&fs32, &ft32, &flag);
+    fpu_cmp_ole_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_le_64(&fs, &ft, &flag);
+    fpu_cmp_ole_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -332,11 +332,11 @@ int VR4300_CP1_C_LT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_lt_32(&fs32, &ft32, &flag);
+    fpu_cmp_olt_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_lt_64(&fs, &ft, &flag);
+    fpu_cmp_olt_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -381,11 +381,11 @@ int VR4300_CP1_C_NGE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_nge_32(&fs32, &ft32, &flag);
+    fpu_cmp_ult_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_nge_64(&fs, &ft, &flag);
+    fpu_cmp_ult_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -430,11 +430,11 @@ int VR4300_CP1_C_NGL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_ngl_32(&fs32, &ft32, &flag);
+    fpu_cmp_ueq_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_ngl_64(&fs, &ft, &flag);
+    fpu_cmp_ueq_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -479,11 +479,11 @@ int VR4300_CP1_C_NGLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_ngle_32(&fs32, &ft32, &flag);
+    fpu_cmp_un_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_ngle_64(&fs, &ft, &flag);
+    fpu_cmp_un_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -528,11 +528,11 @@ int VR4300_CP1_C_NGT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_ngt_32(&fs32, &ft32, &flag);
+    fpu_cmp_ule_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_ngt_64(&fs, &ft, &flag);
+    fpu_cmp_ule_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -675,11 +675,11 @@ int VR4300_CP1_C_SEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_seq_32(&fs32, &ft32, &flag);
+    fpu_cmp_eq_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_seq_64(&fs, &ft, &flag);
+    fpu_cmp_eq_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -724,11 +724,11 @@ int VR4300_CP1_C_SF(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     uint32_t fs32 = fs;
     uint32_t ft32 = ft;
 
-    fpu_cmp_sf_32(&fs32, &ft32, &flag);
+    fpu_cmp_f_32(&fs32, &ft32, &flag);
   }
 
   else
-    fpu_cmp_sf_64(&fs, &ft, &flag);
+    fpu_cmp_f_64(&fs, &ft, &flag);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);

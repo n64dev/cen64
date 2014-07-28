@@ -19,6 +19,6 @@ static inline void fpu_cmp_ult_32(
 
   fs_reg = _mm_load_ss(&fs_float);
   ft_reg = _mm_load_ss(&ft_float);
-  *condition = _mm_ucomilt_ss(fs_reg, ft_reg);
+  *condition = _mm_comilt_ss(fs_reg, ft_reg);
 }
 

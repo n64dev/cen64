@@ -1,5 +1,5 @@
 //
-// os/unix/fpu/x86_64/fpu_cmp_lt_32.h
+// os/unix/fpu/x86_64/fpu_cmp_f_32.h
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
@@ -8,7 +8,7 @@
 #include <emmintrin.h>
 #include <string.h>
 
-static inline void fpu_cmp_lt_32(
+static inline void fpu_cmp_f_32(
   const uint32_t *fs, const uint32_t *ft, uint8_t *condition) {
   float fs_float, ft_float;
   __m128 fs_reg, ft_reg;
@@ -19,6 +19,13 @@ static inline void fpu_cmp_lt_32(
 
   fs_reg = _mm_load_ss(&fs_float);
   ft_reg = _mm_load_ss(&ft_float);
-  *condition = _mm_comilt_ss(fs_reg, ft_reg);
+  *condition = 0;
+
+  __asm__ __volatile__(
+    "comiss %0, %1\n\t"
+    :: "Yz" (fs_reg),
+       "x" (ft_reg)
+    : "cc"
+  );
 }
 

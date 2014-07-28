@@ -19,6 +19,6 @@ static inline void fpu_cmp_ueq_64(
 
   fs_reg = _mm_load_sd(&fs_double);
   ft_reg = _mm_load_sd(&ft_double);
-  *condition = _mm_ucomieq_sd(fs_reg, ft_reg);
+  *condition = _mm_comieq_sd(fs_reg, ft_reg);
 }
 

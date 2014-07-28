@@ -19,6 +19,6 @@ static inline void fpu_cmp_ule_64(
 
   fs_reg = _mm_load_sd(&fs_double);
   ft_reg = _mm_load_sd(&ft_double);
-  *condition = _mm_ucomile_sd(fs_reg, ft_reg);
+  *condition = _mm_comile_sd(fs_reg, ft_reg);
 }
 

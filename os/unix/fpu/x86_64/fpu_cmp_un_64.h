@@ -5,26 +5,28 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_cmp_un_64(
-  uint64_t *fs, uint64_t *ft, uint8_t *flag) {
-  uint16_t sw;
+#include <emmintrin.h>
+#include <string.h>
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "fldl %3\n\t"
-    "fldl %2\n\t"
-    "fcomip\n\t"
+static inline void fpu_cmp_un_64(
+  const uint64_t *fs, const uint64_t *ft, uint8_t *condition) {
+  double fs_double, ft_double;
+  __m128d fs_reg, ft_reg;
+
+  // Prevent aliasing.
+  memcpy(&fs_double, fs, sizeof(fs_double));
+  memcpy(&ft_double, ft, sizeof(ft_double));
+
+  fs_reg = _mm_load_sd(&fs_double);
+  ft_reg = _mm_load_sd(&ft_double);
+
+  __asm__ __volatile__(
+    "comisd %1, %2\n\t"
     "setp %0\n\t"
-    "fstsw %%ax\n\t"
-    "fstp %%st(0)\n\t"
-
-    : "=m" (*flag),
-      "=a" (sw)
-    : "m" (*fs),
-      "m" (*ft)
-    : "cc", "st"
+    : "=m" (*condition)
+    : "Yz" (fs_reg),
+      "x" (ft_reg)
+    : "cc"
   );
-
-  return sw;
 }
 

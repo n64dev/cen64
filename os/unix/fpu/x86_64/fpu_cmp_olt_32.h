@@ -19,6 +19,16 @@ static inline void fpu_cmp_olt_32(
 
   fs_reg = _mm_load_ss(&fs_float);
   ft_reg = _mm_load_ss(&ft_float);
-  *condition = _mm_comilt_ss(fs_reg, ft_reg);
+
+  __asm__ __volatile__(
+    "comiss %1, %2\n\t"
+    "seta %%dl\n\t"
+    "setnp %%al\n\t"
+    "and %%al, %%dl\n\t"
+    : "=a" (*condition)
+    : "Yz" (fs_reg),
+      "x" (ft_reg)
+    : "dl", "cc"
+  );
 }
 
