@@ -16,7 +16,8 @@
 #include "vr4300/pipeline.h"
 
 // Currently used a fixed value...
-#define MEMORY_CYCLE_DELAY 0
+#define MEMORY_CYCLE_DELAY 25
+#define ICACHE_ACCESS_DELAY 25
 
 const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #define X(fault) #fault,
@@ -140,7 +141,31 @@ void VR4300_IADE(unused(struct vr4300 *vr4300)) {
 
 // ICB: Instruction cache busy interlock.
 void VR4300_ICB(unused(struct vr4300 *vr4300)) {
-  abort(); // Hammertime!
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
+  const struct segment *segment = icrf_latch->segment;
+
+  uint32_t line[8];
+  uint32_t paddr;
+  unsigned i;
+
+  /* Raise interlock condition, get virtual address. */
+  vr4300_common_interlocks(pipeline, ICACHE_ACCESS_DELAY, 4);
+  paddr = (icrf_latch->common.pc - segment->offset) & ~0x1C;
+
+  /* Fill the cache line. */
+  for (i = 0; i < 8; i ++) {
+    uint32_t bus_address = (paddr + i * 4);
+
+    bus_read_word(vr4300->bus, bus_address, line + i);
+  }
+
+  /* Fill the line, read the first word. */
+  i = (icrf_latch->common.pc - segment->offset) & 0x1C;
+  memcpy(&rfex_latch->iw, line + (i >> 2), sizeof(rfex_latch->iw));
+  vr4300_icache_fill(&vr4300->icache, icrf_latch->common.pc & ~0x1C,
+    paddr, line);
 }
 
 // INTR: Interrupt exception.

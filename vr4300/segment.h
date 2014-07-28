@@ -17,8 +17,8 @@ struct segment {
   uint64_t length;
   uint64_t offset;
 
-  bool cached;
   bool mapped;
+  bool cached;
 };
 
 const struct segment* get_default_segment(void);
