@@ -11,12 +11,13 @@
 #define VR4300_BUILD_FUNCS
 
 #include "common.h"
-#include "cp0.h"
-#include "cp1.h"
-#include "cpu.h"
-#include "decoder.h"
-#include "opcodes.h"
-#include "pipeline.h"
+#include "vr4300/cp0.h"
+#include "vr4300/cp1.h"
+#include "vr4300/cpu.h"
+#include "vr4300/decoder.h"
+#include "vr4300/opcodes.h"
+#include "vr4300/pipeline.h"
+#include "vr4300/segment.h"
 
 // Mask to negate second operand if subtract operation.
 cen64_align(static const uint64_t vr4300_addsub_lut[2], 16) = {
@@ -310,16 +311,33 @@ int VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
 int VR4300_CACHE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  const struct segment *segment;
   uint32_t iw = rfex_latch->iw;
 
   uint64_t vaddr = rs + (int16_t) iw;
   unsigned code = iw >> 16 & 0x3;
   unsigned op = iw >> 18 & 0x7;
+  uint32_t paddr;
+
+  // Look up the segment that we're in.
+  if ((segment = get_segment(vaddr, cp0_status)) == NULL)
+    abort();
+
+  assert(!segment->mapped);
+  paddr = segment->offset;
 
   switch(code) {
     case 0: // Instruction cache
-      printf("Unimplemented DCACHE operation: %u\n", op);
-      break;
+      switch(op) {
+        case 4:
+          vr4300_icache_invalidate_hit(&vr4300->icache, vaddr, paddr);
+          break;
+
+        default:
+          debug("Unimplemented ICACHE operation: %u\n", op);
+          break;
+      }
 
     case 1: // Data cache
       switch(op) {
@@ -328,7 +346,7 @@ int VR4300_CACHE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
           break;
 
         default:
-          printf("Unimplemented DCACHE operation: %u\n", op);
+          debug("Unimplemented DCACHE operation: %u\n", op);
           break;
       }
 

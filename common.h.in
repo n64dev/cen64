@@ -156,5 +156,7 @@ void cen64_return(struct bus_controller *bus)
 #define debug_mmio_write(what, mnemonic, val, dqm) do {} while (0)
 #endif
 
+#include "common/debug.h"
+
 #endif
 
