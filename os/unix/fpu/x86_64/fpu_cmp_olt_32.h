@@ -24,7 +24,7 @@ static inline void fpu_cmp_olt_32(
     "comiss %1, %2\n\t"
     "seta %%dl\n\t"
     "setnp %%al\n\t"
-    "and %%al, %%dl\n\t"
+    "and %%dl, %%al\n\t"
     : "=a" (*condition)
     : "Yz" (fs_reg),
       "x" (ft_reg)

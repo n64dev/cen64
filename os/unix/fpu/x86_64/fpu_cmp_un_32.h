@@ -22,8 +22,8 @@ static inline void fpu_cmp_un_32(
 
   __asm__ __volatile__(
     "comiss %1, %2\n\t"
-    "setp %0\n\t"
-    : "=m" (*condition)
+    "setp %%al\n\t"
+    : "=a" (*condition)
     : "Yz" (fs_reg),
       "x" (ft_reg)
     : "cc"

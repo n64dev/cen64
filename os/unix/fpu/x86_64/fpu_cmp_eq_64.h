@@ -24,7 +24,7 @@ static inline void fpu_cmp_eq_64(
     "comisd %1, %2\n\t"
     "sete %%dl\n\t"
     "setnp %%al\n\t"
-    "and %%al, %%dl\n\t"
+    "and %%dl, %%al\n\t"
     : "=a" (*condition)
     : "Yz" (fs_reg),
       "x" (ft_reg)
