@@ -5,23 +5,17 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_cvt_i32_f64(uint64_t *fs, uint32_t *fd) {
-  uint32_t res;
-  uint16_t sw;
+#include <emmintrin.h>
+#include <string.h>
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "fldl %2\n\t"
-    "fistpl %1\n\t"
-    "fstsw %%ax\n\t"
+static inline void fpu_cvt_i32_f64(const uint64_t *fs, uint32_t *fd) {
+  double fs_double;
+  __m128d fs_reg;
 
-    : "=a" (sw),
-      "=m" (res)
-    : "m" (*fs)
-    : "st"
-  );
+  // Prevent aliasing.
+  memcpy(&fs_double, fs, sizeof(fs_double));
 
-  *fd = res;
-  return sw;
+  fs_reg = _mm_load_sd(&fs_double);
+  *fd = _mm_cvtsd_si32(fs_reg);
 }
 
