@@ -24,7 +24,7 @@ static inline void fpu_cmp_un_32(
     "comiss %1, %2\n\t"
     "setp %%al\n\t"
     : "=a" (*condition)
-    : "Yz" (fs_reg),
+    : "x" (fs_reg),
       "x" (ft_reg)
     : "cc"
   );

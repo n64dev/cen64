@@ -23,7 +23,7 @@ static inline void fpu_cmp_f_64(
 
   __asm__ __volatile__(
     "comisd %0, %1\n\t"
-    :: "Yz" (fs_reg),
+    :: "x" (fs_reg),
        "x" (ft_reg)
     : "cc"
   );

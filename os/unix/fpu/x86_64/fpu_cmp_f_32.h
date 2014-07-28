@@ -23,7 +23,7 @@ static inline void fpu_cmp_f_32(
 
   __asm__ __volatile__(
     "comiss %0, %1\n\t"
-    :: "Yz" (fs_reg),
+    :: "x" (fs_reg),
        "x" (ft_reg)
     : "cc"
   );

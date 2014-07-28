@@ -26,7 +26,7 @@ static inline void fpu_cmp_eq_32(
     "setnp %%al\n\t"
     "and %%dl, %%al\n\t"
     : "=a" (*condition)
-    : "Yz" (fs_reg),
+    : "x" (fs_reg),
       "x" (ft_reg)
     : "dl", "cc"
   );
