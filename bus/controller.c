@@ -31,7 +31,7 @@ void bus_cleanup(struct bus_controller *bus) {
 
 // Initializes the bus component.
 int bus_init(struct bus_controller *bus) {
-  if ((bus->map = create_memory_map(15)) == NULL)
+  if ((bus->map = create_memory_map(14)) == NULL)
     return -1;
 
   map_address_range(bus->map, AI_REGS_BASE_ADDRESS, AI_REGS_ADDRESS_LEN,
@@ -51,9 +51,6 @@ int bus_init(struct bus_controller *bus) {
 
   map_address_range(bus->map, PIF_ROM_BASE_ADDRESS, PIF_ROM_ADDRESS_LEN,
     bus->si, read_pif_rom, write_pif_rom);
-
-  map_address_range(bus->map, RDRAM_BASE_ADDRESS, RDRAM_BASE_ADDRESS_LEN,
-    bus->ri, read_rdram, write_rdram);
 
   map_address_range(bus->map, RDRAM_REGS_BASE_ADDRESS, RDRAM_REGS_ADDRESS_LEN,
     bus->ri, read_rdram_regs, write_rdram_regs);
@@ -87,7 +84,10 @@ int bus_read_word(struct bus_controller *bus,
   uint32_t address, uint32_t *word) {
   const struct memory_mapping *node;
 
-  if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
+  if (address < RDRAM_BASE_ADDRESS_LEN)
+    return read_rdram(bus->ri, address, word);
+
+  else if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
     fprintf(stderr, "bus_read_word: Failed to access: 0x%.8X\n", address);
     *word = 0x00000000U;
     return 0;
@@ -101,7 +101,10 @@ int bus_write_word(struct bus_controller *bus,
   uint32_t address, uint32_t word, uint32_t dqm) {
   const struct memory_mapping *node;
 
-  if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
+  if (address < RDRAM_BASE_ADDRESS_LEN)
+    return write_rdram(bus->ri, address, word & dqm, dqm);
+
+  else if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
     fprintf(stderr, "bus_write_word: Failed to access: 0x%.8X\n", address);
     return 0;
   }
