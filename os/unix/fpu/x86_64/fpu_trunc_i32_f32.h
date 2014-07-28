@@ -5,23 +5,17 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline uint16_t fpu_trunc_i32_f32(uint32_t *fs, uint32_t *fd) {
-  uint32_t res;
-  uint16_t sw;
+#include <emmintrin.h>
+#include <string.h>
 
-  __asm__ volatile(
-    "fclex\n\t"
-    "flds %2\n\t"
-    "fisttpl %1\n\t"
-    "fstsw %%ax\n\t"
+static inline void fpu_trunc_i32_f32(const uint32_t *fs, uint32_t *fd) {
+  float fs_float;
+  __m128 fs_reg;
 
-    : "=a" (sw),
-      "=m" (res)
-    : "m" (*fs)
-    : "st"
-  );
+  // Prevent aliasing.
+  memcpy(&fs_float, fs, sizeof(fs_float));
 
-  *fd = res;
-  return sw;
+  fs_reg = _mm_load_ss(&fs_float);
+  *fd = _mm_cvttss_si32(fs_reg);
 }
 

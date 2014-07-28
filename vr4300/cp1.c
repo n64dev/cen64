@@ -961,10 +961,12 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
-  fpu_set_state(vr4300->cp1.native_state);
-
-  int oldround = fegetround();
-  fesetround(FE_UPWARD);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_ceil_ss and _mm_ceil_sd.
+  //
+  fpu_set_state((vr4300->cp1.native_state &
+    ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
   switch (fmt) {
     case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
@@ -975,9 +977,14 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
-  fesetround(oldround);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_floor_ss and _mm_floor_sd.
+  //
+  vr4300->cp1.native_state = 
+    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK);
 
-  vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
 
   exdc_latch->result = result;
@@ -1012,10 +1019,12 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
-  fpu_set_state(vr4300->cp1.native_state);
-
-  int oldround = fegetround();
-  fesetround(FE_UPWARD);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_ceil_ss and _mm_ceil_sd.
+  //
+  fpu_set_state((vr4300->cp1.native_state &
+    ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
   switch (fmt) {
     case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
@@ -1026,9 +1035,14 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
-  fesetround(oldround);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_floor_ss and _mm_floor_sd.
+  //
+  vr4300->cp1.native_state = 
+    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK);
 
-  vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
 
   exdc_latch->result = result;
@@ -1377,10 +1391,12 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
     return 1;
   }
 
-  fpu_set_state(vr4300->cp1.native_state);
-
-  int oldround = fegetround();
-  fesetround(FE_DOWNWARD);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_floor_ss and _mm_floor_sd.
+  //
+  fpu_set_state((vr4300->cp1.native_state &
+    ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
   switch (fmt) {
     case VR4300_FMT_S: fpu_round_i64_f32(&fs32, &result); break;
@@ -1391,9 +1407,14 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
-  fesetround(oldround);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_floor_ss and _mm_floor_sd.
+  //
+  vr4300->cp1.native_state = 
+    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK);
 
-  vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
 
   exdc_latch->result = result;
@@ -1430,8 +1451,12 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
   fpu_set_state(vr4300->cp1.native_state);
 
-  int oldround = fegetround();
-  fesetround(FE_DOWNWARD);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_floor_ss and _mm_floor_sd.
+  //
+  fpu_set_state((vr4300->cp1.native_state &
+    ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
   switch (fmt) {
     case VR4300_FMT_S: fpu_round_i32_f32(&fs32, &result); break;
@@ -1442,9 +1467,14 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
       break;
   }
 
-  fesetround(oldround);
+  //
+  // TODO: (Optionally) compile with
+  // _mm_floor_ss and _mm_floor_sd.
+  //
+  vr4300->cp1.native_state = 
+    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK);
 
-  vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
 
   exdc_latch->result = result;

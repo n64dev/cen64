@@ -14,11 +14,13 @@
 
 typedef unsigned int fpu_state_t;
 
+#define FPU_MASK_EXCPS    0x1F80
+
+#define FPU_ROUND_MASK    0x6000
 #define FPU_ROUND_NEAREST 0x0000
 #define FPU_ROUND_NEGINF  0x2000
 #define FPU_ROUND_POSINF  0x4000
 #define FPU_ROUND_TOZERO  0x6000
-#define FPU_MASK_EXCPS    0x1F80
 
 static inline fpu_state_t fpu_get_state(void) {
   return _mm_getcsr();
