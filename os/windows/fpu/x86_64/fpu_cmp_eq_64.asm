@@ -1,10 +1,8 @@
 .code
 fpu_cmp_eq_64 proc
-  mov QWORD PTR [rsp-8], rcx
-  movsd xmm0, QWORD PTR [rsp-8]
-  mov QWORD PTR [rsp-8], rdx
-  movsd xmm1, QWORD PTR [rsp-8]
-  comisd xmm0, xmm1
+  movsd xmm0, QWORD PTR [rcx]
+  movsd xmm1, QWORD PTR [rdx]
+  comisd xmm1, xmm0
   sete dl
   setnp al
   and al, dl
