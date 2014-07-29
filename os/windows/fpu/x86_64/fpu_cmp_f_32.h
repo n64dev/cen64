@@ -8,8 +8,8 @@
 #include <emmintrin.h>
 #include <string.h>
 
-static inline void fpu_cmp_f_32(
-  const uint32_t *fs, const uint32_t *ft, uint8_t *condition) {
+static inline uint8_t fpu_cmp_f_32(
+  const uint32_t *fs, const uint32_t *ft) {
   float fs_float, ft_float;
   __m128 fs_reg, ft_reg;
 
@@ -27,5 +27,7 @@ static inline void fpu_cmp_f_32(
        "x" (ft_reg)
     : "cc"
   );
+
+  return 0;
 }
 

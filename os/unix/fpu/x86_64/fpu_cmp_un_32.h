@@ -8,10 +8,11 @@
 #include <emmintrin.h>
 #include <string.h>
 
-static inline void fpu_cmp_un_32(
-  const uint32_t *fs, const uint32_t *ft, uint8_t *condition) {
+static inline uint8_t fpu_cmp_un_32(
+  const uint32_t *fs, const uint32_t *ft) {
   float fs_float, ft_float;
   __m128 fs_reg, ft_reg;
+  uint8_t condition;
 
   // Prevent aliasing.
   memcpy(&fs_float, fs, sizeof(fs_float));
@@ -23,10 +24,12 @@ static inline void fpu_cmp_un_32(
   __asm__ __volatile__(
     "comiss %1, %2\n\t"
     "setp %%al\n\t"
-    : "=a" (*condition)
+    : "=a" (condition)
     : "x" (fs_reg),
       "x" (ft_reg)
     : "cc"
   );
+
+  return condition;
 }
 

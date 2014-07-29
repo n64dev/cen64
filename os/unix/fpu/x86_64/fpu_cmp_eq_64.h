@@ -8,10 +8,11 @@
 #include <emmintrin.h>
 #include <string.h>
 
-static inline void fpu_cmp_eq_64(
-  const uint64_t *fs, const uint64_t *ft, uint8_t *condition) {
+static inline uint8_t fpu_cmp_eq_64(
+  const uint64_t *fs, const uint64_t *ft) {
   double fs_double, ft_double;
   __m128d fs_reg, ft_reg;
+  uint8_t condition;
 
   // Prevent aliasing.
   memcpy(&fs_double, fs, sizeof(fs_double));
@@ -25,10 +26,12 @@ static inline void fpu_cmp_eq_64(
     "sete %%dl\n\t"
     "setnp %%al\n\t"
     "and %%dl, %%al\n\t"
-    : "=a" (*condition)
+    : "=a" (condition)
     : "x" (fs_reg),
       "x" (ft_reg)
     : "dl", "cc"
   );
+
+  return condition;
 }
 

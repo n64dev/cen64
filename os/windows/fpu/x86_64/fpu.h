@@ -65,16 +65,16 @@ static inline void fpu_set_state(fpu_state_t state) {
 #include "os/windows/fpu/x86_64/fpu_trunc_i64_f32.h"
 #include "os/windows/fpu/x86_64/fpu_trunc_i64_f64.h"
 
-void fpu_cmp_eq_32(const uint32_t *fs, const uint32_t *ft, uint8_t *condition);
-void fpu_cmp_eq_64(const uint64_t *fs, const uint64_t *ft, uint8_t *condition);
-void fpu_cmp_f_32(const uint32_t *fs, const uint32_t *ft, uint8_t *condition);
-void fpu_cmp_f_64(const uint64_t *fs, const uint64_t *ft, uint8_t *condition);
-void fpu_cmp_ole_32(const uint32_t *fs, const uint32_t *ft, uint8_t *condition);
-void fpu_cmp_ole_64(const uint64_t *fs, const uint64_t *ft, uint8_t *condition);
-void fpu_cmp_olt_32(const uint32_t *fs, const uint32_t *ft, uint8_t *condition);
-void fpu_cmp_olt_64(const uint64_t *fs, const uint64_t *ft, uint8_t *condition);
-void fpu_cmp_un_32(const uint32_t *fs, const uint32_t *ft, uint8_t *condition);
-void fpu_cmp_un_64(const uint64_t *fs, const uint64_t *ft, uint8_t *condition);
+uint8_t fpu_cmp_eq_32(const uint32_t *fs, const uint32_t *ft);
+uint8_t fpu_cmp_eq_64(const uint64_t *fs, const uint64_t *ft);
+uint8_t fpu_cmp_f_32(const uint32_t *fs, const uint32_t *ft);
+uint8_t fpu_cmp_f_64(const uint64_t *fs, const uint64_t *ft);
+uint8_t fpu_cmp_ole_32(const uint32_t *fs, const uint32_t *ft);
+uint8_t fpu_cmp_ole_64(const uint64_t *fs, const uint64_t *ft);
+uint8_t fpu_cmp_olt_32(const uint32_t *fs, const uint32_t *ft);
+uint8_t fpu_cmp_olt_64(const uint64_t *fs, const uint64_t *ft);
+uint8_t fpu_cmp_un_32(const uint32_t *fs, const uint32_t *ft);
+uint8_t fpu_cmp_un_64(const uint64_t *fs, const uint64_t *ft);
 
 #endif
 

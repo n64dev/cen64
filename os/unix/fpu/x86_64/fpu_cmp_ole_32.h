@@ -8,10 +8,11 @@
 #include <emmintrin.h>
 #include <string.h>
 
-static inline void fpu_cmp_ole_32(
-  const uint32_t *fs, const uint32_t *ft, uint8_t *condition) {
+static inline uint8_t fpu_cmp_ole_32(
+  const uint32_t *fs, const uint32_t *ft) {
   float fs_float, ft_float;
   __m128 fs_reg, ft_reg;
+  uint8_t condition;
 
   // Prevent aliasing.
   memcpy(&fs_float, fs, sizeof(fs_float));
@@ -25,10 +26,12 @@ static inline void fpu_cmp_ole_32(
     "setae %%dl\n\t"
     "setnp %%al\n\t"
     "and %%dl, %%al\n\t"
-    : "=a" (*condition)
+    : "=a" (condition)
     : "x" (fs_reg),
       "x" (ft_reg)
     : "dl", "cc"
   );
+
+  return condition;
 }
 

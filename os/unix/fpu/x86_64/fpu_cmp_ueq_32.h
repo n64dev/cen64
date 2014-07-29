@@ -8,8 +8,8 @@
 #include <emmintrin.h>
 #include <string.h>
 
-static inline void fpu_cmp_ueq_32(
-  const uint32_t *fs, const uint32_t *ft, uint8_t *condition) {
+static inline uint8_t fpu_cmp_ueq_32(
+  const uint32_t *fs, const uint32_t *ft) {
   float fs_float, ft_float;
   __m128 fs_reg, ft_reg;
 
@@ -19,6 +19,6 @@ static inline void fpu_cmp_ueq_32(
 
   fs_reg = _mm_load_ss(&fs_float);
   ft_reg = _mm_load_ss(&ft_float);
-  *condition = _mm_comieq_ss(fs_reg, ft_reg);
+  return _mm_comieq_ss(fs_reg, ft_reg);
 }
 

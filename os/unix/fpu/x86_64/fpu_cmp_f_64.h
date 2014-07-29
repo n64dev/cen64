@@ -8,8 +8,8 @@
 #include <emmintrin.h>
 #include <string.h>
 
-static inline void fpu_cmp_f_64(
-  const uint64_t *fs, const uint64_t *ft, uint8_t *condition) {
+static inline uint8_t fpu_cmp_f_64(
+  const uint64_t *fs, const uint64_t *ft) {
   double fs_double, ft_double;
   __m128d fs_reg, ft_reg;
 
@@ -19,7 +19,6 @@ static inline void fpu_cmp_f_64(
 
   fs_reg = _mm_load_sd(&fs_double);
   ft_reg = _mm_load_sd(&ft_double);
-  *condition = 0;
 
   __asm__ __volatile__(
     "comisd %0, %1\n\t"
@@ -27,5 +26,7 @@ static inline void fpu_cmp_f_64(
        "x" (ft_reg)
     : "cc"
   );
+
+  return 0;
 }
 
