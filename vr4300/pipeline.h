@@ -75,7 +75,6 @@ struct vr4300_pipeline {
 
   unsigned exception_history;
   unsigned cycles_to_stall;
-  unsigned skip_stages;
   bool fault_present;
 };
 

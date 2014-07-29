@@ -358,7 +358,7 @@ static void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
   if (vr4300_ic_stage(vr4300))
     return;
 
-  pipeline->skip_stages = 0;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
 }
 
 // Advances the processor pipeline by one pclock.
@@ -390,7 +390,7 @@ static void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
   if (vr4300_ic_stage(vr4300))
     return;
 
-  pipeline->skip_stages = 0;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
 }
 
 // Advances the processor pipeline by one pclock.
@@ -433,7 +433,7 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   if (vr4300_ic_stage(vr4300))
     return;
 
-  pipeline->skip_stages = 0;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
 }
 
 // Advances the processor pipeline by one pclock.
@@ -456,7 +456,7 @@ static void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
   if (vr4300_ic_stage(vr4300))
     return;
 
-  pipeline->skip_stages = 0;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
 }
 
 // Advances the processor pipeline by one pclock.
@@ -464,12 +464,10 @@ static void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
 //
 // Starts from IC stage (RF resolved an interlock).
 static void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-
   if (vr4300_ic_stage(vr4300))
     return;
 
-  pipeline->skip_stages = 0;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
 }
 
 // LUT of stages for fault handling.
@@ -503,8 +501,8 @@ void vr4300_cycle(struct vr4300 *vr4300) {
   // Ordinarily, we would need to check every pipeline stage to see if it is
   // aborted, and conditionally not execute it. Since faults are rare, we'll
   // only bother checking for aborted stages when we know they can be present.
-  if (pipeline->fault_present + pipeline->skip_stages) {
-    pipeline_function_lut[pipeline->skip_stages](vr4300);
+  if (pipeline->fault_present + vr4300->regs[PIPELINE_CYCLE_TYPE]) {
+    pipeline_function_lut[vr4300->regs[PIPELINE_CYCLE_TYPE]](vr4300);
     return;
   }
 

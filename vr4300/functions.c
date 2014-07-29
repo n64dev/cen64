@@ -215,6 +215,7 @@ int VR4300_ANDI_ORI_XORI(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 int VR4300_BEQ(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
   int64_t offset = (uint64_t) ((int16_t) iw) << 2;
@@ -224,9 +225,9 @@ int VR4300_BEQ(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
 
-  if (icrf_latch->pc == rfex_latch->pc && GET_RS(iw) == 0 && GET_RT(iw)) {
-    fprintf(stderr, "Detected busy wait loop.\n");
-    abort();
+  if (icrf_latch->pc == rfex_latch->common.pc && GET_RS(iw) == 0 && GET_RT(iw)) {
+    exdc_latch->dest = PIPELINE_CYCLE_TYPE;
+    exdc_latch->result = 0;
   }
 
   return 0;
@@ -795,13 +796,14 @@ int VR4300_INV(struct vr4300 *vr4300,
 int VR4300_J(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t target = (rfex_latch->iw << 2) & 0x0FFFFFFF;
 
   icrf_latch->pc = (rfex_latch->common.pc & ~0x0FFFFFFFULL) | target;
 
   if (icrf_latch->pc == rfex_latch->common.pc) {
-    fprintf(stderr, "Detected busy wait loop.\n");
-    abort();
+    exdc_latch->dest = PIPELINE_CYCLE_TYPE;
+    exdc_latch->result = 0;
   }
 
   return 0;

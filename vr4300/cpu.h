@@ -66,6 +66,14 @@ enum vr4300_register {
   // Miscellanious registers.
   VR4300_REGISTER_HI, VR4300_REGISTER_LO,
   VR4300_CP1_FCR0, VR4300_CP1_FCR31,
+
+  // Pipeline cycle type flag.
+  //
+  // Putting these here along with the other registers allows us to
+  // correctly (and cheaply) detect that a busy-wait loop instruction
+  // is retiring.
+  PIPELINE_CYCLE_TYPE,
+
   NUM_VR4300_REGISTERS
 };
 

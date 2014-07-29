@@ -27,27 +27,30 @@ const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 };
 
 // Sets attributes common to all exceptions.
-static void vr4300_common_exceptions(struct vr4300_pipeline *pipeline) {
+static void vr4300_common_exceptions(struct vr4300 *vr4300) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
   pipeline->icrf_latch.segment = get_default_segment();
   pipeline->exdc_latch.segment = get_default_segment();
 
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
   pipeline->exception_history = 0;
   pipeline->fault_present = true;
   pipeline->cycles_to_stall = 2;
-  pipeline->skip_stages = 0;
 }
 
 // Sets attributes common to all interlocks.
-static void vr4300_common_interlocks(struct vr4300_pipeline *pipeline,
+static void vr4300_common_interlocks(struct vr4300 *vr4300,
   unsigned cycles_to_stall, unsigned skip_stages) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
   pipeline->cycles_to_stall = cycles_to_stall;
-  pipeline->skip_stages = skip_stages;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = skip_stages;
 }
 
 // Raise a fault that originated in the DC stage.
-static void vr4300_dc_fault(struct vr4300_pipeline *pipeline,
-  enum vr4300_fault_id fault) {
-  vr4300_common_exceptions(pipeline);
+static void vr4300_dc_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+
+  vr4300_common_exceptions(vr4300);
   pipeline->dcwb_latch.common.fault = fault;
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
@@ -55,9 +58,10 @@ static void vr4300_dc_fault(struct vr4300_pipeline *pipeline,
 }
 
 // Raise a fault that originated in the EX stage.
-static void vr4300_ex_fault(struct vr4300_pipeline *pipeline,
-  enum vr4300_fault_id fault) {
-  vr4300_common_exceptions(pipeline);
+static void vr4300_ex_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+
+  vr4300_common_exceptions(vr4300);
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
   pipeline->icrf_latch.common.fault = fault;
@@ -96,7 +100,7 @@ void VR4300_CPU(unused(struct vr4300 *vr4300)) {
   vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0xFF) | (1 << 28) | 0x2C;
   vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
 
-  vr4300_ex_fault(pipeline, VR4300_FAULT_CPU);
+  vr4300_ex_fault(vr4300, VR4300_FAULT_CPU);
   vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
     ? 0xFFFFFFFFBFC00280ULL
     : 0xFFFFFFFF80000080ULL;
@@ -109,12 +113,11 @@ void VR4300_DADE(unused(struct vr4300 *vr4300)) {
 
 // DCB: Data cache busy interlock.
 void VR4300_DCB(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
   uint32_t word;
 
-  vr4300_common_interlocks(pipeline, MEMORY_DATA_CYCLE_DELAY, 5);
+  vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 5);
   bus_read_word(vr4300->bus, request->address & ~0x3ULL, &word);
 
   if (!request->two_words) {
@@ -142,9 +145,8 @@ void VR4300_IADE(unused(struct vr4300 *vr4300)) {
 
 // ICB: Instruction cache busy interlock.
 void VR4300_ICB(unused(struct vr4300 *vr4300)) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct segment *segment = icrf_latch->segment;
 
   uint32_t line[8];
@@ -152,7 +154,7 @@ void VR4300_ICB(unused(struct vr4300 *vr4300)) {
   unsigned i;
 
   /* Raise interlock condition, get virtual address. */
-  vr4300_common_interlocks(pipeline, ICACHE_ACCESS_DELAY, 4);
+  vr4300_common_interlocks(vr4300, ICACHE_ACCESS_DELAY, 4);
   paddr = (icrf_latch->common.pc - segment->offset) & ~0x1C;
 
   /* Fill the cache line. */
@@ -202,7 +204,7 @@ void VR4300_INTR(unused(struct vr4300 *vr4300)) {
   vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = cause & ~0xFF;
   vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
 
-  vr4300_dc_fault(pipeline, VR4300_FAULT_INTR);
+  vr4300_dc_fault(vr4300, VR4300_FAULT_INTR);
   vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
     ? 0xFFFFFFFFBFC00280ULL
     : 0xFFFFFFFF80000080ULL;
@@ -215,16 +217,13 @@ void VR4300_LDI(struct vr4300 *vr4300) {
 
   // We'll do EX again, but clear the 'busy' flag.
   exdc_latch->request.type = VR4300_BUS_REQUEST_NONE;
-  vr4300_common_interlocks(pipeline, 0, 2);
+  vr4300_common_interlocks(vr4300, 0, 2);
 }
 
 // RST: External reset exception.
 void VR4300_RST(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-
-  // Prepare pipeline for restart.
   vr4300->pipeline.icrf_latch.pc = 0xFFFFFFFFBFC00000ULL;
-  vr4300_dc_fault(pipeline, VR4300_FAULT_RST);
+  vr4300_dc_fault(vr4300, VR4300_FAULT_RST);
 
   // Cold reset exception.
   if (vr4300->signals & VR4300_SIGNAL_COLDRESET) {
@@ -246,13 +245,12 @@ void VR4300_RST(struct vr4300 *vr4300) {
 
 // UNC: Uncached read interlock.
 void VR4300_UNC(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct segment *segment = icrf_latch->segment;
   uint64_t address;
 
-  vr4300_common_interlocks(pipeline, MEMORY_CODE_CYCLE_DELAY, 4);
+  vr4300_common_interlocks(vr4300, MEMORY_CODE_CYCLE_DELAY, 4);
 
   address = icrf_latch->common.pc - segment->offset;
   bus_read_word(vr4300->bus, address, &rfex_latch->iw);
