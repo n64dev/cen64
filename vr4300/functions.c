@@ -227,7 +227,7 @@ int VR4300_BEQ(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   if (icrf_latch->pc == rfex_latch->common.pc && GET_RS(iw) == 0 && GET_RT(iw)) {
     exdc_latch->dest = PIPELINE_CYCLE_TYPE;
-    exdc_latch->result = 0;
+    exdc_latch->result = 6;
   }
 
   return 0;
@@ -803,7 +803,7 @@ int VR4300_J(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   if (icrf_latch->pc == rfex_latch->common.pc) {
     exdc_latch->dest = PIPELINE_CYCLE_TYPE;
-    exdc_latch->result = 0;
+    exdc_latch->result = 6;
   }
 
   return 0;

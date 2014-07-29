@@ -273,6 +273,12 @@ static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
   return 0;
 }
 
+// Special-cased busy wait handler.
+static void vr4300_cycle_busywait(struct vr4300 *vr4300) {
+  fprintf(stderr, "Busy wait detected!\n");
+  abort();
+}
+
 // Advances the processor pipeline by one pclock.
 // May have exceptions, so check for aborted stages.
 static void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
@@ -472,13 +478,14 @@ static void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
 
 // LUT of stages for fault handling.
 typedef void (*pipeline_function)(struct vr4300 *vr4300);
-static const pipeline_function pipeline_function_lut[6] = {
+static const pipeline_function pipeline_function_lut[] = {
   vr4300_cycle_slow_wb,
   vr4300_cycle_slow_dc,
   vr4300_cycle_slow_ex,
   vr4300_cycle_slow_rf,
   vr4300_cycle_slow_ic,
   vr4300_cycle_slow_ex_fixdc,
+  vr4300_cycle_busywait,
 };
 
 // Advances the processor pipeline by one pclock.
