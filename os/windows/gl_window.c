@@ -244,7 +244,7 @@ int gl_swap_buffers(const struct gl_window *window) {
 }
 
 // Handles events that get sent to the window thread.
-void os_poll_events(struct gl_window *gl_window) {
+void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
   MSG msg;
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
