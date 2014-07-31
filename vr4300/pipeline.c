@@ -155,21 +155,14 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
 
   // No LDI, so we just need to forward results from DC/WB.
   // This is done to preserve RF state and fwd without branching.
-  if (!dcwb_latch->common.fault) {
-    temp = vr4300->regs[dcwb_latch->dest];
-    vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
-    vr4300->regs[VR4300_REGISTER_R0] = 0x0000000000000000ULL;
+  temp = vr4300->regs[dcwb_latch->dest];
+  vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
+  vr4300->regs[VR4300_REGISTER_R0] = 0x0000000000000000ULL;
 
-    rs_reg = vr4300->regs[rs];
-    rt_reg = vr4300->regs[rt];
+  rs_reg = vr4300->regs[rs];
+  rt_reg = vr4300->regs[rt];
 
-    vr4300->regs[dcwb_latch->dest] = temp;
-  }
-
-  else {
-    rs_reg = vr4300->regs[rs];
-    rt_reg = vr4300->regs[rt];
-  }
+  vr4300->regs[dcwb_latch->dest] = temp;
 
   // Finally, execute the instruction.
 #ifdef PRINT_EXEC
@@ -311,8 +304,10 @@ void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
       return;
   }
 
-  else
+  else {
     dcwb_latch->common = exdc_latch->common;
+    dcwb_latch->result = dcwb_latch->dest = 0;
+  }
 
   vr4300_cycle_slow_ex(vr4300);
 }
