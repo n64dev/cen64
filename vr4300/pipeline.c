@@ -208,20 +208,21 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         VR4300_DADE(vr4300);
         return 1;
       }
-    }
 
-    exdc_latch->segment = segment;
+      exdc_latch->segment = segment;
+    }
 
     if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
       struct vr4300_bus_request *request = &exdc_latch->request;
       const struct vr4300_dcache_line *line;
-      uint64_t vaddr = request->address;
-      uint32_t paddr = vaddr - segment->offset;
 
-      int datashift = (8 - request->size) << 3;
-      unsigned rshiftamt, lshiftamt;
-      uint64_t data;
-      int64_t sdata;
+      uint64_t vaddr = request->address;
+      uint32_t paddr;
+
+      // TODO: Implement the TLB.
+      assert(segment->mapped == 0);
+
+      paddr = vaddr - segment->offset;
 
       // Index the data cache; on a miss, stall until the data is available.
       if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)) == NULL) {
@@ -230,15 +231,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         return 1;
       }
 
-      // Otherwise, copy and sign extend the data.
-      memcpy(&data, line->data + (vaddr & 0x8), sizeof(data));
-      rshiftamt = (8 - request->size) << 3;
-      lshiftamt = (request->address & 0x7) << 3;
-
-      data = ((int64_t) (data << lshiftamt)) >> rshiftamt;
-      sdata = (int64_t) ((uint64_t) data << datashift) >> datashift;
-      dcwb_latch->result = sdata & request->dqm;
-
+      assert(0 && "Implement data cache reads.");
       return 0;
     }
 
