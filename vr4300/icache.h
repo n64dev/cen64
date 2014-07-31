@@ -32,7 +32,7 @@ void vr4300_icache_invalidate_hit(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t paddr);
 const struct vr4300_icache_line* vr4300_icache_probe(
   const struct vr4300_icache *icache, uint64_t vaddr, uint32_t paddr);
-void vr4300_icache_set_tag(struct vr4300_icache *icache,
+void vr4300_icache_set_taglo(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t tag);
 
 #endif

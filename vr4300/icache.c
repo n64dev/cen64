@@ -111,10 +111,11 @@ const struct vr4300_icache_line* vr4300_icache_probe(
 }
 
 // Sets the physical tag associated with the line.
-void vr4300_icache_set_tag(struct vr4300_icache *icache,
-  uint64_t vaddr, uint32_t tag) {
+void vr4300_icache_set_taglo(struct vr4300_icache *icache,
+  uint64_t vaddr, uint32_t taglo) {
   struct vr4300_icache_line *line = get_line(icache, vaddr);
 
-  set_tag(line, tag);
+  // TODO: Sloppy; should use private functions of some sort.
+  line->metadata = (taglo << 4 & 0xFFFFF000) | (taglo >> 7 & 0x1);
 }
 

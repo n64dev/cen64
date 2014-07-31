@@ -158,11 +158,8 @@ void VR4300_ICB(unused(struct vr4300 *vr4300)) {
   paddr = (icrf_latch->common.pc - segment->offset) & ~0x1C;
 
   /* Fill the cache line. */
-  for (i = 0; i < 8; i ++) {
-    uint32_t bus_address = (paddr + i * 4);
-
-    bus_read_word(vr4300->bus, bus_address, line + i);
-  }
+  for (i = 0; i < 8; i ++)
+    bus_read_word(vr4300->bus, paddr + i * 4, line + i);
 
   /* Fill the line, read the first word. */
   i = (icrf_latch->common.pc - segment->offset) & 0x1C;

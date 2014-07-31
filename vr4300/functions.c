@@ -370,6 +370,11 @@ int VR4300_CACHE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   switch(code) {
     case 0: // Instruction cache
       switch(op) {
+        case 2:
+          vr4300_icache_set_taglo(&vr4300->icache, vaddr,
+            vr4300->regs[VR4300_CP0_REGISTER_TAGLO]);
+          break;
+
         case 4:
           vr4300_icache_invalidate_hit(&vr4300->icache, vaddr, paddr);
           break;
@@ -378,6 +383,8 @@ int VR4300_CACHE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
           debug("Unimplemented ICACHE operation: %u\n", op);
           break;
       }
+
+      break;
 
     case 1: // Data cache
       switch(op) {
