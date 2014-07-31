@@ -89,18 +89,19 @@ extern const char *mi_register_mnemonics[NUM_MI_REGISTERS];
 #endif
 
 struct vr4300 {
-  uint64_t regs[NUM_VR4300_REGISTERS];
-  uint32_t mi_regs[NUM_MI_REGISTERS];
-
-  struct vr4300_dcache dcache;
-  struct vr4300_icache icache;
-
   struct vr4300_pipeline pipeline;
   struct vr4300_cp1 cp1;
 
   struct bus_controller *bus;
   unsigned long long cycles;
   unsigned signals;
+
+  uint64_t regs[NUM_VR4300_REGISTERS];
+  uint32_t mi_regs[NUM_MI_REGISTERS];
+
+  struct vr4300_dcache dcache;
+  struct vr4300_icache icache;
+
 };
 
 void vr4300_cycle(struct vr4300 *vr4300);
