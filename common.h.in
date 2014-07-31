@@ -20,7 +20,6 @@
 
 #ifndef __cplusplus
 #include <assert.h>
-#include <fenv.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -28,7 +27,6 @@
 #include <string.h>
 #else
 #include <cassert>
-#include <cfenv>
 #include <cstddef>
 #include <cstdlib>
 #include <cstdint>
@@ -47,14 +45,6 @@
 typedef char bool;
 #define false 0
 #define true 1
-#endif
-
-#ifndef NDEBUG
-#ifndef __cplusplus
-#include <stdio.h>
-#else
-#include <cstdio>
-#endif
 #endif
 
 #ifdef __llvm__
