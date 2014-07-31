@@ -607,6 +607,7 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -665,6 +666,7 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -845,6 +847,7 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -939,6 +942,7 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -1037,6 +1041,7 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -1097,6 +1102,7 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -1395,6 +1401,7 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -1453,6 +1460,7 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -1654,6 +1662,7 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
@@ -1700,6 +1709,7 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 
     default:
       assert(0 && "Unknown case?");
+      result = 0;
       break;
   }
 
