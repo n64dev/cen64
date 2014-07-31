@@ -96,7 +96,6 @@ uint32_t vr4300_dcache_get_tag(const struct vr4300_dcache *dcache,
 
 // Initializes the instruction cache.
 void vr4300_dcache_init(struct vr4300_dcache *dcache) {
-  memset(dcache->lines, 0, sizeof(dcache->lines));
 }
 
 // Invalidates an instruction cache line (regardless if hit or miss).

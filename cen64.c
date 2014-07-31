@@ -23,6 +23,10 @@ int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
   struct gl_window_hints hints;
   get_default_gl_window_hints(&hints);
 
+  // Prevent debugging tools from raising warnings
+  // about uninitialized memory being read, etc.
+  memset(device, 0, sizeof(*device));
+
   if (argc < 3) {
     printf("%s <pifrom.bin> <rom>\n", argv[0]);
     return 255;

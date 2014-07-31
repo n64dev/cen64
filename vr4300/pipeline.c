@@ -18,6 +18,15 @@
 #include "vr4300/pipeline.h"
 #include "vr4300/segment.h"
 
+static void vr4300_cycle_slow_wb(struct vr4300 *vr4300);
+static void vr4300_cycle_slow_dc(struct vr4300 *vr4300);
+static void vr4300_cycle_slow_ex(struct vr4300 *vr4300);
+static void vr4300_cycle_slow_rf(struct vr4300 *vr4300);
+static void vr4300_cycle_slow_ic(struct vr4300 *vr4300);
+
+static void vr4300_cycle_busywait(struct vr4300 *vr4300);
+static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300);
+
 // Prints out instructions and their virtual address as they are executed.
 // Note: These instructions should _may_ be speculative and killed later...
 //#define PRINT_EXEC
@@ -267,8 +276,98 @@ static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
   return 0;
 }
 
+// Advances the processor pipeline by one pclock.
+// May have exceptions, so check for aborted stages.
+void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
+
+  // If we haven't had exceptions for at least a
+  // full pipeline's length, switch back to fast mode.
+  if (pipeline->exception_history++ > 4)
+    pipeline->fault_present = false;
+
+  if (dcwb_latch->common.fault == VR4300_FAULT_NONE) {
+    if (vr4300_wb_stage(vr4300))
+      return;
+  }
+
+  vr4300_cycle_slow_dc(vr4300);
+}
+
+// Advances the processor pipeline by one pclock.
+// May have exceptions, so check for aborted stages.
+//
+// Starts from DC stage (WB resolved an interlock).
+void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
+  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
+
+  if (exdc_latch->common.fault == VR4300_FAULT_NONE) {
+    if (vr4300_dc_stage(vr4300))
+      return;
+  }
+
+  else
+    dcwb_latch->common = exdc_latch->common;
+
+  vr4300_cycle_slow_ex(vr4300);
+}
+
+// Advances the processor pipeline by one pclock.
+// May have exceptions, so check for aborted stages.
+//
+// Starts from EX stage (DC resolved an interlock).
+void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
+  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
+
+  if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
+    if (vr4300_ex_stage(vr4300))
+      return;
+  }
+
+  else
+    exdc_latch->common = rfex_latch->common;
+
+  vr4300_cycle_slow_rf(vr4300);
+}
+
+// Advances the processor pipeline by one pclock.
+// May have exceptions, so check for aborted stages.
+//
+// Starts from RF stage (EX resolved an interlock).
+void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
+  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
+
+  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
+    if (vr4300_rf_stage(vr4300))
+      return;
+  }
+
+  else
+    rfex_latch->common = icrf_latch->common;
+
+  vr4300_cycle_slow_ic(vr4300);
+}
+
+// Advances the processor pipeline by one pclock.
+// May have exceptions, so check for aborted stages.
+//
+// Starts from IC stage (RF resolved an interlock).
+void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
+  if (vr4300_ic_stage(vr4300))
+    return;
+
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
+}
+
 // Special-cased busy wait handler.
-static void vr4300_cycle_busywait(struct vr4300 *vr4300) {
+void vr4300_cycle_busywait(struct vr4300 *vr4300) {
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
 
@@ -282,130 +381,10 @@ static void vr4300_cycle_busywait(struct vr4300 *vr4300) {
 
 // Advances the processor pipeline by one pclock.
 // May have exceptions, so check for aborted stages.
-static void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
-  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
-  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-
-  // If we haven't had exceptions for at least a
-  // full pipeline's length, switch back to fast mode.
-  if (pipeline->exception_history++ > 4)
-    pipeline->fault_present = false;
-
-  if (dcwb_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_wb_stage(vr4300))
-      return;
-  }
-
-  if (exdc_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_dc_stage(vr4300))
-      return;
-  }
-
-  else
-    dcwb_latch->common = exdc_latch->common;
-
-  if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_ex_stage(vr4300))
-      return;
-  }
-
-  else
-    exdc_latch->common = rfex_latch->common;
-
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_rf_stage(vr4300))
-      return;
-  }
-
-  else
-    rfex_latch->common = icrf_latch->common;
-
-  if (vr4300_ic_stage(vr4300))
-    return;
-}
-
-// Advances the processor pipeline by one pclock.
-// May have exceptions, so check for aborted stages.
-//
-// Starts from DC stage (WB resolved an interlock).
-static void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
-  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
-  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-
-  if (exdc_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_dc_stage(vr4300))
-      return;
-  }
-
-  else
-    dcwb_latch->common = exdc_latch->common;
-
-  if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_ex_stage(vr4300))
-      return;
-  }
-
-  else
-    exdc_latch->common = rfex_latch->common;
-
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_rf_stage(vr4300))
-      return;
-  }
-
-  else
-    rfex_latch->common = icrf_latch->common;
-
-  if (vr4300_ic_stage(vr4300))
-    return;
-
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
-}
-
-// Advances the processor pipeline by one pclock.
-// May have exceptions, so check for aborted stages.
-//
-// Starts from EX stage (DC resolved an interlock).
-static void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
-  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-
-  if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_ex_stage(vr4300))
-      return;
-  }
-
-  else
-    exdc_latch->common = rfex_latch->common;
-
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_rf_stage(vr4300))
-      return;
-  }
-
-  else
-    rfex_latch->common = icrf_latch->common;
-
-  if (vr4300_ic_stage(vr4300))
-    return;
-
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
-}
-
-// Advances the processor pipeline by one pclock.
-// May have exceptions, so check for aborted stages.
 //
 // Starts from EX stage (DC resolved an interlock).
 // Fixes up the DC/WB latches after memory reads.
-static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
+void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
   struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
@@ -419,40 +398,6 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
 
   vr4300_cycle_slow_ex(vr4300);
-}
-
-// Advances the processor pipeline by one pclock.
-// May have exceptions, so check for aborted stages.
-//
-// Starts from RF stage (EX resolved an interlock).
-static void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_rf_stage(vr4300))
-      return;
-  }
-
-  else
-    rfex_latch->common = icrf_latch->common;
-
-  if (vr4300_ic_stage(vr4300))
-    return;
-
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
-}
-
-// Advances the processor pipeline by one pclock.
-// May have exceptions, so check for aborted stages.
-//
-// Starts from IC stage (RF resolved an interlock).
-static void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
-  if (vr4300_ic_stage(vr4300))
-    return;
-
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
 }
 
 // LUT of stages for fault handling.
@@ -510,8 +455,6 @@ void vr4300_cycle(struct vr4300 *vr4300) {
 
 // Initializes the pipeline with default values.
 void vr4300_pipeline_init(struct vr4300_pipeline *pipeline) {
-  memset(pipeline, 0, sizeof(*pipeline));
-
   pipeline->icrf_latch.segment = get_default_segment();
   pipeline->exdc_latch.segment = get_default_segment();
 }

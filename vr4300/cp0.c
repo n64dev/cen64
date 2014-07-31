@@ -85,7 +85,5 @@ int VR4300_MTC0(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 
 // Initializes the coprocessor.
 void vr4300_cp0_init(struct vr4300 *vr4300) {
-  memset(vr4300->regs + VR4300_REGISTER_CP0_0, 0,
-    sizeof(*vr4300->regs) * NUM_VR4300_CP0_REGISTERS);
 }
 
