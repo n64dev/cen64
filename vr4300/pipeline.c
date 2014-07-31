@@ -275,8 +275,15 @@ static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
 
 // Special-cased busy wait handler.
 static void vr4300_cycle_busywait(struct vr4300 *vr4300) {
-  fprintf(stderr, "Busy wait detected!\n");
-  abort();
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+
+  // Check if the busy wait period is over (due to an interrupt condition).
+  if (unlikely(cause & status & 0xFF00) && (status & 0x1) && !(status & 0x6)) {
+    //fprintf(stderr, "Busy wait done @ %llu cycles\n", vr4300->cycles);
+
+    VR4300_INTR(vr4300);
+  }
 }
 
 // Advances the processor pipeline by one pclock.
