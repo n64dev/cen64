@@ -18,6 +18,8 @@
 #include "vr4300/pipeline.h"
 #include "vr4300/segment.h"
 
+typedef void (*pipeline_function)(struct vr4300 *vr4300);
+
 static void vr4300_cycle_slow_wb(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_dc(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_ex(struct vr4300 *vr4300);
@@ -401,13 +403,14 @@ void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
 }
 
 // LUT of stages for fault handling.
-typedef void (*pipeline_function)(struct vr4300 *vr4300);
-static const pipeline_function pipeline_function_lut[] = {
+cen64_align(static const pipeline_function
+  pipeline_function_lut[], CACHE_LINE_SIZE) = {
   vr4300_cycle_slow_wb,
   vr4300_cycle_slow_dc,
   vr4300_cycle_slow_ex,
   vr4300_cycle_slow_rf,
   vr4300_cycle_slow_ic,
+
   vr4300_cycle_slow_ex_fixdc,
   vr4300_cycle_busywait,
 };
