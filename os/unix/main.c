@@ -14,8 +14,8 @@ int main(int argc, const char *argv[]) {
   struct cen64_device device;
   int status;
 
-  status = cen64_main(&device, argc, argv);
-  cen64_cleanup(&device);
+  if (!(status = cen64_main(&device, argc, argv)))
+    cen64_cleanup(&device);
 
   return status;
 }

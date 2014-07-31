@@ -44,7 +44,6 @@ int pif_perform_command(struct si_controller *si,
   unsigned channel, uint8_t *send_buf, uint8_t send_bytes,
   uint8_t *recv_buf, uint8_t recv_bytes) {
   uint8_t command = send_buf[0];
-  uint16_t address, offset;
 
   switch(command) {
     // Read status/reset.

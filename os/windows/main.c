@@ -61,7 +61,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
   }
 
   CloseHandle(thread);
-  cen64_cleanup(&device);
+
+  if (!ret)
+    cen64_cleanup(&device);
 
   WSACleanup();
   return ret;

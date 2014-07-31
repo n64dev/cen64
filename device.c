@@ -101,16 +101,12 @@ struct cen64_device *device_create(struct cen64_device *device,
   device->ram = malloc(0x800000);
 
   // Read the PIFROM into the device.
-  if (load_pifrom(pifrom, device->pifrom) < 0) {
-    printf("create_device: Failed to load PIFROM.\n");
+  if (load_pifrom(pifrom, device->pifrom) < 0)
     return NULL;
-  }
 
   // Read the ROM into the device.
-  if ((rom_size = load_cart(rom, device->rom)) < 0) {
-    printf("create_device: Failed to load cart.\n");
+  if ((long long int) (rom_size = load_cart(rom, device->rom)) < 0)
     return NULL;
-  }
 
   // Initialize the bus.
   device->bus.ai = &device->ai;

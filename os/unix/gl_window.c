@@ -378,7 +378,7 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
 
     switch (event.type) {
       case ClientMessage:
-        if (event.xclient.data.l[0] == glx_window->wm_delete_message)
+        if ((unsigned) event.xclient.data.l[0] == glx_window->wm_delete_message)
           cen64_return(bus);
         break;
 

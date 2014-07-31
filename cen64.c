@@ -25,7 +25,7 @@ int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
 
   if (argc < 3) {
     printf("%s <pifrom.bin> <rom>\n", argv[0]);
-    return 0;
+    return 255;
   }
 
   if (create_gl_window(&device->vi.gl_window, &hints)) {
@@ -35,6 +35,8 @@ int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
 
   if (device_create(device, argv[1], argv[2]) == NULL) {
     printf("Failed to create a device.\n");
+
+    destroy_gl_window(&device->vi.gl_window);
     return 2;
   }
 
