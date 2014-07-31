@@ -33,7 +33,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
     OUTPUT_VARIABLE GCC_VERSION)
 
   if (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
-    set(GCC_FLTO_FLAGS "-flto -fuse-linker-plugin -flto-partition=none -fdata-sections -ffunction-sections")
+    set(GCC_FLTO_FLAGS "-flto -flto-partition=none -fdata-sections -ffunction-sections")
 
     # When compiling with -flto, need to pass CFLAGS to the linker.
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${GCC_FLTO_FLAGS}")
