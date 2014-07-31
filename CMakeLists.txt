@@ -79,6 +79,9 @@ endif (MSVC)
 # Print out MMIO register accesses?
 option(DEBUG_MMIO_REGISTER_ACCESS "Print message on each MMIO register access?" OFF)
 
+# Use VR4300's busy-wait-detection feature?
+option(VR4300_BUSY_WAIT_DETECTION "Detect and special case VR4300 busy wait loops?" OFF)
+
 # Configure the common header.
 configure_file(
   "${PROJECT_SOURCE_DIR}/common.h.in"

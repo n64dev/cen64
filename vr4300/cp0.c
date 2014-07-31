@@ -37,9 +37,9 @@ int VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
   exdc_latch->common.fault = ~0;
   icrf_latch->common.fault = ~0;
 
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
   pipeline->exception_history = 0;
   pipeline->fault_present = true;
-  pipeline->skip_stages = 0;
 
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
   // vr4300->llbit = 0;
