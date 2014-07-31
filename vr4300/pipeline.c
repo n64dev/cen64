@@ -162,7 +162,7 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
 
   // Finally, execute the instruction.
 #ifdef PRINT_EXEC
-  fprintf(stderr, "%.16llX: %s\n", (unsigned long long) rfex_latch->common.pc,
+  debug("%.16llX: %s\n", (unsigned long long) rfex_latch->common.pc,
     vr4300_opcode_mnemonics[rfex_latch->opcode.id]);
 #endif
 
@@ -281,7 +281,7 @@ static void vr4300_cycle_busywait(struct vr4300 *vr4300) {
 
   // Check if the busy wait period is over (due to an interrupt condition).
   if (unlikely(cause & status & 0xFF00) && (status & 0x1) && !(status & 0x6)) {
-    //fprintf(stderr, "Busy wait done @ %llu cycles\n", vr4300->cycles);
+    //debug("Busy wait done @ %llu cycles\n", vr4300->cycles);
 
     VR4300_INTR(vr4300);
   }

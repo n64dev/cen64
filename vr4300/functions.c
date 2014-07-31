@@ -226,7 +226,7 @@ int VR4300_BEQ(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
 
   if (icrf_latch->pc == rfex_latch->common.pc && GET_RS(iw) == 0 && GET_RT(iw)) {
-    //fprintf(stderr, "Enter busy wait @ %llu cycles\n", vr4300->cycles);
+    //debug("Enter busy wait @ %llu cycles\n", vr4300->cycles);
 
     exdc_latch->dest = PIPELINE_CYCLE_TYPE;
     exdc_latch->result = 6;
@@ -767,11 +767,9 @@ int VR4300_INV(struct vr4300 *vr4300,
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   enum vr4300_opcode_id opcode = rfex_latch->opcode.id;
 
-#ifndef NDEBUG
-  fprintf(stderr, "Unimplemented instruction: %s [0x%.8X] @ 0x%.16llX\n",
+  debug("Unimplemented instruction: %s [0x%.8X] @ 0x%.16llX\n",
     vr4300_opcode_mnemonics[opcode], rfex_latch->iw, (long long unsigned)
     rfex_latch->common.pc);
-#endif
 
   // TODO/FIXME: Implement this instruction later.
   if (opcode == VR4300_OPCODE_TLBP)
@@ -811,7 +809,7 @@ int VR4300_J(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   icrf_latch->pc = (rfex_latch->common.pc & ~0x0FFFFFFFULL) | target;
 
   if (icrf_latch->pc == rfex_latch->common.pc) {
-    //fprintf(stderr, "Enter busy wait @ %llu cycles\n", vr4300->cycles);
+    //debug("Enter busy wait @ %llu cycles\n", vr4300->cycles);
 
     exdc_latch->dest = PIPELINE_CYCLE_TYPE;
     exdc_latch->result = 6;

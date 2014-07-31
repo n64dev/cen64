@@ -88,7 +88,7 @@ int bus_read_word(struct bus_controller *bus,
     return read_rdram(bus->ri, address, word);
 
   else if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
-    fprintf(stderr, "bus_read_word: Failed to access: 0x%.8X\n", address);
+    debug("bus_read_word: Failed to access: 0x%.8X\n", address);
     *word = 0x00000000U;
     return 0;
   }
@@ -105,7 +105,7 @@ int bus_write_word(struct bus_controller *bus,
     return write_rdram(bus->ri, address, word & dqm, dqm);
 
   else if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
-    fprintf(stderr, "bus_write_word: Failed to access: 0x%.8X\n", address);
+    debug("bus_write_word: Failed to access: 0x%.8X\n", address);
     return 0;
   }
 
