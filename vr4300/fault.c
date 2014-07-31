@@ -163,8 +163,9 @@ void VR4300_ICB(unused(struct vr4300 *vr4300)) {
 
   /* Fill the line, read the first word. */
   i = (icrf_latch->common.pc - segment->offset) & 0x1C;
+
   memcpy(&rfex_latch->iw, line + (i >> 2), sizeof(rfex_latch->iw));
-  vr4300_icache_fill(&vr4300->icache, icrf_latch->common.pc & ~0x1C,
+  vr4300_icache_fill(&vr4300->icache, icrf_latch->common.pc,
     paddr, line);
 }
 

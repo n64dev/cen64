@@ -83,6 +83,7 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
 
   // Probe the instruction cache for the data.
   paddr = icrf_latch->common.pc - segment->offset;
+
   if ((line = vr4300_icache_probe(&vr4300->icache,
     icrf_latch->common.pc, paddr)) == NULL) {
     VR4300_ICB(vr4300);

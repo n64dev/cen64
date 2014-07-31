@@ -19,7 +19,7 @@ static inline const struct vr4300_icache_line* get_line_const(
 static inline uint32_t get_tag(const struct vr4300_icache_line *line);
 static void invalidate_line(struct vr4300_icache_line *line);
 static bool is_valid(const struct vr4300_icache_line *line);
-static void set_tag(struct vr4300_icache_line *line, uint32_t tag);
+static void set_taglo(struct vr4300_icache_line *line, uint32_t taglo);
 static void validate_line(struct vr4300_icache_line *line, uint32_t tag);
 
 // Returns the line for a given virtual address.
@@ -49,9 +49,9 @@ bool is_valid(const struct vr4300_icache_line *line) {
   return (line->metadata & 0x1) == 0x1;
 }
 
-// Sets the tag of the specified line, retaining current valid bit.
-void set_tag(struct vr4300_icache_line *line, uint32_t tag) {
-  line->metadata = (tag << 12) | (line->metadata & 0x1);
+// Sets the tag of the specified line and valid bit.
+void set_taglo(struct vr4300_icache_line *line, uint32_t taglo) {
+  line->metadata = (taglo << 4 & 0xFFFFF000) | (taglo >> 7 & 0x1);
 }
 
 // Sets the line's physical tag and validates the line.
@@ -115,7 +115,6 @@ void vr4300_icache_set_taglo(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t taglo) {
   struct vr4300_icache_line *line = get_line(icache, vaddr);
 
-  // TODO: Sloppy; should use private functions of some sort.
-  line->metadata = (taglo << 4 & 0xFFFFF000) | (taglo >> 7 & 0x1);
+  set_taglo(line, taglo);
 }
 
