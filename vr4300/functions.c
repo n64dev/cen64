@@ -365,7 +365,7 @@ int VR4300_CACHE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     abort();
 
   assert(!segment->mapped);
-  paddr = segment->offset;
+  paddr = vaddr - segment->offset;
 
   switch(code) {
     case 0: // Instruction cache
