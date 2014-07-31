@@ -407,8 +407,6 @@ static void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
 // Fixes up the DC/WB latches after memory reads.
 static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-  struct vr4300_rfex_latch *rfex_latch = &pipeline->rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
@@ -420,27 +418,7 @@ static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   sdata = (int64_t) ((uint64_t) sdata << datashift) >> datashift;
   dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
 
-  // Continue with the rest of the pipeline.
-  if (rfex_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_ex_stage(vr4300))
-      return;
-  }
-
-  else
-    exdc_latch->common = rfex_latch->common;
-
-  if (icrf_latch->common.fault == VR4300_FAULT_NONE) {
-    if (vr4300_rf_stage(vr4300))
-      return;
-  }
-
-  else
-    rfex_latch->common = icrf_latch->common;
-
-  if (vr4300_ic_stage(vr4300))
-    return;
-
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
+  vr4300_cycle_slow_ex(vr4300);
 }
 
 // Advances the processor pipeline by one pclock.
