@@ -225,7 +225,8 @@ int VR4300_BEQ(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
 
-  if (icrf_latch->pc == rfex_latch->common.pc && GET_RS(iw) == 0 && GET_RT(iw)) {
+  if (icrf_latch->pc == rfex_latch->common.pc &&
+    GET_RS(iw) == 0 && GET_RT(iw) == 0) {
     //debug("Enter busy wait @ %llu cycles\n", vr4300->cycles);
 
     exdc_latch->dest = PIPELINE_CYCLE_TYPE;
