@@ -19,7 +19,6 @@
 #include <tchar.h>
 #include <GL/gl.h>
 
-extern DWORD event_thread_id;
 static const wchar_t CLASSNAME[] = L"CEN64";
 
 struct winapi_window {
@@ -248,10 +247,8 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
   MSG msg;
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-    if (msg.message == WM_QUIT) {
-      PostThreadMessage(event_thread_id, WM_QUIT, 0, 0);
-      ExitThread(0);
-    }
+    if (msg.message == WM_QUIT)
+      cen64_return(bus);
 
     TranslateMessage(&msg);
     DispatchMessage(&msg);
