@@ -139,8 +139,8 @@ void cen64_return(struct bus_controller *bus)
 #else
 #include <cstdio>
 #endif
-#define debug_mmio_read(what, mnemonic, val) fprintf(stderr, #what": READ [%s]: 0x%.8X\n", mnemonic, val)
-#define debug_mmio_write(what, mnemonic, val, dqm) fprintf(stderr, #what": WRITE [%s]: 0x%.8X/0x%.8X\n", mnemonic, val, dqm)
+#define debug_mmio_read(what, mnemonic, val) printf(#what": READ [%s]: 0x%.8X\n", mnemonic, val)
+#define debug_mmio_write(what, mnemonic, val, dqm) printf(#what": WRITE [%s]: 0x%.8X/0x%.8X\n", mnemonic, val, dqm)
 #else
 #define debug_mmio_read(what, mnemonic, val) do {} while (0)
 #define debug_mmio_write(what, mnemonic, val, dqm) do {} while (0)

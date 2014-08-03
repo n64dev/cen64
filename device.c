@@ -39,7 +39,7 @@ static int load_cart(const char *file, uint8_t *rom) {
   }
 
   status = size;
-  rewind(f);
+  fseek(f, 0, SEEK_SET);
 
   for (i = 0; i < (unsigned long int) size; i += last) {
     last = fread(rom + i, 1, size - i, f);
