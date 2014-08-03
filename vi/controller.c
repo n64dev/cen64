@@ -12,6 +12,7 @@
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "os/gl_window.h"
+#include "os/timer.h"
 #include "ri/controller.h"
 #include "vi/controller.h"
 #include "vr4300/interface.h"
@@ -63,15 +64,17 @@ void vi_cycle(struct vi_controller *vi) {
     // Poll for window events: resize, close, etc.
     os_poll_events(vi->bus, &vi->gl_window);
 
-#if 0
-    if (vi->frame_count++ == 9) {
-      float vis = (float) 10 / (glfwGetTime() - vi->start_time);
+    if (vi->frame_count++ == 29) {
+      cen64_time current_time;
+      unsigned long long ns;
 
-      printf("VI/s: %.2f\n", vis);
-      //vi->start_time = glfwGetTime();
+      get_time(&current_time);
+      ns = compute_time_difference(&current_time, &vi->last_vi_time);
+      printf("VI/s: %.2f\n", (30 / ((double) ns / NS_PER_SEC)));
+
+      vi->last_vi_time = current_time;
       vi->frame_count = 0;
     }
-#endif
 
     // Calculate the bounding positions.
     ra->x.start = vi->regs[VI_H_START_REG] >> 16 & 0x3FF;
@@ -160,6 +163,9 @@ int vi_init(struct vi_controller *vi,
 
   // Tell OpenGL that the byte order is swapped.
   glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE);
+
+  // Initialize the timer.
+  get_time(&vi->last_vi_time);
   return 0;
 }
 
