@@ -36,15 +36,20 @@ struct cen64_device {
   struct rsp rsp;
   struct vr4300 vr4300;
 
-  uint8_t pifrom[PIFROM_SIZE];
-  uint8_t *ram, *rom;
+  // Dynamic memory.
+  uint8_t *ram;
+
+  // Read only images.
+  size_t pifrom_size;
+  size_t cart_size;
+
+  const uint8_t *pifrom;
+  const uint8_t *cart;
 };
 
+struct cen64_device *device_create(struct cen64_device *device);
 void device_destroy(struct cen64_device *device);
-struct cen64_device *device_create(struct cen64_device *device,
-  const char *pifrom, const char *rom);
-
-void device_run(struct cen64_device *device);
+int device_run(struct cen64_device *device);
 
 #endif
 

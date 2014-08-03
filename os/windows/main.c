@@ -16,23 +16,20 @@
 int WINAPI WinMain(HINSTANCE hInstance,
   HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
   struct cen64_device device;
-  WPARAM status = 255;
-
   WSADATA wsa_data = {0};
-  HANDLE thread;
-  DWORD tid;
+  WPARAM status = 255;
 
   if (WSAStartup(MAKEWORD(2, 2), &wsa_data)) {
     MessageBox(NULL, L"Failed to initialize Winsock.", L"CEN64",
       MB_OK | MB_ICONEXCLAMATION);
 
-    return ret;
+    return status;
   }
 
-  if (!(status = cen64_main(device, __argc, __argv)))
+  if (!(status = cen64_main(&device, __argc, __argv)))
     cen64_cleanup(&device);
 
   WSACleanup();
-  return ret;
+  return status;
 }
 
