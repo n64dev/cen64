@@ -942,10 +942,10 @@ int VR4300_LWL_LWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   // LWR
   if (iw >> 28 & 0x1) {
-    cen64_align(static uint64_t forceset[], 32) = {0ULL, 0ULL, 0ULL, ~0ULL};
+    cen64_align(static const uint64_t forceset[], 32) = {0ULL, 0ULL, 0ULL, ~0ULL};
 
     size = offset + 1;
-    dqm = ~0U >> ((4 - size) < 3);
+    dqm = ~0U >> ((4 - size) << 3);
     address ^= offset;
 
     //
