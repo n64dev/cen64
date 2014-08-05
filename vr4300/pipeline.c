@@ -205,6 +205,12 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
   // Look up the segment that we're in.
   if (exdc_latch->request.type != VR4300_BUS_REQUEST_NONE) {
+    struct vr4300_bus_request *request = &exdc_latch->request;
+    const struct vr4300_dcache_line *line;
+
+    uint64_t vaddr = request->address;
+    uint32_t paddr;
+
     if ((address - segment->start) > segment->length) {
       uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
@@ -216,21 +222,19 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       exdc_latch->segment = segment;
     }
 
+    // Compute the physical address.
+    // TODO: Implement the TLB.
+    assert(segment->mapped == 0);
+    paddr = vaddr - segment->offset;
+
+    line = (segment->cached == true)
+      ? vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)
+      : NULL;
+
+    // Data cache reads.
     if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-      struct vr4300_bus_request *request = &exdc_latch->request;
-      const struct vr4300_dcache_line *line;
-
-      uint64_t vaddr = request->address;
-      uint32_t paddr;
-
-      // TODO: Implement the TLB.
-      assert(segment->mapped == 0);
-
-      paddr = vaddr - segment->offset;
-
-      // Index the data cache; on a miss, stall until the data is available.
-      if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)) == NULL) {
-        request->address -= segment->offset;
+      if (line == NULL) {
+        request->address = paddr;
         VR4300_DCB(vr4300);
         return 1;
       }
@@ -239,24 +243,22 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       return 0;
     }
 
-    else {
-      assert(exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE &&
-        "Unsupported DC stage request type.");
+    // Data cache writes.
+    else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
+      uint64_t data = request->data;
+      uint64_t dqm = request->dqm;
 
-      exdc_latch->request.address -= segment->offset;
-
-      // TODO/FIXME: Not accurate.
-      if (exdc_latch->request.size > 4) {
-        bus_write_word(vr4300->bus, exdc_latch->request.address,
-          exdc_latch->request.data >> 32, exdc_latch->request.dqm);
-
-        exdc_latch->request.dqm >>= 32;
-        exdc_latch->request.address += 4;
+      if (request->size > 4) {
+        bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
+        paddr += 4;
       }
 
-      bus_write_word(vr4300->bus, exdc_latch->request.address,
-        exdc_latch->request.data, exdc_latch->request.dqm);
+      bus_write_word(vr4300->bus, paddr, data, dqm);
     }
+
+    // TODO: Perform other CACHE instruction operations here.
+    else
+      assert(0 && "Unsupported DC stage request type.");
   }
 
   return 0;
