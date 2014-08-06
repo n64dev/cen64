@@ -1138,7 +1138,7 @@ int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     return 1;
   }
 
-  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.dqm = ~0ULL;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.two_words = 1;
@@ -1181,7 +1181,7 @@ int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
     dest &= ~0x1;
   }
 
-  exdc_latch->request.address = address;
+  exdc_latch->request.vaddr = address;
   exdc_latch->request.dqm = ~0U;
   exdc_latch->request.postshift = postshift;
   exdc_latch->request.two_words = 0;
@@ -1495,7 +1495,7 @@ int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
     return 1;
   }
 
-  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0ULL;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
@@ -1618,7 +1618,7 @@ int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
   if (!(status & 0x04000000))
     ft >>= ((ft_reg & 0x1) << 5);
 
-  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0U;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;

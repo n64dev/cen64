@@ -851,7 +851,7 @@ int VR4300_LD(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RT(iw);
 
-  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.dqm = ~0ULL;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.two_words = 1;
@@ -882,7 +882,7 @@ int VR4300_LOAD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   uint64_t dqm = vr4300_load_sex_mask[iw >> 28 & 0x1][request_size];
   unsigned dest = GET_RT(iw);
 
-  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.dqm = dqm;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.two_words = 0;
@@ -939,7 +939,7 @@ int VR4300_LDL_LDR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     dqm = ~0ULL << (offset << 3);
   }
 
-  exdc_latch->request.address = address;
+  exdc_latch->request.vaddr = address;
   exdc_latch->request.dqm = dqm;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.two_words = 1;
@@ -987,7 +987,7 @@ int VR4300_LWL_LWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     size = 4;
   }
 
-  exdc_latch->request.address = address;
+  exdc_latch->request.vaddr = address;
   exdc_latch->request.dqm = dqm;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.two_words = 0;
@@ -1080,7 +1080,7 @@ int VR4300_SD(struct vr4300 *vr4300, uint64_t rs, uint64_t unused(rt)) {
   uint32_t iw = rfex_latch->iw;
 
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
-  exdc_latch->request.address = rs + (int16_t) iw;
+  exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = rt;
   exdc_latch->request.dqm = ~0ULL;
   exdc_latch->request.size = 8;
@@ -1262,7 +1262,7 @@ int VR4300_STORE(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   unsigned lshiftamt = (4 - request_size) << 3;
   unsigned rshiftamt = (address & 0x3) << 3;
 
-  exdc_latch->request.address = address & ~0x3ULL;
+  exdc_latch->request.vaddr = address & ~0x3ULL;
   exdc_latch->request.data = (rt << lshiftamt) >> rshiftamt;
   exdc_latch->request.dqm = (~0U << lshiftamt) >> rshiftamt;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
@@ -1301,7 +1301,7 @@ int VR4300_SWL_SWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     dqm = mask >> shiftamt;
   }
 
-  exdc_latch->request.address = address & ~0x3ULL;
+  exdc_latch->request.vaddr = address & ~0x3ULL;
   exdc_latch->request.data = data;
   exdc_latch->request.dqm = dqm;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;

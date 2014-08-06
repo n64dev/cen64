@@ -183,7 +183,6 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
   const struct segment *segment = exdc_latch->segment;
-  uint64_t address = exdc_latch->request.address;
 
   dcwb_latch->common = exdc_latch->common;
   dcwb_latch->result = exdc_latch->result;
@@ -206,15 +205,14 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   // Look up the segment that we're in.
   if (exdc_latch->request.type != VR4300_BUS_REQUEST_NONE) {
     struct vr4300_bus_request *request = &exdc_latch->request;
+    uint64_t vaddr = exdc_latch->request.vaddr;
     const struct vr4300_dcache_line *line;
-
-    uint64_t vaddr = request->address;
     uint32_t paddr;
 
-    if ((address - segment->start) > segment->length) {
+    if ((vaddr - segment->start) > segment->length) {
       uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-      if (unlikely((segment = get_segment(address, cp0_status)) == NULL)) {
+      if (unlikely((segment = get_segment(vaddr, cp0_status)) == NULL)) {
         VR4300_DADE(vr4300);
         return 1;
       }
@@ -230,7 +228,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     // If we're in a cached region and miss, it's a DCM.
     if (!segment->cached || (line = vr4300_dcache_probe
       (&vr4300->dcache, vaddr, paddr)) == NULL) {
-      request->address = paddr;
+      request->paddr = paddr;
 
       VR4300_DCM(vr4300);
       return 1;

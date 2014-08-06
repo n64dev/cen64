@@ -12,7 +12,9 @@
 #include "bus/controller.h"
 #include "vr4300/cp0.h"
 #include "vr4300/cpu.h"
+#include "vr4300/dcache.h"
 #include "vr4300/fault.h"
+#include "vr4300/icache.h"
 #include "vr4300/pipeline.h"
 
 // Currently used a fixed value...
@@ -115,47 +117,83 @@ void VR4300_DADE(unused(struct vr4300 *vr4300)) {
 void VR4300_DCB(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
-  uint32_t paddr = request->address;
+  const struct segment *segment = exdc_latch->segment;
+
+  uint64_t vaddr = request->vaddr;
+  uint32_t paddr = request->paddr;
+  struct vr4300_dcache_line *line;
+  uint32_t data[4];
+  unsigned i;
 
   // Service a read.
   if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-    uint32_t word;
+    if (!segment->cached) {
+      uint32_t word;
 
-    vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 5);
-    bus_read_word(vr4300->bus, paddr & ~0x3ULL, &word);
+      vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 5);
+      bus_read_word(vr4300->bus, paddr & ~0x3ULL, &word);
 
-    if (!request->two_words) {
-      unsigned rshiftamt = (4 - request->size) << 3;
-      unsigned lshiftamt = (paddr & 0x3) << 3;
+      if (!request->two_words) {
+        unsigned rshiftamt = (4 - request->size) << 3;
+        unsigned lshiftamt = (paddr & 0x3) << 3;
 
-      request->data = ((int64_t) (word << lshiftamt)) >> rshiftamt;
-    }
+        request->data = ((int64_t) (word << lshiftamt)) >> rshiftamt;
+      }
 
-    else {
-      unsigned rshiftamt = (8 - request->size) << 3;
-      unsigned lshiftamt = (paddr & 0x7) << 3;
+      else {
+        unsigned rshiftamt = (8 - request->size) << 3;
+        unsigned lshiftamt = (paddr & 0x7) << 3;
 
-      request->data = (uint64_t) word << 32;
-      bus_read_word(vr4300->bus, (paddr & ~0x7ULL) + 4, &word);
-      request->data = (int64_t) ((request->data | word) << lshiftamt) >>
-        rshiftamt;
+        request->data = (uint64_t) word << 32;
+        bus_read_word(vr4300->bus, (paddr & ~0x7ULL) + 4, &word);
+        request->data = (int64_t) ((request->data | word) << lshiftamt) >>
+          rshiftamt;
+      }
+
+      return;
     }
   }
 
   // Service a write.
   else {
-    uint64_t data = request->data;
-    uint64_t dqm = request->dqm;
+    if (!segment->cached) {
+      uint64_t data = request->data;
+      uint64_t dqm = request->dqm;
+      vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 2);
 
-    vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 2);
-
-    if (request->size > 4) {
-      bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
-      paddr += 4;
+      if (request->size > 4) {
+        bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
+        paddr += 4;
+      }
+ 
+      bus_write_word(vr4300->bus, paddr, data, dqm);
+      return;
     }
-
-    bus_write_word(vr4300->bus, paddr, data, dqm);
   }
+
+  // Cached accesses require us to potentially flush the old line.
+  // In addition to that, we also need to pull in the next one.
+  if ((line = vr4300_dcache_should_flush_line(
+    &vr4300->dcache, vaddr)) != NULL) {
+    uint32_t tag, bus_address;
+
+    tag = vr4300_dcache_get_tag(line);
+    bus_address = (tag << 12) | (vaddr & 0xFF0);
+    memcpy(data, line->data, sizeof(data));
+
+    for (i = 0; i < 4; i++)
+      bus_write_word(vr4300->bus, bus_address, data[i], ~0);
+  }
+
+  // Raise interlock condition, get virtual address.
+  vr4300_common_interlocks(vr4300, ICACHE_ACCESS_DELAY, 1);
+  paddr &= ~0x3;
+
+  // Fill the cache line.
+  for (i = 0; i < 4; i++)
+    bus_read_word(vr4300->bus, paddr + i * 4, data+ i);
+
+  vr4300_dcache_fill(&vr4300->dcache, vaddr, paddr, data);
 }
 
 // DCM: Data cache miss interlock.

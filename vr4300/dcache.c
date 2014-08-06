@@ -84,13 +84,11 @@ void vr4300_dcache_fill(struct vr4300_dcache *dcache,
 
   memcpy(line->data, data, sizeof(line->data));
   validate_line(line, paddr >> 4);
+  set_clean(line);
 }
 
 // Returns the tag of the line associated with vaddr.
-uint32_t vr4300_dcache_get_tag(const struct vr4300_dcache *dcache,
-  uint64_t vaddr) {
-  const struct vr4300_dcache_line *line = get_line_const(dcache, vaddr);
-
+uint32_t vr4300_dcache_get_tag(const struct vr4300_dcache_line *line) {
   return get_tag(line);
 }
 
@@ -133,6 +131,16 @@ void vr4300_dcache_set_tag(struct vr4300_dcache *dcache,
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
   set_tag(line, tag);
+}
+
+// Returns the line if it's dirty and valid.
+// Call before replacement of writeback entry.
+struct vr4300_dcache_line *vr4300_dcache_should_flush_line(
+  struct vr4300_dcache *dcache, uint64_t vaddr) {
+  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
+
+  return is_dirty(line) && is_valid(line)
+    ? line : NULL;
 }
 
 // Writes back the block if the line is valid, then invalidates the line.
