@@ -264,27 +264,29 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // Data cache writes.
     else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-      uint32_t data, word, dqm;
-
       if (request->size > 4) {
-        data = request->data >> 32;
-        dqm = request->dqm >> 32;
+        uint64_t data, dword, dqm;
 
-        assert((paddr & 0x7) == 0 && "Should already be aligned!");
-        memcpy(&word, line->data + (paddr & 0x8), sizeof(word));
-        word = (word & ~dqm) | (data & dqm);
-        memcpy(line->data + (paddr & 0x8), &word, sizeof(word));
+        data = request->data;
+        dqm = request->dqm;
+        paddr &= 0x8;
 
-        paddr += 4;
+        memcpy(&dword, line->data + paddr, sizeof(dword));
+        dword = (dword & ~dqm) | (((data << 32) | (data >> 32)) & dqm);
+        memcpy(line->data + paddr, &dword, sizeof(dword));
       }
 
-      data = request->data;
-      dqm = request->dqm;
+      else {
+        uint32_t data, word, dqm;
 
-      assert((paddr & 0x3) == 0 && "Should already be aligned!");
-      memcpy(&word, line->data + (paddr & 0xC), sizeof(word));
-      word = (word & ~dqm) | (data & dqm);
-      memcpy(line->data + (paddr & 0xC), &word, sizeof(word));
+        data = request->data;
+        dqm = request->dqm;
+        paddr &= 0xC;
+
+        memcpy(&word, line->data + paddr, sizeof(word));
+        word = (word & ~dqm) | (data & dqm);
+        memcpy(line->data + paddr, &word, sizeof(word));
+      }
 
       vr4300_dcache_set_dirty(line);
     }
