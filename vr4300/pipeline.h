@@ -27,11 +27,10 @@ struct vr4300_bus_request {
   uint64_t address;
   uint64_t data;
   uint64_t dqm;
-  unsigned size;
-  int postshift;
-  char two_words;
 
   enum vr4300_bus_request_type type;
+  unsigned size, postshift;
+  char two_words;
 };
 
 struct vr4300_latch {

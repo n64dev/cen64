@@ -138,6 +138,25 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   }
 }
 
+// DCM: Data cache miss interlock.
+void VR4300_DCM(struct vr4300 *vr4300) {
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  struct vr4300_bus_request *request = &exdc_latch->request;
+
+  uint32_t paddr = request->address;
+  uint64_t data = request->data;
+  uint64_t dqm = request->dqm;
+
+  vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 2);
+
+  if (request->size > 4) {
+    bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
+    paddr += 4;
+  }
+
+  bus_write_word(vr4300->bus, paddr, data, dqm);
+}
+
 // IADE: Instruction address error exception.
 void VR4300_IADE(unused(struct vr4300 *vr4300)) {
   abort(); // Hammertime!
@@ -153,15 +172,15 @@ void VR4300_ICB(unused(struct vr4300 *vr4300)) {
   uint32_t paddr;
   unsigned i;
 
-  /* Raise interlock condition, get virtual address. */
+  // Raise interlock condition, get virtual address.
   vr4300_common_interlocks(vr4300, ICACHE_ACCESS_DELAY, 4);
   paddr = (icrf_latch->common.pc - segment->offset) & ~0x1C;
 
-  /* Fill the cache line. */
+  // Fill the cache line.
   for (i = 0; i < 8; i ++)
     bus_read_word(vr4300->bus, paddr + i * 4, line + i);
 
-  /* Fill the line, read the first word. */
+  // Fill the line, read the first word.
   i = (icrf_latch->common.pc - segment->offset) & 0x1C;
 
   memcpy(&rfex_latch->iw, line + (i >> 2), sizeof(rfex_latch->iw));

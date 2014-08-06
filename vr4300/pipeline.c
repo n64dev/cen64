@@ -248,12 +248,14 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       uint64_t data = request->data;
       uint64_t dqm = request->dqm;
 
-      if (request->size > 4) {
-        bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
-        paddr += 4;
+      if (line == NULL) {
+        request->address = paddr;
+        VR4300_DCM(vr4300);
+        return 1;
       }
 
-      bus_write_word(vr4300->bus, paddr, data, dqm);
+      assert(0 && "Implement data cache writes.");
+      return 0;
     }
 
     // TODO: Perform other CACHE instruction operations here.
