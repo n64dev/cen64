@@ -227,36 +227,22 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     assert(segment->mapped == 0);
     paddr = vaddr - segment->offset;
 
-    line = (segment->cached == true)
-      ? vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)
-      : NULL;
+    // If we're in a cached region and miss, it's a DCM.
+    if (!segment->cached || (line = vr4300_dcache_probe
+      (&vr4300->dcache, vaddr, paddr)) == NULL) {
+      request->address = paddr;
+
+      VR4300_DCM(vr4300);
+      return 1;
+    }
 
     // Data cache reads.
-    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-      if (line == NULL) {
-        request->address = paddr;
-        VR4300_DCB(vr4300);
-        return 1;
-      }
-
+    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ)
       assert(0 && "Implement data cache reads.");
-      return 0;
-    }
 
     // Data cache writes.
-    else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-      uint64_t data = request->data;
-      uint64_t dqm = request->dqm;
-
-      if (line == NULL) {
-        request->address = paddr;
-        VR4300_DCM(vr4300);
-        return 1;
-      }
-
+    else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE)
       assert(0 && "Implement data cache writes.");
-      return 0;
-    }
 
     // TODO: Perform other CACHE instruction operations here.
     else
@@ -412,6 +398,7 @@ cen64_align(static const pipeline_function
 
   vr4300_cycle_slow_ex_fixdc,
   vr4300_cycle_busywait,
+  VR4300_DCB,
 };
 
 // Advances the processor pipeline by one pclock.

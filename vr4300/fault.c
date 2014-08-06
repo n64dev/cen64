@@ -115,46 +115,52 @@ void VR4300_DADE(unused(struct vr4300 *vr4300)) {
 void VR4300_DCB(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
-  uint32_t word;
+  uint32_t paddr = request->address;
 
-  vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 5);
-  bus_read_word(vr4300->bus, request->address & ~0x3ULL, &word);
+  // Service a read.
+  if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
+    uint32_t word;
 
-  if (!request->two_words) {
-    unsigned rshiftamt = (4 - request->size) << 3;
-    unsigned lshiftamt = (request->address & 0x3) << 3;
+    vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 5);
+    bus_read_word(vr4300->bus, paddr & ~0x3ULL, &word);
 
-    request->data = ((int64_t) (word << lshiftamt)) >> rshiftamt;
+    if (!request->two_words) {
+      unsigned rshiftamt = (4 - request->size) << 3;
+      unsigned lshiftamt = (paddr & 0x3) << 3;
+
+      request->data = ((int64_t) (word << lshiftamt)) >> rshiftamt;
+    }
+
+    else {
+      unsigned rshiftamt = (8 - request->size) << 3;
+      unsigned lshiftamt = (paddr & 0x7) << 3;
+
+      request->data = (uint64_t) word << 32;
+      bus_read_word(vr4300->bus, (paddr & ~0x7ULL) + 4, &word);
+      request->data = (int64_t) ((request->data | word) << lshiftamt) >>
+        rshiftamt;
+    }
   }
 
+  // Service a write.
   else {
-    unsigned rshiftamt = (8 - request->size) << 3;
-    unsigned lshiftamt = (request->address & 0x7) << 3;
+    uint64_t data = request->data;
+    uint64_t dqm = request->dqm;
 
-    request->data = (uint64_t) word << 32;
-    bus_read_word(vr4300->bus, (request->address & ~0x7ULL) + 4, &word);
-    request->data = (int64_t) ((request->data | word) << lshiftamt) >>
-      rshiftamt;
+    vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 2);
+
+    if (request->size > 4) {
+      bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
+      paddr += 4;
+    }
+
+    bus_write_word(vr4300->bus, paddr, data, dqm);
   }
 }
 
 // DCM: Data cache miss interlock.
 void VR4300_DCM(struct vr4300 *vr4300) {
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  struct vr4300_bus_request *request = &exdc_latch->request;
-
-  uint32_t paddr = request->address;
-  uint64_t data = request->data;
-  uint64_t dqm = request->dqm;
-
-  vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 2);
-
-  if (request->size > 4) {
-    bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
-    paddr += 4;
-  }
-
-  bus_write_word(vr4300->bus, paddr, data, dqm);
+  vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 7);
 }
 
 // IADE: Instruction address error exception.
