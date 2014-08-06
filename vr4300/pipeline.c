@@ -90,7 +90,7 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   }
 
   // TODO: Implement the TLB.
-  assert(segment->mapped == 0);
+  //assert(segment->mapped == 0);
 
   // Probe the instruction cache for the data.
   paddr = icrf_latch->common.pc - segment->offset;
@@ -206,7 +206,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   if (exdc_latch->request.type != VR4300_BUS_REQUEST_NONE) {
     struct vr4300_bus_request *request = &exdc_latch->request;
     uint64_t vaddr = exdc_latch->request.vaddr;
-    const struct vr4300_dcache_line *line;
+    struct vr4300_dcache_line *line;
     uint32_t paddr;
 
     if ((vaddr - segment->start) > segment->length) {
@@ -222,7 +222,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // Compute the physical address.
     // TODO: Implement the TLB.
-    assert(segment->mapped == 0);
+    //assert(segment->mapped == 0);
     paddr = vaddr - segment->offset;
 
     // If we're in a cached region and miss, it's a DCM.
@@ -235,12 +235,62 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     // Data cache reads.
-    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ)
-      assert(0 && "Implement data cache reads.");
+    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
+      int datashift = (8 - request->size) << 3;
+      int64_t sdata;
+
+      if (!request->two_words) {
+        unsigned rshiftamt = (4 - request->size) << 3;
+        unsigned lshiftamt = (paddr & 0x3) << 3;
+        uint32_t word;
+
+        // TODO: Actually sign extend this...?
+        memcpy(&word, line->data + (paddr & 0xC), sizeof(word));
+        sdata = (int64_t) (word << lshiftamt) >> rshiftamt;
+      }
+
+      else {
+        unsigned rshiftamt = (8 - request->size) << 3;
+        unsigned lshiftamt = (paddr & 0x7) << 3;
+        uint32_t hiword, loword;
+
+        memcpy(&hiword, line->data + (paddr & 0x8), sizeof(hiword));
+        memcpy(&loword, line->data + (paddr & 0x8) + 4, sizeof(loword));
+        sdata = (int64_t) (((uint64_t) hiword << 32 | loword)
+          << lshiftamt) >> rshiftamt;
+      }
+
+      // Shall we sign extend?
+      sdata = (int64_t) ((uint64_t) sdata << datashift) >> datashift;
+      dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
+    }
 
     // Data cache writes.
-    else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE)
-      assert(0 && "Implement data cache writes.");
+    else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
+      uint32_t data, word, dqm;
+
+      if (request->size > 4) {
+        data = request->data >> 32;
+        dqm = request->dqm >> 32;
+
+        assert((paddr & 0x7) == 0 && "Should already be aligned!");
+        memcpy(&word, line->data + (paddr & 0x8), sizeof(word));
+        word = (word & ~dqm) | (data & dqm);
+        memcpy(line->data + (paddr & 0x8), &word, sizeof(word));
+
+        paddr += 4;
+      }
+
+      data = request->data;
+      dqm = request->dqm;
+
+      assert((paddr & 0x3) == 0 && "Should already be aligned!");
+      memcpy(&word, line->data + (paddr & 0xC), sizeof(word));
+      word = (word & ~dqm) | (data & dqm);
+      memcpy(line->data + (paddr & 0xC), &word, sizeof(word));
+
+      vr4300_dcache_set_dirty(line);
+    }
 
     // TODO: Perform other CACHE instruction operations here.
     else

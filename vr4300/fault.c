@@ -18,9 +18,9 @@
 #include "vr4300/pipeline.h"
 
 // Currently used a fixed value...
-#define MEMORY_CODE_CYCLE_DELAY 50
-#define MEMORY_DATA_CYCLE_DELAY 5
-#define ICACHE_ACCESS_DELAY 50
+#define DCACHE_ACCESS_DELAY (48 - 2)
+#define ICACHE_ACCESS_DELAY (52 - 2)
+#define MEMORY_WORD_CYCLE_DELAY 40
 
 const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #define X(fault) #fault,
@@ -130,7 +130,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
     if (!segment->cached) {
       uint32_t word;
 
-      vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 5);
+      vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 5);
       bus_read_word(vr4300->bus, paddr & ~0x3ULL, &word);
 
       if (!request->two_words) {
@@ -159,7 +159,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
     if (!segment->cached) {
       uint64_t data = request->data;
       uint64_t dqm = request->dqm;
-      vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 2);
+      vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 2);
 
       if (request->size > 4) {
         bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
@@ -175,19 +175,18 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   // In addition to that, we also need to pull in the next one.
   if ((line = vr4300_dcache_should_flush_line(
     &vr4300->dcache, vaddr)) != NULL) {
-    uint32_t tag, bus_address;
+    uint32_t bus_address;
 
-    tag = vr4300_dcache_get_tag(line);
-    bus_address = (tag << 12) | (vaddr & 0xFF0);
+    bus_address = vr4300_dcache_get_tag(line);
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
-      bus_write_word(vr4300->bus, bus_address, data[i], ~0);
+      bus_write_word(vr4300->bus, bus_address + i * 4, data[i], ~0);
   }
 
   // Raise interlock condition, get virtual address.
-  vr4300_common_interlocks(vr4300, ICACHE_ACCESS_DELAY, 1);
-  paddr &= ~0x3;
+  vr4300_common_interlocks(vr4300, DCACHE_ACCESS_DELAY, 1);
+  paddr &= ~0xF;
 
   // Fill the cache line.
   for (i = 0; i < 4; i++)
@@ -198,7 +197,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
 // DCM: Data cache miss interlock.
 void VR4300_DCM(struct vr4300 *vr4300) {
-  vr4300_common_interlocks(vr4300, MEMORY_DATA_CYCLE_DELAY, 7);
+  vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 7);
 }
 
 // IADE: Instruction address error exception.
@@ -311,7 +310,7 @@ void VR4300_UNC(struct vr4300 *vr4300) {
   const struct segment *segment = icrf_latch->segment;
   uint64_t address;
 
-  vr4300_common_interlocks(vr4300, MEMORY_CODE_CYCLE_DELAY, 4);
+  vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 4);
 
   address = icrf_latch->common.pc - segment->offset;
   bus_read_word(vr4300->bus, address, &rfex_latch->iw);

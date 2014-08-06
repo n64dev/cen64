@@ -20,7 +20,6 @@ static inline uint32_t get_tag(const struct vr4300_dcache_line *line);
 static void invalidate_line(struct vr4300_dcache_line *line);
 static bool is_dirty(const struct vr4300_dcache_line *line);
 static bool is_valid(const struct vr4300_dcache_line *line);
-static void set_clean(struct vr4300_dcache_line *line);
 static void set_dirty(struct vr4300_dcache_line *line);
 static void set_tag(struct vr4300_dcache_line *line, uint32_t tag);
 static void validate_line(struct vr4300_dcache_line *line, uint32_t tag);
@@ -39,7 +38,7 @@ const struct vr4300_dcache_line* get_line_const(
 
 // Returns the physical tag associated with the line.
 uint32_t get_tag(const struct vr4300_dcache_line *line) {
-  return line->metadata >> 12;
+  return line->metadata & ~0xF;
 }
 
 // Invalidates the line, but leaves the physical tag untouched.
@@ -57,11 +56,6 @@ bool is_valid(const struct vr4300_dcache_line *line) {
   return (line->metadata & 0x1) == 0x1;
 }
 
-// Sets the state of the line to clean.
-void set_clean(struct vr4300_dcache_line *line) {
-  line->metadata &= ~0x2;
-}
-
 // Sets the state of the line to dirty.
 void set_dirty(struct vr4300_dcache_line *line) {
   line->metadata |= 0x2;
@@ -69,12 +63,12 @@ void set_dirty(struct vr4300_dcache_line *line) {
 
 // Sets the tag of the specified line, retaining current valid bit.
 void set_tag(struct vr4300_dcache_line *line, uint32_t tag) {
-  line->metadata = (tag << 12) | (line->metadata & 0x1);
+  line->metadata = tag | (line->metadata & 0x1);
 }
 
 // Sets the line's physical tag and validates the line.
 static void validate_line(struct vr4300_dcache_line *line, uint32_t tag) {
-  line->metadata = (tag << 12) | 0x1;
+  line->metadata = tag | 0x1;
 }
 
 // Fills an instruction cache line with data.
@@ -83,8 +77,7 @@ void vr4300_dcache_fill(struct vr4300_dcache *dcache,
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
   memcpy(line->data, data, sizeof(line->data));
-  validate_line(line, paddr >> 4);
-  set_clean(line);
+  validate_line(line, paddr & ~0xF);
 }
 
 // Returns the tag of the line associated with vaddr.
@@ -97,9 +90,7 @@ void vr4300_dcache_init(struct vr4300_dcache *dcache) {
 }
 
 // Invalidates an instruction cache line (regardless if hit or miss).
-void vr4300_dcache_invalidate(struct vr4300_dcache *dcache, uint64_t vaddr) {
-  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
-
+void vr4300_dcache_invalidate(struct vr4300_dcache_line *line) {
   invalidate_line(line);
 }
 
@@ -109,20 +100,25 @@ void vr4300_dcache_invalidate_hit(struct vr4300_dcache *dcache,
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
   uint32_t ptag = get_tag(line);
 
-  if (ptag == (paddr >> 4) && is_valid(line))
+  if (ptag == (paddr & ~0xF) && is_valid(line))
     invalidate_line(line);
 }
 
 // Probes the instruction cache for a matching line.
-const struct vr4300_dcache_line* vr4300_dcache_probe(
-  const struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr) {
-  const struct vr4300_dcache_line *line = get_line_const(dcache, vaddr);
+struct vr4300_dcache_line* vr4300_dcache_probe(
+  struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr) {
+  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
   uint32_t ptag = get_tag(line);
 
   // Virtually index, and physically tagged.
-  return (ptag == (paddr >> 4) && is_valid(line))
+  return (ptag == (paddr & ~0xF) && is_valid(line))
     ? line
     : NULL;
+}
+
+// Marks the line as dirty.
+void vr4300_dcache_set_dirty(struct vr4300_dcache_line *line) {
+  set_dirty(line);
 }
 
 // Sets the physical tag associated with the line.
@@ -144,11 +140,15 @@ struct vr4300_dcache_line *vr4300_dcache_should_flush_line(
 }
 
 // Writes back the block if the line is valid, then invalidates the line.
-void vr4300_dcache_wb_invalidate(struct vr4300_dcache *dcache, uint64_t vaddr) {
+struct vr4300_dcache_line *vr4300_dcache_wb_invalidate(
+  struct vr4300_dcache *dcache, uint64_t vaddr) {
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
-  // TODO: Writeback.
-  if (is_valid(line))
+  if (is_valid(line)) {
     invalidate_line(line);
+    return line;
+  }
+
+  return NULL;
 }
 

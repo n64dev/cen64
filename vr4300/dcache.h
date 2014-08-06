@@ -26,16 +26,18 @@ void vr4300_dcache_init(struct vr4300_dcache *dcache);
 void vr4300_dcache_fill(struct vr4300_dcache *dcache,
   uint64_t vaddr, uint32_t paddr, const void *data);
 uint32_t vr4300_dcache_get_tag(const struct vr4300_dcache_line *line);
-void vr4300_dcache_invalidate(struct vr4300_dcache *dcache, uint64_t vaddr);
+void vr4300_dcache_invalidate(struct vr4300_dcache_line *line);
 void vr4300_dcache_invalidate_hit(struct vr4300_dcache *dcache,
   uint64_t vaddr, uint32_t paddr);
-const struct vr4300_dcache_line* vr4300_dcache_probe(
-  const struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr);
+struct vr4300_dcache_line* vr4300_dcache_probe(
+  struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr);
+void vr4300_dcache_set_dirty(struct vr4300_dcache_line *line);
 void vr4300_dcache_set_tag(struct vr4300_dcache *dcache,
   uint64_t vaddr, uint32_t tag);
 struct vr4300_dcache_line *vr4300_dcache_should_flush_line(
   struct vr4300_dcache *dcache, uint64_t vaddr);
-void vr4300_dcache_wb_invalidate(struct vr4300_dcache *dcache, uint64_t vaddr);
+struct vr4300_dcache_line *vr4300_dcache_wb_invalidate(
+  struct vr4300_dcache *dcache, uint64_t vaddr);
 
 #endif
 
