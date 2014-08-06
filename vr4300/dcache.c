@@ -13,8 +13,6 @@
 
 static inline struct vr4300_dcache_line* get_line(
   struct vr4300_dcache *dcache, uint64_t vaddr);
-static inline const struct vr4300_dcache_line* get_line_const(
-  const struct vr4300_dcache *dcache, uint64_t vaddr);
 
 static inline uint32_t get_tag(const struct vr4300_dcache_line *line);
 static void invalidate_line(struct vr4300_dcache_line *line);
@@ -27,12 +25,6 @@ static void validate_line(struct vr4300_dcache_line *line, uint32_t tag);
 // Returns the line for a given virtual address.
 struct vr4300_dcache_line* get_line(
   struct vr4300_dcache *dcache, uint64_t vaddr) {
-  return dcache->lines + (vaddr >> 4 & 0x1FF);
-}
-
-// Returns the line for a given virtual address.
-const struct vr4300_dcache_line* get_line_const(
-  const struct vr4300_dcache *dcache, uint64_t vaddr) {
   return dcache->lines + (vaddr >> 4 & 0x1FF);
 }
 

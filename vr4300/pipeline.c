@@ -236,7 +236,6 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // Data cache reads.
     if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-      int datashift = (8 - request->size) << 3;
       int64_t sdata;
 
       if (!request->two_words) {
@@ -246,7 +245,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
         // TODO: Actually sign extend this...?
         memcpy(&word, line->data + (paddr & 0xC), sizeof(word));
-        sdata = (int64_t) (word << lshiftamt) >> rshiftamt;
+        sdata = (int32_t) (word << lshiftamt) >> rshiftamt;
       }
 
       else {
@@ -256,12 +255,10 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
         memcpy(&hiword, line->data + (paddr & 0x8), sizeof(hiword));
         memcpy(&loword, line->data + (paddr & 0x8) + 4, sizeof(loword));
-        sdata = (int64_t) (((uint64_t) hiword << 32 | loword)
-          << lshiftamt) >> rshiftamt;
+        sdata = (int64_t) (((uint64_t) hiword << 32 | loword) << lshiftamt)
+          >> rshiftamt;
       }
 
-      // Shall we sign extend?
-      sdata = (int64_t) ((uint64_t) sdata << datashift) >> datashift;
       dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
     }
 
@@ -424,14 +421,9 @@ void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
-
-  int datashift = (8 - request->size) << 3;
   int64_t sdata = request->data;
 
-  // Shall we sign extend?
-  sdata = (int64_t) ((uint64_t) sdata << datashift) >> datashift;
   dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
-
   vr4300_cycle_slow_ex(vr4300);
 }
 
