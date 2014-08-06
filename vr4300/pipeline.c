@@ -25,9 +25,7 @@ static void vr4300_cycle_slow_dc(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_ex(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_rf(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_ic(struct vr4300 *vr4300);
-
 static void vr4300_cycle_busywait(struct vr4300 *vr4300);
-static void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300);
 
 // Prints out instructions and their virtual address as they are executed.
 // Note: These instructions should _may_ be speculative and killed later...
@@ -409,22 +407,6 @@ void vr4300_cycle_busywait(struct vr4300 *vr4300) {
   }
 }
 
-// Advances the processor pipeline by one pclock.
-// May have exceptions, so check for aborted stages.
-//
-// Starts from EX stage (DC resolved an interlock).
-// Fixes up the DC/WB latches after memory reads.
-void vr4300_cycle_slow_ex_fixdc(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
-  struct vr4300_dcwb_latch *dcwb_latch = &pipeline->dcwb_latch;
-  struct vr4300_bus_request *request = &exdc_latch->request;
-  int64_t sdata = request->data;
-
-  dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
-  vr4300_cycle_slow_ex(vr4300);
-}
-
 // LUT of stages for fault handling.
 cen64_align(static const pipeline_function
   pipeline_function_lut[], CACHE_LINE_SIZE) = {
@@ -434,7 +416,6 @@ cen64_align(static const pipeline_function
   vr4300_cycle_slow_rf,
   vr4300_cycle_slow_ic,
 
-  vr4300_cycle_slow_ex_fixdc,
   vr4300_cycle_busywait,
   VR4300_DCB,
 };

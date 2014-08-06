@@ -115,6 +115,7 @@ void VR4300_DADE(unused(struct vr4300 *vr4300)) {
 
 // DCB: Data cache busy interlock.
 void VR4300_DCB(struct vr4300 *vr4300) {
+  struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
   const struct segment *segment = exdc_latch->segment;
@@ -125,41 +126,38 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   uint32_t data[4];
   unsigned i;
 
-  // Service a read.
-  if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-    if (!segment->cached) {
-      uint32_t word;
+  if (!segment->cached) {
 
-      vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 5);
-      bus_read_word(vr4300->bus, paddr & ~0x3ULL, &word);
+    // Service a read.
+    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
+      uint32_t hiword, loword;
+      int64_t sdata;
+
+      bus_read_word(vr4300->bus, paddr & ~0x3ULL, &hiword);
 
       if (!request->two_words) {
         unsigned rshiftamt = (4 - request->size) << 3;
         unsigned lshiftamt = (paddr & 0x3) << 3;
 
-        request->data = (int32_t) (word << lshiftamt) >> rshiftamt;
+        sdata = (int32_t) (hiword << lshiftamt) >> rshiftamt;
       }
 
       else {
         unsigned rshiftamt = (8 - request->size) << 3;
         unsigned lshiftamt = (paddr & 0x7) << 3;
 
-        request->data = (uint64_t) word << 32;
-        bus_read_word(vr4300->bus, (paddr & ~0x7ULL) + 4, &word);
-        request->data = (int64_t) ((request->data | word) << lshiftamt) >>
+        bus_read_word(vr4300->bus, (paddr & ~0x7ULL) + 4, &loword);
+        sdata = (int64_t) (((uint64_t) hiword | loword) << lshiftamt) >>
           rshiftamt;
       }
 
-      return;
+      dcwb_latch->result |= sdata << request->postshift;
     }
-  }
 
-  // Service a write.
-  else {
-    if (!segment->cached) {
+    // Service a write.
+    else {
       uint64_t data = request->data;
       uint64_t dqm = request->dqm;
-      vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 2);
 
       if (request->size > 4) {
         bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
@@ -167,8 +165,10 @@ void VR4300_DCB(struct vr4300 *vr4300) {
       }
  
       bus_write_word(vr4300->bus, paddr, data, dqm);
-      return;
     }
+
+    vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 2);
+    return;
   }
 
   // Cached accesses require us to potentially flush the old line.
@@ -197,7 +197,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
 // DCM: Data cache miss interlock.
 void VR4300_DCM(struct vr4300 *vr4300) {
-  vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 7);
+  vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 6);
 }
 
 // IADE: Instruction address error exception.

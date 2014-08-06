@@ -231,7 +231,7 @@ int VR4300_BEQ(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     //debug("Enter busy wait @ %llu cycles\n", vr4300->cycles);
 
     exdc_latch->dest = PIPELINE_CYCLE_TYPE;
-    exdc_latch->result = 6;
+    exdc_latch->result = 5;
   }
 
   return 0;
@@ -824,7 +824,7 @@ int VR4300_J(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
     //debug("Enter busy wait @ %llu cycles\n", vr4300->cycles);
 
     exdc_latch->dest = PIPELINE_CYCLE_TYPE;
-    exdc_latch->result = 6;
+    exdc_latch->result = 5;
   }
 
   return 0;
