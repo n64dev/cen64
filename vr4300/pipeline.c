@@ -84,24 +84,20 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
 
   rfex_latch->common = icrf_latch->common;
 
-  if (!segment->cached) {
-    VR4300_UNC(vr4300);
-    return 1;
-  }
-
   // TODO: Implement the TLB.
-  //assert(segment->mapped == 0);
-
-  // Probe the instruction cache for the data.
+  assert(segment->mapped == 0);
   paddr = icrf_latch->common.pc - segment->offset;
 
-  if ((line = vr4300_icache_probe(&vr4300->icache,
-    icrf_latch->common.pc, paddr)) == NULL) {
+  // If we're in a cached region and miss, it's a ICB.
+  if (!segment->cached || (line = vr4300_icache_probe(
+    &vr4300->icache, icrf_latch->common.pc, paddr)) == NULL) {
     VR4300_ICB(vr4300);
     return 1;
   }
 
-  memcpy(&rfex_latch->iw, line->data + (paddr & 0x1C), sizeof(rfex_latch->iw));
+  memcpy(&rfex_latch->iw, line->data + (paddr & 0x1C),
+    sizeof(rfex_latch->iw));
+
   return 0;
 }
 

@@ -20,7 +20,7 @@
 // Currently used a fixed value...
 #define DCACHE_ACCESS_DELAY (48 - 2)
 #define ICACHE_ACCESS_DELAY (52 - 2)
-#define MEMORY_WORD_CYCLE_DELAY 40
+#define MEMORY_WORD_DELAY 40
 
 const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #define X(fault) #fault,
@@ -130,7 +130,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
     if (!segment->cached) {
       uint32_t word;
 
-      vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 5);
+      vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 5);
       bus_read_word(vr4300->bus, paddr & ~0x3ULL, &word);
 
       if (!request->two_words) {
@@ -159,7 +159,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
     if (!segment->cached) {
       uint64_t data = request->data;
       uint64_t dqm = request->dqm;
-      vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 2);
+      vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 2);
 
       if (request->size > 4) {
         bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
@@ -197,7 +197,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
 // DCM: Data cache miss interlock.
 void VR4300_DCM(struct vr4300 *vr4300) {
-  vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 7);
+  vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 7);
 }
 
 // IADE: Instruction address error exception.
@@ -210,25 +210,31 @@ void VR4300_ICB(unused(struct vr4300 *vr4300)) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct segment *segment = icrf_latch->segment;
+  uint64_t vaddr = icrf_latch->common.pc - segment->offset;
+  unsigned delay;
 
-  uint32_t line[8];
-  uint32_t paddr;
-  unsigned i;
+  if (!segment->cached) {
+    bus_read_word(vr4300->bus, vaddr, &rfex_latch->iw);
+    delay = MEMORY_WORD_DELAY;
+  }
 
-  // Raise interlock condition, get virtual address.
-  vr4300_common_interlocks(vr4300, ICACHE_ACCESS_DELAY, 4);
-  paddr = (icrf_latch->common.pc - segment->offset) & ~0x1C;
+  else {
+    uint32_t line[8];
+    uint32_t paddr;
+    unsigned i;
 
-  // Fill the cache line.
-  for (i = 0; i < 8; i ++)
-    bus_read_word(vr4300->bus, paddr + i * 4, line + i);
+    paddr = vaddr & ~0x1C;
 
-  // Fill the line, read the first word.
-  i = (icrf_latch->common.pc - segment->offset) & 0x1C;
+    // Fill the cache line.
+    for (i = 0; i < 8; i ++)
+      bus_read_word(vr4300->bus, paddr + i * 4, line + i);
 
-  memcpy(&rfex_latch->iw, line + (i >> 2), sizeof(rfex_latch->iw));
-  vr4300_icache_fill(&vr4300->icache, icrf_latch->common.pc,
-    paddr, line);
+    memcpy(&rfex_latch->iw, line + (vaddr >> 2 & 0x7), sizeof(rfex_latch->iw));
+    vr4300_icache_fill(&vr4300->icache, icrf_latch->common.pc, paddr, line);
+    delay = ICACHE_ACCESS_DELAY;
+  }
+
+  vr4300_common_interlocks(vr4300, delay, 4);
 }
 
 // INTR: Interrupt exception.
@@ -301,18 +307,5 @@ void VR4300_RST(struct vr4300 *vr4300) {
   // Soft reset exception.
   else
     abort();
-}
-
-// UNC: Uncached read interlock.
-void VR4300_UNC(struct vr4300 *vr4300) {
-  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  const struct segment *segment = icrf_latch->segment;
-  uint64_t address;
-
-  vr4300_common_interlocks(vr4300, MEMORY_WORD_CYCLE_DELAY, 4);
-
-  address = icrf_latch->common.pc - segment->offset;
-  bus_read_word(vr4300->bus, address, &rfex_latch->iw);
 }
 
