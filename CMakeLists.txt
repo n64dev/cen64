@@ -28,15 +28,15 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 
   string(REGEX MATCH "([a-zA-Z0-9])+" GCC_MACHINE ${GCC_MACHINE})
 
-  if ("${GCC_MACHINE}" STREQUAL "x86_64")
-    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/x86_64)
-  endif ("${GCC_MACHINE}" STREQUAL "x86_64")
-
-  if ("${GCC_MACHINE}" STREQUAL "arm")
+  if ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
     if (NOT NATIVE_BUILD)
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
     endif (NOT NATIVE_BUILD)
 
+    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/x86_64)
+  endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+
+  if ("${GCC_MACHINE}" STREQUAL "arm")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/arm)
   endif ("${GCC_MACHINE}" STREQUAL "arm")
 
