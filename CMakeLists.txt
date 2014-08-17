@@ -41,10 +41,10 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   endif ("${GCC_MACHINE}" STREQUAL "arm")
 
   # Set architecture-independent flags.
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -ggdb3 -g3 -O0")
-  set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -Os -DNDEBUG -s")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O2 -DNDEBUG -s")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -Og")
+  set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
+  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
   # Enable link time optimization on recent versions.
@@ -79,25 +79,25 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 
   string(REGEX MATCH "([a-zA-Z0-9])+" CLANG_MACHINE ${CLANG_MACHINE})
 
-  if ("${CLANG_MACHINE}" STREQUAL "x86_64")
-    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/x86_64)
-  endif ("${CLANG_MACHINE}" STREQUAL "x86_64")
-
-  if ("${CLANG_MACHINE}" STREQUAL "arm")
+  if ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
     if (NOT NATIVE_BUILD)
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
     endif (NOT NATIVE_BUILD)
 
+    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/x86_64)
+  endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+
+  if ("${GCC_MACHINE}" STREQUAL "arm")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/arm)
-  endif ("${CLANG_MACHINE}" MATCHES "^arm")
+  endif ("${GCC_MACHINE}" STREQUAL "arm")
 
   # Set architecture-independent flags.
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -ggdb3 -g3 -O0 -fsanitize=undefined")
-  set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -Os -DNDEBUG -flto")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O2 -DNDEBUG -flto")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -Og")
-  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_C_FLAGS} -s")
-  set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -s")
+  set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
+  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
+  set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")
+  set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-s")
 
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
