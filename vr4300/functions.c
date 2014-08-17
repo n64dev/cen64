@@ -574,7 +574,7 @@ int VR4300_DDIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 int VR4300_DMULT(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint64_t lo, hi;
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && defined(__x86_64__)
   __uint128_t rsx = (int64_t) rs;
   __uint128_t rtx = (int64_t) rt;
   __uint128_t result;
@@ -599,7 +599,7 @@ int VR4300_DMULT(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 int VR4300_DMULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   uint64_t lo, hi;
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && defined(__x86_64__)
   __uint128_t rsx = rs;
   __uint128_t rtx = rt;
   __uint128_t result;
