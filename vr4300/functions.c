@@ -569,20 +569,32 @@ int VR4300_DDIVU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 //
 // DMULT
 //
-// TODO: Add a version that works on MSVC.
-//
 int VR4300_DMULT(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  uint64_t lo, hi;
+  int64_t lo, hi;
 
 #if defined(__GNUC__) && defined(__x86_64__)
-  __uint128_t rsx = (int64_t) rs;
-  __uint128_t rtx = (int64_t) rt;
+  __uint128_t rsx = (uint64_t) rs;
+  __uint128_t rtx = (uint64_t) rt;
   __uint128_t result;
 
   result = rsx * rtx;
 
   lo = result;
   hi = result >> 64;
+#else
+  int64_t hi_prod, mid_prods, lo_prod;
+  int64_t rshi = (int32_t) (rs >> 32);
+  int64_t rthi = (int32_t) (rt >> 32);
+  int64_t rslo = (uint32_t) rs;
+  int64_t rtlo = (uint32_t) rt;
+
+  mid_prods = (rshi * rtlo) + (rslo * rthi);
+  lo_prod = (rslo * rtlo);
+  hi_prod = (rshi * rthi);
+
+  mid_prods += lo_prod >> 32;
+  hi = hi_prod + (mid_prods >> 32);
+  lo = (uint32_t) lo_prod + (mid_prods << 32);
 #endif
 
   // TODO: Delay the output a few cycles.
@@ -608,6 +620,20 @@ int VR4300_DMULTU(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   lo = result;
   hi = result >> 64;
+#else
+  uint64_t hi_prod, mid_prods, lo_prod;
+  uint64_t rshi = (int32_t) (rs >> 32);
+  uint64_t rthi = (int32_t) (rt >> 32);
+  uint64_t rslo = (uint32_t) rs;
+  uint64_t rtlo = (uint32_t) rt;
+
+  mid_prods = (rshi * rtlo) + (rslo * rthi);
+  lo_prod = (rslo * rtlo);
+  hi_prod = (rshi * rthi);
+
+  mid_prods += lo_prod >> 32;
+  hi = hi_prod + (mid_prods >> 32);
+  lo = (uint32_t) lo_prod + (mid_prods << 32);
 #endif
 
   // TODO: Delay the output a few cycles.
