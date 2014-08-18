@@ -10,7 +10,7 @@
 
 #include "common.h"
 #include "decoder.h"
-#include "fpu.h"
+#include "fpu/fpu.h"
 #include "vr4300/cp1.h"
 #include "vr4300/cpu.h"
 

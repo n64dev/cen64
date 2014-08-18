@@ -11,7 +11,7 @@
 #ifndef __vr4300_cp1_h__
 #define __vr4300_cp1_h__
 #include "common.h"
-#include "fpu.h"
+#include "fpu/fpu.h"
 
 struct vr4300;
 

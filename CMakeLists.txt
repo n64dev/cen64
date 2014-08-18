@@ -33,11 +33,11 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
     endif (NOT NATIVE_BUILD)
 
-    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/x86_64)
+    include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
   endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
 
   if ("${GCC_MACHINE}" STREQUAL "arm")
-    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/arm)
+    include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
   endif ("${GCC_MACHINE}" STREQUAL "arm")
 
   # Set architecture-independent flags.
@@ -84,11 +84,11 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
     endif (NOT NATIVE_BUILD)
 
-    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/x86_64)
+    include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
   endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
 
   if ("${GCC_MACHINE}" STREQUAL "arm")
-    include_directories(${PROJECT_SOURCE_DIR}/os/unix/fpu/arm)
+    include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
   endif ("${GCC_MACHINE}" STREQUAL "arm")
 
   # Set architecture-independent flags.
@@ -106,8 +106,8 @@ endif ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 if (MSVC)
   enable_language(ASM_MASM) # Are you kidding me? Really?
 
-  file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/fpu/x86_64/*.asm)
-  include_directories(${PROJECT_SOURCE_DIR}/os/windows/fpu/x86_64)
+  file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/x86_64/fpu/*.asm)
+  include_directories(${PROJECT_SOURCE_DIR}/os/windows/x86_64)
 endif (MSVC)
 
 # Print out MMIO register accesses?
