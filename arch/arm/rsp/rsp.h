@@ -12,10 +12,12 @@
 #include "common.h"
 #include <arm_neon.h>
 
-extern const uint8_t shuffle_keys[16][16];
+typedef uint16x8_t rsp_vect_t;
 
 // Loads and shuffles a 16x8 vector according to element.
-static inline uint16x8_t load_and_shuffle_operand(
+extern const uint8_t shuffle_keys[16][16];
+
+static inline uint16x8_t rsp_vect_load_and_shuffle_operand(
   const uint8_t *src, unsigned element) {
   const uint8x16_t keys = vld1q_u8(shuffle_keys[element]);
   const uint8x8x2_t packed_operand = vld2_u8(src);
@@ -28,14 +30,21 @@ static inline uint16x8_t load_and_shuffle_operand(
 }
 
 // Loads a vector without shuffling its elements.
-static inline uint16x8_t load_unshuffled_operand(const uint8_t *src) {
+static inline uint16x8_t rsp_vect_load_unshuffled_operand(const uint8_t *src) {
   return vreinterpretq_u16_u8(vld1q_u8(src));
 }
 
 // Writes an operand back to memory.
-static inline void write_operand(uint8_t *dest, uint16x8_t src) {
+static inline void rsp_vect_write_operand(uint8_t *dest, uint16x8_t src) {
   vst1q_u8(dest, vreinterpretq_u8_u16(src));
 }
+
+#include "arch/arm/rsp/vand.h"
+#include "arch/arm/rsp/vnand.h"
+#include "arch/arm/rsp/vnor.h"
+#include "arch/arm/rsp/vor.h"
+#include "arch/arm/rsp/vnxor.h"
+#include "arch/arm/rsp/vxor.h"
 
 #endif
 
