@@ -29,6 +29,8 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   string(REGEX MATCH "([a-zA-Z0-9])+" GCC_MACHINE ${GCC_MACHINE})
 
   if ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+    set(CEN64_ARCH_DIR "x86_64")
+
     if (NOT NATIVE_BUILD)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
     endif (NOT NATIVE_BUILD)
@@ -37,6 +39,9 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
 
   if ("${GCC_MACHINE}" STREQUAL "arm")
+    set(CEN64_ARCH_DIR "arm")
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
   endif ("${GCC_MACHINE}" STREQUAL "arm")
 
@@ -80,6 +85,8 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
   string(REGEX MATCH "([a-zA-Z0-9])+" CLANG_MACHINE ${CLANG_MACHINE})
 
   if ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+    set(CEN64_ARCH_DIR "x86_64")
+
     if (NOT NATIVE_BUILD)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
     endif (NOT NATIVE_BUILD)
@@ -88,6 +95,9 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
   endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
 
   if ("${GCC_MACHINE}" STREQUAL "arm")
+    set(CEN64_ARCH_DIR "arm")
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
   endif ("${GCC_MACHINE}" STREQUAL "arm")
 
@@ -105,6 +115,8 @@ endif ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 # If using MSVC, configure it accordingly.
 if (MSVC)
   enable_language(ASM_MASM) # Are you kidding me? Really?
+
+  set(CEN64_ARCH_DIR "x86_64")
 
   file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/x86_64/fpu/*.asm)
   include_directories(${PROJECT_SOURCE_DIR}/os/windows/x86_64)
@@ -137,6 +149,8 @@ file(GLOB RDP_SOURCES ${PROJECT_SOURCE_DIR}/rdp/*.c)
 file(GLOB RSP_SOURCES ${PROJECT_SOURCE_DIR}/rsp/*.c)
 file(GLOB VI_SOURCES ${PROJECT_SOURCE_DIR}/vi/*.c)
 file(GLOB VR4300_SOURCES ${PROJECT_SOURCE_DIR}/vr4300/*.c)
+file(GLOB ARCH_FPU_SOURCES arch/${CEN64_ARCH_DIR}/fpu/*.c)
+file(GLOB ARCH_RSP_SOURCES arch/${CEN64_ARCH_DIR}/rsp/*.c)
 
 #
 # Glob all the files together.
@@ -164,7 +178,7 @@ endif (DEFINED WIN32)
 add_executable(cen64 ${EXTRA_OS_EXE} ${ASM_SOURCES} ${OS_SOURCES}
   ${COMMON_SOURCES} ${CEN64_SOURCES} ${AI_SOURCES} ${BUS_SOURCES} ${PI_SOURCES}
   ${RDP_SOURCES} ${RSP_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
-  ${VR4300_SOURCES})
+  ${VR4300_SOURCES} ${ARCH_FPU_SOURCES} ${ARCH_RSP_SOURCES})
 
 target_link_libraries(cen64 ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY})
 
