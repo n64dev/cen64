@@ -8,7 +8,7 @@
 #include "common.h"
 #include <emmintrin.h>
 
-static inline uint16x8_t rsp_vand(__m128i vs, __m128i vt) {
+static inline __m128i rsp_vand(__m128i vs, __m128i vt) {
   return _mm_and_si128(vs, vt);
 }
 
