@@ -170,7 +170,7 @@ endif (DEFINED UNIX)
 
 if (DEFINED WIN32)
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
-  set(EXTRA_OS_LIBS ws2_32 Opengl32)
+  set(EXTRA_OS_LIBS ws2_32 Winmm Opengl32)
   set(EXTRA_OS_EXE WIN32)
 endif (DEFINED WIN32)
 

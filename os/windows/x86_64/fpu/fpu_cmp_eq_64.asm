@@ -1,9 +1,9 @@
-#
-# os/windows/x86_64/fpu/fpu_cmp_eq_64.asm
-#
-# This file is subject to the terms and conditions defined in
-# 'LICENSE', which is part of this source code package.
-#
+;
+; os/windows/x86_64/fpu/fpu_cmp_eq_64.asm
+;
+; This file is subject to the terms and conditions defined in
+; 'LICENSE', which is part of this source code package.
+;
 
 .code
 fpu_cmp_eq_64 proc
