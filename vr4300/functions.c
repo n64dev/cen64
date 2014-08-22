@@ -920,7 +920,7 @@ int VR4300_LDL_LDR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t address = (rs + (int16_t) iw);
+  uint64_t address = rs + (int16_t) iw;
   unsigned offset = address & 0x7;
   unsigned dest = GET_RT(iw);
   uint64_t dqm;
@@ -928,15 +928,15 @@ int VR4300_LDL_LDR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   // LDR
   if (iw >> 26 & 0x1) {
-    dqm = ~0ULL << (offset << 3);
-    size = 8;
+    address ^= offset;
+    size = offset + 1;
+    dqm = ~0ULL >> ((8 - size) << 3);
   }
 
   // LDL
   else {
-    size = offset + 1;
-    dqm = ~0ULL >> ((8 - size) << 3);
-    address ^= offset;
+    size = 8;
+    dqm = ~0ULL << (offset << 3);
   }
 
   exdc_latch->request.address = address;
@@ -944,7 +944,7 @@ int VR4300_LDL_LDR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   exdc_latch->request.postshift = 0;
   exdc_latch->request.two_words = 1;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
-  exdc_latch->request.size = 8;
+  exdc_latch->request.size = size;
 
   exdc_latch->dest = dest;
   exdc_latch->result = rt & ~dqm;
@@ -960,7 +960,7 @@ int VR4300_LWL_LWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t address = (rs + (int16_t) iw);
+  uint64_t address = rs + (int16_t) iw;
   unsigned offset = address & 0x3;
   unsigned dest = GET_RT(iw);
   uint64_t dqm;
@@ -968,7 +968,8 @@ int VR4300_LWL_LWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 
   // LWR
   if (iw >> 28 & 0x1) {
-    cen64_align(static const uint64_t forceset[], 32) = {0ULL, 0ULL, 0ULL, ~0ULL};
+    cen64_align(static const uint64_t forceset[], 32) =
+      {0ULL, 0ULL, 0ULL, ~0ULL};
 
     size = offset + 1;
     dqm = ~0U >> ((4 - size) << 3);
@@ -1278,7 +1279,7 @@ int VR4300_SWL_SWR(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint32_t iw = rfex_latch->iw;
-  uint64_t address = (rs + (int16_t) iw);
+  uint64_t address = rs + (int16_t) iw;
   unsigned offset = address & 0x3;
   uint32_t mask = ~0U;
 
