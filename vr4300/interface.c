@@ -72,7 +72,7 @@ int write_mi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
   // Change mode settings?
   if (reg == MI_INIT_MODE_REG) {
-    result = word & 0x7F;
+    result = word & 0x3FF;
 
     if (word & 0x0080)
       result &= ~MI_INIT_MODE;
