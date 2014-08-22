@@ -166,7 +166,8 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
 
   exdc_latch->dest = VR4300_REGISTER_R0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_NONE;
-  return vr4300_function_table[rfex_latch->opcode.id](vr4300, rs_reg, rt_reg);
+  return vr4300_function_table[rfex_latch->opcode.id](
+    vr4300, iw, rs_reg, rt_reg);
 }
 
 // Data cache fetch stage.

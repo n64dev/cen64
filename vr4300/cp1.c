@@ -24,11 +24,10 @@ void VR4300_INV(struct vr4300 *vr4300);
 //
 // ABS.fmt
 //
-int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_ABS(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -70,11 +69,10 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // ADD.fmt
 //
-int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_ADD(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -120,11 +118,10 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // BC1T
 // BC1TL
 //
-int VR4300_BC1(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
+int VR4300_BC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-
-  uint32_t iw = rfex_latch->iw;
   unsigned opcode = (iw >> 16) & 0x3;
 
   uint64_t offset = (uint64_t) ((int16_t) iw) << 2;
@@ -171,11 +168,10 @@ int VR4300_BC1(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.eq.fmt
 // C.seq.fmt
 //
-int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -221,11 +217,10 @@ int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.f.fmt
 // C.sf.fmt
 //
-int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -271,11 +266,10 @@ int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.ole.fmt
 // C.le.fmt
 //
-int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -321,11 +315,10 @@ int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.olt.fmt
 // C.lt.fmt
 //
-int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -371,11 +364,10 @@ int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.ueq.fmt
 // C.ngl.fmt
 //
-int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -421,11 +413,10 @@ int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.ule.fmt
 // C.ngt.fmt
 //
-int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -471,11 +462,10 @@ int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.ult.fmt
 // C.nge.fmt
 //
-int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -521,11 +511,10 @@ int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 // C.un.fmt
 // C.ngle.fmt
 //
-int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
@@ -570,11 +559,10 @@ int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // CEIL.l.fmt
 //
-int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -629,11 +617,10 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // CEIL.w.fmt
 //
-int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -688,11 +675,10 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // CFC1
 //
-int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CFC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RT(iw);
   unsigned src = GET_RD(iw);
   uint64_t result;
@@ -735,11 +721,9 @@ int VR4300_CFC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 // XXX: Raise exception on cause/enable.
 // XXX: In such cases, ensure write occurs.
 //
-int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CTC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RD(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
@@ -767,11 +751,9 @@ int VR4300_CTC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 //
 // CVT.d.fmt
 //
-int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_CVT_D(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -815,11 +797,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // CVT.l.fmt
 //
-int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_CVT_L(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -862,11 +842,9 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // CVT.s.fmt
 //
-int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_CVT_S(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -910,11 +888,9 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // CVT.w.fmt
 //
-int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_CVT_W(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -957,11 +933,9 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // DIV.fmt
 //
-int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_DIV(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1004,11 +978,9 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // FLOOR.l.fmt
 //
-int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1063,11 +1035,9 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // FLOOR.w.fmt
 //
-int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1126,11 +1096,9 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_LDC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_FT(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
@@ -1155,12 +1123,10 @@ int VR4300_LDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t rt) {
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_LWC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
-  uint32_t iw = rfex_latch->iw;
   uint64_t address = (rs + (int16_t) iw);
   unsigned dest = GET_FT(iw);
 
@@ -1196,11 +1162,9 @@ int VR4300_LWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
 //
 // MUL.fmt
 //
-int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_MUL(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1243,13 +1207,11 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // MFC1
 //
-int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt)) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_MFC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t unused(rt)) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint64_t result;
-  uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_RT(iw);
+  uint64_t result;
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1268,11 +1230,9 @@ int VR4300_MFC1(struct vr4300 *vr4300, uint64_t fs, uint64_t unused(rt)) {
 //
 // MOV.fmt
 //
-int VR4300_CP1_MOV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_MOV(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_FD(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
@@ -1288,13 +1248,11 @@ int VR4300_CP1_MOV(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // MTC1
 //
-int VR4300_MTC1(struct vr4300 *vr4300, uint64_t fs, uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_MTC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
   uint64_t result = (int32_t) rt;
-  uint32_t iw = rfex_latch->iw;
   unsigned dest = GET_FS(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
@@ -1318,11 +1276,9 @@ int VR4300_MTC1(struct vr4300 *vr4300, uint64_t fs, uint64_t rt) {
 //
 // NEG.fmt
 //
-int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_NEG(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1364,11 +1320,9 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // ROUND.l.fmt
 //
-int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1423,11 +1377,9 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // ROUND.w.fmt
 //
-int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1484,11 +1436,9 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_SDC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
 
   if (!vr4300_cp1_usable(vr4300)) {
     VR4300_CPU(vr4300);
@@ -1507,11 +1457,9 @@ int VR4300_SDC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
 //
 // SQRT.fmt
 //
-int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_SQRT(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1553,11 +1501,9 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // SUB.fmt
 //
-int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_SUB(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1602,12 +1548,10 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_SWC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
-  uint32_t iw = rfex_latch->iw;
   unsigned ft_reg = GET_FT(iw);
 
   if (!vr4300_cp1_usable(vr4300)) {
@@ -1630,11 +1574,9 @@ int VR4300_SWC1(struct vr4300 *vr4300, uint64_t rs, uint64_t ft) {
 //
 // TRUNC.l.fmt
 //
-int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
@@ -1677,11 +1619,9 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
 //
 // TRUNC.w.fmt
 //
-int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint64_t fs, uint64_t ft) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;

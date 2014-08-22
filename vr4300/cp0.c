@@ -15,7 +15,8 @@
 //
 // ERET
 //
-int VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
+int VR4300_ERET(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
@@ -50,11 +51,9 @@ int VR4300_ERET(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 // MFC0
 // TODO/FIXME: Combine with MFC{1,2}?
 //
-int VR4300_MFC0(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+int VR4300_MFC0(struct vr4300 *vr4300, 
+  uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint32_t iw = rfex_latch->iw;
   unsigned src = GET_RD(iw) + 32;
   unsigned dest = GET_RT(iw);
 
@@ -66,10 +65,8 @@ int VR4300_MFC0(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
 //
 // MTC0
 //
-int VR4300_MTC0(struct vr4300 *vr4300, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-
-  uint32_t iw = rfex_latch->iw;
+int VR4300_MTC0(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
   unsigned dest = GET_RD(iw) + 32;
 
   if (dest == VR4300_CP0_REGISTER_COMPARE)
