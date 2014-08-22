@@ -63,6 +63,15 @@ static void validate_line(struct vr4300_dcache_line *line, uint32_t tag) {
   line->metadata = tag | 0x1;
 }
 
+// Sets the physical tag associated with the line, marks as dirty.
+void vr4300_dcache_create_dirty_exclusive(
+  struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr) {
+  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
+
+  set_tag(line, paddr & ~0xF);
+  set_dirty(line);
+}
+
 // Fills an instruction cache line with data.
 void vr4300_dcache_fill(struct vr4300_dcache *dcache,
   uint64_t vaddr, uint32_t paddr, const void *data) {
@@ -111,14 +120,6 @@ struct vr4300_dcache_line* vr4300_dcache_probe(
 // Marks the line as dirty.
 void vr4300_dcache_set_dirty(struct vr4300_dcache_line *line) {
   set_dirty(line);
-}
-
-// Sets the physical tag associated with the line.
-void vr4300_dcache_set_tag(struct vr4300_dcache *dcache,
-  uint64_t vaddr, uint32_t tag) {
-  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
-
-  set_tag(line, tag);
 }
 
 // Returns the line if it's dirty and valid.
