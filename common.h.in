@@ -149,5 +149,10 @@ void cen64_return(struct bus_controller *bus)
 #cmakedefine VR4300_BUSY_WAIT_DETECTION
 
 #include "common/debug.h"
+
+// Common/shared LUT with one-hot semantics.
+// Returns index (0-based) of hot bit, or -1.
+extern const int8_t cen64_one_hot_lut[256];
+
 #endif
 

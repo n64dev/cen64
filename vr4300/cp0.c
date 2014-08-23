@@ -9,8 +9,48 @@
 //
 
 #include "common.h"
+#include "tlb/tlb.h"
 #include "vr4300/cp0.h"
 #include "vr4300/cpu.h"
+
+static const uint64_t vr4300_cp0_reg_masks[32] = {
+  0x000000008000003FULL, //  0: VR4300_CP0_REGISTER_INDEX
+  0x000000000000003FULL, //  1: VR4300_CP0_REGISTER_RANDOM
+  0x000000007FFFFFFFULL, //  2: VR4300_CP0_REGISTER_ENTRYLO0
+  0x000000007FFFFFFFULL, //  3: VR4300_CP0_REGISTER_ENTRYLO1
+  0xFFFFFFFFFFFFFFF0ULL, //  4: VR4300_CP0_REGISTER_CONTEXT
+  0x0000000001FFE000ULL, //  5: VR4300_CP0_REGISTER_PAGEMASK
+  0xFFFFFFFFFFFFFFFFULL, //  6: VR4300_CP0_REGISTER_WIRED
+  0x000000000000003FULL, //  7:
+  0xFFFFFFFFFFFFFFFFULL, //  8: VR4300_CP0_REGISTER_BADVADDR
+  0x00000000FFFFFFFFULL, //  9: VR4300_CP0_REGISTER_COUNT
+  0xC00000FFFFFFE0FFULL, // 10: VR4300_CP0_REGISTER_ENTRYHI
+  0x00000000FFFFFFFFULL, // 11: VR4300_CP0_REGISTER_COMPARE
+  0x00000000FFFFFFFFULL, // 12: VR4300_CP0_REGISTER_STATUS
+  0x00000000B000FFFFULL, // 13: VR4300_CP0_REGISTER_CAUSE
+  0xFFFFFFFFFFFFFFFFULL, // 14: VR4300_CP0_REGISTER_EPC
+  0x000000000000FFFFULL, // 15; VR4300_CP0_REGISTER_PRID
+  0x000000007FFFFFFFULL, // 16: VR4300_CP0_REGISTER_CONFIG
+  0x00000000FFFFFFFFULL, // 17: VR4300_CP0_REGISTER_LLADDR
+  0x00000000FFFFFFFBULL, // 18: VR4300_CP0_REGISTER_WATCHLO
+  0x000000000000000FULL, // 19: VR4300_CP0_REGISTER_WATCHHI
+  0xFFFFFFFFFFFFFFFFULL, // 20: VR4300_CP0_REGISTER_XCONTEXT
+  0xFFFFFFFFFFFFFFFFULL, // 21:
+  0xFFFFFFFFFFFFFFFFULL, // 22:
+  0xFFFFFFFFFFFFFFFFULL, // 23:
+  0xFFFFFFFFFFFFFFFFULL, // 24:
+  0xFFFFFFFFFFFFFFFFULL, // 25:
+  0x0000000000000000ULL, // 26: VR4300_CP0_REGISTER_PARITYERROR
+  0x0000000000000000ULL, // 27: VR4300_CP0_REGISTER_CACHEERR
+  0x000000000FFFFFC0ULL, // 28: VR4300_CP0_REGISTER_TAGLO
+  0x0000000000000000ULL, // 29: VR4300_CP0_REGISTER_TAGHI
+  0xFFFFFFFFFFFFFFFFULL, // 30: VR4300_CP0_REGISTER_ERROREPC
+  0xFFFFFFFFFFFFFFFFULL, // 31
+};
+
+static inline uint64_t mask_reg(unsigned reg, uint64_t data) {
+  return vr4300_cp0_reg_masks[reg] & data;
+};
 
 //
 // ERET
@@ -49,15 +89,14 @@ int VR4300_ERET(struct vr4300 *vr4300,
 
 //
 // MFC0
-// TODO/FIXME: Combine with MFC{1,2}?
 //
 int VR4300_MFC0(struct vr4300 *vr4300, 
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  unsigned src = GET_RD(iw) + 32;
   unsigned dest = GET_RT(iw);
+  unsigned src = GET_RD(iw);
 
-  exdc_latch->result = (int32_t) vr4300->regs[src];
+  exdc_latch->result = mask_reg(src, vr4300->regs[32 + src]);
   exdc_latch->dest = dest;
   return 0;
 }
@@ -67,20 +106,45 @@ int VR4300_MFC0(struct vr4300 *vr4300,
 //
 int VR4300_MTC0(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
-  unsigned dest = GET_RD(iw) + 32;
+  unsigned dest = 32 + GET_RD(iw);
 
   if (dest == VR4300_CP0_REGISTER_COMPARE)
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
 
-  // TODO/FIXME: Sign extend, or...?
-  // Would make sense for EPC, etc.
-  //exdc_latch->result = (int32_t) rt;
-  //exdc_latch->dest = dest;
-  vr4300->regs[dest] = (int32_t) rt;
+  vr4300->regs[dest] = rt;
+  return 0;
+}
+
+//
+// TLBP
+//
+int VR4300_TLBP(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+  uint64_t entry_hi = mask_reg(10, vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI]);
+
+  if (tlb_probe(&vr4300->tlb, entry_hi, entry_hi & 0xFF) != -1)
+    vr4300->regs[VR4300_CP0_REGISTER_INDEX] |= 0x80000000;
+
+  return 0;
+}
+
+//
+// TLBWI
+//
+int VR4300_TLBWI(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+  uint64_t entry_hi = mask_reg(10, vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI]);
+  uint64_t entry_lo_0 = mask_reg(2, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO0]);
+  uint64_t entry_lo_1 = mask_reg(3, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO1]);
+  uint32_t page_mask = mask_reg(5, vr4300->regs[VR4300_CP0_REGISTER_PAGEMASK]);
+  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_INDEX] & 0x3F;
+
+  tlb_write(&vr4300->tlb, index, entry_hi, entry_lo_0, entry_lo_1, page_mask);
   return 0;
 }
 
 // Initializes the coprocessor.
 void vr4300_cp0_init(struct vr4300 *vr4300) {
+  tlb_init(&vr4300->tlb);
 }
 
