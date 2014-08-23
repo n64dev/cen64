@@ -1246,6 +1246,7 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
 int VR4300_MFC1(struct vr4300 *vr4300,
   uint32_t iw, uint64_t fs, uint64_t unused(rt)) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   unsigned dest = GET_RT(iw);
   uint64_t result;
 
@@ -1254,9 +1255,14 @@ int VR4300_MFC1(struct vr4300 *vr4300,
     return 1;
   }
 
-  // TODO/FIXME: XXX
-  assert(!(GET_FS(iw) & 0x1));
-  result = (int32_t) fs;
+  if (status & 0x04000000)
+    result = (int32_t) fs;
+
+  else {
+    result = (GET_FS(iw) & 0x1)
+      ? (int32_t) (fs >> 32)
+      : (int32_t) (fs);
+  }
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
