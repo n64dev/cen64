@@ -56,7 +56,7 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
     : 0x00000000;
 
   // Look up the segment that we're in.
-  if ((pc - segment->start) > segment->length) {
+  if ((pc - segment->start) >= segment->length) {
     uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
     if (unlikely((segment = get_segment(pc, cp0_status)) == NULL)) {
@@ -204,7 +204,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     struct vr4300_dcache_line *line;
     uint32_t paddr;
 
-    if ((vaddr - segment->start) > segment->length) {
+    if ((vaddr - segment->start) >= segment->length) {
       uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
       if (unlikely((segment = get_segment(vaddr, cp0_status)) == NULL)) {
