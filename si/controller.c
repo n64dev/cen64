@@ -36,6 +36,14 @@ int si_init(struct si_controller *si,
 
   si->ram[0x26] = 0x3F;
   si->ram[0x27] = 0x3F;
+
+  // Specify 8MiB RDRAM for 6102/6105 carts.
+  if (si->ram[0x26] == 0x3F && si->ram[0x27] == 0x3F)
+    bus_write_word(si->bus, 0x318, 0x800000, ~0U);
+
+  else if (si->ram[0x26] == 0x91 && si->ram[0x27] == 0x3F)
+    bus_write_word(si->bus, 0x3F0, 0x800000, ~0U);
+
   return 0;
 }
 
