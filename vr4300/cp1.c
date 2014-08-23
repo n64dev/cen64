@@ -976,6 +976,42 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300,
 }
 
 //
+// DMFC1
+//
+int VR4300_DMFC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t unused(rt)) {
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  unsigned dest = GET_RT(iw);
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  exdc_latch->result = fs;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
+// DMTC1
+//
+int VR4300_DMTC1(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t fs, uint64_t rt) {
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  unsigned dest = GET_FS(iw);
+
+  if (!vr4300_cp1_usable(vr4300)) {
+    VR4300_CPU(vr4300);
+    return 1;
+  }
+
+  exdc_latch->result = rt;
+  exdc_latch->dest = dest;
+  return 0;
+}
+
+//
 // FLOOR.l.fmt
 //
 int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,

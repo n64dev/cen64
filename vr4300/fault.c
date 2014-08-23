@@ -197,7 +197,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
 // DCM: Data cache miss interlock.
 void VR4300_DCM(struct vr4300 *vr4300) {
-  vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 6);
+  vr4300_common_interlocks(vr4300, 0, 6);
 }
 
 // IADE: Instruction address error exception.
