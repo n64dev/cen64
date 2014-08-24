@@ -92,7 +92,9 @@ struct vr4300 {
   struct vr4300_pipeline pipeline;
 
   // Align the TLB to a 16-byte boundary for vectorization.
-  uint8_t padding_for_tlb[(16 - (sizeof(struct vr4300_pipeline) % 16)) % 16];
+  // TODO: Handle the fact that MSVC doesn't like 0-sized arrays.
+  //uint8_t padding_for_tlb[(16 - (sizeof(struct vr4300_pipeline) % 16)) % 16];
+  uint8_t padding_for_tlb[16 - (sizeof(struct vr4300_pipeline) % 16)];
   struct vr4300_cp0 cp0;
   struct vr4300_cp1 cp1;
 
