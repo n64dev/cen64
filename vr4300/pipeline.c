@@ -84,6 +84,8 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   rfex_latch->common = icrf_latch->common;
 
   // If we're in a mapped region, do a TLB translation.
+  paddr = vaddr - segment->offset;
+
   if (segment->mapped) {
     unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
     int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
@@ -97,9 +99,6 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
     else
       abort();
   }
-
-  else
-    paddr = icrf_latch->common.pc - segment->offset;
 
   // If we're in a cached region and miss, it's a ICB.
   if (!segment->cached || (line = vr4300_icache_probe(
@@ -232,6 +231,8 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     // If we're in a mapped region, do a TLB translation.
+    paddr = vaddr - segment->offset;
+
     if (segment->mapped) {
       unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
       int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
@@ -245,9 +246,6 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       else
         abort();
     }
-
-    else
-      paddr = vaddr - segment->offset;
 
     // If we're in a cached region and miss, it's a DCM.
     if (!segment->cached || (line = vr4300_dcache_probe
