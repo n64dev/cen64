@@ -49,7 +49,7 @@ struct vr4300_icrf_latch {
 struct vr4300_rfex_latch {
   struct vr4300_latch common;
   struct vr4300_opcode opcode;
-  uint32_t iw, iw_mask;
+  uint32_t iw, iw_mask, paddr;
 };
 
 struct vr4300_exdc_latch {

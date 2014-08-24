@@ -82,13 +82,23 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
 
   rfex_latch->common = icrf_latch->common;
 
-  // TODO: Implement the TLB.
-  assert(segment->mapped == 0);
-  paddr = icrf_latch->common.pc - segment->offset;
+  // If we're in a mapped region, do a TLB translation.
+  if (segment->mapped) {
+    unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
+    int index = tlb_probe(&vr4300->cp0.tlb, icrf_latch->common.pc, asid);
+
+    assert(index >= 0);
+    paddr = (vr4300->cp0.pfn[index][icrf_latch->common.pc >> 12 & 0x1]) |
+      (icrf_latch->common.pc & 0xFFF);
+  }
+
+  else
+    paddr = icrf_latch->common.pc - segment->offset;
 
   // If we're in a cached region and miss, it's a ICB.
   if (!segment->cached || (line = vr4300_icache_probe(
     &vr4300->icache, icrf_latch->common.pc, paddr)) == NULL) {
+    rfex_latch->paddr = paddr;
     VR4300_ICB(vr4300);
     return 1;
   }
@@ -215,10 +225,20 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       exdc_latch->segment = segment;
     }
 
-    // Compute the physical address.
-    // TODO: Implement the TLB.
-    //assert(segment->mapped == 0);
-    paddr = vaddr - segment->offset;
+    // If we're in a mapped region, do a TLB translation.
+    if (segment->mapped) {
+      unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
+      int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
+
+      if (index >= 0)
+        paddr = (vr4300->cp0.pfn[index][vaddr >> 12 & 0x1]) | (vaddr & 0xFFF);
+
+      else
+        paddr = vaddr;
+    }
+
+    else
+      paddr = vaddr - segment->offset;
 
     // If we're in a cached region and miss, it's a DCM.
     if (!segment->cached || (line = vr4300_dcache_probe

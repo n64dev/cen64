@@ -210,20 +210,20 @@ void VR4300_ICB(unused(struct vr4300 *vr4300)) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct segment *segment = icrf_latch->segment;
-  uint64_t vaddr = icrf_latch->common.pc - segment->offset;
+  uint64_t vaddr = icrf_latch->common.pc;
+  uint32_t paddr = rfex_latch->paddr;
   unsigned delay;
 
   if (!segment->cached) {
-    bus_read_word(vr4300->bus, vaddr, &rfex_latch->iw);
+    bus_read_word(vr4300->bus, paddr, &rfex_latch->iw);
     delay = MEMORY_WORD_DELAY;
   }
 
   else {
     uint32_t line[8];
-    uint32_t paddr;
     unsigned i;
 
-    paddr = vaddr & ~0x1C;
+    paddr &= ~0x1C;
 
     // Fill the cache line.
     for (i = 0; i < 8; i ++)

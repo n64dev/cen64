@@ -45,10 +45,10 @@ int tlb_probe(struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
     __m128i vpn_h = _mm_load_si128((__m128i*) (tlb->vpn2 + i + 4));
 
     // Check for matching VPNs.
-    check_l = _mm_and_si128(vpn_l, page_mask_l);
-    check_l = _mm_cmpeq_epi32(check_l, vpn);
-    check_h = _mm_and_si128(vpn_h, page_mask_h);
-    check_h = _mm_cmpeq_epi32(check_h, vpn);
+    check_l = _mm_and_si128(vpn, page_mask_l);
+    check_l = _mm_cmpeq_epi32(check_l, vpn_l);
+    check_h = _mm_and_si128(vpn, page_mask_h);
+    check_h = _mm_cmpeq_epi32(check_h, vpn_h);
     vpn_check = _mm_packs_epi32(check_l, check_h);
     vpn_check = _mm_packs_epi16(vpn_check, vpn_check);
 
@@ -70,7 +70,7 @@ int tlb_probe(struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
 // Reads data from the specified TLB index.
 int tlb_read(struct cen64_tlb *tlb, unsigned index,
   uint64_t *entry_hi, uint32_t *page_mask) {
-  *page_mask = tlb->page_mask[index] << 13;
+  *page_mask = (~tlb->page_mask[index] & 0xFFF) << 13;
 
   *entry_hi =
     (tlb->vpn2[index] & 0x18000000LLU << 35) |
@@ -84,7 +84,7 @@ int tlb_read(struct cen64_tlb *tlb, unsigned index,
 // Writes an entry to the TLB.
 int tlb_write(struct cen64_tlb *tlb, unsigned index, uint64_t entry_hi,
   uint64_t entry_lo_0, uint64_t entry_lo_1, uint32_t page_mask) {
-  tlb->page_mask[index] = page_mask >> 13;
+  tlb->page_mask[index] = ~(page_mask >> 13);
 
   tlb->vpn2[index] =
     (entry_hi >> 35 & 0x18000000U) |
