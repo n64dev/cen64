@@ -92,11 +92,6 @@ void VR4300_CPU(unused(struct vr4300 *vr4300)) {
     }
   }
 
-  else assert(0);
-
-  // TODO/FIXME: Check for XTLB/TLB miss exceptions.
-  // For now, we're just hard-coding the vector offset.
-
   // Prepare pipeline for restart.
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
   vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0xFF) | (1 << 28) | 0x2C;
@@ -259,11 +254,6 @@ void VR4300_INTR(unused(struct vr4300 *vr4300)) {
       epc = common->pc;
     }
   }
-
-  else assert(0);
-
-  // TODO/FIXME: Check for XTLB/TLB miss exceptions.
-  // For now, we're just hard-coding the vector offset.
 
   // Prepare pipeline for restart.
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
