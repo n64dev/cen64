@@ -163,16 +163,17 @@ int VR4300_TLBR(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   unsigned index = vr4300->regs[VR4300_CP0_REGISTER_INDEX] & 0x3F;
   uint64_t entry_hi;
-  uint32_t page_mask;
 
+  uint32_t page_mask = (vr4300->cp0.page_mask[index] << 1) & 0x1FFE000U;
   uint32_t pfn0 = vr4300->cp0.pfn[index][0];
   uint32_t pfn1 = vr4300->cp0.pfn[index][1];
   uint8_t state0 = vr4300->cp0.state[index][0];
   uint8_t state1 = vr4300->cp0.state[index][1];
 
-  tlb_read(&vr4300->cp0.tlb, index, &entry_hi, &page_mask);
+  tlb_read(&vr4300->cp0.tlb, index, &entry_hi);
   vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO0] = (pfn0 >> 6) | state0;
   vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO1] = (pfn1 >> 6) | state1;
+  vr4300->regs[VR4300_CP0_REGISTER_PAGEMASK] = page_mask;
   return 0;
 }
 
@@ -188,6 +189,8 @@ int VR4300_TLBWI(struct vr4300 *vr4300,
   unsigned index = vr4300->regs[VR4300_CP0_REGISTER_INDEX] & 0x3F;
 
   tlb_write(&vr4300->cp0.tlb, index, entry_hi, entry_lo_0, entry_lo_1, page_mask);
+
+  vr4300->cp0.page_mask[index] = (page_mask | 0x1FFF) >> 1;
   vr4300->cp0.pfn[index][0] = (entry_lo_0 << 6) & ~0xFFFU;
   vr4300->cp0.pfn[index][1] = (entry_lo_1 << 6) & ~0xFFFU;
   vr4300->cp0.state[index][0] = entry_lo_0 & 0x3F;

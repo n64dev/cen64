@@ -18,6 +18,7 @@ struct vr4300;
 struct vr4300_cp0 {
   struct cen64_tlb tlb;
 
+  uint32_t page_mask[32];
   uint32_t pfn[32][2];
   uint8_t state[32][2];
 };

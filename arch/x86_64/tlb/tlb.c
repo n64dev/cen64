@@ -20,13 +20,8 @@ void tlb_init(struct cen64_tlb *tlb) {
     tlb->vpn2[i] = ~0;
 }
 
-// Returns the page mask for a given index.
-uint32_t tlb_get_page_mask(struct cen64_tlb *tlb, unsigned index) {
-  return (~tlb->page_mask[index] & 0xFFF) << 13 | 0x1FFF;
-}
-
 // Probes the TLB for matching entry. Returns the index or -1.
-int tlb_probe(struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
+int tlb_probe(const struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
   int one_hot_idx;
   uint32_t vpn2;
   unsigned i;
@@ -73,10 +68,7 @@ int tlb_probe(struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
 }
 
 // Reads data from the specified TLB index.
-int tlb_read(struct cen64_tlb *tlb, unsigned index,
-  uint64_t *entry_hi, uint32_t *page_mask) {
-  *page_mask = (~tlb->page_mask[index] & 0xFFF) << 13;
-
+int tlb_read(const struct cen64_tlb *tlb, unsigned index, uint64_t *entry_hi) {
   *entry_hi =
     (tlb->vpn2[index] & 0x18000000LLU << 35) |
     (tlb->vpn2[index] & 0x7FFFFFFLLU << 13) |

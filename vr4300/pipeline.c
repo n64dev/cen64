@@ -78,6 +78,7 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
 
   const struct segment *segment = icrf_latch->segment;
   const struct vr4300_icache_line *line;
+  uint64_t vaddr = icrf_latch->common.pc;
   uint32_t paddr;
 
   rfex_latch->common = icrf_latch->common;
@@ -85,11 +86,16 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   // If we're in a mapped region, do a TLB translation.
   if (segment->mapped) {
     unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
-    int index = tlb_probe(&vr4300->cp0.tlb, icrf_latch->common.pc, asid);
+    int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
 
-    assert(index >= 0);
-    paddr = (vr4300->cp0.pfn[index][icrf_latch->common.pc >> 12 & 0x1]) |
-      (icrf_latch->common.pc & tlb_get_page_mask(&vr4300->cp0.tlb, index));
+    if (index >= 0) {
+      uint32_t page_mask = vr4300->cp0.page_mask[index];
+      unsigned select = ((page_mask + 1) & vaddr) == 0 ? 0 : 1;
+      paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
+    }
+
+    else
+      abort();
   }
 
   else
@@ -230,12 +236,14 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
       int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
 
-      if (index >= 0)
-        paddr = (vr4300->cp0.pfn[index][vaddr >> 12 & 0x1]) |
-          (vaddr & tlb_get_page_mask(&vr4300->cp0.tlb, index));
+      if (index >= 0) {
+        uint32_t page_mask = vr4300->cp0.page_mask[index];
+        unsigned select = ((page_mask + 1) & vaddr) == 0 ? 0 : 1;
+        paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
+      }
 
       else
-        paddr = vaddr;
+        abort();
     }
 
     else
