@@ -20,6 +20,7 @@ struct cen64_tlb {
 
 void tlb_init(struct cen64_tlb *tlb);
 
+uint32_t tlb_get_page_mask(struct cen64_tlb *tlb, unsigned index);
 int tlb_probe(struct cen64_tlb *tlb, uint64_t vpn2, uint8_t vasid);
 
 int tlb_read(struct cen64_tlb *tlb, unsigned index,

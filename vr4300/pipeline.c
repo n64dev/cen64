@@ -89,7 +89,7 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
 
     assert(index >= 0);
     paddr = (vr4300->cp0.pfn[index][icrf_latch->common.pc >> 12 & 0x1]) |
-      (icrf_latch->common.pc & 0xFFF);
+      (icrf_latch->common.pc & tlb_get_page_mask(&vr4300->cp0.tlb, index));
   }
 
   else
@@ -231,7 +231,8 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
 
       if (index >= 0)
-        paddr = (vr4300->cp0.pfn[index][vaddr >> 12 & 0x1]) | (vaddr & 0xFFF);
+        paddr = (vr4300->cp0.pfn[index][vaddr >> 12 & 0x1]) |
+          (vaddr & tlb_get_page_mask(&vr4300->cp0.tlb, index));
 
       else
         paddr = vaddr;
