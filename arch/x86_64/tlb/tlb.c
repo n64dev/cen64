@@ -67,10 +67,25 @@ int tlb_probe(struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
   return -1;
 }
 
+// Reads data from the specified TLB index.
+int tlb_read(struct cen64_tlb *tlb, unsigned index,
+  uint64_t *entry_hi, uint32_t *page_mask) {
+  *page_mask = tlb->page_mask[index] << 13;
+
+  *entry_hi =
+    (tlb->vpn2[index] & 0x18000000LLU << 35) |
+    (tlb->vpn2[index] & 0x7FFFFFFLLU << 13) |
+    (tlb->global[index] & 1 << 12) |
+    (tlb->asid[index]);
+
+  return 0;
+}
+
 // Writes an entry to the TLB.
 int tlb_write(struct cen64_tlb *tlb, unsigned index, uint64_t entry_hi,
   uint64_t entry_lo_0, uint64_t entry_lo_1, uint32_t page_mask) {
-  tlb->page_mask[index] = page_mask;
+  tlb->page_mask[index] = page_mask >> 13;
+
   tlb->vpn2[index] =
     (entry_hi >> 35 & 0x18000000U) |
     (entry_hi >> 13 & 0x7FFFFFF);

@@ -11,7 +11,6 @@
 #ifndef __vr4300_cpu_h__
 #define __vr4300_cpu_h__
 #include "common.h"
-#include "tlb/tlb.h"
 #include "vr4300/cp0.h"
 #include "vr4300/cp1.h"
 #include "vr4300/dcache.h"
@@ -94,8 +93,7 @@ struct vr4300 {
 
   // Align the TLB to a 16-byte boundary for vectorization.
   uint8_t padding_for_tlb[(16 - (sizeof(struct vr4300_pipeline) % 16)) % 16];
-  struct cen64_tlb tlb;
-
+  struct vr4300_cp0 cp0;
   struct vr4300_cp1 cp1;
 
   struct bus_controller *bus;

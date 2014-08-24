@@ -95,7 +95,7 @@ int read_pi_regs(void *opaque, uint32_t address, uint32_t *word) {
 
 // Writes a word to cartridge ROM.
 int write_cart_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
-  assert(0 && "Attempt to write to cart ROM.");
+  //assert(0 && "Attempt to write to cart ROM.");
   return 0;
 }
 

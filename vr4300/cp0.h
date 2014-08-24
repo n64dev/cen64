@@ -11,8 +11,16 @@
 #ifndef __vr4300_cp0_h__
 #define __vr4300_cp0_h__
 #include "common.h"
+#include "tlb/tlb.h"
 
 struct vr4300;
+
+struct vr4300_cp0 {
+  struct cen64_tlb tlb;
+
+  uint32_t pfn[32][2];
+  uint8_t state[32][2];
+};
 
 // Registers list.
 enum vr4300_cp0_register {
@@ -44,10 +52,13 @@ enum vr4300_cp0_register {
   NUM_VR4300_CP0_REGISTERS = 32,
 };
 
+int VR4300_DMFC0(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
+int VR4300_DMTC0(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_ERET(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_MFC0(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_MTC0(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_TLBP(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
+int VR4300_TLBR(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_TLBWI(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 
 void vr4300_cp0_init(struct vr4300 *vr4300);
