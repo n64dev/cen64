@@ -86,6 +86,7 @@ int VR4300_DMTC0(struct vr4300 *vr4300,
 int VR4300_ERET(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
 
@@ -104,17 +105,18 @@ int VR4300_ERET(struct vr4300 *vr4300,
   // Until we delay CP0 writes, we have to kill ourselves
   // to prevent squashing this instruction the next cycle.
   exdc_latch->common.fault = ~0;
-  icrf_latch->common.fault = ~0;
+  rfex_latch->common.fault = ~0;
 
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 4;
   pipeline->exception_history = 0;
   pipeline->fault_present = true;
 
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
-  pipeline->icrf_latch.segment = get_default_segment();
+
+  pipeline->icrf_latch.segment = get_default_segment(); //get_segment(icrf_latch->pc, status);
   pipeline->exdc_latch.segment = get_default_segment();
   // vr4300->llbit = 0;
-  return 0;
+  return 1;
 }
 
 //
