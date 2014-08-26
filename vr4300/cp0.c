@@ -113,7 +113,7 @@ int VR4300_ERET(struct vr4300 *vr4300,
 
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
 
-  pipeline->icrf_latch.segment = get_default_segment(); //get_segment(icrf_latch->pc, status);
+  pipeline->icrf_latch.segment = get_segment(icrf_latch->pc, status);
   pipeline->exdc_latch.segment = get_default_segment();
   // vr4300->llbit = 0;
   return 1;
@@ -138,10 +138,17 @@ int VR4300_MFC0(struct vr4300 *vr4300,
 //
 int VR4300_MTC0(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = 32 + GET_RD(iw);
 
   if (dest == VR4300_CP0_REGISTER_COMPARE)
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
+
+  else if (dest == VR4300_CP0_REGISTER_STATUS) {
+    icrf_latch->segment = get_segment(icrf_latch->common.pc, rt);
+    exdc_latch->segment = get_default_segment();
+  }
 
   vr4300->regs[dest] = (int32_t) rt;
   return 0;
@@ -153,9 +160,12 @@ int VR4300_MTC0(struct vr4300 *vr4300,
 int VR4300_TLBP(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   uint64_t entry_hi = mask_reg(10, vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI]);
+  int index;
 
-  if (tlb_probe(&vr4300->cp0.tlb, entry_hi, entry_hi & 0xFF) != -1)
-    vr4300->regs[VR4300_CP0_REGISTER_INDEX] |= 0x80000000;
+  vr4300->regs[VR4300_CP0_REGISTER_INDEX] |= 0x80000000U;
+
+  if ((index = tlb_probe(&vr4300->cp0.tlb, entry_hi, entry_hi & 0xFF)) != -1)
+    vr4300->regs[VR4300_CP0_REGISTER_INDEX] = index;
 
   return 0;
 }
@@ -175,6 +185,7 @@ int VR4300_TLBR(struct vr4300 *vr4300,
   uint8_t state1 = vr4300->cp0.state[index][1];
 
   tlb_read(&vr4300->cp0.tlb, index, &entry_hi);
+  vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] = entry_hi;
   vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO0] = (pfn0 >> 6) | state0;
   vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO1] = (pfn1 >> 6) | state1;
   vr4300->regs[VR4300_CP0_REGISTER_PAGEMASK] = page_mask;
