@@ -10,6 +10,7 @@
 #include "common.h"
 #include "common/debug.h"
 #include "os/gl_window.h"
+#include "os/input.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -42,6 +43,12 @@ LRESULT CALLBACK WndProc(HWND hWnd,
   switch(message) {
     case WM_DESTROY:
       PostQuitMessage(0);
+      break;
+
+    case WM_KEYDOWN:
+      break;
+
+    case WM_KEYUP:
       break;
 
     case WM_SIZE:
@@ -250,8 +257,18 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
     if (msg.message == WM_QUIT)
       cen64_return(bus);
 
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+    else if (msg.message == WM_KEYDOWN) {
+      keyboard_press_callback(bus, msg.wParam);
+    }
+
+    else if (msg.message == WM_KEYUP) {
+      keyboard_release_callback(bus, msg.wParam);
+    }
+
+    else {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
   }
 }
 
