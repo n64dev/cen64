@@ -10,6 +10,7 @@
 #include "common.h"
 #include "common/debug.h"
 #include "os/gl_window.h"
+#include "os/input.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -133,7 +134,7 @@ int create_gl_window(struct gl_window *gl_window,
   }
 
   glx_window->attr.event_mask = ExposureMask | KeyPressMask |
-    ButtonPressMask | StructureNotifyMask;
+    KeyReleaseMask | ButtonPressMask | StructureNotifyMask;
 
   if (!(glx_window->attr.colormap = XCreateColormap(glx_window->display,
     root_window, glx_window->visual_info->visual, AllocNone))) {
@@ -384,6 +385,14 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
 
       case ConfigureNotify:
         gl_window_resize_cb(event.xconfigure.width, event.xconfigure.height);
+        break;
+
+      case KeyPress:
+        keyboard_press_callback(bus, XLookupKeysym(&event.xkey, 0));
+        break;
+
+      case KeyRelease:
+        keyboard_release_callback(bus, XLookupKeysym(&event.xkey, 0));
         break;
     }
   }

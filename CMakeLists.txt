@@ -128,12 +128,6 @@ option(DEBUG_MMIO_REGISTER_ACCESS "Print message on each MMIO register access?" 
 # Use VR4300's busy-wait-detection feature?
 option(VR4300_BUSY_WAIT_DETECTION "Detect and special case VR4300 busy wait loops?" OFF)
 
-# Configure the common header.
-configure_file(
-  "${PROJECT_SOURCE_DIR}/common.h.in"
-  "${PROJECT_BINARY_DIR}/common.h"
-)
-
 # Glob all the files together.
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
@@ -142,6 +136,7 @@ file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
 file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)
 file(GLOB COMMON_SOURCES ${PROJECT_SOURCE_DIR}/common/*.c)
 file(GLOB CEN64_SOURCES ${PROJECT_SOURCE_DIR}/*.c)
+file(GLOB OS_COMMON_SOURCES ${PROJECT_SOURCE_DIR}/os/*.c)
 file(GLOB PI_SOURCES ${PROJECT_SOURCE_DIR}/pi/*.c)
 file(GLOB RI_SOURCES ${PROJECT_SOURCE_DIR}/ri/*.c)
 file(GLOB SI_SOURCES ${PROJECT_SOURCE_DIR}/si/*.c)
@@ -158,6 +153,7 @@ file(GLOB ARCH_TLB_SOURCES arch/${CEN64_ARCH_DIR}/tlb/*.c)
 #
 if (DEFINED UNIX)
   find_package(X11 REQUIRED)
+  set(CEN64_OS_UNIX 1)
 
   if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=199309L")
@@ -170,13 +166,21 @@ if (DEFINED UNIX)
 endif (DEFINED UNIX)
 
 if (DEFINED WIN32)
+  set(CEN64_OS_WINDOWS 1)
+
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
   set(EXTRA_OS_LIBS ws2_32 Winmm Opengl32)
   set(EXTRA_OS_EXE WIN32)
 endif (DEFINED WIN32)
 
+# Configure the common header.
+configure_file(
+  "${PROJECT_SOURCE_DIR}/common.h.in"
+  "${PROJECT_BINARY_DIR}/common.h"
+)
+
 # Create the executable.
-add_executable(cen64 ${EXTRA_OS_EXE} ${ASM_SOURCES} ${OS_SOURCES}
+add_executable(cen64 ${EXTRA_OS_EXE} ${ASM_SOURCES} ${OS_SOURCES} ${OS_COMMON_SOURCES}
   ${COMMON_SOURCES} ${CEN64_SOURCES} ${AI_SOURCES} ${BUS_SOURCES} ${PI_SOURCES}
   ${RDP_SOURCES} ${RSP_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
   ${VR4300_SOURCES} ${ARCH_FPU_SOURCES} ${ARCH_RSP_SOURCES} ${ARCH_TLB_SOURCES})
