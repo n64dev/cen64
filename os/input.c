@@ -27,8 +27,8 @@ void keyboard_press_callback(struct bus_controller *bus, unsigned key) {
 
   switch (key) {
     // Analog stick.
-    case CEN64_KEY_LEFT: si->input[2] = shift_down ? 114 : 38; break;
-    case CEN64_KEY_RIGHT: si->input[2] = shift_down ? -114 : -38; break;
+    case CEN64_KEY_LEFT: si->input[2] = shift_down ? -114 : -38; break;
+    case CEN64_KEY_RIGHT: si->input[2] = shift_down ? 114 : 38; break;
     case CEN64_KEY_UP: si->input[3] = shift_down ? 114 : 38; break;
     case CEN64_KEY_DOWN: si->input[3] = shift_down ? -114 : -38; break;
 
