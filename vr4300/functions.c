@@ -410,6 +410,25 @@ int VR4300_CACHE(struct vr4300 *vr4300,
             vr4300_dcache_invalidate(line);
           break;
 
+        case 5:
+          if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr))) {
+            uint32_t bus_address;
+            uint32_t data[4];
+            unsigned i;
+
+            if (line->metadata & 0x2) {
+              bus_address = vr4300_dcache_get_tag(line);
+              memcpy(data, line->data, sizeof(data));
+
+              for (i = 0; i < 4; i++)
+                bus_write_word(vr4300->bus, bus_address + i * 4, data[i], ~0);
+            }
+
+            line->metadata &= ~0x1;
+          }
+
+          break;
+
         case 6:
           if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr))) {
             uint32_t bus_address;

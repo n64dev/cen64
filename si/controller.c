@@ -86,7 +86,7 @@ int pif_perform_command(struct si_controller *si,
     case 0x01:
       switch(channel) {
         case 0:
-          memset(recv_buf, 0, 4);
+          memcpy(recv_buf, si->input, sizeof(si->input));
           break;
 
         default:

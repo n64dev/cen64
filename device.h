@@ -24,6 +24,7 @@
 #define PIFROM_SIZE 2048
 
 struct cen64_device {
+  struct vr4300 vr4300;
   struct bus_controller bus;
 
   struct ai_controller ai;
@@ -34,7 +35,6 @@ struct cen64_device {
 
   struct rdp rdp;
   struct rsp rsp;
-  struct vr4300 vr4300;
 
   // Dynamic memory.
   uint8_t *ram;

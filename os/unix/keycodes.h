@@ -9,7 +9,7 @@
 
 #ifndef __unix_keycodes_h__
 #define __unix_keycodes_h__
-#include <X11/keydefs.h>
+#include <X11/keysym.h>
 
 // Letter keys.
 #define CEN64_KEY_A XK_a

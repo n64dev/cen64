@@ -33,6 +33,7 @@ struct si_controller {
 
   uint32_t regs[NUM_SI_REGISTERS];
   uint32_t pif_status;
+  uint8_t input[4];
 };
 
 int si_init(struct si_controller *si,
