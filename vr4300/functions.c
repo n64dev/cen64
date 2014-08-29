@@ -355,6 +355,7 @@ int VR4300_CACHE(struct vr4300 *vr4300,
       switch(op) {
         case 0:
           vr4300_icache_invalidate(&vr4300->icache, vaddr);
+          break;
 
         case 2:
           vr4300_icache_set_taglo(&vr4300->icache, vaddr,
