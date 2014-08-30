@@ -373,6 +373,7 @@ int gl_swap_buffers(const struct gl_window *window) {
 void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
   XEvent event;
+  bool released;
 
   while (XPending(glx_window->display)) {
     XNextEvent(glx_window->display, &event);
@@ -392,7 +393,24 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
         break;
 
       case KeyRelease:
-        keyboard_release_callback(bus, XLookupKeysym(&event.xkey, 0));
+        released = true;
+
+        // Detect and correct auto-repeated keys. Auto-repeated KeyEvents
+        // will be inserted immediately after the release.
+        if (XEventsQueued(glx_window->display, QueuedAfterReading)) {
+          XEvent next_event;
+
+          XPeekEvent(glx_window->display, &next_event);
+          if (next_event.type == KeyPress && next_event.xkey.time ==
+            event.xkey.time && next_event.xkey.keycode == event.xkey.keycode) {
+            XNextEvent(glx_window->display, &event);
+            released = false;
+          }
+        }
+
+        if (released)
+          keyboard_release_callback(bus, XLookupKeysym(&event.xkey, 0));
+
         break;
     }
   }
