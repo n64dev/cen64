@@ -1490,6 +1490,7 @@ int VR4300_SDC1(struct vr4300 *vr4300,
   exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0ULL;
+  exdc_latch->request.two_words = true;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 8;
 
@@ -1607,6 +1608,7 @@ int VR4300_SWC1(struct vr4300 *vr4300,
   exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
   exdc_latch->request.dqm = ~0U;
+  exdc_latch->request.two_words = false;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 4;
 

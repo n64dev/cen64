@@ -286,7 +286,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // Data cache writes.
     else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-      if (request->size > 4) {
+      if (request->two_words) {
         uint64_t data, dword, dqm;
 
         data = request->data;

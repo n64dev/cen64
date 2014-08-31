@@ -154,7 +154,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
       uint64_t data = request->data;
       uint64_t dqm = request->dqm;
 
-      if (request->size > 4) {
+      if (request->two_words) {
         bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
         paddr += 4;
       }
