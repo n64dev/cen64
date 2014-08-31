@@ -1250,6 +1250,44 @@ int VR4300_SRLV(struct vr4300 *vr4300,
 }
 
 //
+// SDL
+// SDR
+//
+int VR4300_SDL_SDR(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  uint64_t address = rs + (int16_t) iw;
+  unsigned offset = address & 0x7;
+  uint64_t mask = ~0ULL;
+
+  unsigned shiftamt;
+  uint64_t data;
+  uint64_t dqm;
+
+  // SDR
+  if (iw >> 26 & 0x1) {
+    shiftamt = (7 - offset) << 3;
+    data = rt << shiftamt;
+    dqm = mask << shiftamt;
+  }
+
+  // SDL
+  else {
+    shiftamt = offset << 3;
+    data = rt >> shiftamt;
+    dqm = mask >> shiftamt;
+  }
+
+  exdc_latch->request.vaddr = address & ~0x3ULL;
+  exdc_latch->request.data = data;
+  exdc_latch->request.dqm = dqm;
+  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
+  exdc_latch->request.size = 4;
+  return 0;
+}
+
+//
 // SB
 // SH
 // SW
