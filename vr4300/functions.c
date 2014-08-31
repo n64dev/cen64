@@ -1285,7 +1285,7 @@ int VR4300_SDL_SDR(struct vr4300 *vr4300,
   exdc_latch->request.dqm = dqm;
   exdc_latch->request.two_words = true;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
-  exdc_latch->request.size = 4;
+  exdc_latch->request.size = 8;
   return 0;
 }
 
