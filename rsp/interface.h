@@ -12,6 +12,9 @@
 #define __rsp_interface_h__
 #include "common.h"
 
+void rsp_dma_read(struct rsp *rsp);
+void rsp_dma_write(struct rsp *rsp);
+
 int read_sp_mem(void *opaque, uint32_t address, uint32_t *word);
 int read_sp_regs(void *opaque, uint32_t address, uint32_t *word);
 int read_sp_regs2(void *opaque, uint32_t address, uint32_t *word);

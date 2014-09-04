@@ -12,6 +12,7 @@
   (RSP_##func)
 
 #include "common.h"
+#include "rsp/cp0.h"
 #include "rsp/cpu.h"
 #include "rsp/decoder.h"
 #include "rsp/opcodes.h"

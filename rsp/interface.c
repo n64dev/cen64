@@ -10,8 +10,82 @@
 
 #include "common.h"
 #include "bus/address.h"
+#include "bus/controller.h"
+#include "rsp/cp0.h"
 #include "rsp/cpu.h"
 #include "rsp/interface.h"
+
+// DMA into the RSP's memory space.
+void rsp_dma_read(struct rsp *rsp) {
+  uint32_t length = (rsp->regs[RSP_CP0_REGISTER_DMA_READ_LENGTH] & 0xFFF) + 1;
+  uint32_t skip = rsp->regs[RSP_CP0_REGISTER_DMA_READ_LENGTH] >> 20 & 0xFFF;
+  unsigned count = rsp->regs[RSP_CP0_REGISTER_DMA_READ_LENGTH] >> 12 & 0xFF;
+  unsigned j, i = 0;
+
+  // Force alignment.
+  length = (length + 0x7) & ~0x7;
+  rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] &= ~0x3;
+  rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] &= ~0x7;
+
+  // Check length.
+  if (((rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] & 0xFFF) + length) > 0x1000)
+    length = 0x1000 - (rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] & 0xFFF);
+
+  do {
+    uint32_t source = rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] & 0x7FFFFC;
+    uint32_t dest = rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] & 0x1FFC;
+    j = 0;
+
+    do {
+      uint32_t source_addr = (source + j) & 0x7FFFFC;
+      uint32_t dest_addr = (dest + j) & 0x1FFC;
+      uint32_t word;
+
+      bus_read_word(rsp->bus, source_addr, &word);
+      memcpy(rsp->mem + dest_addr, &word, sizeof(word));
+      j += 4;
+    } while (j < length);
+
+    rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] += length;
+    rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] += length + skip;
+  } while(++i <= count);
+}
+
+// DMA from the RSP's memory space.
+void rsp_dma_write(struct rsp *rsp) {
+  uint32_t length = (rsp->regs[RSP_CP0_REGISTER_DMA_WRITE_LENGTH] & 0xFFF) + 1;
+  uint32_t skip = rsp->regs[RSP_CP0_REGISTER_DMA_WRITE_LENGTH] >> 20 & 0xFFF;
+  unsigned count = rsp->regs[RSP_CP0_REGISTER_DMA_WRITE_LENGTH] >> 12 & 0xFF;
+  unsigned j, i = 0;
+
+  // Force alignment.
+  length = (length + 0x7) & ~0x7;
+  rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] &= ~0x3;
+  rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] &= ~0x7;
+
+  // Check length.
+  if (((rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] & 0xFFF) + length) > 0x1000)
+    length = 0x1000 - (rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] & 0xFFF);
+
+  do {
+    uint32_t dest = rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] & 0x7FFFFC;
+    uint32_t source = rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] & 0x1FFC;
+    j = 0;
+
+    do {
+      uint32_t source_addr = (source + j) & 0x1FFC;
+      uint32_t dest_addr = (dest + j) & 0x7FFFFC;
+      uint32_t word;
+
+      memcpy(&word, rsp->mem + source_addr, sizeof(word));
+      bus_write_word(rsp->bus, dest_addr, word, ~0U);
+      j += 4;
+    } while (j < length);
+
+    rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] += length;
+    rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] += length + skip;
+  } while (++i <= count);
+}
 
 // Reads a word from the SP memory MMIO register space.
 int read_sp_mem(void *opaque, uint32_t address, uint32_t *word) {
@@ -29,7 +103,7 @@ int read_sp_regs(void *opaque, uint32_t address, uint32_t *word) {
   uint32_t offset = address - SP_REGS_BASE_ADDRESS;
   enum sp_register reg = (offset >> 2);
 
-  *word = rsp->regs[reg + SP_REGISTER_OFFSET];
+  *word = rsp_read_cp0_reg(rsp, reg);
   debug_mmio_read(sp, sp_register_mnemonics[reg], *word);
   return 0;
 }

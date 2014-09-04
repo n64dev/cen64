@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "rsp/cpu.h"
+#include "rsp/cp0.h"
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 const char *sp_register_mnemonics[NUM_SP_REGISTERS] = {
@@ -28,7 +29,7 @@ static void rsp_connect_bus(struct rsp *rsp, struct bus_controller *bus) {
 int rsp_init(struct rsp *rsp, struct bus_controller *bus) {
   rsp_connect_bus(rsp, bus);
 
-  rsp->regs[SP_REGISTER_OFFSET + SP_STATUS_REG] = 0x1;
+  rsp_cp0_init(rsp);
   return 0;
 }
 
