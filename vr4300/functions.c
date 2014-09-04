@@ -788,11 +788,13 @@ int VR4300_DSRLV(struct vr4300 *vr4300,
 //
 int VR4300_INV(struct vr4300 *vr4300,
   uint32_t iw, uint64_t unused(rs), uint64_t unused(rt)) {
+#ifndef NDEBUG
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 
   debug("Unimplemented instruction: %s [0x%.8X] @ 0x%.16llX\n",
     vr4300_opcode_mnemonics[rfex_latch->opcode.id], iw, (long long unsigned)
     rfex_latch->common.pc);
+#endif
 
   return 0;
 }

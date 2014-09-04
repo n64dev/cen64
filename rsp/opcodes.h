@@ -28,8 +28,8 @@ enum rsp_vector_opcode_id {
 };
 
 struct rsp;
-typedef int (*rsp_function)(struct rsp *,
-  uint32_t, uint64_t, uint64_t);
+typedef void (*rsp_function)(struct rsp *,
+  uint32_t, uint32_t, uint32_t);
 
 typedef int (*rsp_vector_function)(struct rsp *, uint32_t,
   unsigned, rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vd);
