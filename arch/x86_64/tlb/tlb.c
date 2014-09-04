@@ -70,9 +70,9 @@ int tlb_probe(const struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
 // Reads data from the specified TLB index.
 int tlb_read(const struct cen64_tlb *tlb, unsigned index, uint64_t *entry_hi) {
   *entry_hi =
-    (tlb->vpn2[index] & 0x18000000LLU << 35) |
-    (tlb->vpn2[index] & 0x7FFFFFFLLU << 13) |
-    (tlb->global[index] & 1 << 12) |
+    ((tlb->vpn2[index] & 0x18000000LLU) << 35) |
+    ((tlb->vpn2[index] & 0x7FFFFFFLLU) << 13) |
+    ((tlb->global[index] & 1) << 12) |
     (tlb->asid[index]);
 
   return 0;
