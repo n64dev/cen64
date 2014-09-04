@@ -8,7 +8,8 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#define VR4300_BUILD_FUNCS
+#define VR4300_BUILD_OP(op, func, flags) \
+  (VR4300_##func)
 
 #include "common.h"
 #include "bus/controller.h"
@@ -17,6 +18,7 @@
 #include "vr4300/cpu.h"
 #include "vr4300/decoder.h"
 #include "vr4300/opcodes.h"
+#include "vr4300/opcodes_priv.h"
 #include "vr4300/pipeline.h"
 #include "vr4300/segment.h"
 

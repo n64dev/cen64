@@ -9,10 +9,10 @@
 //
 
 #include "common.h"
-#include "decoder.h"
 #include "fpu/fpu.h"
 #include "vr4300/cp1.h"
 #include "vr4300/cpu.h"
+#include "vr4300/decoder.h"
 
 static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 

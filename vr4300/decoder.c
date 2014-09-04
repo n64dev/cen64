@@ -8,9 +8,13 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+#define VR4300_BUILD_OP(op, func, flags) \
+  (VR4300_OPCODE_##op), (flags)
+
 #include "common.h"
 #include "vr4300/decoder.h"
 #include "vr4300/opcodes.h"
+#include "vr4300/opcodes_priv.h"
 
 // ============================================================================
 //  Escaped opcode table: Special.
