@@ -17,9 +17,11 @@ enum rsp_opcode_id {
 #define X(op) RSP_OPCODE_##op,
 #include "rsp/opcodes.md"
   NUM_RSP_OPCODES
+#undef X
 };
 
 enum rsp_vector_opcode_id {
+#define X(op) RSP_OPCODE_##op,
 #include "rsp/vector_opcodes.md"
   NUM_RSP_VECTOR_OPCODES
 #undef X
