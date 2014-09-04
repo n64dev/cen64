@@ -136,6 +136,7 @@ option(VR4300_BUSY_WAIT_DETECTION "Detect and special case VR4300 busy wait loop
 # Glob all the files together.
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/arch/${CEN64_ARCH_DIR})
 
 file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
 file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)

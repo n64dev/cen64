@@ -20,7 +20,7 @@ enum vr4300_opcode_id {
 };
 
 struct vr4300;
-typedef int (*const vr4300_function)(struct vr4300 *,
+typedef int (*vr4300_function)(struct vr4300 *,
   uint32_t, uint64_t, uint64_t);
 
 extern const vr4300_function vr4300_function_table[NUM_VR4300_OPCODES];
