@@ -622,9 +622,9 @@ int VR4300_DMULT(struct vr4300 *vr4300,
   int64_t lo, hi;
 
 #if defined(__GNUC__) && defined(__x86_64__)
-  __uint128_t rsx = (uint64_t) rs;
-  __uint128_t rtx = (uint64_t) rt;
-  __uint128_t result;
+  __int128_t rsx = (int64_t) rs;
+  __int128_t rtx = (int64_t) rt;
+  __int128_t result;
 
   result = rsx * rtx;
 
