@@ -35,18 +35,17 @@ struct rsp_latch {
   uint32_t pc;
 };
 
-struct rsp_icrf_latch {
+struct rsp_ifrd_latch {
   struct rsp_latch common;
-  uint32_t pc;
+  uint32_t pc, iw;
 };
 
-struct rsp_rfex_latch {
+struct rsp_rdex_latch {
   struct rsp_latch common;
   struct rsp_opcode opcode;
-  uint32_t iw, iw_mask, paddr;
 };
 
-struct rsp_exdc_latch {
+struct rsp_exdf_latch {
   struct rsp_latch common;
   uint32_t result;
   uint32_t dest;
@@ -54,17 +53,17 @@ struct rsp_exdc_latch {
   struct rsp_mem_request request;
 };
 
-struct rsp_dcwb_latch {
+struct rsp_dfwb_latch {
   struct rsp_latch common;
   uint32_t result;
   uint32_t dest;
 };
 
 struct rsp_pipeline {
-  struct rsp_dcwb_latch dcwb_latch;
-  struct rsp_exdc_latch exdc_latch;
-  struct rsp_rfex_latch rfex_latch;
-  struct rsp_icrf_latch icrf_latch;
+  struct rsp_dfwb_latch dfwb_latch;
+  struct rsp_exdf_latch exdf_latch;
+  struct rsp_rdex_latch rdex_latch;
+  struct rsp_ifrd_latch ifrd_latch;
 };
 
 void rsp_pipeline_init(struct rsp_pipeline *pipeline);

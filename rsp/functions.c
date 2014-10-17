@@ -49,7 +49,7 @@ cen64_align(static const uint32_t rsp_load_sex_mask[2][4], 32) = {
 //
 void RSP_ADDIU_SUBIU(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   uint32_t mask = 0; //rsp_addsub_lut[iw & 0x1];
 
   unsigned dest;
@@ -59,8 +59,8 @@ void RSP_ADDIU_SUBIU(struct rsp *rsp,
   rt = (rt ^ mask) - mask;
   rt = rs + rt;
 
-  exdc_latch->result = rt;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rt;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -69,7 +69,7 @@ void RSP_ADDIU_SUBIU(struct rsp *rsp,
 //
 void RSP_ADDU_SUBU(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   uint32_t mask = rsp_addsub_lut[iw >> 1 & 0x1];
 
   unsigned dest;
@@ -79,8 +79,8 @@ void RSP_ADDU_SUBU(struct rsp *rsp,
   rt = (rt ^ mask) - mask;
   rd = rs + rt;
 
-  exdc_latch->result = rd;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rd;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -90,7 +90,7 @@ void RSP_ADDU_SUBU(struct rsp *rsp,
 //
 void RSP_AND_OR_XOR(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   uint32_t and_mask = rsp_bitwise_lut[iw & 0x3][0];
   uint32_t xor_mask = rsp_bitwise_lut[iw & 0x3][1];
 
@@ -100,8 +100,8 @@ void RSP_AND_OR_XOR(struct rsp *rsp,
   dest = GET_RD(iw);
   rd = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
 
-  exdc_latch->result = rd;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rd;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -111,7 +111,7 @@ void RSP_AND_OR_XOR(struct rsp *rsp,
 //
 void RSP_ANDI_ORI_XORI(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   uint32_t and_mask = rsp_bitwise_lut[iw >> 26 & 0x3][0];
   uint32_t xor_mask = rsp_bitwise_lut[iw >> 26 & 0x3][1];
 
@@ -121,8 +121,8 @@ void RSP_ANDI_ORI_XORI(struct rsp *rsp,
   rt = (uint16_t) iw;
   rt = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
 
-  exdc_latch->result = rt;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rt;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -133,8 +133,8 @@ void RSP_ANDI_ORI_XORI(struct rsp *rsp,
 //
 void RSP_BEQ_BNE(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_icrf_latch *icrf_latch = &rsp->pipeline.icrf_latch;
-  struct rsp_rfex_latch *rfex_latch = &rsp->pipeline.rfex_latch;
+  struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   uint32_t offset = (uint32_t) ((int16_t) iw) << 2;
 
   bool is_ne = iw >> 26 & 0x1;
@@ -143,7 +143,7 @@ void RSP_BEQ_BNE(struct rsp *rsp,
   if (cmp == is_ne)
     return;
 
-  icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
 }
 
 //
@@ -155,8 +155,8 @@ void RSP_BEQ_BNE(struct rsp *rsp,
 void RSP_BGEZ_BLTZ(
   struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t unused(rt)) {
-  struct rsp_icrf_latch *icrf_latch = &rsp->pipeline.icrf_latch;
-  struct rsp_rfex_latch *rfex_latch = &rsp->pipeline.rfex_latch;
+  struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   uint32_t offset = (uint32_t) ((int16_t) iw) << 2;
 
   bool is_ge = iw >> 16 & 0x1;
@@ -165,7 +165,7 @@ void RSP_BGEZ_BLTZ(
   if (cmp == is_ge)
     return;
 
-  icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
 }
 
 //
@@ -176,21 +176,21 @@ void RSP_BGEZ_BLTZ(
 //
 void RSP_BGEZAL_BLTZAL(
   struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t unused(rt)) {
-  struct rsp_icrf_latch *icrf_latch = &rsp->pipeline.icrf_latch;
-  struct rsp_rfex_latch *rfex_latch = &rsp->pipeline.rfex_latch;
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   uint32_t offset = (uint32_t) ((int16_t) iw) << 2;
 
   bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int32_t) rs < 0;
 
-  exdc_latch->result = rfex_latch->common.pc + 8;
-  exdc_latch->dest = RSP_REGISTER_RA;
+  exdf_latch->result = rdex_latch->common.pc + 8;
+  exdf_latch->dest = RSP_REGISTER_RA;
 
   if (cmp == is_ge)
     return;
 
-  icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
 }
 
 //
@@ -201,8 +201,8 @@ void RSP_BGEZAL_BLTZAL(
 //
 void RSP_BGTZ_BLEZ(
   struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t unused(rt)) {
-  struct rsp_icrf_latch *icrf_latch = &rsp->pipeline.icrf_latch;
-  struct rsp_rfex_latch *rfex_latch = &rsp->pipeline.rfex_latch;
+  struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   uint32_t offset = (uint32_t) ((int16_t) iw) << 2;
 
   bool is_gt = iw >> 26 & 0x1;
@@ -211,7 +211,7 @@ void RSP_BGTZ_BLEZ(
   if (cmp == is_gt)
     return;
 
-  icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
 }
 
 //
@@ -220,11 +220,11 @@ void RSP_BGTZ_BLEZ(
 void RSP_INV(struct rsp *rsp,
   uint32_t iw, uint32_t unused(rs), uint32_t unused(rt)) {
 #ifndef NDEBUG
-  struct rsp_rfex_latch *rfex_latch = &rsp->pipeline.rfex_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
   debug("Unimplemented instruction: %s [0x%.8X] @ 0x%.16llX\n",
-    rsp_opcode_mnemonics[rfex_latch->opcode.id], iw, (long long unsigned)
-    rfex_latch->common.pc);
+    rsp_opcode_mnemonics[rdex_latch->opcode.id], iw, (long long unsigned)
+    rdex_latch->common.pc);
 #endif
 }
 
@@ -236,18 +236,18 @@ void RSP_INV(struct rsp *rsp,
 //
 void RSP_J_JAL(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_icrf_latch *icrf_latch = &rsp->pipeline.icrf_latch;
-  struct rsp_rfex_latch *rfex_latch = &rsp->pipeline.rfex_latch;
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   bool is_jal = iw >> 26 & 0x1;
   uint32_t target = iw << 2 & 0x0FFFFFFF;
   uint32_t mask = rsp_branch_lut[is_jal];
 
-  exdc_latch->result = rfex_latch->common.pc + 8;
-  exdc_latch->dest = RSP_REGISTER_RA & ~mask;
+  exdf_latch->result = rdex_latch->common.pc + 8;
+  exdf_latch->dest = RSP_REGISTER_RA & ~mask;
 
-  icrf_latch->pc = (rfex_latch->common.pc & ~0x0FFFFFFFULL) | target;
+  ifrd_latch->pc = (rdex_latch->common.pc & ~0x0FFFFFFFULL) | target;
 }
 
 //
@@ -258,17 +258,17 @@ void RSP_J_JAL(struct rsp *rsp,
 //
 void RSP_JALR_JR(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t unused(rt)) {
-  struct rsp_icrf_latch *icrf_latch = &rsp->pipeline.icrf_latch;
-  struct rsp_rfex_latch *rfex_latch = &rsp->pipeline.rfex_latch;
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   bool is_jalr = iw & 0x1;
   uint32_t mask = rsp_branch_lut[is_jalr];
 
-  exdc_latch->result = rfex_latch->common.pc + 8;
-  exdc_latch->dest = RSP_REGISTER_RA & ~mask;
+  exdf_latch->result = rdex_latch->common.pc + 8;
+  exdf_latch->dest = RSP_REGISTER_RA & ~mask;
 
-  icrf_latch->pc = rs;
+  ifrd_latch->pc = rs;
 }
 
 //
@@ -282,21 +282,21 @@ void RSP_JALR_JR(struct rsp *rsp,
 //
 void RSP_LOAD(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t unused(rt)) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   unsigned request_size = (iw >> 26 & 0x3);
   uint32_t dqm = rsp_load_sex_mask[iw >> 28 & 0x1][request_size];
   unsigned dest = GET_RT(iw);
 
-  exdc_latch->request.addr = rs + (int16_t) iw;
-  exdc_latch->request.dqm = dqm;
-  exdc_latch->request.postshift = 0;
-  exdc_latch->request.two_words = 0;
-  exdc_latch->request.type = RSP_MEM_REQUEST_READ;
-  exdc_latch->request.size = request_size + 1;
+  exdf_latch->request.addr = rs + (int16_t) iw;
+  exdf_latch->request.dqm = dqm;
+  exdf_latch->request.postshift = 0;
+  exdf_latch->request.two_words = 0;
+  exdf_latch->request.type = RSP_MEM_REQUEST_READ;
+  exdf_latch->request.size = request_size + 1;
 
-  exdc_latch->dest = dest;
-  exdc_latch->result = 0;
+  exdf_latch->dest = dest;
+  exdf_latch->result = 0;
 }
 
 //
@@ -304,13 +304,13 @@ void RSP_LOAD(struct rsp *rsp,
 //
 void RSP_LUI(struct rsp *rsp,
   uint32_t iw, uint32_t unused(rs), uint32_t unused(rt)) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   int32_t imm = iw << 16;
   unsigned dest = GET_RT(iw);
 
-  exdc_latch->result = imm;
-  exdc_latch->dest = dest;
+  exdf_latch->result = imm;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -318,11 +318,11 @@ void RSP_LUI(struct rsp *rsp,
 //
 void RSP_NOR(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_RD(iw);
 
-  exdc_latch->result = ~(rs | rt);
-  exdc_latch->dest = dest;
+  exdf_latch->result = ~(rs | rt);
+  exdf_latch->dest = dest;
 }
 
 //
@@ -330,13 +330,13 @@ void RSP_NOR(struct rsp *rsp,
 //
 void RSP_SLL(struct rsp *rsp,
   uint32_t iw, uint32_t unused(rs), uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   unsigned dest = GET_RD(iw);
   unsigned sa = iw >> 6 & 0x1F;
 
-  exdc_latch->result = rt << sa;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rt << sa;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -344,13 +344,13 @@ void RSP_SLL(struct rsp *rsp,
 //
 void RSP_SLLV(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   unsigned dest = GET_RD(iw);
   unsigned sa = rs & 0x1F;
 
-  exdc_latch->result = rt << sa;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rt << sa;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -358,11 +358,11 @@ void RSP_SLLV(struct rsp *rsp,
 //
 void RSP_SLT(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_RD(iw);
 
-  exdc_latch->result = (int32_t) rs < (int32_t) rt;
-  exdc_latch->dest = dest;
+  exdf_latch->result = (int32_t) rs < (int32_t) rt;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -370,13 +370,13 @@ void RSP_SLT(struct rsp *rsp,
 //
 void RSP_SLTI(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   unsigned dest = GET_RT(iw);
   int32_t imm = (int16_t) iw;
 
-  exdc_latch->result = (int32_t) rs < imm;
-  exdc_latch->dest = dest;
+  exdf_latch->result = (int32_t) rs < imm;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -384,13 +384,13 @@ void RSP_SLTI(struct rsp *rsp,
 //
 void RSP_SLTIU(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   unsigned dest = GET_RT(iw);
   uint32_t imm = (int16_t) iw;
 
-  exdc_latch->result = rs < imm;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rs < imm;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -398,11 +398,11 @@ void RSP_SLTIU(struct rsp *rsp,
 //
 void RSP_SLTU(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_RD(iw);
 
-  exdc_latch->result = rs < rt;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rs < rt;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -410,12 +410,12 @@ void RSP_SLTU(struct rsp *rsp,
 //
 void RSP_SRA(struct rsp *rsp,
   uint32_t iw, uint32_t unused(rs), uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_RD(iw);
   unsigned sa = iw >> 6 & 0x1F;
 
-  exdc_latch->result = (int32_t) rt >> sa;
-  exdc_latch->dest = dest;
+  exdf_latch->result = (int32_t) rt >> sa;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -423,12 +423,12 @@ void RSP_SRA(struct rsp *rsp,
 //
 void RSP_SRAV(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_RD(iw);
   unsigned sa = rs & 0x1F;
 
-  exdc_latch->result = (int32_t) rt >> sa;
-  exdc_latch->dest = dest;
+  exdf_latch->result = (int32_t) rt >> sa;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -436,12 +436,12 @@ void RSP_SRAV(struct rsp *rsp,
 //
 void RSP_SRL(struct rsp *rsp,
   uint32_t iw, uint32_t unused(rs), uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_RD(iw);
   unsigned sa = iw >> 6 & 0x1F;
 
-  exdc_latch->result = rt >> sa;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rt >> sa;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -449,12 +449,12 @@ void RSP_SRL(struct rsp *rsp,
 //
 void RSP_SRLV(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_RD(iw);
   unsigned sa = rs & 0x1F;
 
-  exdc_latch->result = rt >> sa;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rt >> sa;
+  exdf_latch->dest = dest;
 }
 
 //
@@ -466,19 +466,19 @@ void RSP_SRLV(struct rsp *rsp,
 //
 void RSP_STORE(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   uint32_t address = rs + (int16_t) iw;
   unsigned request_size = (iw >> 26 & 0x3) + 1;
   unsigned lshiftamt = (4 - request_size) << 3;
   unsigned rshiftamt = (address & 0x3) << 3;
 
-  exdc_latch->request.addr = address & ~0x3ULL;
-  exdc_latch->request.data = (rt << lshiftamt) >> rshiftamt;
-  exdc_latch->request.dqm = (~0U << lshiftamt) >> rshiftamt;
-  exdc_latch->request.two_words = false;
-  exdc_latch->request.type = RSP_MEM_REQUEST_WRITE;
-  exdc_latch->request.size = request_size;
+  exdf_latch->request.addr = address & ~0x3ULL;
+  exdf_latch->request.data = (rt << lshiftamt) >> rshiftamt;
+  exdf_latch->request.dqm = (~0U << lshiftamt) >> rshiftamt;
+  exdf_latch->request.two_words = false;
+  exdf_latch->request.type = RSP_MEM_REQUEST_WRITE;
+  exdf_latch->request.size = request_size;
 }
 
 // Function lookup table.

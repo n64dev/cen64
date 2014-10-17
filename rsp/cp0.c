@@ -23,14 +23,14 @@ static void rsp_status_write(struct rsp *rsp, uint32_t rt);
 //
 void RSP_MFC0(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdc_latch *exdc_latch = &rsp->pipeline.exdc_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest;
 
   dest = GET_RT(iw);
   rt = rsp_read_cp0_reg(rsp, GET_RD(iw));
 
-  exdc_latch->result = rt;
-  exdc_latch->dest = dest;
+  exdf_latch->result = rt;
+  exdf_latch->dest = dest;
 }
 
 //
