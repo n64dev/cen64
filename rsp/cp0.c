@@ -164,12 +164,12 @@ void rsp_write_cp0_reg(struct rsp *rsp, unsigned dest, uint32_t rt) {
 
     case RSP_CP0_REGISTER_DMA_READ_LENGTH:
       rsp->regs[RSP_CP0_REGISTER_DMA_READ_LENGTH] = rt;
-      //rsp_dma_read(rsp);
+      rsp_dma_read(rsp);
       break;
 
     case RSP_CP0_REGISTER_DMA_WRITE_LENGTH:
       rsp->regs[RSP_CP0_REGISTER_DMA_WRITE_LENGTH] = rt;
-      //rsp_dma_write(rsp);
+      rsp_dma_write(rsp);
       break;
 
     case RSP_CP0_REGISTER_SP_STATUS:
@@ -201,6 +201,6 @@ void rsp_write_cp0_reg(struct rsp *rsp, unsigned dest, uint32_t rt) {
 
 // Initializes the coprocessor.
 void rsp_cp0_init(struct rsp *rsp) {
-  rsp->regs[RSP_CP0_REGISTER_SP_STATUS] = 0x1;
+  rsp->regs[RSP_CP0_REGISTER_SP_STATUS] = SP_STATUS_HALT;
 }
 

@@ -37,16 +37,55 @@ static inline void rsp_rd_stage(struct rsp *rsp) {
 
   rdex_latch->common = ifrd_latch->common;
   rdex_latch->opcode = *rsp_decode_instruction(iw);
+  rdex_latch->iw = ifrd_latch->iw;
 }
 
 // Execution stage.
 static inline void rsp_ex_stage(struct rsp *rsp) {
+  struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
+  uint64_t rs_reg, rt_reg, temp;
+  unsigned rs, rt;
+  uint32_t iw;
+
+  exdf_latch->common = rdex_latch->common;
+  iw = rdex_latch->iw;
+
+  rs = GET_RS(iw);
+  rt = GET_RT(iw);
+
+  // Forward results from DF/WB.
+  temp = rsp->regs[dfwb_latch->dest];
+  rsp->regs[dfwb_latch->dest] = dfwb_latch->result;
+  rsp->regs[RSP_REGISTER_R0] = 0x00000000U;
+
+  rs_reg = rsp->regs[rs];
+  rt_reg = rsp->regs[rt];
+
+  rsp->regs[dfwb_latch->dest] = temp;
+
+  // Finally, execute the instruction.
+#ifdef PRINT_EXEC
+  debug("%.8X: %s\n", rfex_latch->common.pc,
+    rsp_opcode_mnemonics[rdex_latch->opcode.id]);
+#endif
+
+  exdf_latch->dest = RSP_REGISTER_R0;
+  return rsp_function_table[rdex_latch->opcode.id](
+    rsp, iw, rs_reg, rt_reg);
 }
 
 // Data cache fetch stage.
 static inline void rsp_df_stage(struct rsp *rsp) {
+  struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
+  dfwb_latch->common = exdf_latch->common;
+
+  dfwb_latch->result = exdf_latch->result;
+  dfwb_latch->dest = exdf_latch->dest;
 }
 
 // Writeback stage.

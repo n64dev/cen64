@@ -43,6 +43,7 @@ struct rsp_ifrd_latch {
 struct rsp_rdex_latch {
   struct rsp_latch common;
   struct rsp_opcode opcode;
+  uint32_t iw;
 };
 
 struct rsp_exdf_latch {
