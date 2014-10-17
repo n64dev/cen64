@@ -103,10 +103,16 @@ int device_run(struct cen64_device *device) {
     return 0;
 
   while (1) {
+    // Even bus cycles.
     vi_cycle(&device->vi);
+
+    rsp_cycle(&device->rsp);
     vr4300_cycle(&device->vr4300);
 
+    // Odd bus cycles.
     vi_cycle(&device->vi);
+
+    rsp_cycle(&device->rsp);
     vr4300_cycle(&device->vr4300);
     vr4300_cycle(&device->vr4300);
   }
