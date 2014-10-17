@@ -12,6 +12,9 @@
 #include "rsp/cp0.h"
 #include "rsp/cpu.h"
 
+// Prints out instructions and their address as they are executed.
+//#define PRINT_EXEC
+
 typedef void (*pipeline_function)(struct rsp *rsp);
 
 // Instruction cache fetch stage.
@@ -68,7 +71,7 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
 
   // Finally, execute the instruction.
 #ifdef PRINT_EXEC
-  debug("%.8X: %s\n", rfex_latch->common.pc,
+  debug("%.8X: %s\n", rdex_latch->common.pc,
     rsp_opcode_mnemonics[rdex_latch->opcode.id]);
 #endif
 

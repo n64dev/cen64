@@ -28,7 +28,7 @@ static void vr4300_cycle_slow_ic(struct vr4300 *vr4300);
 static void vr4300_cycle_busywait(struct vr4300 *vr4300);
 
 // Prints out instructions and their virtual address as they are executed.
-// Note: These instructions should _may_ be speculative and killed later...
+// Note: Some of these instructions _may_ be speculative and killed later...
 //#define PRINT_EXEC
 
 // Instruction cache stage.

@@ -92,9 +92,9 @@ void rsp_status_write(struct rsp *rsp, uint32_t rt) {
     status &= ~SP_STATUS_BROKE;
 
   if (rt & SP_CLR_INTR)
-    signal_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
-  else if (rt & SP_SET_INTR)
     clear_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
+  else if (rt & SP_SET_INTR)
+    signal_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
 
   if (rt & SP_CLR_SSTEP)
     status &= ~SP_STATUS_SSTEP;

@@ -139,8 +139,7 @@ int write_sp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   enum sp_register reg = (offset >> 2);
 
   debug_mmio_write(sp, sp_register_mnemonics[reg], word, dqm);
-  rsp->regs[reg + SP_REGISTER_OFFSET] &= ~dqm;
-  rsp->regs[reg + SP_REGISTER_OFFSET] |= word;
+  rsp_write_cp0_reg(rsp, reg, word);
   return 0;
 }
 
