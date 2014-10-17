@@ -65,6 +65,11 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE ${CMAKE_EXE_LINKER_FLAGS_RELEASE} "-Wl,--gc-sections")
     set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL ${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} "-Wl,--gc-sections")
   endif (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
+
+  # Check for undefined behaviour when debugging.
+  if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined")
+  endif (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
 endif ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 
 # If using Clang, configure it accordingly.
@@ -84,7 +89,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 
   string(REGEX MATCH "([a-zA-Z0-9])+" CLANG_MACHINE ${CLANG_MACHINE})
 
-  if ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+  if ("${CLANG_MACHINE}" MATCHES "x86.*" OR "${CLANG_MACHINE}" MATCHES "i.86.*")
     set(CEN64_ARCH_DIR "x86_64")
 
     if (NOT NATIVE_BUILD)
@@ -92,17 +97,17 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     endif (NOT NATIVE_BUILD)
 
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
-  endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+  endif ("${CLANG_MACHINE}" MATCHES "x86.*" OR "${CLANG_MACHINE}" MATCHES "i.86.*")
 
-  if ("${GCC_MACHINE}" STREQUAL "arm")
+  if ("${CLANG_MACHINE}" STREQUAL "arm")
     set(CEN64_ARCH_DIR "arm")
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
-  endif ("${GCC_MACHINE}" STREQUAL "arm")
+  endif ("${CLANG_MACHINE}" STREQUAL "arm")
 
   # Set architecture-independent flags.
-  set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
+  set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
   set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
