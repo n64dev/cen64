@@ -146,7 +146,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
           rshiftamt;
       }
 
-      dcwb_latch->result |= sdata << request->postshift;
+      dcwb_latch->result |= (uint64_t) sdata << request->postshift;
     }
 
     // Service a write.
