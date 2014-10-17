@@ -156,8 +156,8 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   rs &= ~(rslutidx & fr);
 
   // Check to see if we should hold off execution due to a LDI.
-  if (((dcwb_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
-    ((dcwb_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT))) {
+  if (((exdc_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
+    ((exdc_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT))) {
     VR4300_LDI(vr4300);
     return 1;
   }
