@@ -15,7 +15,7 @@
 #include "rsp/pipeline.h"
 
 // Prints out instructions and their address as they are executed.
-#define PRINT_EXEC
+//#define PRINT_EXEC
 
 typedef void (*pipeline_function)(struct rsp *rsp);
 
