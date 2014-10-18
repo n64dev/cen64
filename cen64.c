@@ -46,10 +46,8 @@ int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
   }
 
   // Start simulation.
-  if (!(status = setup_and_run_device(device, argv[1], argv[2]))) {
+  if ((status = setup_and_run_device(device, argv[1], argv[2])))
     destroy_gl_window(&device->vi.gl_window);
-    return 2;
-  }
 
   return status;
 }
