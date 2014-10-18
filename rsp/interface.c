@@ -150,6 +150,13 @@ int write_sp_regs2(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) 
   enum sp_register reg = (offset >> 2) + SP_PC_REG;
 
   debug_mmio_write(sp, sp_register_mnemonics[reg], word, dqm);
+
+  if (reg == SP_PC_REG)
+    rsp->pipeline.ifrd_latch.pc = word & 0xFFC;
+
+  else
+    abort();
+
   rsp->regs[reg + SP_REGISTER_OFFSET] &= ~dqm;
   rsp->regs[reg + SP_REGISTER_OFFSET] |= word;
   return 0;

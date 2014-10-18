@@ -146,7 +146,7 @@ void rsp_status_write(struct rsp *rsp, uint32_t rt) {
   else if (rt & SP_SET_SIG7)
     status |= SP_STATUS_SIG7;
 
-  rsp->regs[RSP_CP0_REGISTER_CMD_STATUS] = status;
+  rsp->regs[RSP_CP0_REGISTER_SP_STATUS] = status;
 }
 
 // Writes a value to the control processor.

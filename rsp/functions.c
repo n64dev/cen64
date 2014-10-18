@@ -241,13 +241,13 @@ void RSP_J_JAL(struct rsp *rsp,
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   bool is_jal = iw >> 26 & 0x1;
-  uint32_t target = iw << 2 & 0x0FFFFFFF;
+  uint32_t target = iw << 2 & 0x3FF;
   uint32_t mask = rsp_branch_lut[is_jal];
 
   exdf_latch->result = rdex_latch->common.pc + 8;
   exdf_latch->dest = RSP_REGISTER_RA & ~mask;
 
-  ifrd_latch->pc = (rdex_latch->common.pc & ~0x0FFFFFFFULL) | target;
+  ifrd_latch->pc = target;
 }
 
 //
