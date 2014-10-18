@@ -153,8 +153,6 @@ static inline void rsp_wb_stage(struct rsp *rsp) {
 
 // Advances the processor pipeline by one clock.
 void rsp_cycle(struct rsp *rsp) {
-  struct rsp_pipeline *pipeline = &rsp->pipeline;
-
   if (rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_HALT)
     return;
 
