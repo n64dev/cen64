@@ -303,8 +303,6 @@ void RSP_LOAD(struct rsp *rsp,
 
   exdf_latch->request.addr = rs + (int16_t) iw;
   exdf_latch->request.dqm = dqm;
-  exdf_latch->request.postshift = 0;
-  exdf_latch->request.two_words = 0;
   exdf_latch->request.type = RSP_MEM_REQUEST_READ;
   exdf_latch->request.size = request_size + 1;
 
@@ -489,7 +487,6 @@ void RSP_STORE(struct rsp *rsp,
   exdf_latch->request.addr = address & ~0x3ULL;
   exdf_latch->request.data = (rt << lshiftamt) >> rshiftamt;
   exdf_latch->request.dqm = (~0U << lshiftamt) >> rshiftamt;
-  exdf_latch->request.two_words = false;
   exdf_latch->request.type = RSP_MEM_REQUEST_WRITE;
   exdf_latch->request.size = request_size;
 }

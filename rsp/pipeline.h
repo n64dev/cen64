@@ -27,8 +27,7 @@ struct rsp_mem_request {
   uint32_t dqm;
 
   enum rsp_mem_request_type type;
-  unsigned size, postshift;
-  char two_words;
+  unsigned size;
 };
 
 struct rsp_latch {

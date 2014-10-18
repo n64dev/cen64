@@ -76,6 +76,7 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
 #endif
 
   exdf_latch->dest = RSP_REGISTER_R0;
+  exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
   return rsp_function_table[rdex_latch->opcode.id](
     rsp, iw, rs_reg, rt_reg);
 }
@@ -89,6 +90,32 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   dfwb_latch->result = exdf_latch->result;
   dfwb_latch->dest = exdf_latch->dest;
+
+  if (exdf_latch->request.type != RSP_MEM_REQUEST_NONE) {
+    const struct rsp_mem_request *request = &exdf_latch->request;
+    uint32_t addr = request->addr & 0xFFC;
+    uint32_t dqm = request->dqm;
+    uint32_t word;
+
+    // DMEM scalar reads.
+    if (exdf_latch->request.type == RSP_MEM_REQUEST_READ) {
+      unsigned rshiftamt = (4 - request->size) << 3;
+      unsigned lshiftamt = (addr & 0x3) << 3;
+
+      memcpy(&word, rsp->mem + addr, sizeof(word));
+      word = (int32_t) (word << lshiftamt) >> rshiftamt;
+      dfwb_latch->result = dqm & word;
+    }
+
+    // DMEM scalar writes.
+    else {
+      uint32_t data = request->data;
+
+      memcpy(&word, rsp->mem + addr, sizeof(word));
+      word = (word & ~dqm) | (data & dqm);
+      memcpy(rsp->mem + addr, &word, sizeof(word));
+    }
+  }
 }
 
 // Writeback stage.
