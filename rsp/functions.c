@@ -12,12 +12,14 @@
   (RSP_##func)
 
 #include "common.h"
+#include "bus/controller.h"
 #include "rsp/cp0.h"
 #include "rsp/cpu.h"
 #include "rsp/decoder.h"
 #include "rsp/opcodes.h"
 #include "rsp/opcodes_priv.h"
 #include "rsp/pipeline.h"
+#include "vr4300/interface.h"
 
 // Mask to negate second operand if subtract operation.
 cen64_align(static const uint32_t rsp_addsub_lut[2], 16) = {
@@ -212,6 +214,17 @@ void RSP_BGTZ_BLEZ(
     return;
 
   ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
+}
+
+//
+// BREAK
+//
+void RSP_BREAK(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  rsp->regs[RSP_CP0_REGISTER_SP_STATUS] |= (SP_STATUS_HALT | SP_STATUS_BROKE);
+
+  if (rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_INTR_BREAK)
+    signal_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
 }
 
 //

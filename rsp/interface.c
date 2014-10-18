@@ -42,6 +42,8 @@ void rsp_dma_read(struct rsp *rsp) {
       uint32_t word;
 
       bus_read_word(rsp->bus, source_addr, &word);
+      word = byteswap_32(word);
+
       memcpy(rsp->mem + dest_addr, &word, sizeof(word));
       j += 4;
     } while (j < length);
@@ -78,6 +80,8 @@ void rsp_dma_write(struct rsp *rsp) {
       uint32_t word;
 
       memcpy(&word, rsp->mem + source_addr, sizeof(word));
+      word = byteswap_32(word);
+
       bus_write_word(rsp->bus, dest_addr, word, ~0U);
       j += 4;
     } while (j < length);
