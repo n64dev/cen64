@@ -11,9 +11,11 @@
 #include "common.h"
 #include "rsp/cp0.h"
 #include "rsp/cpu.h"
+#include "rsp/decoder.h"
+#include "rsp/pipeline.h"
 
 // Prints out instructions and their address as they are executed.
-//#define PRINT_EXEC
+#define PRINT_EXEC
 
 typedef void (*pipeline_function)(struct rsp *rsp);
 
@@ -32,15 +34,36 @@ static inline void rsp_if_stage(struct rsp *rsp) {
 }
 
 // Register fetch and decode stage.
-static inline void rsp_rd_stage(struct rsp *rsp) {
+static inline int rsp_rd_stage(struct rsp *rsp) {
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
 
+  const struct rsp_opcode *opcode;
   uint32_t iw = ifrd_latch->iw;
 
   rdex_latch->common = ifrd_latch->common;
-  rdex_latch->opcode = *rsp_decode_instruction(iw);
+
+  // Check for load-use stalls.
+  opcode = rsp_decode_instruction(iw);
+
+  if (rdex_latch->opcode.flags & OPCODE_INFO_LOAD) {
+    unsigned dest = GET_RT(rdex_latch->iw);
+    unsigned rs = GET_RS(ifrd_latch->iw);
+    unsigned rt = GET_RT(ifrd_latch->iw);
+
+    if ((((opcode->flags & OPCODE_INFO_NEEDRS) && dest == rs)) ||
+      ((opcode->flags & OPCODE_INFO_NEEDRT) && dest == rt)) {
+      rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
+      //rdex_latch->iw = 0x00000000U;
+
+      return 1;
+    }
+  }
+
+  rdex_latch->opcode = *opcode;
   rdex_latch->iw = ifrd_latch->iw;
+
+  return 0;
 }
 
 // Execution stage.
@@ -103,6 +126,8 @@ static inline void rsp_df_stage(struct rsp *rsp) {
       unsigned lshiftamt = (addr & 0x3) << 3;
 
       memcpy(&word, rsp->mem + addr, sizeof(word));
+
+      word = byteswap_32(word);
       word = (int32_t) (word << lshiftamt) >> rshiftamt;
       dfwb_latch->result = dqm & word;
     }
@@ -112,7 +137,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
       uint32_t data = request->data;
 
       memcpy(&word, rsp->mem + addr, sizeof(word));
-      word = (word & ~dqm) | (data & dqm);
+      word = byteswap_32((byteswap_32(word) & ~dqm) | (data & dqm));
       memcpy(rsp->mem + addr, &word, sizeof(word));
     }
   }
@@ -136,8 +161,9 @@ void rsp_cycle(struct rsp *rsp) {
   rsp_wb_stage(rsp);
   rsp_df_stage(rsp);
   rsp_ex_stage(rsp);
-  rsp_rd_stage(rsp);
-  rsp_if_stage(rsp);
+
+  if (!rsp_rd_stage(rsp))
+    rsp_if_stage(rsp);
 }
 
 // Initializes the pipeline with default values.

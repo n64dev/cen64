@@ -27,6 +27,8 @@
 #define OPCODE_INFO_BRANCH (1 << 2)
 #define OPCODE_INFO_NEEDRS (1 << 3)
 #define OPCODE_INFO_NEEDRT (1 << 4)
+#define OPCODE_INFO_LOAD   (1 << 5)
+#define OPCODE_INFO_STORE  (1 << 6)
 
 struct rsp_opcode {
   uint32_t id;
