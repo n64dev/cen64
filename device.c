@@ -99,21 +99,19 @@ void device_destroy(struct cen64_device *device) {
 
 // Kicks off threads and starts the device.
 int device_run(struct cen64_device *device) {
+  unsigned i;
+
   if (setjmp(device->bus.unwind_data))
     return 0;
 
   while (1) {
-    // Even bus cycles.
-    vi_cycle(&device->vi);
+    for (i = 0; i < 2; i++) {
+      vi_cycle(&device->vi);
 
-    rsp_cycle(&device->rsp);
-    vr4300_cycle(&device->vr4300);
+      rsp_cycle(&device->rsp);
+      vr4300_cycle(&device->vr4300);
+    }
 
-    // Odd bus cycles.
-    vi_cycle(&device->vi);
-
-    rsp_cycle(&device->rsp);
-    vr4300_cycle(&device->vr4300);
     vr4300_cycle(&device->vr4300);
   }
 
