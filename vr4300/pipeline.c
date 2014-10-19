@@ -137,12 +137,9 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   uint32_t flags, iw;
 
   exdc_latch->common = rfex_latch->common;
+  flags = rfex_latch->opcode.flags;
   fr = (status >> 26 & 0x1) ^ 1;
   iw = rfex_latch->iw;
-
-  flags = rfex_latch->opcode.flags;
-  if (exdc_latch->request.type != VR4300_BUS_REQUEST_READ)
-    flags &= ~(OPCODE_INFO_NEEDRS | OPCODE_INFO_NEEDRT);
 
   // CP1 register, or no?
   rslutidx = flags & 0x1;
@@ -156,8 +153,9 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   rs &= ~(rslutidx & fr);
 
   // Check to see if we should hold off execution due to a LDI.
-  if (((exdc_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
-    ((exdc_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT))) {
+  if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ && (
+    ((exdc_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
+    ((exdc_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT)))) {
     VR4300_LDI(vr4300);
     return 1;
   }
