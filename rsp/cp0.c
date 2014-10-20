@@ -81,7 +81,7 @@ uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
 
 // Updates the SP_STATUS register according to bitmask in rt.
 void rsp_status_write(struct rsp *rsp, uint32_t rt) {
-  uint32_t status = rsp->regs[RSP_CP0_REGISTER_CMD_STATUS];
+  uint32_t status = rsp->regs[RSP_CP0_REGISTER_SP_STATUS];
 
   if (rt & SP_CLR_HALT)
     status &= ~SP_STATUS_HALT;
