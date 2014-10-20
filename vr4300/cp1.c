@@ -17,6 +17,15 @@
 static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 
 //
+// Raises a MCI interlock for a set number of cycles.
+//
+static inline int vr4300_do_mci(struct vr4300 *vr4300, unsigned cycles) {
+  vr4300->pipeline.cycles_to_stall = cycles - 1;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 3;
+  return 1;
+}
+
+//
 // Invalid operation exception.
 //
 void VR4300_INV(struct vr4300 *vr4300);
@@ -63,7 +72,7 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 3);
 }
 
 //
@@ -109,7 +118,10 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+
+  vr4300->pipeline.cycles_to_stall = 2;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 3;
+  return vr4300_do_mci(vr4300, 3);
 }
 
 //
@@ -611,7 +623,7 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -669,7 +681,7 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -791,7 +803,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return fmt != VR4300_FMT_S
+    ? vr4300_do_mci(vr4300, 5)
+    : 0;
 }
 
 //
@@ -836,7 +850,7 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -882,7 +896,8 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300,
+    fmt == VR4300_FMT_D ? 2 : 5);
 }
 
 //
@@ -927,7 +942,7 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -972,7 +987,8 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300,
+    fmt == VR4300_FMT_D ? 58 : 29);
 }
 
 //
@@ -1065,7 +1081,7 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -1124,7 +1140,7 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -1237,7 +1253,11 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+
+  vr4300->pipeline.cycles_to_stall = 7;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 3;
+  return vr4300_do_mci(vr4300,
+    fmt == VR4300_FMT_D ? 8 : 5);
 }
 
 //
@@ -1413,7 +1433,7 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -1470,7 +1490,7 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -1538,7 +1558,8 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300,
+    fmt == VR4300_FMT_D ? 58 : 29);
 }
 
 //
@@ -1583,7 +1604,7 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 3);
 }
 
 //
@@ -1657,7 +1678,7 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 //
@@ -1702,7 +1723,7 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 5);
 }
 
 // Initializes the coprocessor.

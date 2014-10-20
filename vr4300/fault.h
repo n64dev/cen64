@@ -11,8 +11,6 @@
 #ifndef __vr4300_fault_h__
 #define __vr4300_fault_h__
 
-struct vr4300;
-
 enum vr4300_fault_id {
 #define X(fault) VR4300_FAULT_##fault,
 #include "vr4300/fault.md"

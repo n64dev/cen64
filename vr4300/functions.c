@@ -52,6 +52,15 @@ cen64_align(static const uint64_t vr4300_load_sex_mask[2][4], CACHE_LINE_SIZE) =
 };
 
 //
+// Raises a MCI interlock for a set number of cycles.
+//
+static inline int vr4300_do_mci(struct vr4300 *vr4300, unsigned cycles) {
+  vr4300->pipeline.cycles_to_stall = cycles - 1;
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 3;
+  return 1;
+}
+
+//
 // ADD
 // SUB
 //
@@ -574,7 +583,7 @@ int VR4300_DIV_DIVU(struct vr4300 *vr4300,
     vr4300->regs[VR4300_REGISTER_HI] = mod;
   }
 
-  return 0;
+  return vr4300_do_mci(vr4300, 37);
 }
 
 //
@@ -594,7 +603,7 @@ int VR4300_DDIV(struct vr4300 *vr4300,
     vr4300->regs[VR4300_REGISTER_HI] = mod;
   }
 
-  return 0;
+  return vr4300_do_mci(vr4300, 69);
 }
 
 //
@@ -611,7 +620,7 @@ int VR4300_DDIVU(struct vr4300 *vr4300,
     vr4300->regs[VR4300_REGISTER_HI] = mod;
   }
 
-  return 0;
+  return vr4300_do_mci(vr4300, 69);
 }
 
 //
@@ -649,7 +658,7 @@ int VR4300_DMULT(struct vr4300 *vr4300,
   // TODO: Delay the output a few cycles.
   vr4300->regs[VR4300_REGISTER_LO] = lo;
   vr4300->regs[VR4300_REGISTER_HI] = hi;
-  return 0;
+  return vr4300_do_mci(vr4300, 8);
 }
 
 //
@@ -689,7 +698,7 @@ int VR4300_DMULTU(struct vr4300 *vr4300,
   // TODO: Delay the output a few cycles.
   vr4300->regs[VR4300_REGISTER_LO] = lo;
   vr4300->regs[VR4300_REGISTER_HI] = hi;
-  return 0;
+  return vr4300_do_mci(vr4300, 8);
 }
 
 //
@@ -1091,7 +1100,7 @@ int VR4300_NOR(struct vr4300 *vr4300,
 
   exdc_latch->result = ~(rs | rt);
   exdc_latch->dest = dest;
-  return 0;
+  return vr4300_do_mci(vr4300, 57);
 }
 
 //
