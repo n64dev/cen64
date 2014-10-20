@@ -148,7 +148,6 @@ static inline void rsp_wb_stage(struct rsp *rsp) {
   const struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
 
   rsp->regs[dfwb_latch->dest] = dfwb_latch->result;
-  rsp->regs[RSP_REGISTER_R0] = 0x00000000U;
 }
 
 // Advances the processor pipeline by one clock.

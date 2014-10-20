@@ -324,7 +324,6 @@ static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
   vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
-  vr4300->regs[VR4300_REGISTER_R0] = 0x0000000000000000ULL;
   return 0;
 }
 
