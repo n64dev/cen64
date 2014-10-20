@@ -53,6 +53,9 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   // If decoding of prior instruction indicates this is a BD slot...
   icrf_latch->common.cause_data = (opcode->flags & OPCODE_INFO_BRANCH);
 
+  // Update the fetch PC for the new cycle.
+  icrf_latch->pc += 4;
+
   // Look up the segment that we're in.
   if ((pc - segment->start) >= segment->length) {
     uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
@@ -65,7 +68,6 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
     icrf_latch->segment = segment;
   }
 
-  icrf_latch->pc += 4;
   return 0;
 }
 
