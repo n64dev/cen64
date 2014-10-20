@@ -9,7 +9,9 @@
 //
 
 #include "common.h"
+#include "bus/address.h"
 #include "bus/controller.h"
+#include "rdp/interface.h"
 #include "rsp/cp0.h"
 #include "rsp/cpu.h"
 #include "rsp/decoder.h"
@@ -46,6 +48,8 @@ void RSP_MTC0(struct rsp *rsp,
 
 // Reads a value from the control coprocessor.
 uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
+  uint32_t word;
+
   src = SP_REGISTER_OFFSET + src;
 
   switch(src) {
@@ -70,7 +74,10 @@ uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
     case RSP_CP0_REGISTER_CMD_BUSY:
     case RSP_CP0_REGISTER_CMD_PIPE_BUSY:
     case RSP_CP0_REGISTER_CMD_TMEM_BUSY:
-      abort();
+      src -= RSP_CP0_REGISTER_CMD_START;
+
+      read_dp_regs(rsp->bus->rdp, DP_REGS_BASE_ADDRESS + src * 4, &word);
+      return word;
 
     default:
       return rsp->regs[src];
@@ -191,7 +198,10 @@ void rsp_write_cp0_reg(struct rsp *rsp, unsigned dest, uint32_t rt) {
     case RSP_CP0_REGISTER_CMD_BUSY:
     case RSP_CP0_REGISTER_CMD_PIPE_BUSY:
     case RSP_CP0_REGISTER_CMD_TMEM_BUSY:
-      abort();
+      dest -= RSP_CP0_REGISTER_CMD_START;
+
+      write_dp_regs(rsp->bus->rdp, DP_REGS_BASE_ADDRESS + 4 * dest, rt, ~0);
+      break;
 
     default:
       rsp->regs[dest] = rt;
