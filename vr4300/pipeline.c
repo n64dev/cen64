@@ -362,7 +362,7 @@ void vr4300_cycle_slow_dc(struct vr4300 *vr4300) {
 
   else {
     dcwb_latch->common = exdc_latch->common;
-    dcwb_latch->result = dcwb_latch->dest = 0;
+    dcwb_latch->dest = 0;
   }
 
   vr4300_cycle_slow_ex(vr4300);
@@ -382,8 +382,10 @@ void vr4300_cycle_slow_ex(struct vr4300 *vr4300) {
       return;
   }
 
-  else
+  else {
     exdc_latch->common = rfex_latch->common;
+    exdc_latch->dest = 0;
+  }
 
   vr4300_cycle_slow_rf(vr4300);
 }
