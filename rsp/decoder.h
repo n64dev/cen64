@@ -24,7 +24,7 @@
 
 #define OPCODE_INFO_NONE (0)
 #define OPCODE_INFO_VECTOR (1 << 1)
-#define OPCODE_INFO_BRANCH (1 << 2)
+#define OPCODE_INFO_BRANCH (1 << 31)
 #define OPCODE_INFO_NEEDRS (1 << 3)
 #define OPCODE_INFO_NEEDRT (1 << 4)
 #define OPCODE_INFO_LOAD   (1 << 5)

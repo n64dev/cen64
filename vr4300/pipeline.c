@@ -51,9 +51,7 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   icrf_latch->common.pc = pc;
 
   // If decoding of prior instruction indicates this is a BD slot...
-  icrf_latch->common.cause_data = (opcode->flags & OPCODE_INFO_BRANCH)
-    ? 0x80000000
-    : 0x00000000;
+  icrf_latch->common.cause_data = (opcode->flags & OPCODE_INFO_BRANCH);
 
   // Look up the segment that we're in.
   if ((pc - segment->start) >= segment->length) {
