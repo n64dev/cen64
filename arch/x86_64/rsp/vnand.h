@@ -6,7 +6,6 @@
 //
 
 #include "common.h"
-#include <emmintrin.h>
 
 static inline __m128i rsp_vnand(__m128i vs, __m128i vt) {
   __m128i zeroes = _mm_setzero_si128();
