@@ -51,6 +51,11 @@ static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
   _mm_store_si128((__m128i*) dest, src);
 }
 
+// Zeroes out a register.
+static inline __m128i rsp_vzero(void) {
+  return _mm_setzero_si128();
+}
+
 #include "arch/x86_64/rsp/vand.h"
 #include "arch/x86_64/rsp/vnand.h"
 #include "arch/x86_64/rsp/vnor.h"

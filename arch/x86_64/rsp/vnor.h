@@ -7,10 +7,9 @@
 
 #include "common.h"
 
-static inline __m128i rsp_vnor(__m128i vs, __m128i vt) {
-  __m128i zeroes = _mm_setzero_si128();
-  __m128i ones = _mm_cmpeq_epi32(zeroes, zeroes);
+static inline __m128i rsp_vnor(__m128i vs, __m128i vt, __m128i zero) {
+  __m128i set = _mm_cmpeq_epi32(zero, zero);
 
-  return _mm_xor_si128(_mm_or_si128(vs, vt), ones);
+  return _mm_xor_si128(_mm_or_si128(vs, vt), set);
 }
 

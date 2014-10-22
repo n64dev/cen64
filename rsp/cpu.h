@@ -11,6 +11,7 @@
 #ifndef __rsp_cpu_h__
 #define __rsp_cpu_h__
 #include "common.h"
+#include "rsp/cp2.h"
 #include "rsp/pipeline.h"
 
 enum rsp_register {
@@ -49,6 +50,7 @@ extern const char *sp_register_mnemonics[NUM_SP_REGISTERS];
 
 struct rsp {
   struct rsp_pipeline pipeline;
+  struct rsp_cp2 cp2;
 
   uint32_t regs[NUM_RSP_REGISTERS];
   uint8_t mem[0x2000];
