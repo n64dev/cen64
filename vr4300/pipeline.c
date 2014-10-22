@@ -256,35 +256,22 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // Data cache reads.
     if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-      int64_t sdata;
+      unsigned rshiftamt = (8 - request->size) << 3;
+      unsigned lshiftamt = (paddr & 0x7) << 3;
+      uint64_t data;
 
-      if (request->access_type != VR4300_ACCESS_DWORD) {
-        unsigned rshiftamt = (4 - request->size) << 3;
-        unsigned lshiftamt = (paddr & 0x3) << 3;
-        uint32_t word;
+      memcpy(&data, line->data + (paddr & 0x8), sizeof(data));
+      data = (int64_t) (data << lshiftamt) >> rshiftamt;
 
-        // TODO: Actually sign extend this...?
-        memcpy(&word, line->data + ((paddr & 0xC) ^ WORD_ADDR_XOR), sizeof(word));
-        sdata = (int32_t) (word << lshiftamt) >> rshiftamt;
-      }
-
-      else {
-        unsigned rshiftamt = (8 - request->size) << 3;
-        unsigned lshiftamt = (paddr & 0x7) << 3;
-        uint64_t data;
-
-        memcpy(&data, line->data + (paddr & 0x8), sizeof(data));
-        sdata = (int64_t) (data << lshiftamt) >> rshiftamt;
-      }
-
-      dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
+      dcwb_latch->result |= (data & request->dqm) << request->postshift;
     }
 
     // Data cache writes.
     else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-      unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3) & (request->access_type);
+      unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3);
       uint64_t data, dword, dqm;
 
+      shiftamt &= request->access_type;
       data = request->data << shiftamt;
       dqm = request->dqm << shiftamt;
       paddr &= 0x8;
