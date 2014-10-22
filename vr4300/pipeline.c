@@ -258,25 +258,23 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
       int64_t sdata;
 
-      if (!request->two_words) {
+      if (request->access_type != VR4300_ACCESS_DWORD) {
         unsigned rshiftamt = (4 - request->size) << 3;
         unsigned lshiftamt = (paddr & 0x3) << 3;
         uint32_t word;
 
         // TODO: Actually sign extend this...?
-        memcpy(&word, line->data + (paddr & 0xC), sizeof(word));
+        memcpy(&word, line->data + ((paddr & 0xC) ^ WORD_ADDR_XOR), sizeof(word));
         sdata = (int32_t) (word << lshiftamt) >> rshiftamt;
       }
 
       else {
         unsigned rshiftamt = (8 - request->size) << 3;
         unsigned lshiftamt = (paddr & 0x7) << 3;
-        uint32_t hiword, loword;
+        uint64_t data;
 
-        memcpy(&hiword, line->data + (paddr & 0x8), sizeof(hiword));
-        memcpy(&loword, line->data + (paddr & 0x8) + 4, sizeof(loword));
-        sdata = (int64_t) (((uint64_t) hiword << 32 | loword) << lshiftamt)
-          >> rshiftamt;
+        memcpy(&data, line->data + (paddr & 0x8), sizeof(data));
+        sdata = (int64_t) (data << lshiftamt) >> rshiftamt;
       }
 
       dcwb_latch->result |= (sdata & request->dqm) << request->postshift;
@@ -284,29 +282,16 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // Data cache writes.
     else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-      if (request->two_words) {
-        uint64_t data, dword, dqm;
+      unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3) & (request->access_type);
+      uint64_t data, dword, dqm;
 
-        data = request->data;
-        dqm = request->dqm;
-        paddr &= 0x8;
+      data = request->data << shiftamt;
+      dqm = request->dqm << shiftamt;
+      paddr &= 0x8;
 
-        memcpy(&dword, line->data + paddr, sizeof(dword));
-        dword = (dword & ~dqm) | (((data << 32) | (data >> 32)) & dqm);
-        memcpy(line->data + paddr, &dword, sizeof(dword));
-      }
-
-      else {
-        uint32_t data, word, dqm;
-
-        data = request->data;
-        dqm = request->dqm;
-        paddr &= 0xC;
-
-        memcpy(&word, line->data + paddr, sizeof(word));
-        word = (word & ~dqm) | (data & dqm);
-        memcpy(line->data + paddr, &word, sizeof(word));
-      }
+      memcpy(&dword, line->data + paddr, sizeof(dword));
+      dword = (dword & ~dqm) | (data & dqm);
+      memcpy(line->data + paddr, &dword, sizeof(dword));
 
       vr4300_dcache_set_dirty(line);
     }

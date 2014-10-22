@@ -130,7 +130,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
       bus_read_word(vr4300->bus, paddr & ~0x3ULL, &hiword);
 
-      if (!request->two_words) {
+      if (request->access_type != VR4300_ACCESS_DWORD) {
         unsigned rshiftamt = (4 - request->size) << 3;
         unsigned lshiftamt = (paddr & 0x3) << 3;
 
@@ -154,7 +154,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
       uint64_t data = request->data;
       uint64_t dqm = request->dqm;
 
-      if (request->two_words) {
+      if (request->access_type == VR4300_ACCESS_DWORD) {
         bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
         paddr += 4;
       }
@@ -176,7 +176,8 @@ void VR4300_DCB(struct vr4300 *vr4300) {
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
-      bus_write_word(vr4300->bus, bus_address + i * 4, data[i], ~0);
+      bus_write_word(vr4300->bus, bus_address + i * 4,
+        data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
   }
 
   // Raise interlock condition, get virtual address.
@@ -185,7 +186,8 @@ void VR4300_DCB(struct vr4300 *vr4300) {
 
   // Fill the cache line.
   for (i = 0; i < 4; i++)
-    bus_read_word(vr4300->bus, paddr + i * 4, data+ i);
+    bus_read_word(vr4300->bus, paddr + i * 4,
+      data + (i ^ (WORD_ADDR_XOR >> 2)));
 
   vr4300_dcache_fill(&vr4300->dcache, vaddr, paddr, data);
 }

@@ -105,10 +105,13 @@ typedef char bool;
 #define unused(decl) decl
 #endif
 
-// Forward declarations.
-struct bus_controller;
-
 // Byte order swap functions.
+#ifdef BIG_ENDIAN_HOST
+#define WORD_ADDR_XOR 0
+#else
+#define WORD_ADDR_XOR 4
+#endif
+
 static inline uint32_t byteswap_32(uint32_t word) {
 #ifdef BIG_ENDIAN_HOST
   return word;
@@ -126,6 +129,8 @@ static inline uint32_t byteswap_32(uint32_t word) {
 }
 
 // Return from simulation function.
+struct bus_controller;
+
 void cen64_return(struct bus_controller *bus)
 #ifdef __GNUC__
  __attribute__ ((noreturn))

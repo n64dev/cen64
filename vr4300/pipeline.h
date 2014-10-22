@@ -23,15 +23,20 @@ enum vr4300_bus_request_type {
   VR4300_BUS_REQUEST_WRITE,
 };
 
+enum vr4300_access_type {
+  VR4300_ACCESS_WORD = 1 << 5,
+  VR4300_ACCESS_DWORD = 0
+};
+
 struct vr4300_bus_request {
   uint64_t vaddr;
   uint64_t data;
   uint64_t dqm;
   uint32_t paddr;
 
+  enum vr4300_access_type access_type;
   enum vr4300_bus_request_type type;
   unsigned size, postshift;
-  char two_words;
 };
 
 struct vr4300_latch {
