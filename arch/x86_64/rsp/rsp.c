@@ -66,7 +66,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
     int i;
 
     for (i = -2; i < 6; i += 2)
-      dword = (dword << 16) | vd[element + i];
+      dword = (dword << 16) | src[element + i];
 
     vlo = _mm_loadl_epi64((__m128i *) &dword);
     vhi = _mm_slli_si128(vlo, 8);
