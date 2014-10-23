@@ -122,37 +122,37 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   unsigned i;
 
   if (!segment->cached) {
+    unsigned mask = request->access_type ==
+      VR4300_ACCESS_DWORD ? 0x7 : 0x3;
 
     // Service a read.
     if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
+      unsigned rshiftamt = (8 - request->size) << 3;
+      unsigned lshiftamt = (paddr & mask) << 3;
       uint32_t hiword, loword;
       int64_t sdata;
 
-      bus_read_word(vr4300->bus, paddr & ~0x3ULL, &hiword);
+      paddr &= ~mask;
+      bus_read_word(vr4300->bus, paddr, &hiword);
 
-      if (request->access_type != VR4300_ACCESS_DWORD) {
-        unsigned rshiftamt = (4 - request->size) << 3;
-        unsigned lshiftamt = (paddr & 0x3) << 3;
-
-        sdata = (int32_t) (hiword << lshiftamt) >> rshiftamt;
-      }
+      if (request->access_type != VR4300_ACCESS_DWORD)
+        sdata = (uint64_t) hiword << (lshiftamt + 32);
 
       else {
-        unsigned rshiftamt = (8 - request->size) << 3;
-        unsigned lshiftamt = (paddr & 0x7) << 3;
-
-        bus_read_word(vr4300->bus, (paddr & ~0x7ULL) + 4, &loword);
-        sdata = (int64_t) (((uint64_t) hiword | loword) << lshiftamt) >>
-          rshiftamt;
+        bus_read_word(vr4300->bus, paddr + 4, &loword);
+        sdata = ((uint64_t) hiword << 32) | loword;
+        sdata = sdata << lshiftamt;
       }
 
-      dcwb_latch->result |= (uint64_t) sdata << request->postshift;
+      dcwb_latch->result |= (sdata >> rshiftamt) << request->postshift;
     }
 
     // Service a write.
     else {
       uint64_t data = request->data;
       uint64_t dqm = request->dqm;
+
+      paddr &= ~mask;
 
       if (request->access_type == VR4300_ACCESS_DWORD) {
         bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
