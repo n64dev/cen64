@@ -307,7 +307,6 @@ void RSP_LOAD(struct rsp *rsp,
   exdf_latch->request.size = request_size + 1;
 
   exdf_latch->dest = dest;
-  exdf_latch->result = 0;
 }
 
 //
@@ -322,6 +321,26 @@ void RSP_LUI(struct rsp *rsp,
 
   exdf_latch->result = imm;
   exdf_latch->dest = dest;
+}
+
+//
+// LQV
+//
+void RSP_LQV(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+  unsigned addr, dest = GET_VT(iw);
+  rsp_vect_t dqm;
+
+  addr = rs + ((uint16_t) iw << 4);
+  dqm = rsp_vset(rsp_vzero());
+
+  exdf_latch->request.addr = addr;
+  rsp_vect_write_operand(exdf_latch->request.vdqm, dqm);
+  exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR_READ;
+  exdf_latch->request.srselect = 16 + (addr & 0xF);
+
+  exdf_latch->dest = dest + 32;
 }
 
 //
@@ -414,6 +433,26 @@ void RSP_SLTU(struct rsp *rsp,
 
   exdf_latch->result = rs < rt;
   exdf_latch->dest = dest;
+}
+
+//
+// SQV
+//
+void RSP_SQV(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+  unsigned addr, dest = GET_VT(iw);
+  rsp_vect_t dqm;
+
+  addr = rs + ((uint16_t) iw << 4);
+  dqm = rsp_vset(rsp_vzero());
+
+  exdf_latch->request.addr = addr;
+  rsp_vect_write_operand(exdf_latch->request.vdqm, dqm);
+  exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR_WRITE;
+  exdf_latch->request.srselect = addr & 0xF;
+
+  exdf_latch->dest = dest + 32;
 }
 
 //

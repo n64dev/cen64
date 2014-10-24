@@ -12,6 +12,7 @@
 #define __rsp_pipeline_h__
 #include "common.h"
 #include "rsp/decoder.h"
+#include "rsp/rsp.h"
 
 struct rsp;
 
@@ -19,15 +20,19 @@ enum rsp_mem_request_type {
   RSP_MEM_REQUEST_NONE,
   RSP_MEM_REQUEST_READ,
   RSP_MEM_REQUEST_WRITE,
+  RSP_MEM_REQUEST_VECTOR_READ,
+  RSP_MEM_REQUEST_VECTOR_WRITE
 };
 
 struct rsp_mem_request {
+  uint16_t vdata[8];
+  uint16_t vdqm[8];
   uint32_t addr;
   uint32_t data;
   uint32_t dqm;
 
   enum rsp_mem_request_type type;
-  unsigned size;
+  unsigned size, srselect;
 };
 
 struct rsp_latch {

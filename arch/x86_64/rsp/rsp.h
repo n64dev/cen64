@@ -23,6 +23,7 @@
 #include <emmintrin.h>
 #endif
 
+struct rsp;
 typedef __m128i rsp_vect_t;
 
 // Loads and shuffles a 16x8 vector according to element.
@@ -55,6 +56,17 @@ static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
 static inline __m128i rsp_vzero(void) {
   return _mm_setzero_si128();
 }
+
+// Sets all bits in a vector.
+static inline __m128i rsp_vset(__m128i zero) {
+  return _mm_cmpeq_epi32(zero, zero);
+}
+
+// Load and store aligner.
+__m128i rsp_vload_dmem(struct rsp *rsp,
+  __m128i reg, __m128i dqm, uint32_t addr, unsigned srselect);
+void rsp_vstore_dmem(struct rsp *rsp,
+  __m128i reg, __m128i dqm, uint32_t addr, unsigned srselect);
 
 #include "arch/x86_64/rsp/vand.h"
 #include "arch/x86_64/rsp/vnand.h"

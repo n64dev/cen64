@@ -153,20 +153,45 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
 static inline void rsp_df_stage(struct rsp *rsp) {
   struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+  const struct rsp_mem_request *request = &exdf_latch->request;
 
   dfwb_latch->common = exdf_latch->common;
-
-  dfwb_latch->result = exdf_latch->result;
   dfwb_latch->dest = exdf_latch->dest;
 
-  if (exdf_latch->request.type != RSP_MEM_REQUEST_NONE) {
-    const struct rsp_mem_request *request = &exdf_latch->request;
+  if (request->type == RSP_MEM_REQUEST_NONE) {
+    dfwb_latch->result = exdf_latch->result;
+    return;
+  }
+
+  // Vector unit DMEM access.
+  if (exdf_latch->dest >= 32) {
+    uint16_t *regp = rsp->cp2.regs[exdf_latch->dest - 32];
+    unsigned srselect = request->srselect;
+    uint32_t addr = request->addr;
+    rsp_vect_t reg, dqm;
+
+    dqm = rsp_vect_load_unshuffled_operand(exdf_latch->request.vdqm);
+    reg = rsp_vect_load_unshuffled_operand(regp);
+
+    // DMEM vector reads.
+    if (request->type == RSP_MEM_REQUEST_VECTOR_READ) {
+      reg = rsp_vload_dmem(rsp, reg, dqm, addr & 0xFF0, srselect);
+      rsp_vect_write_operand(regp, reg);
+    }
+
+    // DMEM vector writes.
+    else
+      rsp_vstore_dmem(rsp, reg, dqm, addr & 0xFF0, srselect);
+  }
+
+  // Scalar unit DMEM access.
+  else {
     uint32_t addr = request->addr & 0xFFC;
     uint32_t dqm = request->dqm;
     uint32_t word;
 
     // DMEM scalar reads.
-    if (exdf_latch->request.type == RSP_MEM_REQUEST_READ) {
+    if (request->type == RSP_MEM_REQUEST_READ) {
       unsigned rshiftamt = (4 - request->size) << 3;
       unsigned lshiftamt = (addr & 0x3) << 3;
 
