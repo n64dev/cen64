@@ -165,6 +165,7 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
 //
 // TODO: Test this.
 //
+#ifdef __SSSE3__
 void rsp_vstore_dmem(struct rsp *rsp,
   __m128i reg, __m128i dqm, uint32_t addr, unsigned srselect) {
   __m128i data = _mm_load_si128((__m128i *) (rsp->mem + addr));
@@ -185,4 +186,5 @@ void rsp_vstore_dmem(struct rsp *rsp,
 
   _mm_store_si128((__m128i *) (rsp->mem + addr), data);
 }
+#endif
 
