@@ -92,7 +92,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
 // This table also takes into account that DMEM is big-endian
 // byte ordering, whereas vectors are 2-byte little-endian.
 //
-cen64_align(const uint16_t b2l_keys[32][8], CACHE_LINE_SIZE) = {
+cen64_align(const uint16_t b2l_keys[16][8], CACHE_LINE_SIZE) = {
 
   // Shift right LUT; shifts in zeros from the left, one byte at a time.
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
@@ -120,7 +120,7 @@ cen64_align(const uint16_t b2l_keys[32][8], CACHE_LINE_SIZE) = {
 // This table also takes into account that vectors are 2-byte
 // little-endian, whereas DMEM is big-endian byte-ordering.
 //
-cen64_align(const uint16_t l2b_keys[32][8], CACHE_LINE_SIZE) = {
+cen64_align(const uint16_t l2b_keys[16][8], CACHE_LINE_SIZE) = {
 
   // Shift left LUT; shifts in zeros from the right, one byte at a time.
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
