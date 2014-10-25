@@ -230,10 +230,15 @@ void RSP_BGTZ_BLEZ(
 //
 void RSP_BREAK(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   rsp->regs[RSP_CP0_REGISTER_SP_STATUS] |= (SP_STATUS_HALT | SP_STATUS_BROKE);
 
   if (rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_INTR_BREAK)
     signal_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
+
+  // Kill whatever's behind us; not sure if this is necessary?
+  rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
+  rdex_latch->iw = 0x00000000U;
 }
 
 //

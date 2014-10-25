@@ -56,7 +56,7 @@ static inline int rsp_rd_stage(struct rsp *rsp) {
     if ((((opcode->flags & OPCODE_INFO_NEEDRS) && dest == rs)) ||
       ((opcode->flags & OPCODE_INFO_NEEDRT) && dest == rt)) {
       rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
-      //rdex_latch->iw = 0x00000000U;
+      rdex_latch->iw = 0x00000000U;
 
       return 1;
     }
@@ -237,6 +237,9 @@ void rsp_cycle(struct rsp *rsp) {
 
 // Initializes the pipeline with default values.
 void rsp_pipeline_init(struct rsp_pipeline *pipeline) {
+  struct rsp_rdex_latch *rdex_latch = &pipeline->rdex_latch;
 
+  rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
+  rdex_latch->iw = 0x00000000U;
 }
 
