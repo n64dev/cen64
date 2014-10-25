@@ -23,8 +23,8 @@
 #include "vr4300/segment.h"
 
 // Mask to negate second operand if subtract operation.
-cen64_align(static const uint64_t vr4300_addsub_lut[2], 16) = {
-  0x0ULL, ~0x0ULL
+cen64_align(static const uint64_t vr4300_addsub_lut[4], 32) = {
+  0x0ULL, ~0x0ULL, ~0x0ULL, ~0x0ULL
 };
 
 // Mask to select outputs for bitwise operations.
@@ -67,7 +67,7 @@ static inline int vr4300_do_mci(struct vr4300 *vr4300, unsigned cycles) {
 int VR4300_ADD_SUB(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
+  uint64_t mask = vr4300_addsub_lut[iw & 0x2];
 
   unsigned dest;
   uint64_t rd;
@@ -136,7 +136,7 @@ int VR4300_ADDIU_LUI_SUBIU(struct vr4300 *vr4300,
 int VR4300_ADDU_SUBU(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
+  uint64_t mask = vr4300_addsub_lut[iw & 0x2];
 
   unsigned dest;
   uint64_t rd;
@@ -483,7 +483,7 @@ int VR4300_CACHE(struct vr4300 *vr4300,
 int VR4300_DADD_DSUB(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
+  uint64_t mask = vr4300_addsub_lut[iw & 0x2];
 
   unsigned dest;
   uint64_t rd;
@@ -552,7 +552,7 @@ int VR4300_DADDIU_DSUBIU(struct vr4300 *vr4300,
 int VR4300_DADDU_DSUBU(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t mask = vr4300_addsub_lut[iw >> 1 & 0x1];
+  uint64_t mask = vr4300_addsub_lut[iw & 0x2];
 
   unsigned dest;
   uint64_t rd;

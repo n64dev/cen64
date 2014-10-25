@@ -22,8 +22,8 @@
 #include "vr4300/interface.h"
 
 // Mask to negate second operand if subtract operation.
-cen64_align(static const uint32_t rsp_addsub_lut[2], 16) = {
-  0x0U, ~0x0U
+cen64_align(static const uint32_t rsp_addsub_lut[4], 16) = {
+  0x0U, ~0x0U, ~0x0U, ~0x0U
 };
 
 // Mask to select outputs for bitwise operations.
@@ -72,7 +72,7 @@ void RSP_ADDIU_LUI_SUBIU(struct rsp *rsp,
 void RSP_ADDU_SUBU(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-  uint32_t mask = rsp_addsub_lut[iw >> 1 & 0x1];
+  uint32_t mask = rsp_addsub_lut[iw & 0x2];
 
   unsigned dest;
   uint32_t rd;
