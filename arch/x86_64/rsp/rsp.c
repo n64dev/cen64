@@ -85,9 +85,32 @@ __m128i rsp_vect_load_and_shuffle_operand(
 // This table also takes into account that DMEM is big-endian
 // byte ordering, whereas vectors are 2-byte little-endian.
 //
-cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
 
-  // Shift right LUT; shifts in zeros from the left, one byte at a time.
+// Shift left LUT; shifts in zeros from the right, one byte at a time.
+cen64_align(const uint16_t sll_b2l_keys[16][8], CACHE_LINE_SIZE) = {
+  {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
+  {0x8000, 0x0102, 0x0304, 0x0506, 0x0708, 0x090A, 0x0B0C, 0x0D0E},
+  {0x8080, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D},
+  {0x8080, 0x8000, 0x0102, 0x0304, 0x0506, 0x0708, 0x090A, 0x0B0C},
+
+  {0x8080, 0x8080, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B},
+  {0x8080, 0x8080, 0x8000, 0x0102, 0x0304, 0x0506, 0x0708, 0x090A},
+  {0x8080, 0x8080, 0x8080, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809},
+  {0x8080, 0x8080, 0x8080, 0x8000, 0x0102, 0x0304, 0x0506, 0x0708},
+
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x0001, 0x0203, 0x0405, 0x0607},
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x8000, 0x0102, 0x0304, 0x0506},
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x0001, 0x0203, 0x0405},
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8000, 0x0102, 0x0304},
+
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x0001, 0x0203},
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8000, 0x0102},
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x0001},
+  {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8000},
+};
+
+// Shift right LUT; shifts in zeros from the left, one byte at a time.
+cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x0102, 0x0304, 0x0506, 0x0708, 0x090A, 0x0B0C, 0x0D0E, 0x0F80},
   {0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x8080},
@@ -114,19 +137,38 @@ cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
 // vector. Start at vector element offset, discarding any wraparound
 // as necessary. Lastly, don't load across cacheline boundary.
 //
-// TODO: Reverse-engineer wraparound behavior.
+// TODO: Verify wraparound behavior.
 // TODO: Only tested for L{B/S/L/D/Q}V
 //
 __m128i rsp_vload_dmem(struct rsp *rsp,
   uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
+  unsigned doffset = addr & 0xF;
   uint32_t aligned_addr = addr & 0xFF0;
 
   __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
-  __m128i key = _mm_load_si128((__m128i *) (srl_b2l_keys[element]));
+  __m128i ekey = _mm_load_si128((__m128i *) (sll_b2l_keys[element]));
+  __m128i dkey, temp;
 
-  // Byteswap and rotate as needed.
-  data = _mm_shuffle_epi8(data, key);
-  dqm = _mm_shuffle_epi8(dqm, key);
+  dqm = _mm_shuffle_epi8(dqm, ekey);
+
+  // If the element is the bounding factor as to how much we
+  // load, we'll just select the data by pushing dqm over.
+  if (doffset <= element)
+    dkey = _mm_load_si128((__m128i *) (sll_b2l_keys[element - doffset]));
+
+  // If the amount of data restricts how much we'll feed
+  // into the vector, we'll need to cut off the loose end
+  // in addition to pushing dqm over.
+  else {
+    dkey = _mm_load_si128((__m128i *) (srl_b2l_keys[doffset - element]));
+
+    temp = _mm_cmpeq_epi32(reg, reg);
+    temp = _mm_shuffle_epi8(temp, dkey);
+    dqm = _mm_and_si128(dqm, temp);
+  }
+
+  // Byteswap and shift as needed.
+  data = _mm_shuffle_epi8(data, dkey);
 
   // Mask and mux in the data.
 #ifdef __SSE4_1__
