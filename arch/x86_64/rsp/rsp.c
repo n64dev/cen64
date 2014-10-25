@@ -172,7 +172,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
   __m128i key = _mm_load_si128((__m128i *) (byteswap_key[srselect]));
 
   // Byteswap and rotate as needed.
-  reg = _mm_shuffle_epi8(reg, key);
+  data = _mm_shuffle_epi8(data, key);
   dqm = _mm_shuffle_epi8(dqm, key);
 
   // Mask and mux in the data, write.
