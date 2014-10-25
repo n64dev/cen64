@@ -1112,28 +1112,14 @@ int VR4300_SD(struct vr4300 *vr4300,
 
 //
 // SLL
-//
-int VR4300_SLL(struct vr4300 *vr4300,
-  uint32_t iw, uint64_t unused(rs), uint64_t rt) {
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  unsigned dest = GET_RD(iw);
-  unsigned sa = iw >> 6 & 0x1F;
-
-  exdc_latch->result = (int32_t) (rt << sa);
-  exdc_latch->dest = dest;
-  return 0;
-}
-
-//
 // SLLV
 //
-int VR4300_SLLV(struct vr4300 *vr4300,
+int VR4300_SLL_SLLV(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   unsigned dest = GET_RD(iw);
-  unsigned sa = rs & 0x1F;
+  unsigned sa = (rs & 0x1F) + (iw >> 6 & 0x1F);
 
   exdc_latch->result = (int32_t) (rt << sa);
   exdc_latch->dest = dest;

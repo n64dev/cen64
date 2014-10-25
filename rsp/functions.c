@@ -361,27 +361,14 @@ void RSP_NOR(struct rsp *rsp,
 
 //
 // SLL
-//
-void RSP_SLL(struct rsp *rsp,
-  uint32_t iw, uint32_t unused(rs), uint32_t rt) {
-  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-
-  unsigned dest = GET_RD(iw);
-  unsigned sa = iw >> 6 & 0x1F;
-
-  exdf_latch->result = rt << sa;
-  exdf_latch->dest = dest;
-}
-
-//
 // SLLV
 //
-void RSP_SLLV(struct rsp *rsp,
+void RSP_SLL_SLLV(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   unsigned dest = GET_RD(iw);
-  unsigned sa = rs & 0x1F;
+  unsigned sa = (rs & 0x1F) + (iw >> 6 & 0x1F);
 
   exdf_latch->result = rt << sa;
   exdf_latch->dest = dest;
