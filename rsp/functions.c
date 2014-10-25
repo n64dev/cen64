@@ -334,7 +334,7 @@ void RSP_LQV_SQV(struct rsp *rsp,
   rsp_vect_t dqm;
 
   addr = rs + ((uint16_t) iw << 4);
-  dqm = rsp_vset(rsp_vzero());
+  dqm = rsp_vset();
 
   exdf_latch->request.addr = addr;
   rsp_vect_write_operand(exdf_latch->request.vdqm, dqm);

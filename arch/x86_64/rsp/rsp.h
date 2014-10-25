@@ -58,8 +58,20 @@ static inline __m128i rsp_vzero(void) {
 }
 
 // Sets all bits in a vector.
-static inline __m128i rsp_vset(__m128i zero) {
-  return _mm_cmpeq_epi32(zero, zero);
+static inline __m128i rsp_vset(void) {
+  __m128i junk;
+
+  // GCC will try to `pxor xmm,xmm` as a peephole optimization to the
+  // processor if we try to init junk using _mm_setzero_si128, don't
+  // explicitly provide a value, initialize it to itself, or whatever
+  // else. Skip the pxor instruction by just telling GCC to give us
+  // back whatever's in the register.
+#ifdef __GNUC__
+  __asm__ __volatile__("" : "=x" (junk));
+#else
+  junk = _mm_setzero_si128();
+#endif
+  return _mm_cmpeq_epi32(junk, junk);
 }
 
 // Load and store aligner.
