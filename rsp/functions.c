@@ -34,6 +34,15 @@ cen64_align(static const uint32_t rsp_bitwise_lut[4][2], 32) = {
   { 0U,  0U}, // -
 };
 
+// Mask to denote which part of the vector to load/store.
+cen64_align(static const uint16_t rsp_bdlqs_lut[5][8], CACHE_LINE_SIZE) = {
+  {0xFF00, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}, // B
+  {0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}, // S
+  {0xFFFF, 0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}, // L
+  {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000}, // D
+  {0xFFFF, 0xFFFF, 0xFFFF, 0XFFFF, 0xFFFF, 0xFFFF, 0XFFFF, 0XFFFF}, // Q
+};
+
 // Mask to select link address register for some branches.
 cen64_align(static const uint32_t rsp_branch_lut[2], 8) = {
   ~0U, 0U
@@ -324,22 +333,28 @@ void RSP_LUI(struct rsp *rsp,
 }
 
 //
+// LBV
+// LDV
+// LLV
 // LQV
+// LSV
+// SBV
+// SDV
+// SLV
 // SQV
+// SSV
 //
-void RSP_LQV_SQV(struct rsp *rsp,
+void RSP_BDLQSV_SBDLQSV(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-  unsigned addr, dest = GET_VT(iw);
-  rsp_vect_t dqm;
+  unsigned shift_and_idx = iw >> 11 & 0x7;
+  unsigned dest = GET_VT(iw);
 
-  addr = rs + ((uint16_t) iw << 4);
-  dqm = rsp_vset();
+  exdf_latch->request.addr = rs + ((uint16_t) iw << shift_and_idx);
+  memcpy(exdf_latch->request.vdqm, rsp_bdlqs_lut[shift_and_idx],
+    sizeof(exdf_latch->request.vdqm));
 
-  exdf_latch->request.addr = addr;
-  rsp_vect_write_operand(exdf_latch->request.vdqm, dqm);
-  exdf_latch->request.element = GET_E(iw) & 0xF;
-
+  exdf_latch->request.element = GET_E(iw);
   exdf_latch->request.type = (iw >> 29 & 0x1)
     ? RSP_MEM_REQUEST_VECTOR_WRITE
     : RSP_MEM_REQUEST_VECTOR_READ;
