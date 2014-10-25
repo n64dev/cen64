@@ -32,7 +32,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
     set(CEN64_ARCH_DIR "x86_64")
 
     if (NOT NATIVE_BUILD)
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
     endif (NOT NATIVE_BUILD)
 
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
@@ -93,7 +93,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     set(CEN64_ARCH_DIR "x86_64")
 
     if (NOT NATIVE_BUILD)
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
     endif (NOT NATIVE_BUILD)
 
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
