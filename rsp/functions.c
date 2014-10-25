@@ -47,19 +47,19 @@ cen64_align(static const uint32_t rsp_load_sex_mask[2][4], 32) = {
 
 //
 // ADDIU
+// LUI
 // SUBIU
 //
-void RSP_ADDIU_SUBIU(struct rsp *rsp,
+void RSP_ADDIU_LUI_SUBIU(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-  uint32_t mask = 0; //rsp_addsub_lut[iw & 0x1];
-
+  unsigned immshift = iw >> 24 & 0x10;
   unsigned dest;
 
   dest = GET_RT(iw);
+
   rt = (int16_t) iw;
-  rt = (rt ^ mask) - mask;
-  rt = rs + rt;
+  rt = rs + (rt << immshift);
 
   exdf_latch->result = rt;
   exdf_latch->dest = dest;

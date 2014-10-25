@@ -110,19 +110,19 @@ int VR4300_ADDI_SUBI(struct vr4300 *vr4300,
 
 //
 // ADDIU
+// LUI
 // SUBIU
 //
-int VR4300_ADDIU_SUBIU(struct vr4300 *vr4300,
+int VR4300_ADDIU_LUI_SUBIU(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t mask = 0; //vr4300_addsub_lut[iw & 0x1];
-
+  unsigned immshift = iw >> 24 & 0x10;
   unsigned dest;
 
   dest = GET_RT(iw);
+
   rt = (int16_t) iw;
-  rt = (rt ^ mask) - mask;
-  rt = rs + rt;
+  rt = rs + (rt << immshift);
 
   exdc_latch->result = (int32_t) rt;
   exdc_latch->dest = dest;
@@ -940,21 +940,6 @@ int VR4300_LOAD(struct vr4300 *vr4300,
 
   exdc_latch->dest = dest;
   exdc_latch->result = 0;
-  return 0;
-}
-
-//
-// LUI
-//
-int VR4300_LUI(struct vr4300 *vr4300,
-  uint32_t iw, uint64_t unused(rs), uint64_t unused(rt)) {
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  int32_t imm = iw << 16;
-  unsigned dest = GET_RT(iw);
-
-  exdc_latch->result = imm;
-  exdc_latch->dest = dest;
   return 0;
 }
 
