@@ -64,9 +64,9 @@ static inline __m128i rsp_vset(__m128i zero) {
 
 // Load and store aligner.
 __m128i rsp_vload_dmem(struct rsp *rsp,
-  __m128i reg, __m128i dqm, uint32_t addr, unsigned srselect);
+  uint32_t addr, unsigned element, __m128i reg, __m128i dqm);
 void rsp_vstore_dmem(struct rsp *rsp,
-  __m128i reg, __m128i dqm, uint32_t addr, unsigned srselect);
+  uint32_t addr, unsigned element, __m128i reg, __m128i dqm);
 
 #include "arch/x86_64/rsp/vand.h"
 #include "arch/x86_64/rsp/vnand.h"

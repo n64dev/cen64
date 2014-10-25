@@ -166,7 +166,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
   // Vector unit DMEM access.
   if (exdf_latch->dest >= 32) {
     uint16_t *regp = rsp->cp2.regs[exdf_latch->dest - 32];
-    unsigned srselect = request->srselect;
+    unsigned element = request->element;
     uint32_t addr = request->addr;
     rsp_vect_t reg, dqm;
 
@@ -175,13 +175,13 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
     // DMEM vector reads.
     if (request->type == RSP_MEM_REQUEST_VECTOR_READ) {
-      reg = rsp_vload_dmem(rsp, reg, dqm, addr & 0xFF0, srselect);
+      reg = rsp_vload_dmem(rsp, addr, element, reg, dqm);
       rsp_vect_write_operand(regp, reg);
     }
 
     // DMEM vector writes.
     else
-      rsp_vstore_dmem(rsp, reg, dqm, addr & 0xFF0, srselect);
+      rsp_vstore_dmem(rsp, addr, element, reg, dqm);
   }
 
   // Scalar unit DMEM access.

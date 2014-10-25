@@ -338,7 +338,7 @@ void RSP_LQV_SQV(struct rsp *rsp,
 
   exdf_latch->request.addr = addr;
   rsp_vect_write_operand(exdf_latch->request.vdqm, dqm);
-  exdf_latch->request.srselect = GET_E(iw) & 0xF;
+  exdf_latch->request.element = GET_E(iw) & 0xF;
 
   exdf_latch->request.type = (iw >> 29 & 0x1)
     ? RSP_MEM_REQUEST_VECTOR_WRITE

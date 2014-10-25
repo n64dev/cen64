@@ -82,17 +82,10 @@ __m128i rsp_vect_load_and_shuffle_operand(
 
 #ifdef __SSSE3__
 //
-// The magic, omnipotent shift/rotate tables. Since SSE does not
-// provide the capability to shift (or rotate, for that matter)
-// an entire vector by a variable value, we use pshufb with a LUT
-// to achieve the desired effect.
-//
-
-//
 // This table also takes into account that DMEM is big-endian
 // byte ordering, whereas vectors are 2-byte little-endian.
 //
-cen64_align(const uint16_t b2l_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
 
   // Shift right LUT; shifts in zeros from the left, one byte at a time.
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
@@ -117,12 +110,68 @@ cen64_align(const uint16_t b2l_keys[16][8], CACHE_LINE_SIZE) = {
 };
 
 //
-// This table also takes into account that vectors are 2-byte
+// Accelerated loads. Byteswap big-endian to 2-byte little-endian
+// vector. Start at vector element offset, discarding any wraparound
+// as necessary. Lastly, don't load across cacheline boundary.
+//
+// TODO: Reverse-engineer wraparound behavior.
+// TODO: Only tested for L{B/S/L/D/Q}V
+//
+__m128i rsp_vload_dmem(struct rsp *rsp,
+  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
+  uint32_t aligned_addr = addr & 0xFF0;
+
+  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
+  __m128i key = _mm_load_si128((__m128i *) (srl_b2l_keys[element]));
+
+  // Byteswap and rotate as needed.
+  data = _mm_shuffle_epi8(data, key);
+  dqm = _mm_shuffle_epi8(dqm, key);
+
+  // Mask and mux in the data.
+#ifdef __SSE4_1__
+  data = _mm_blendv_epi8(reg, data, dqm);
+#else
+  data = _mm_and_si128(dqm, data);
+  reg = _mm_andnot_si128(dqm, reg);
+  data = _mm_or_si128(data, reg);
+#endif
+
+  return data;
+}
+#endif
+
+#ifdef __SSSE3__
+//
+// These tables takes into account that vectors are 2-byte
 // little-endian, whereas DMEM is big-endian byte-ordering.
 //
-cen64_align(const uint16_t l2b_keys[16][8], CACHE_LINE_SIZE) = {
 
-  // Shift left LUT; shifts in zeros from the right, one byte at a time.
+// Rotate left LUT; rotates high order bytes back to low order.
+cen64_align(const uint16_t rol_l2b_keys[16][8], CACHE_LINE_SIZE) = {
+  {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
+  {0x010E, 0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0F0C},
+  {0x0E0F, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D},
+  {0x0F0C, 0x010E, 0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A},
+
+  {0x0C0D, 0x0E0F, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B},
+  {0x0D0A, 0x0F0C, 0x010E, 0x0300, 0x0502, 0x0704, 0x0906, 0x0B08},
+  {0x0A0B, 0x0C0D, 0x0E0F, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809},
+  {0x0B08, 0x0D0A, 0x0F0C, 0x010E, 0x0300, 0x0502, 0x0704, 0x0906},
+
+  {0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x0001, 0x0203, 0x0405, 0x0607},
+  {0x0906, 0x0B08, 0x0D0A, 0x0F0C, 0x010E, 0x0300, 0x0502, 0x0704},
+  {0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x0001, 0x0203, 0x0405},
+  {0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0F0C, 0x010E, 0x0300, 0x0502},
+
+  {0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x0001, 0x0203},
+  {0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0F0C, 0x010E, 0x0300},
+  {0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x0001},
+  {0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0F0C, 0x010E},
+};
+
+// Shift left LUT; shirts low order to high order, inserting 0x00s.
+cen64_align(const uint16_t sll_l2b_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x0180, 0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0E0C},
   {0x8080, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D},
@@ -143,48 +192,30 @@ cen64_align(const uint16_t l2b_keys[16][8], CACHE_LINE_SIZE) = {
   {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x0001},
   {0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x0180},
 };
-#endif
 
 //
-// TODO: Test this.
+// Accelerated stores. Byteswap 2-byte little-endian vector back
+// to big-endian. Start at vector element offset, wrapping around
+// as necessary. Lastly, only store upto the cacheline boundary.
 //
-#ifdef __SSSE3__
-__m128i rsp_vload_dmem(struct rsp *rsp,
-  __m128i reg, __m128i dqm, uint32_t addr, unsigned srselect) {
-  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + addr));
-  __m128i key = _mm_load_si128((__m128i *) (b2l_keys[srselect]));
-
-  // Byteswap and rotate as needed.
-  data = _mm_shuffle_epi8(data, key);
-  dqm = _mm_shuffle_epi8(dqm, key);
-
-  // Mask and mux in the data.
-#ifdef __SSE4_1__
-  data = _mm_blendv_epi8(reg, data, dqm);
-#else
-  data = _mm_and_si128(dqm, data);
-  reg = _mm_andnot_si128(dqm, reg);
-  data = _mm_or_si128(data, reg);
-#endif
-
-  return data;
-}
-#endif
-
+// TODO: Verify wraparound behavior.
+// TODO: Only tested for L{B/S/L/D/Q}V
 //
-// TODO: Test this.
-//
-#ifdef __SSSE3__
 void rsp_vstore_dmem(struct rsp *rsp,
-  __m128i reg, __m128i dqm, uint32_t addr, unsigned srselect) {
-  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + addr));
-  __m128i key = _mm_load_si128((__m128i *) (l2b_keys[srselect]));
+  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
+  unsigned doffset = addr & 0xF;
+  unsigned eoffset = (doffset - element) & 0xF;
+  uint32_t aligned_addr = addr & 0xFF0;
 
-  // Byteswap and rotate as needed.
-  reg = _mm_shuffle_epi8(reg, key);
-  dqm = _mm_shuffle_epi8(dqm, key);
+  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
+  __m128i dkey = _mm_load_si128((__m128i *) (sll_l2b_keys[doffset]));
+  __m128i ekey = _mm_load_si128((__m128i *) (rol_l2b_keys[eoffset]));
 
-  // Mask and mux in the data, write.
+  // Byteswap and rotate/shift using LUTs.
+  reg = _mm_shuffle_epi8(reg, ekey);
+  dqm = _mm_shuffle_epi8(dqm, dkey);
+
+  // Mask and mux out the data, write.
 #ifdef __SSE4_1__
   data = _mm_blendv_epi8(data, reg, dqm);
 #else
@@ -193,7 +224,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
   data = _mm_or_si128(data, reg);
 #endif
 
-  _mm_store_si128((__m128i *) (rsp->mem + addr), data);
+  _mm_store_si128((__m128i *) (rsp->mem + aligned_addr), data);
 }
 #endif
 

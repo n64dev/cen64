@@ -32,7 +32,7 @@ struct rsp_mem_request {
   uint32_t dqm;
 
   enum rsp_mem_request_type type;
-  unsigned size, srselect;
+  unsigned size, element;
 };
 
 struct rsp_latch {
