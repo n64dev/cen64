@@ -80,6 +80,17 @@ void RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *vd, uint16_t *acc,
 }
 
 //
+// VSAR
+//
+void RSP_VSAR(struct rsp *rsp, uint32_t iw, uint16_t *vd, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  unsigned e = GET_E(iw) & 0x3;
+
+  assert(e < 3 && "Invalid element! Needs reversing.");
+  memcpy(vd, acc + (e << 3), sizeof(*vd) * 8);
+}
+
+//
 // VXOR
 //
 void RSP_VXOR(struct rsp *rsp, uint32_t iw, uint16_t *vd, uint16_t *acc,

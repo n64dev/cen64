@@ -14,9 +14,9 @@
 #include "rsp/rsp.h"
 
 enum rsp_acc_t {
-  RSP_ACC_LO = 0,
+  RSP_ACC_LO = 16,
   RSP_ACC_MID = 8,
-  RSP_ACC_HI = 16
+  RSP_ACC_HI = 0,
 };
 
 struct rsp_cp2 {

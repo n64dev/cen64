@@ -225,12 +225,10 @@ void rsp_cycle(struct rsp *rsp) {
   if (rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_HALT)
     return;
 
-  // Vector.
-  rsp_v_ex_stage(rsp);
-
-  // Scalar.
   rsp_wb_stage(rsp);
   rsp_df_stage(rsp);
+
+  rsp_v_ex_stage(rsp);
   rsp_ex_stage(rsp);
 
   if (!rsp_rd_stage(rsp))

@@ -150,7 +150,7 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
   dqm = _mm_shuffle_epi8(dqm, key);
 
   // Mask and mux in the data.
-#ifdef __SSE4__
+#ifdef __SSE4_1__
   data = _mm_blendv_epi8(reg, data, dqm);
 #else
   data = _mm_and_si128(dqm, data);
@@ -172,15 +172,15 @@ void rsp_vstore_dmem(struct rsp *rsp,
   __m128i key = _mm_load_si128((__m128i *) (byteswap_key[srselect]));
 
   // Byteswap and rotate as needed.
-  data = _mm_shuffle_epi8(data, key);
+  reg = _mm_shuffle_epi8(reg, key);
   dqm = _mm_shuffle_epi8(dqm, key);
 
   // Mask and mux in the data, write.
-#ifdef __SSE4__
+#ifdef __SSE4_1__
   data = _mm_blendv_epi8(data, reg, dqm);
 #else
-  data = _mm_and_si128(dqm, reg);
-  reg = _mm_andnot_si128(dqm, data);
+  reg = _mm_and_si128(dqm, reg);
+  data = _mm_andnot_si128(dqm, data);
   data = _mm_or_si128(data, reg);
 #endif
 

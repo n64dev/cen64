@@ -338,7 +338,7 @@ void RSP_LQV(struct rsp *rsp,
   exdf_latch->request.addr = addr;
   rsp_vect_write_operand(exdf_latch->request.vdqm, dqm);
   exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR_READ;
-  exdf_latch->request.srselect = 16 + (addr & 0xF);
+  exdf_latch->request.srselect = 16 + (GET_E(iw) & 0xF);
 
   exdf_latch->dest = dest + 32;
 }
@@ -450,7 +450,7 @@ void RSP_SQV(struct rsp *rsp,
   exdf_latch->request.addr = addr;
   rsp_vect_write_operand(exdf_latch->request.vdqm, dqm);
   exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR_WRITE;
-  exdf_latch->request.srselect = addr & 0xF;
+  exdf_latch->request.srselect = (GET_E(iw) & 0xF);
 
   exdf_latch->dest = dest + 32;
 }
