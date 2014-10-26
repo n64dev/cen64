@@ -108,8 +108,8 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 
   # Set architecture-independent flags.
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
-  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
-  set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
+  set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")
   set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-s")
