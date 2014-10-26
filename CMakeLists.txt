@@ -19,7 +19,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   option(NATIVE_BUILD "Build binary for native architecture?" OFF)
 
   if (NATIVE_BUILD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -mno-avx")
   endif (NATIVE_BUILD)
 
   # Include architecture-specify machinery.
@@ -80,7 +80,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
   option(NATIVE_BUILD "Build binary for native architecture?" OFF)
 
   if (NATIVE_BUILD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -mno-avx")
   endif (NATIVE_BUILD)
 
   # Include architecture-specify machinery.
