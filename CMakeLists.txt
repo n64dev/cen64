@@ -12,7 +12,7 @@ project(cen64)
 find_package(OpenGL REQUIRED)
 
 # If using GCC, configure it accordingly.
-if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
+if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
 
   # Enable processor-specific optimizations?
@@ -28,7 +28,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
 
   string(REGEX MATCH "([a-zA-Z0-9])+" GCC_MACHINE ${GCC_MACHINE})
 
-  if ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+  if (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
     set(CEN64_ARCH_DIR "x86_64")
 
     if (NOT NATIVE_BUILD)
@@ -36,14 +36,14 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
     endif (NOT NATIVE_BUILD)
 
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
-  endif ("${GCC_MACHINE}" MATCHES "x86.*" OR "${GCC_MACHINE}" MATCHES "i.86.*")
+  endif (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
 
-  if ("${GCC_MACHINE}" STREQUAL "arm")
+  if (${GCC_MACHINE} STREQUAL "arm")
     set(CEN64_ARCH_DIR "arm")
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
-  endif ("${GCC_MACHINE}" STREQUAL "arm")
+  endif (${GCC_MACHINE} STREQUAL "arm")
 
   # Set architecture-independent flags.
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
@@ -70,10 +70,10 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined")
   endif (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
-endif ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
+endif (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 
 # If using Clang, configure it accordingly.
-if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
+if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
 
   # Enable processor-specific optimizations?
@@ -89,7 +89,7 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 
   string(REGEX MATCH "([a-zA-Z0-9])+" CLANG_MACHINE ${CLANG_MACHINE})
 
-  if ("${CLANG_MACHINE}" MATCHES "x86.*" OR "${CLANG_MACHINE}" MATCHES "i.86.*")
+  if (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
     set(CEN64_ARCH_DIR "x86_64")
 
     if (NOT NATIVE_BUILD)
@@ -97,14 +97,14 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     endif (NOT NATIVE_BUILD)
 
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
-  endif ("${CLANG_MACHINE}" MATCHES "x86.*" OR "${CLANG_MACHINE}" MATCHES "i.86.*")
+  endif (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
 
-  if ("${CLANG_MACHINE}" STREQUAL "arm")
+  if (${CLANG_MACHINE} STREQUAL "arm")
     set(CEN64_ARCH_DIR "arm")
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
-  endif ("${CLANG_MACHINE}" STREQUAL "arm")
+  endif (${CLANG_MACHINE} STREQUAL "arm")
 
   # Set architecture-independent flags.
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
@@ -115,7 +115,33 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-s")
 
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-endif ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
+endif (${CMAKE_C_COMPILER_ID} MATCHES Clang)
+
+# If using ICC, configure it accordingly.
+if (${CMAKE_C_COMPILER_ID} MATCHES Intel)
+  set(CMAKE_C_FLAGS "-Wall -Wno-unused-parameter -std=c99")
+
+  # Enable processor-specific optimizations?
+  option(NATIVE_BUILD "Build binary for native architecture?" OFF)
+
+  if (NATIVE_BUILD)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHost")
+  else ()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xSSSE3")
+  endif ()
+
+  # Include architecture-specify machinery.
+  set(CEN64_ARCH_DIR "x86_64")
+
+  include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
+
+  # Set architecture-independent flags.
+  set(CMAKE_C_FLAGS_DEBUG "-g3 -O0")
+  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -ipo -ffunction-sections -fdata-sections")
+  set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG -ipo -ffunction-sections -fdata-sections")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
+  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
+endif (${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
 # If using MSVC, configure it accordingly.
 if (MSVC)
@@ -161,9 +187,9 @@ if (DEFINED UNIX)
   find_package(X11 REQUIRED)
   set(CEN64_OS_UNIX 1)
 
-  if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang)
+  if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=199309L")
-  endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang)
+  endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
   include_directories(${X11_xf86vmode_INCLUDE_PATH})
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
