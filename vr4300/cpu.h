@@ -15,6 +15,7 @@
 #include "vr4300/cp1.h"
 #include "vr4300/dcache.h"
 #include "vr4300/icache.h"
+#include "vr4300/opcodes.h"
 #include "vr4300/pipeline.h"
 
 struct bus_controller;
@@ -110,8 +111,18 @@ struct vr4300 {
 
 };
 
+struct vr4300_stats {
+  unsigned long long executed_instructions;
+  unsigned long long total_cycles;
+
+  unsigned long long opcode_counts[NUM_VR4300_OPCODES];
+};
+
 void vr4300_cycle(struct vr4300 *vr4300);
+void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats);
 int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);
+
+void vr4300_print_summary(struct vr4300_stats *stats);
 
 #endif
 

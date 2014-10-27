@@ -17,7 +17,7 @@ static int load_roms(const char *pifrom_path, const char *cart_path,
   struct rom_file *pifrom, struct rom_file *cart);
 
 static int setup_and_run_device(struct cen64_device *device,
-  const char *pifrom_path, const char *cart_path);
+  const char *pifrom_path, const char *cart_path, bool extra_mode);
 
 // Called when a simulation instance is terminating.
 void cen64_cleanup(struct cen64_device *device) {
@@ -28,7 +28,8 @@ void cen64_cleanup(struct cen64_device *device) {
 // Called when another simulation instance is desired.
 int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
   struct gl_window_hints hints;
-  int status;
+  bool extra_mode = false;
+  int status, i;
 
   // Prevent debugging tools from raising warnings
   // about uninitialized memory being read, etc.
@@ -36,7 +37,11 @@ int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
   get_default_gl_window_hints(&hints);
 
   if (argc < 3) {
-    printf("%s <pifrom.bin> <rom>\n", argv[0]);
+    printf("%s <pifrom.bin> <rom>\n\n"
+      "Options:\n"
+      "  -printsimstats             : Print simulation statistics at exit.\n",
+      argv[0]);
+
     return 255;
   }
 
@@ -45,8 +50,13 @@ int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
     return 1;
   }
 
+  // Parse arguments.
+  for (i = 1; i < argc - 2; i++)
+    if (!strcmp(argv[i], "-printsimstats"))
+      extra_mode = true;
+
   // Start simulation.
-  if ((status = setup_and_run_device(device, argv[1], argv[2])))
+  if ((status = setup_and_run_device(device, argv[i], argv[i + 1], extra_mode)))
     destroy_gl_window(&device->vi.gl_window);
 
   return status;
@@ -79,7 +89,7 @@ int load_roms(const char *pifrom_path, const char *cart_path,
 
 // Create a device, Load ROM images, etc. and run.
 int setup_and_run_device(struct cen64_device *device,
-  const char *pifrom_path, const char *cart_path) {
+  const char *pifrom_path, const char *cart_path, bool extra_mode) {
   struct rom_file pifrom, cart;
   int status;
 
@@ -90,8 +100,11 @@ int setup_and_run_device(struct cen64_device *device,
     device->cart_size = cart.size;
 
     // Create a device and roceed to the main application loop.
-    if (!(status = device_create(device) == NULL))
-      status = device_run(device);
+    if (!(status = device_create(device) == NULL)) {
+      status = unlikely(extra_mode)
+        ? device_run_extra(device)
+        : device_run(device);
+    }
 
     close_rom_file(&cart);
     close_rom_file(&pifrom);

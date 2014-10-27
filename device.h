@@ -45,11 +45,16 @@ struct cen64_device {
 
   const uint8_t *pifrom;
   const uint8_t *cart;
+
+  // Debugging/statistical data.
+  struct vr4300_stats vr4300_stats;
 };
 
 struct cen64_device *device_create(struct cen64_device *device);
 void device_destroy(struct cen64_device *device);
+
 int device_run(struct cen64_device *device);
+int device_run_extra(struct cen64_device *device);
 
 #endif
 

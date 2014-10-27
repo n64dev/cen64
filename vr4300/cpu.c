@@ -48,3 +48,51 @@ int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus) {
   return 0;
 }
 
+// Prints out simulation information to stdout.
+void vr4300_print_summary(struct vr4300_stats *stats) {
+  unsigned i, j;
+  float secs;
+  float cpi;
+
+  // Print banner.
+  printf("###############################\n"
+         " NEC VR4300 Simulation Summary\n"
+         "###############################\n"
+         "\n"
+  );
+
+  // Print configuration, summary, whatever.
+  secs = stats->total_cycles / 93750000.0f;
+
+  printf("   %16s: %.1f sec.\n"
+         "\n\n",
+
+    "Actual runtime", secs
+  );
+
+  // Print performance statistics.
+  cpi = (float) stats->executed_instructions / stats->total_cycles;
+
+  printf(" * Performance statistics:\n\n"
+         "   %16s: %llu\n"
+         "   %16s: %llu\n"
+         "   %16s: %1.2f\n"
+         "\n\n",
+
+    "Elapsed pcycles", stats->total_cycles,
+    "Insns executed", stats->executed_instructions,
+    "Average CPI", cpi
+  );
+
+  // Print executed opcode counts.
+  printf(" * Executed instruction counts:\n\n");
+
+  for (i = 1; i < NUM_VR4300_OPCODES; i += 2) {
+    for (j = 0; i + j < NUM_VR4300_OPCODES && j < 2; j++)
+      printf("   %16s: %16llu\t", vr4300_opcode_mnemonics[i + j],
+        stats->opcode_counts[i + j]);
+
+    printf("\n");
+  }
+}
+

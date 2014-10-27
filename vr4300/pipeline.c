@@ -460,6 +460,22 @@ void vr4300_cycle(struct vr4300 *vr4300) {
     return;
 }
 
+// Collects additional information about the pipeline each cycle.
+void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats) {
+  struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
+  struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
+
+  // Collect information for CPI.
+  stats->executed_instructions +=
+    !dcwb_latch->common.fault &&
+    !vr4300->pipeline.cycles_to_stall;
+
+  stats->total_cycles++;
+
+  // Collect information about executed instructions.
+  stats->opcode_counts[rfex_latch->opcode.id]++;
+}
+
 // Initializes the pipeline with default values.
 void vr4300_pipeline_init(struct vr4300_pipeline *pipeline) {
   pipeline->icrf_latch.segment = get_default_segment();

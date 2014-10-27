@@ -118,3 +118,28 @@ int device_run(struct cen64_device *device) {
   return 0;
 }
 
+// Kicks off threads and starts the device.
+int device_run_extra(struct cen64_device *device) {
+  unsigned i;
+
+  if (setjmp(device->bus.unwind_data)) {
+    vr4300_print_summary(&device->vr4300_stats);
+    return 0;
+  }
+
+  while (1) {
+    for (i = 0; i < 2; i++) {
+      vi_cycle(&device->vi);
+
+      rsp_cycle(&device->rsp);
+      vr4300_cycle(&device->vr4300);
+      vr4300_cycle_extra(&device->vr4300, &device->vr4300_stats);
+    }
+
+    vr4300_cycle(&device->vr4300);
+    vr4300_cycle_extra(&device->vr4300, &device->vr4300_stats);
+  }
+
+  return 0;
+}
+
