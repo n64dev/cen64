@@ -307,7 +307,7 @@ void vr4300_cycle_slow_wb(struct vr4300 *vr4300) {
 
   // If we haven't had exceptions for at least a
   // full pipeline's length, switch back to fast mode.
-  if (pipeline->exception_history++ > 4)
+  if (pipeline->exception_history++ > 3)
     pipeline->fault_present = false;
 
   if (dcwb_latch->common.fault == VR4300_FAULT_NONE) {

@@ -44,12 +44,12 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -89,12 +89,12 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -192,12 +192,12 @@ int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -241,12 +241,12 @@ int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -290,12 +290,12 @@ int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -339,12 +339,12 @@ int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -388,12 +388,12 @@ int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -437,12 +437,12 @@ int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -486,12 +486,12 @@ int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -535,12 +535,12 @@ int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -584,12 +584,12 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -642,12 +642,12 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -695,7 +695,7 @@ int VR4300_CFC1(struct vr4300 *vr4300,
   unsigned src = GET_RD(iw);
   uint64_t result;
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -738,7 +738,7 @@ int VR4300_CTC1(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_RD(iw);
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -775,7 +775,7 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -823,12 +823,12 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -868,7 +868,7 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -915,12 +915,12 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -958,12 +958,12 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -999,7 +999,7 @@ int VR4300_DMFC1(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_RT(iw);
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1017,7 +1017,7 @@ int VR4300_DMTC1(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_FS(iw);
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1042,12 +1042,12 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1099,12 +1099,12 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1153,7 +1153,7 @@ int VR4300_LDC1(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_FT(iw);
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1185,7 +1185,7 @@ int VR4300_LWC1(struct vr4300 *vr4300,
   uint64_t result = 0;
   unsigned postshift = 0;
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1224,12 +1224,12 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1270,7 +1270,7 @@ int VR4300_MFC1(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
   uint64_t result;
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1297,7 +1297,7 @@ int VR4300_CP1_MOV(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_FD(iw);
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1317,7 +1317,7 @@ int VR4300_MTC1(struct vr4300 *vr4300,
   uint64_t result = (int32_t) rt;
   unsigned dest = GET_FS(iw);
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1348,12 +1348,12 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1394,12 +1394,12 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1451,12 +1451,12 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1502,7 +1502,7 @@ int VR4300_SDC1(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1530,12 +1530,12 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1575,12 +1575,12 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1618,7 +1618,7 @@ int VR4300_SWC1(struct vr4300 *vr4300,
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   unsigned ft_reg = GET_FT(iw);
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
@@ -1651,12 +1651,12 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
@@ -1696,12 +1696,12 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
 
   saved_state = fpu_get_state();
 
-  if (!vr4300_cp1_usable(vr4300)) {
+  if (unlikely(!vr4300_cp1_usable(vr4300))) {
     VR4300_CPU(vr4300);
     return 1;
   }
 
-  else if (fmt != VR4300_FMT_S && fmt != VR4300_FMT_D) {
+  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
     VR4300_INV(vr4300);
     return 1;
   }
