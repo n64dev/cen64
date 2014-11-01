@@ -106,7 +106,6 @@ struct cen64_device *device_create(struct cen64_device *device,
 
 // Deallocates and cleans up a device.
 void device_destroy(struct cen64_device *device) {
-  bus_cleanup(&device->bus);
 }
 
 // Called when we should (probably?) leave simulation.

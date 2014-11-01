@@ -25,8 +25,6 @@ struct rsp;
 struct vr4300;
 
 struct bus_controller {
-  struct memory_map *map;
-
   struct ai_controller *ai;
   struct pi_controller *pi;
   struct ri_controller *ri;
@@ -37,13 +35,15 @@ struct bus_controller {
   struct rsp *rsp;
   struct vr4300 *vr4300;
 
+  // For resolving physical address ranges to devices.
+  struct memory_map map;
+
   // Allows to to pop back out into device_run during simulation.
   // Kind of a hack to put this in with the device "bus", but at
   // least everyone gets access to it this way.
   jmp_buf unwind_data;
 };
 
-void bus_cleanup(struct bus_controller *bus);
 int bus_init(struct bus_controller *bus);
 
 // General-purpose accesssor functions.

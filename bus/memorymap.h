@@ -42,18 +42,16 @@ struct memory_map_node {
 };
 
 struct memory_map {
-  struct memory_map_node *mappings;
+  struct memory_map_node mappings[16];
+
   struct memory_map_node *nil;
   struct memory_map_node *root;
-
   unsigned next_map_index;
-  unsigned num_mappings;
 };
 
-struct memory_map* create_memory_map(unsigned num_mappings);
-void destroy_memory_map(struct memory_map *memory_map);
+void create_memory_map(struct memory_map *map);
 
-void map_address_range(struct memory_map *memory_map,
+int map_address_range(struct memory_map *memory_map,
   uint32_t start, uint32_t length, void *instance,
   memory_rd_function on_read, memory_wr_function on_write);
 

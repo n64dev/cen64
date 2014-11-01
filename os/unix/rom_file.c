@@ -26,11 +26,11 @@ int open_rom_file(const char *path, struct rom_file *file) {
   void *ptr;
   int fd;
 
-  /* Open the file for read only. */
+  // Open the file for read only.
   if ((fd = open(path, O_RDONLY)) == -1)
     return -1;
 
-  /* Get the file's size, map it into the address space. */
+  // Get the file's size, map it into the address space.
   if (fstat(fd, &sb) == -1 || (ptr = mmap(NULL,
     sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED) {
     close(fd);

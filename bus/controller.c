@@ -33,11 +33,6 @@ struct bus_controller_mapping {
   uint32_t length;
 };
 
-// Releases resources acquired by the bus component.
-void bus_cleanup(struct bus_controller *bus) {
-  destroy_memory_map(bus->map);
-}
-
 // Initializes the bus component.
 int bus_init(struct bus_controller *bus) {
   unsigned i;
@@ -78,12 +73,12 @@ int bus_init(struct bus_controller *bus) {
     bus->rsp
   };
 
-  if ((bus->map = create_memory_map(NUM_MAPPINGS)) == NULL)
-    return -1;
+  create_memory_map(&bus->map);
 
   for (i = 0; i < NUM_MAPPINGS; i++)
-    map_address_range(bus->map, mappings[i].address, mappings[i].length,
-      instances[i], mappings[i].read, mappings[i].write);
+    if (map_address_range(&bus->map, mappings[i].address, mappings[i].length,
+      instances[i], mappings[i].read, mappings[i].write))
+      return 1;
 
   return 0;
 }
@@ -96,7 +91,7 @@ int bus_read_word(struct bus_controller *bus,
   if (address < RDRAM_BASE_ADDRESS_LEN)
     return read_rdram(bus->ri, address, word);
 
-  else if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
+  else if ((node = resolve_mapped_address(&bus->map, address)) == NULL) {
     debug("bus_read_word: Failed to access: 0x%.8X\n", address);
 
     *word = 0x00000000U;
@@ -114,7 +109,7 @@ int bus_write_word(struct bus_controller *bus,
   if (address < RDRAM_BASE_ADDRESS_LEN)
     return write_rdram(bus->ri, address, word & dqm, dqm);
 
-  else if ((node = resolve_mapped_address(bus->map, address)) == NULL) {
+  else if ((node = resolve_mapped_address(&bus->map, address)) == NULL) {
     debug("bus_write_word: Failed to access: 0x%.8X\n", address);
 
     return 0;

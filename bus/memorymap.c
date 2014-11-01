@@ -16,35 +16,14 @@ static void rotate_left(struct memory_map *, struct memory_map_node *);
 static void rotate_right(struct memory_map *, struct memory_map_node *);
 
 // Creates a new memory map.
-struct memory_map *create_memory_map(unsigned num_maps) {
-  struct memory_map_node *mappings;
-	struct memory_map *map;
-
-	size_t alloc_size = sizeof(*map) + sizeof(*mappings) * (num_maps + 1);
-	if ((map = (struct memory_map*) malloc(alloc_size)) == NULL)
-    return NULL;
-
-	mappings = (struct memory_map_node*) (map + 1);
-
-	// Initialize the allocation.
-	memset(map, 0, alloc_size);
-	map->mappings = mappings;
-
-  // Initialize the tree.
-  map->num_mappings = num_maps;
-	map->nil = &mappings[num_maps];
+void create_memory_map(struct memory_map *map) {
+  map->next_map_index = 1;
+	map->nil = map->mappings;
   map->root = map->nil;
-
-  return map;
-}
-
-// Releases memory allocated for a memory map.
-void destroy_memory_map(struct memory_map *memory_map) {
-  free(memory_map);
 }
 
 // Rebalances the tree after a node is inserted.
-static void fixup(struct memory_map *map, struct memory_map_node *node) {
+void fixup(struct memory_map *map, struct memory_map_node *node) {
 	struct memory_map_node *cur;
 
   // Rebalance the whole tree as needed. 
@@ -108,20 +87,25 @@ static void fixup(struct memory_map *map, struct memory_map_node *node) {
 }
 
 // Inserts a mapping into the tree.
-void map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
+int map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
   void *instance, memory_rd_function on_read, memory_wr_function on_write) {
   struct memory_map_node *check = map->root;
   struct memory_map_node *cur = map->nil;
 	uint32_t end = start + length - 1;
 
-  struct memory_map_node *newNode;
+  struct memory_map_node *new_node;
 	struct memory_mapping mapping;
 
   // Make sure we have enough space in the map.
-  assert(map->next_map_index < map->num_mappings &&
-    "Tried to insert into a memory_map with no free mappings.");
+  const unsigned num_mappings = sizeof(map->mappings) /
+    sizeof(map->mappings[0]) - 1;
 
-  newNode =  &map->mappings[map->next_map_index++];
+  if (unlikely(map->next_map_index >= num_mappings)) {
+    debug("map_address_range: Out of free mappings.");
+    return 1;
+  }
+
+  new_node =  &map->mappings[map->next_map_index++];
 
   // Walk down the tree.
   while (check != map->nil) {
@@ -133,16 +117,16 @@ void map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
 
 	// Insert the entry.
   if (cur == map->nil)
-    map->root = newNode;
+    map->root = new_node;
 
   else if (start < cur->mapping.start)
-    cur->left = newNode;
+    cur->left = new_node;
   else
-    cur->right = newNode;
+    cur->right = new_node;
 
-  newNode->left = map->nil;
-  newNode->right = map->nil;
-  newNode->parent = cur;
+  new_node->left = map->nil;
+  new_node->right = map->nil;
+  new_node->parent = cur;
 
 	// Initialize the entry.
 	mapping.instance = instance;
@@ -153,11 +137,12 @@ void map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
 	mapping.length = length;
 	mapping.start = start;
 
-	newNode->mapping = mapping;
+	new_node->mapping = mapping;
 
 	// Rebalance the tree.
-  newNode->color = MEMORY_MAP_RED;
-	fixup(map, newNode);
+  new_node->color = MEMORY_MAP_RED;
+	fixup(map, new_node);
+  return 0;
 }
 
 // Returns a pointer to a region given an address.
