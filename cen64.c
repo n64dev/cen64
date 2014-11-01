@@ -8,64 +8,42 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+#include "bus/controller.h"
 #include "common.h"
-#include "device.h"
+#include "options.h"
+#include "os/main.h"
 #include "os/rom_file.h"
-#include <setjmp.h>
+#include <stdlib.h>
 
 static int load_roms(const char *pifrom_path, const char *cart_path,
   struct rom_file *pifrom, struct rom_file *cart);
 
-static int setup_and_run_device(struct cen64_device *device,
-  const char *pifrom_path, const char *cart_path, bool extra_mode);
-
-// Called when a simulation instance is terminating.
-void cen64_cleanup(struct cen64_device *device) {
-  destroy_gl_window(&device->vi.gl_window);
-  device_destroy(device);
-}
-
 // Called when another simulation instance is desired.
-int cen64_main(struct cen64_device *device, int argc, const char *argv[]) {
-  struct gl_window_hints hints;
-  bool extra_mode = false;
-  int status, i;
-
-  // Prevent debugging tools from raising warnings
-  // about uninitialized memory being read, etc.
-  memset(device, 0, sizeof(*device));
-  get_default_gl_window_hints(&hints);
+int cen64_cmdline_main(int argc, const char *argv[]) {
+	struct cen64_options options = default_cen64_options;
+  struct rom_file pifrom, cart;
+  int status;
 
   if (argc < 3) {
-    printf("%s <pifrom.bin> <rom>\n\n"
-      "Options:\n"
-      "  -printsimstats             : Print simulation statistics at exit.\n",
-      argv[0]);
-
-    return 255;
+    print_command_line_usage(argv[0]);
+    return EXIT_SUCCESS;
   }
 
-  if (create_gl_window(&device->vi.gl_window, &hints)) {
-    printf("Failed to create a window.\n");
-    return 1;
+  if (parse_options(&options, argc - 1, argv + 1)) {
+    printf("Invalid command line argument(s) specified.\n");
+
+    print_command_line_usage(argv[0]);
+    return EXIT_FAILURE;
   }
 
-  // Parse arguments.
-  for (i = 1; i < argc - 2; i++)
-    if (!strcmp(argv[i], "-printsimstats"))
-      extra_mode = true;
+  if (load_roms(options.pifrom_path, options.cart_path, &pifrom, &cart))
+    return EXIT_FAILURE;
 
-  // Start simulation.
-  if ((status = setup_and_run_device(device, argv[i], argv[i + 1], extra_mode)))
-    destroy_gl_window(&device->vi.gl_window);
+  status = os_main(&options, &pifrom, &cart);
 
+  close_rom_file(&cart);
+  close_rom_file(&pifrom);
   return status;
-}
-
-// Called to temporary (or permanently) leave simulation.
-// After calling this function, we return to device_run.
-void cen64_return(struct bus_controller *bus) {
-  longjmp(bus->unwind_data, 1);
 }
 
 // Load any ROM images required for simulation.
@@ -85,31 +63,5 @@ int load_roms(const char *pifrom_path, const char *cart_path,
   }
 
   return 0;
-}
-
-// Create a device, Load ROM images, etc. and run.
-int setup_and_run_device(struct cen64_device *device,
-  const char *pifrom_path, const char *cart_path, bool extra_mode) {
-  struct rom_file pifrom, cart;
-  int status;
-
-  if (!(status = load_roms(pifrom_path, cart_path, &pifrom, &cart))) {
-    device->pifrom = pifrom.ptr;
-    device->cart = cart.ptr;
-    device->pifrom_size = pifrom.size;
-    device->cart_size = cart.size;
-
-    // Create a device and roceed to the main application loop.
-    if (!(status = device_create(device) == NULL)) {
-      status = unlikely(extra_mode)
-        ? device_run_extra(device)
-        : device_run(device);
-    }
-
-    close_rom_file(&cart);
-    close_rom_file(&pifrom);
-  }
-
-  return status;
 }
 

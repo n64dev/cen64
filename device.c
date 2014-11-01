@@ -8,10 +8,15 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#include "bus/controller.h"
-#include "ai/controller.h"
+#include <setjmp.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include "common.h"
 #include "device.h"
+#include "os/rom_file.h"
+
+#include "bus/controller.h"
+#include "ai/controller.h"
 #include "pi/controller.h"
 #include "ri/controller.h"
 #include "si/controller.h"
@@ -19,9 +24,17 @@
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 
+static struct cen64_device *device_create(struct cen64_device *device,
+  uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
+
+static void device_destroy(struct cen64_device *device);
+
+static int device_runmode_fast(struct cen64_device *device);
+static int device_runmode_extra(struct cen64_device *device);
+
 // Creates and initializes a device.
-struct cen64_device *device_create(struct cen64_device *device) {
-  device->ram = malloc(0x800000);
+struct cen64_device *device_create(struct cen64_device *device,
+  uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart) {
 
   // Initialize the bus.
   device->bus.ai = &device->ai;
@@ -47,19 +60,19 @@ struct cen64_device *device_create(struct cen64_device *device) {
   }
 
   // Initialize the PI.
-  if (pi_init(&device->pi, &device->bus, device->cart, device->cart_size) < 0) {
+  if (pi_init(&device->pi, &device->bus, cart->ptr, cart->size) < 0) {
     printf("create_device: Failed to initialize the PI.\n");
     return NULL;
   }
 
   // Initialize the RI.
-  if (ri_init(&device->ri, &device->bus, device->ram) < 0) {
+  if (ri_init(&device->ri, &device->bus, ram) < 0) {
     printf("create_device: Failed to initialize the RI.\n");
     return NULL;
   }
 
   // Initialize the SI.
-  if (si_init(&device->si, &device->bus, device->pifrom) < 0) {
+  if (si_init(&device->si, &device->bus, pifrom->ptr) < 0) {
     printf("create_device: Failed to initialize the SI.\n");
     return NULL;
   }
@@ -94,11 +107,16 @@ struct cen64_device *device_create(struct cen64_device *device) {
 // Deallocates and cleans up a device.
 void device_destroy(struct cen64_device *device) {
   bus_cleanup(&device->bus);
-  free(device->ram);
+}
+
+// Called when we should (probably?) leave simulation.
+// After calling this function, we return to device_runmode_*.
+void device_request_exit(struct bus_controller *bus) {
+  longjmp(bus->unwind_data, 1);
 }
 
 // Kicks off threads and starts the device.
-int device_run(struct cen64_device *device) {
+static int device_runmode_fast(struct cen64_device *device) {
   unsigned i;
 
   if (setjmp(device->bus.unwind_data))
@@ -119,11 +137,14 @@ int device_run(struct cen64_device *device) {
 }
 
 // Kicks off threads and starts the device.
-int device_run_extra(struct cen64_device *device) {
+static int device_runmode_extra(struct cen64_device *device) {
+  struct vr4300_stats vr4300_stats;
   unsigned i;
 
+  memset(&vr4300_stats, 0, sizeof(vr4300_stats));
+
   if (setjmp(device->bus.unwind_data)) {
-    vr4300_print_summary(&device->vr4300_stats);
+    vr4300_print_summary(&vr4300_stats);
     return 0;
   }
 
@@ -133,13 +154,30 @@ int device_run_extra(struct cen64_device *device) {
 
       rsp_cycle(&device->rsp);
       vr4300_cycle(&device->vr4300);
-      vr4300_cycle_extra(&device->vr4300, &device->vr4300_stats);
+      vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
     }
 
     vr4300_cycle(&device->vr4300);
-    vr4300_cycle_extra(&device->vr4300, &device->vr4300_stats);
+    vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
   }
 
   return 0;
+}
+
+// Create a device and proceed to the main loop.
+int device_run(struct cen64_device *device, struct cen64_options *options,
+  uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart) {
+  int status = EXIT_FAILURE;
+
+  // Memory is already allocated; just spawn the device.
+  if (device_create(device, ram, pifrom, cart) != NULL) {
+    status = unlikely(options->extra_mode)
+      ? device_runmode_extra(device)
+      : device_runmode_fast(device);
+
+    device_destroy(device);
+  }
+
+  return status;
 }
 

@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "common/debug.h"
+#include "device.h"
 #include "os/gl_window.h"
 #include "os/input.h"
 
@@ -381,7 +382,7 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
     switch (event.type) {
       case ClientMessage:
         if ((unsigned) event.xclient.data.l[0] == glx_window->wm_delete_message)
-          cen64_return(bus);
+          device_request_exit(bus);
         break;
 
       case ConfigureNotify:

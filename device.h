@@ -11,6 +11,9 @@
 #ifndef __device_h__
 #define __device_h__
 #include "common.h"
+#include "options.h"
+#include "os/rom_file.h"
+
 #include "ai/controller.h"
 #include "bus/controller.h"
 #include "pi/controller.h"
@@ -21,12 +24,12 @@
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 
-#define PIFROM_SIZE 2048
+#define DEVICE_RAMSIZE 0x800000U
 
 struct cen64_device {
   struct vr4300 vr4300;
-  struct bus_controller bus;
 
+  struct bus_controller bus;
   struct ai_controller ai;
   struct pi_controller pi;
   struct ri_controller ri;
@@ -35,26 +38,12 @@ struct cen64_device {
 
   struct rdp rdp;
   struct rsp rsp;
-
-  // Dynamic memory.
-  uint8_t *ram;
-
-  // Read only images.
-  size_t pifrom_size;
-  size_t cart_size;
-
-  const uint8_t *pifrom;
-  const uint8_t *cart;
-
-  // Debugging/statistical data.
-  struct vr4300_stats vr4300_stats;
 };
 
-struct cen64_device *device_create(struct cen64_device *device);
-void device_destroy(struct cen64_device *device);
+void device_request_exit(struct bus_controller *bus);
 
-int device_run(struct cen64_device *device);
-int device_run_extra(struct cen64_device *device);
+int device_run(struct cen64_device *device, struct cen64_options *options,
+  uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
 
 #endif
 
