@@ -259,8 +259,6 @@ void RSP_INV(struct rsp *rsp,
 // J
 // JAL
 //
-// TODO: Adjust branch target for RSP IMEM range.
-//
 void RSP_J_JAL(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
@@ -268,7 +266,7 @@ void RSP_J_JAL(struct rsp *rsp,
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
   bool is_jal = iw >> 26 & 0x1;
-  uint32_t target = iw << 2 & 0x3FF;
+  uint32_t target = iw << 2 & 0xFFC;
   uint32_t mask = rsp_branch_lut[is_jal];
 
   exdf_latch->result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
@@ -280,8 +278,6 @@ void RSP_J_JAL(struct rsp *rsp,
 //
 // JALR
 // JR
-//
-// TODO: Adjust branch target for RSP IMEM range.
 //
 void RSP_JALR_JR(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t unused(rt)) {

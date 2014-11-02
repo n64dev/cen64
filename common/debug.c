@@ -14,13 +14,13 @@
 
 #ifndef NDEBUG
 
-/* Writes a formatted string to standard error. */
+// Writes a formatted string to standard output.
 int debug(const char *fmt, ...) {
 	va_list ap;
 	int ret;
 
 	va_start(ap, fmt);
-	ret = vfprintf(stderr, fmt, ap);
+	ret = vfprintf(stdout, fmt, ap);
 	va_end(ap);
 
 	return ret;
