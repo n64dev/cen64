@@ -119,7 +119,7 @@ int read_sp_regs2(void *opaque, uint32_t address, uint32_t *word) {
   enum sp_register reg = (offset >> 2) + SP_PC_REG;
 
   if (reg == SP_PC_REG)
-    *word = rsp->pipeline.dfwb_latch.common.pc;
+    *word = 0x1000 | rsp->pipeline.dfwb_latch.common.pc;
 
   else
     abort();
