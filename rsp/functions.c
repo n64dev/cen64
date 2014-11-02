@@ -154,7 +154,7 @@ void RSP_BEQ_BNE(struct rsp *rsp,
   if (cmp == is_ne)
     return;
 
-  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = (rdex_latch->common.pc + offset + 4) & 0xFFC;
 }
 
 //
@@ -176,7 +176,7 @@ void RSP_BGEZ_BLTZ(
   if (cmp == is_ge)
     return;
 
-  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = (rdex_latch->common.pc + offset + 4) & 0xFFC;
 }
 
 //
@@ -201,7 +201,7 @@ void RSP_BGEZAL_BLTZAL(
   if (cmp == is_ge)
     return;
 
-  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = (rdex_latch->common.pc + offset + 4) & 0xFFC;
 }
 
 //
@@ -222,7 +222,7 @@ void RSP_BGTZ_BLEZ(
   if (cmp == is_gt)
     return;
 
-  ifrd_latch->pc = rdex_latch->common.pc + (offset + 4);
+  ifrd_latch->pc = (rdex_latch->common.pc + offset + 4) & 0xFFC;
 }
 
 //
@@ -271,7 +271,7 @@ void RSP_J_JAL(struct rsp *rsp,
   uint32_t target = iw << 2 & 0x3FF;
   uint32_t mask = rsp_branch_lut[is_jal];
 
-  exdf_latch->result = rdex_latch->common.pc + 8;
+  exdf_latch->result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
   exdf_latch->dest = RSP_REGISTER_RA & ~mask;
 
   ifrd_latch->pc = target;
@@ -292,10 +292,10 @@ void RSP_JALR_JR(struct rsp *rsp,
   bool is_jalr = iw & 0x1;
   uint32_t mask = rsp_branch_lut[is_jalr];
 
-  exdf_latch->result = rdex_latch->common.pc + 8;
+  exdf_latch->result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
   exdf_latch->dest = RSP_REGISTER_RA & ~mask;
 
-  ifrd_latch->pc = rs;
+  ifrd_latch->pc = rs & 0xFFC;
 }
 
 //
