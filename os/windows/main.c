@@ -12,6 +12,7 @@
 #include "options.h"
 #include "os/gl_window.h"
 #include "os/main.h"
+#include "os/windows/winapi_window.h"
 #include <stdlib.h>
 #include <tchar.h>
 #include <windows.h>
@@ -126,16 +127,35 @@ int os_main(struct cen64_options *options,
     return 1;
   }
 
+  if (options->console)
+    show_console();
+
+  // TODO: Temporary fixes until we're threaded...
+  gl_window_init(&device.vi.gl_window);
+
   status = device_run(&device, options, malloc(DEVICE_RAMSIZE), pifrom, cart);
   destroy_gl_window(&device.vi.gl_window);
+
+  if (options->console)
+    hide_console();
 
   return status;
 }
 
-// Temporary stub functions.
-bool os_exit_requested(struct gl_window *gl_window) { return false; }
+// TODO: Temporary fixes until we're threaded...
+bool os_exit_requested(struct gl_window *gl_window) {
+  struct winapi_window *winapi_window =
+    (struct winapi_window *) (gl_window->window);
+
+  return winapi_window->exit_requested;
+}
+
+// TODO: Temporary fixes until we're threaded...
 void os_render_frame(struct gl_window *gl_window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type) {
+
+  gl_window_render_frame(gl_window, data,
+    xres, yres, xskip, type);
 }
 
 // "Unhides" the console window.

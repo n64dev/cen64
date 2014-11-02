@@ -11,6 +11,7 @@
 #include "common/debug.h"
 #include "os/gl_window.h"
 #include "os/input.h"
+#include "os/windows/winapi_window.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -21,14 +22,6 @@
 #include <GL/gl.h>
 
 static const wchar_t CLASSNAME[] = L"CEN64";
-
-struct winapi_window {
-  HINSTANCE h_instance;
-  HWND h_wnd;
-
-  HDC h_dc;
-  HGLRC h_glrc;
-};
 
 void gl_window_resize_cb(int width, int height);
 
@@ -73,8 +66,8 @@ int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc) {
 }
 
 // Creates a new rendering window.
-int create_gl_window(struct gl_window *gl_window,
-  const struct gl_window_hints *hints) {
+int create_gl_window(struct bus_controller *bus,
+  struct gl_window *gl_window, const struct gl_window_hints *hints) {
   struct winapi_window *winapi_window;
   int fullscreen;
 
@@ -250,7 +243,7 @@ int gl_swap_buffers(const struct gl_window *window) {
 }
 
 // Handles events that get sent to the window thread.
-void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
+void winapi_window_poll_events(struct bus_controller *bus) {
   MSG msg;
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
