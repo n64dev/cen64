@@ -88,9 +88,13 @@ void vr4300_print_summary(struct vr4300_stats *stats) {
   printf(" * Executed instruction counts:\n\n");
 
   for (i = 1; i < NUM_VR4300_OPCODES; i += 2) {
-    for (j = 0; i + j < NUM_VR4300_OPCODES && j < 2; j++)
-      printf("   %16s: %16llu\t", vr4300_opcode_mnemonics[i + j],
+    for (j = 0; i + j < NUM_VR4300_OPCODES && j < 2; j++) {
+      printf("   %16s: %16llu", vr4300_opcode_mnemonics[i + j],
         stats->opcode_counts[i + j]);
+
+      if (j == 0)
+        printf("\t");
+    }
 
     printf("\n");
   }
