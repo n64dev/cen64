@@ -53,11 +53,13 @@ struct vi_controller {
   double start_time;
   uint32_t counter;
 
-  float viuv[8];
-  float quad[8];
   unsigned frame_count;
   struct render_area render_area;
 };
+
+void gl_window_init(struct gl_window *window);
+void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
+  unsigned hres, unsigned vres, unsigned hskip, unsigned type);
 
 void vi_cycle(struct vi_controller *vi);
 int vi_init(struct vi_controller *vi, struct bus_controller *bus);

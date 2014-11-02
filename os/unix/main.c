@@ -12,6 +12,7 @@
 #include "options.h"
 #include "os/gl_window.h"
 #include "os/main.h"
+#include "os/unix/glx_window.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -57,10 +58,18 @@ int main(int argc, const char *argv[]) {
   return cen64_cmdline_main(argc, argv);
 }
 
+// Informs the simulation thread if an exit was requested.
+bool os_exit_requested(struct gl_window *gl_window) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+
+  return glx_window_exit_requested(glx_window);
+}
+
 // Allocates memory for a new device, runs it.
 int os_main(struct cen64_options *options,
   struct rom_file *pifrom, struct rom_file *cart) {
   struct gl_window_hints hints;
+  struct glx_window window;
   int status;
 
   // Allocate the device on the stack.
@@ -77,9 +86,10 @@ int os_main(struct cen64_options *options,
 
   // Prevent debugging tools from raising warnings
   // about uninitialized memory being read, etc.
+  device.vi.gl_window.window = &window;
   get_default_gl_window_hints(&hints);
 
-  if (create_gl_window(&device.vi.gl_window, &hints)) {
+  if (create_gl_window(&device.bus, &device.vi.gl_window, &hints)) {
     printf("Failed to create a window.\n");
 
     deallocate_ram(&hunk, DEVICE_RAMSIZE);
@@ -91,5 +101,14 @@ int os_main(struct cen64_options *options,
   deallocate_ram(&hunk, DEVICE_RAMSIZE);
 
   return status;
+}
+
+// Pushes a frame to the rendering thread.
+void os_render_frame(struct gl_window *gl_window, const void *data,
+  unsigned xres, unsigned yres, unsigned xskip, unsigned type) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+
+  glx_window_render_frame(glx_window, data, xres, yres, xskip, type);
+  pthread_cond_signal(&glx_window->render_cv);
 }
 

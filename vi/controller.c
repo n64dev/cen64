@@ -11,7 +11,9 @@
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
+#include "device.h"
 #include "os/gl_window.h"
+#include "os/main.h"
 #include "os/timer.h"
 #include "ri/controller.h"
 #include "vi/controller.h"
@@ -26,6 +28,66 @@ const char *vi_register_mnemonics[NUM_VI_REGISTERS] = {
 #undef X
 };
 #endif
+
+// Initializes OpenGL to an default state.
+void gl_window_init(struct gl_window *window) {
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glDisable(GL_BLEND);
+  glDisable(GL_DITHER);
+  glEnable(GL_TEXTURE_2D);
+
+  // Initialize the texture that we'll use for drawing the screen.
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  // Initialize vertex arrays for drawing.
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+  glTexCoordPointer(2, GL_FLOAT, 0, window->viuv);
+  glVertexPointer(2, GL_FLOAT, 0, window->quad);
+
+  window->quad[0] = window->quad[5] =
+  window->quad[6] = window->quad[7] = -1;
+  window->quad[1] = window->quad[2] =
+  window->quad[3] = window->quad[4] = 1;
+  window->viuv[2] = window->viuv[4] =
+  window->viuv[5] = window->viuv[7] = 1;
+
+  // Tell OpenGL that the byte order is swapped.
+  glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE);
+}
+
+// Renders a frame.
+void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
+  unsigned hres, unsigned vres, unsigned hskip, unsigned type) {
+
+  switch(type) {
+    case 0:
+      break;
+
+    case 1:
+      assert(0 && "Attempted to use reserved frame type.");
+      break;
+
+    case 2:
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, hres + hskip, vres,
+        0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, buffer);
+      break;
+
+    case 3:
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, hres + hskip, vres,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+      break;
+  }
+
+  gl_window->viuv[2] = gl_window->viuv[4] = (float) hres / (hres + hskip);
+
+  glDrawArrays(GL_QUADS, 0, 4);
+  gl_swap_buffers(gl_window);
+}
 
 // Reads a word from the VI MMIO register space.
 int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
@@ -50,7 +112,6 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
   return 0;
 }
 
-
 // Advances the controller by one clock cycle.
 void vi_cycle(struct vi_controller *vi) {
   if (unlikely(vi->counter-- == 0)) {
@@ -61,8 +122,13 @@ void vi_cycle(struct vi_controller *vi) {
     uint32_t offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
     const uint8_t *buffer = vi->bus->ri->ram + offset;
 
+    // We're at a vertical interrupt...
+    // check if an exit was requested.
+    if (os_exit_requested(&vi->gl_window))
+      device_request_exit(vi->bus);
+
     // Poll for window events: resize, close, etc.
-    os_poll_events(vi->bus, &vi->gl_window);
+    //os_poll_events(vi->bus, &vi->gl_window);
 
     if (vi->frame_count++ == 29) {
       cen64_time current_time;
@@ -99,28 +165,8 @@ void vi_cycle(struct vi_controller *vi) {
       if (vres > 480)
         vres = 480;
 
-      switch(vi->regs[VI_STATUS_REG] & 0x3) {
-        case 0:
-          break;
-
-        case 1:
-          assert(0 && "Attempted to use reserved frame type.");
-          break;
-
-        case 2:
-          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, hres + hskip, vres,
-            0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, buffer);
-          break;
-
-        case 3:
-          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, hres + hskip, vres,
-            0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-          break;
-      }
-
-      vi->viuv[2] = vi->viuv[4] = (float) hres / (hres + hskip);
-      glDrawArrays(GL_QUADS, 0, 4);
-      gl_swap_buffers(&vi->gl_window);
+      os_render_frame(&vi->gl_window, buffer, hres, vres,
+        hskip, vi->regs[VI_STATUS_REG] & 0x3);
     }
 
     // Raise an interrupt to indicate refresh.
@@ -134,35 +180,6 @@ int vi_init(struct vi_controller *vi,
   struct bus_controller *bus) {
   vi->bus = bus;
   vi->counter = VI_COUNTER_START;
-
-  // Configure OpenGL.
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
-  glDisable(GL_BLEND);
-  glDisable(GL_DITHER);
-  glEnable(GL_TEXTURE_2D);
-
-  // Initialize the texture that we'll use for drawing the screen.
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-  // Initialize vertex arrays for drawing.
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  glTexCoordPointer(2, GL_FLOAT, 0, vi->viuv);
-  glVertexPointer(2, GL_FLOAT, 0, vi->quad);
-
-  vi->quad[0] = vi->quad[5] =
-  vi->quad[6] = vi->quad[7] = -1;
-  vi->quad[1] = vi->quad[2] =
-  vi->quad[3] = vi->quad[4] = 1;
-  vi->viuv[2] = vi->viuv[4] =
-  vi->viuv[5] = vi->viuv[7] = 1;
-
-  // Tell OpenGL that the byte order is swapped.
-  glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE);
 
   // Initialize the timer.
   get_time(&vi->last_vi_time);

@@ -21,6 +21,9 @@ struct bus_controller;
 
 struct gl_window {
   void *window;
+
+  float viuv[8];
+  float quad[8];
 };
 
 struct gl_window_hints {
@@ -42,12 +45,10 @@ struct gl_window_hints {
 void get_default_gl_window_hints(struct gl_window_hints *hints);
 
 int destroy_gl_window(struct gl_window *window);
-int create_gl_window(struct gl_window *window,
-  const struct gl_window_hints *hints);
+int create_gl_window(struct bus_controller *bus,
+  struct gl_window *window, const struct gl_window_hints *hints);
 
 int gl_swap_buffers(const struct gl_window *window); 
-void os_poll_events(struct bus_controller *bus,
-  struct gl_window *gl_window);
 
 #endif
 

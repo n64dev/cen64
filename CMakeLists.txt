@@ -10,6 +10,7 @@ cmake_minimum_required(VERSION 2.6)
 project(cen64)
 
 find_package(OpenGL REQUIRED)
+find_package(Threads REQUIRED)
 
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
@@ -217,5 +218,5 @@ add_executable(cen64 ${EXTRA_OS_EXE} ${ASM_SOURCES} ${OS_SOURCES} ${OS_COMMON_SO
   ${RDP_SOURCES} ${RSP_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
   ${VR4300_SOURCES} ${ARCH_FPU_SOURCES} ${ARCH_RSP_SOURCES} ${ARCH_TLB_SOURCES})
 
-target_link_libraries(cen64 ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY})
+target_link_libraries(cen64 ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 

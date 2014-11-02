@@ -1,5 +1,5 @@
 //
-// os/unix/gl_window.c
+// os/unix/glx_window.c
 //
 // Convenience functions for managing rendering windows.
 //
@@ -7,14 +7,16 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+#include "bus/controller.h"
 #include "common.h"
 #include "common/debug.h"
-#include "device.h"
 #include "os/gl_window.h"
 #include "os/input.h"
+#include "os/unix/glx_window.h"
+#include "vi/controller.h"
 
+#include <pthread.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <GL/glx.h>
@@ -22,22 +24,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/xf86vmode.h>
-
-struct glx_window {
-  Display *display;
-  XVisualInfo *visual_info;
-  XF86VidModeModeInfo old_mode;
-
-  Atom wm_delete_message;
-  XSetWindowAttributes attr;
-  Window window;
-  int screen;
-
-  GLXContext context;
-  char went_fullscreen;
-};
-
-void gl_window_resize_cb(int width, int height);
 
 // Functions to assist in taming X11.
 static int create_glx_context(
@@ -51,6 +37,11 @@ static int get_matching_visual_info(struct glx_window *glx_window,
 
 static int get_matching_window_mode(struct glx_window *glx_window,
   const struct gl_window_hints *hints, XF86VidModeModeInfo *mode);
+
+static void glx_window_poll_events(struct bus_controller *bus,
+  struct glx_window *glx_window);
+
+static void *glx_window_thread(void *opaque);
 
 static int switch_to_fullscreen(struct glx_window *glx_window,
   const struct gl_window_hints *hints);
@@ -85,8 +76,8 @@ int create_glx_context(struct glx_window *glx_window, GLXContext *context) {
 }
 
 // Creates a new rendering window.
-int create_gl_window(struct gl_window *gl_window,
-  const struct gl_window_hints *hints) {
+int create_gl_window(struct bus_controller *bus,
+  struct gl_window *gl_window, const struct gl_window_hints *hints) {
   struct glx_window *glx_window;
   int window_valuemask;
   Window root_window;
@@ -95,21 +86,18 @@ int create_gl_window(struct gl_window *gl_window,
   // to change active the windowing mode.
   int fullscreen = hints->fullscreen;
 
-  debug("create_gl_window: Creating window...\n");
-
   // Magic number was chosen based on the glXChooseFBConfig man page.
   // It is at least large enough to hold the supported attributes, as
   // well as a few additional ones. Expand it at your convenience.
   int attribute_list[64];
 
-  // Allocate memory for the opaque handle inside thw window.
-  if ((gl_window->window = malloc(sizeof(*glx_window))) == NULL) {
-    debug("create_gl_window: Could not allocate enough memory.\n");
-    goto create_out_destroy;
-  }
-
+  debug("create_gl_window: Creating window...\n");
   glx_window = (struct glx_window *) (gl_window->window);
   memset(glx_window, 0, sizeof(*glx_window));
+
+  pthread_mutex_init(&glx_window->event_lock, NULL);
+  pthread_mutex_init(&glx_window->render_lock, NULL);
+  pthread_cond_init(&glx_window->render_cv, NULL);
 
   // Open a connection and get the default screen number.
   if ((glx_window->display = XOpenDisplay(NULL)) == NULL) {
@@ -190,13 +178,9 @@ int create_gl_window(struct gl_window *gl_window,
 
   XMapRaised(glx_window->display, glx_window->window);
 
-  if (!glXMakeCurrent(glx_window->display,
-    glx_window->window, glx_window->context)) {
-    debug("create_gl_window: Could not attach rendering context.\n");
-    goto create_out_destroy;
-  }
-
-  return 0;
+  // All ready; kickoff the thread.
+  return pthread_create(&glx_window->thread, NULL,
+    glx_window_thread, bus);
 
 create_out_destroy:
   destroy_gl_window(gl_window);
@@ -242,8 +226,9 @@ int destroy_gl_window(struct gl_window *window) {
     glx_window->display = NULL;
   }
 
-  free(glx_window);
-  window->window = NULL;
+  pthread_cond_destroy(&glx_window->render_cv);
+  pthread_mutex_destroy(&glx_window->render_lock);
+  pthread_mutex_destroy(&glx_window->event_lock);
   return 0;
 }
 
@@ -365,14 +350,25 @@ int get_matching_window_mode(struct glx_window *glx_window,
 int gl_swap_buffers(const struct gl_window *window) {
   const struct glx_window *glx_window;
 
-  glx_window = (const struct glx_window *) window->window;
+  glx_window = (const struct glx_window *) (window->window);
   glXSwapBuffers(glx_window->display, glx_window->window);
   return 0;
 }
 
+// Informs the caller if an exit was requested.
+bool glx_window_exit_requested(struct glx_window *window) {
+  bool exit_requested;
+
+  pthread_mutex_lock(&window->event_lock);
+  exit_requested = window->exit_requested;
+  pthread_mutex_unlock(&window->event_lock);
+
+  return exit_requested;
+}
+
 // Handles events that come from X11.
-void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
-  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+void glx_window_poll_events(struct bus_controller *bus,
+  struct glx_window *glx_window) {
   XEvent event;
   bool released;
 
@@ -381,8 +377,12 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
 
     switch (event.type) {
       case ClientMessage:
-        if ((unsigned) event.xclient.data.l[0] == glx_window->wm_delete_message)
-          device_request_exit(bus);
+        if ((unsigned) event.xclient.data.l[0] == glx_window->wm_delete_message) {
+          pthread_mutex_lock(&glx_window->event_lock);
+          glx_window->exit_requested = true;
+          pthread_mutex_unlock(&glx_window->event_lock);
+        }
+
         break;
 
       case ConfigureNotify:
@@ -390,7 +390,9 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
         break;
 
       case KeyPress:
+        pthread_mutex_lock(&glx_window->event_lock);
         keyboard_press_callback(bus, XLookupKeysym(&event.xkey, 0));
+        pthread_mutex_unlock(&glx_window->event_lock);
         break;
 
       case KeyRelease:
@@ -409,12 +411,75 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
           }
         }
 
-        if (released)
+        if (released) {
+          pthread_mutex_lock(&glx_window->event_lock);
           keyboard_release_callback(bus, XLookupKeysym(&event.xkey, 0));
+          pthread_mutex_unlock(&glx_window->event_lock);
+        }
 
         break;
     }
   }
+}
+
+// Copies the frame data to the render thread.
+void glx_window_render_frame(struct glx_window *window, const void *data,
+  unsigned xres, unsigned yres, unsigned xskip, unsigned type) {
+  size_t copy_size;
+
+  switch (type & 0x3) {
+    case 0:
+    case 1:
+      copy_size = 0;
+      break;
+
+    case 2:
+      copy_size = 2;
+      break;
+
+    case 3:
+      copy_size = 4;
+      break;
+  }
+
+  copy_size *= xres * yres;
+
+  // Grab the locks and dump the data.
+  pthread_mutex_lock(&window->render_lock);
+
+  memcpy(window->frame_data, data, copy_size);
+  window->frame_xres = xres;
+  window->frame_yres = yres;
+  window->frame_xskip = xskip;
+  window->frame_type = type;
+
+  pthread_mutex_unlock(&window->render_lock);
+}
+
+// Main window threads. Handles and pumps events.
+void *glx_window_thread(void *opaque) {
+  struct bus_controller *bus = (struct bus_controller *) opaque;
+  struct gl_window *gl_window = (struct gl_window *) (&bus->vi->gl_window);
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+
+  if (!glXMakeCurrent(glx_window->display,
+    glx_window->window, glx_window->context))
+    debug("create_gl_window: Could not attach rendering context.\n");
+
+  gl_window_init(gl_window);
+  pthread_mutex_lock(&glx_window->render_lock);
+
+  while (1) {
+    pthread_cond_wait(&glx_window->render_cv, &glx_window->render_lock);
+
+    glx_window_poll_events(bus, glx_window);
+
+    gl_window_render_frame(gl_window, glx_window->frame_data,
+      glx_window->frame_xres, glx_window->frame_yres,
+      glx_window->frame_xskip, glx_window->frame_type);
+  }
+
+  return NULL;
 }
 
 // Attempts to switch to fullscreen mode.
