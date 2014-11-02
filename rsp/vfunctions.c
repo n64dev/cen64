@@ -33,6 +33,13 @@ void RSP_VAND(struct rsp *rsp, uint32_t iw, uint16_t *vd, uint16_t *acc,
 //
 void RSP_VINV(struct rsp *rsp, uint32_t iw, uint16_t *vd, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+#ifndef NDEBUG
+  struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
+
+  debug("Unimplemented instruction: %s [0x%.8X] @ 0x%.8X\n",
+    rsp_vector_opcode_mnemonics[rdex_latch->opcode.id],
+    iw, rdex_latch->common.pc);
+#endif
 }
 
 //

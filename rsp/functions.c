@@ -249,9 +249,9 @@ void RSP_INV(struct rsp *rsp,
 #ifndef NDEBUG
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
-  debug("Unimplemented instruction: %s [0x%.8X] @ 0x%.16llX\n",
-    rsp_opcode_mnemonics[rdex_latch->opcode.id], iw, (long long unsigned)
-    rdex_latch->common.pc);
+  debug("Unimplemented instruction: %s [0x%.8X] @ 0x%.8X\n",
+    rsp_opcode_mnemonics[rdex_latch->opcode.id],
+    iw, rdex_latch->common.pc);
 #endif
 }
 
