@@ -12,7 +12,6 @@
 #define __vi_controller_h__
 #include "common.h"
 #include "os/gl_window.h"
-#include "os/timer.h"
 
 struct bus_controller *bus;
 
@@ -45,15 +44,11 @@ struct render_area {
 
 struct vi_controller {
   struct gl_window gl_window;
-  cen64_time last_vi_time;
 
   struct bus_controller *bus;
   uint32_t regs[NUM_VI_REGISTERS];
 
-  double start_time;
   uint32_t counter;
-
-  unsigned frame_count;
   struct render_area render_area;
 };
 

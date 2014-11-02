@@ -63,6 +63,7 @@ void gl_window_init(struct gl_window *window) {
 // Renders a frame.
 void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
   unsigned hres, unsigned vres, unsigned hskip, unsigned type) {
+  float aspect;
 
   switch(type) {
     case 0:
@@ -83,7 +84,8 @@ void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
       break;
   }
 
-  gl_window->viuv[2] = gl_window->viuv[4] = (float) hres / (hres + hskip);
+  aspect = (float) hres / (hres + hskip);
+  gl_window->viuv[2] = gl_window->viuv[4] = aspect;
 
   glDrawArrays(GL_QUADS, 0, 4);
   gl_swap_buffers(gl_window);
@@ -114,75 +116,62 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
 
 // Advances the controller by one clock cycle.
 void vi_cycle(struct vi_controller *vi) {
-  if (unlikely(vi->counter-- == 0)) {
-    struct render_area *ra = &vi->render_area;
-    int hskip, vres, hres;
-    float hcoeff, vcoeff;
+  struct render_area *ra = &vi->render_area;
+  int hskip, vres, hres;
+  float hcoeff, vcoeff;
 
-    uint32_t offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
-    const uint8_t *buffer = vi->bus->ri->ram + offset;
+  const uint8_t *buffer;
+  uint32_t offset;
 
-    // We're at a vertical interrupt...
-    // check if an exit was requested.
-    if (os_exit_requested(&vi->gl_window))
-      device_request_exit(vi->bus);
+  if (likely(vi->counter-- != 0))
+    return;
 
-    // Poll for window events: resize, close, etc.
-    //os_poll_events(vi->bus, &vi->gl_window);
+  offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
+  buffer = vi->bus->ri->ram + offset;
 
-    if (vi->frame_count++ == 29) {
-      cen64_time current_time;
-      unsigned long long ns;
+  // We're at a vertical interrupt...
+  // check if an exit was requested.
+  if (os_exit_requested(&vi->gl_window))
+    device_request_exit(vi->bus);
 
-      get_time(&current_time);
-      ns = compute_time_difference(&current_time, &vi->last_vi_time);
-      printf("VI/s: %.2f\n", (30 / ((double) ns / NS_PER_SEC)));
+  // Calculate the bounding positions.
+  ra->x.start = vi->regs[VI_H_START_REG] >> 16 & 0x3FF;
+  ra->x.end = vi->regs[VI_H_START_REG] & 0x3FF;
+  ra->y.start = vi->regs[VI_V_START_REG] >> 16 & 0x3FF;
+  ra->y.end = vi->regs[VI_V_START_REG] & 0x3FF;
 
-      vi->last_vi_time = current_time;
-      vi->frame_count = 0;
+  hcoeff = (float) (vi->regs[VI_X_SCALE_REG] & 0xFFF) / (1 << 10);
+  vcoeff = (float) (vi->regs[VI_Y_SCALE_REG] & 0xFFF) / (1 << 10);
+
+  // Calculate the height and width of the frame.
+  vres = ra->height =((ra->y.end - ra->y.start) >> 1) * vcoeff;
+  hres = ra->width = ((ra->x.end - ra->x.start)) * hcoeff;
+  hskip = ra->hskip = vi->regs[VI_WIDTH_REG] - ra->width;
+
+  if (hres > 0 && vres > 0) {
+    if (hres > 640) {
+      hskip += (hres - 640);
+      hres = 640;
     }
 
-    // Calculate the bounding positions.
-    ra->x.start = vi->regs[VI_H_START_REG] >> 16 & 0x3FF;
-    ra->x.end = vi->regs[VI_H_START_REG] & 0x3FF;
-    ra->y.start = vi->regs[VI_V_START_REG] >> 16 & 0x3FF;
-    ra->y.end = vi->regs[VI_V_START_REG] & 0x3FF;
+    if (vres > 480)
+       vres = 480;
 
-    hcoeff = (float) (vi->regs[VI_X_SCALE_REG] & 0xFFF) / (1 << 10);
-    vcoeff = (float) (vi->regs[VI_Y_SCALE_REG] & 0xFFF) / (1 << 10);
-
-    // Calculate the height and width of the frame.
-    vres = ra->height =((ra->y.end - ra->y.start) >> 1) * vcoeff;
-    hres = ra->width = ((ra->x.end - ra->x.start)) * hcoeff;
-    hskip = ra->hskip = vi->regs[VI_WIDTH_REG] - ra->width;
-
-    if (hres > 0 && vres > 0) {
-      if (hres > 640) {
-        hskip += (hres - 640);
-        hres = 640;
-      }
-
-      if (vres > 480)
-        vres = 480;
-
-      os_render_frame(&vi->gl_window, buffer, hres, vres,
-        hskip, vi->regs[VI_STATUS_REG] & 0x3);
-    }
-
-    // Raise an interrupt to indicate refresh.
-    signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
-    vi->counter = VI_COUNTER_START;
+    os_render_frame(&vi->gl_window, buffer, hres, vres,
+      hskip, vi->regs[VI_STATUS_REG] & 0x3);
   }
+
+  // Raise an interrupt to indicate refresh.
+  signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
+    vi->counter = VI_COUNTER_START;
 }
 
 // Initializes the VI.
 int vi_init(struct vi_controller *vi,
   struct bus_controller *bus) {
-  vi->bus = bus;
   vi->counter = VI_COUNTER_START;
+  vi->bus = bus;
 
-  // Initialize the timer.
-  get_time(&vi->last_vi_time);
   return 0;
 }
 

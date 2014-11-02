@@ -12,6 +12,7 @@
 #include "common/debug.h"
 #include "os/gl_window.h"
 #include "os/input.h"
+#include "os/timer.h"
 #include "os/unix/glx_window.h"
 #include "vi/controller.h"
 
@@ -29,6 +30,8 @@
 static int create_glx_context(
   struct glx_window *glx_window, GLXContext *context);
 
+static int destroy_glx_window(struct glx_window *glx_window);
+
 static void generate_attribute_list(int *attribute_list,
   const struct gl_window_hints *hints);
 
@@ -38,7 +41,7 @@ static int get_matching_visual_info(struct glx_window *glx_window,
 static int get_matching_window_mode(struct glx_window *glx_window,
   const struct gl_window_hints *hints, XF86VidModeModeInfo *mode);
 
-static void glx_window_poll_events(struct bus_controller *bus,
+static bool glx_window_poll_events(struct bus_controller *bus,
   struct glx_window *glx_window);
 
 static void *glx_window_thread(void *opaque);
@@ -183,14 +186,26 @@ int create_gl_window(struct bus_controller *bus,
     glx_window_thread, bus);
 
 create_out_destroy:
-  destroy_gl_window(gl_window);
+  destroy_glx_window(glx_window);
   return 1;
 }
 
 // Destroys an existing rendering window.
-int destroy_gl_window(struct gl_window *window) {
-  struct glx_window *glx_window = (struct glx_window *) window->window;
+int destroy_gl_window(struct gl_window *gl_window) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
 
+  // Wait for the window to tear down, first.
+  pthread_join(glx_window->thread, NULL);
+
+  pthread_cond_destroy(&glx_window->render_cv);
+  pthread_mutex_destroy(&glx_window->render_lock);
+  pthread_mutex_destroy(&glx_window->event_lock);
+
+  return 0;
+}
+
+// Releases resources acquired for a rendering window.
+int destroy_glx_window(struct glx_window *glx_window) {
   if (glx_window->went_fullscreen) {
     XF86VidModeSwitchToMode(glx_window->display,
       glx_window->screen, &glx_window->old_mode);
@@ -226,9 +241,6 @@ int destroy_gl_window(struct gl_window *window) {
     glx_window->display = NULL;
   }
 
-  pthread_cond_destroy(&glx_window->render_cv);
-  pthread_mutex_destroy(&glx_window->render_lock);
-  pthread_mutex_destroy(&glx_window->event_lock);
   return 0;
 }
 
@@ -367,10 +379,12 @@ bool glx_window_exit_requested(struct glx_window *window) {
 }
 
 // Handles events that come from X11.
-void glx_window_poll_events(struct bus_controller *bus,
+bool glx_window_poll_events(struct bus_controller *bus,
   struct glx_window *glx_window) {
+  bool released, exit_requested;
   XEvent event;
-  bool released;
+
+  exit_requested = false;
 
   while (XPending(glx_window->display)) {
     XNextEvent(glx_window->display, &event);
@@ -379,7 +393,7 @@ void glx_window_poll_events(struct bus_controller *bus,
       case ClientMessage:
         if ((unsigned) event.xclient.data.l[0] == glx_window->wm_delete_message) {
           pthread_mutex_lock(&glx_window->event_lock);
-          glx_window->exit_requested = true;
+          glx_window->exit_requested = exit_requested = true;
           pthread_mutex_unlock(&glx_window->event_lock);
         }
 
@@ -420,6 +434,8 @@ void glx_window_poll_events(struct bus_controller *bus,
         break;
     }
   }
+
+  return exit_requested;
 }
 
 // Copies the frame data to the render thread.
@@ -462,23 +478,49 @@ void *glx_window_thread(void *opaque) {
   struct gl_window *gl_window = (struct gl_window *) (&bus->vi->gl_window);
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
 
+  cen64_time last_report_time;
+  unsigned frame_count;
+
+  // Activate the rendering context from THIS thread.
+  // Any kind of GL call has to be done from here, or else.
   if (!glXMakeCurrent(glx_window->display,
     glx_window->window, glx_window->context))
-    debug("create_gl_window: Could not attach rendering context.\n");
+    debug("glx_window_thread: Could not attach rendering context.\n");
 
-  gl_window_init(gl_window);
-  pthread_mutex_lock(&glx_window->render_lock);
+  else {
+    gl_window_init(gl_window);
+    get_time(&last_report_time);
+    frame_count = 0;
 
-  while (1) {
-    pthread_cond_wait(&glx_window->render_cv, &glx_window->render_lock);
+    // Main loop; wait for frames, put them out.
+    // TODO: Pull/push events more aggressively now?
+    pthread_mutex_lock(&glx_window->render_lock);
 
-    glx_window_poll_events(bus, glx_window);
+    while (1) {
+      if (frame_count++ == 29) {
+        cen64_time current_time;
+        unsigned long long ns;
 
-    gl_window_render_frame(gl_window, glx_window->frame_data,
-      glx_window->frame_xres, glx_window->frame_yres,
-      glx_window->frame_xskip, glx_window->frame_type);
+        get_time(&current_time);
+        ns = compute_time_difference(&current_time, &last_report_time);
+        printf("VI/s: %.2f\n", (30 / ((double) ns / NS_PER_SEC)));
+
+        last_report_time = current_time;
+        frame_count = 0;
+      }
+
+      pthread_cond_wait(&glx_window->render_cv, &glx_window->render_lock);
+
+      if (glx_window_poll_events(bus, glx_window))
+        break;
+
+      gl_window_render_frame(gl_window, glx_window->frame_data,
+        glx_window->frame_xres, glx_window->frame_yres,
+        glx_window->frame_xskip, glx_window->frame_type);
+    }
   }
 
+  destroy_glx_window(glx_window);
   return NULL;
 }
 
