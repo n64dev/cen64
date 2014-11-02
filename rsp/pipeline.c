@@ -74,7 +74,7 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
-  uint64_t rs_reg, rt_reg, temp;
+  uint32_t rs_reg, rt_reg, temp;
   unsigned rs, rt;
   uint32_t iw;
 
@@ -186,6 +186,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   // Scalar unit DMEM access.
   else {
+    unsigned offset = request->addr & 0x3;
     uint32_t addr = request->addr & 0xFFC;
     uint32_t dqm = request->dqm;
     uint32_t word;
@@ -193,7 +194,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
     // DMEM scalar reads.
     if (request->type == RSP_MEM_REQUEST_READ) {
       unsigned rshiftamt = (4 - request->size) << 3;
-      unsigned lshiftamt = (addr & 0x3) << 3;
+      unsigned lshiftamt = (offset) << 3;
 
       memcpy(&word, rsp->mem + addr, sizeof(word));
 
