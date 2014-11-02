@@ -88,14 +88,14 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
   rt = GET_RT(iw);
 
   // Forward results from DF/WB.
-  temp = rsp->regs[dfwb_latch->dest];
-  rsp->regs[dfwb_latch->dest] = dfwb_latch->result;
+  temp = rsp->regs[dfwb_latch->result.dest];
+  rsp->regs[dfwb_latch->result.dest] = dfwb_latch->result.result;
   rsp->regs[RSP_REGISTER_R0] = 0x00000000U;
 
   rs_reg = rsp->regs[rs];
   rt_reg = rsp->regs[rt];
 
-  rsp->regs[dfwb_latch->dest] = temp;
+  rsp->regs[dfwb_latch->result.dest] = temp;
 
   // Finally, execute the instruction.
 #ifdef PRINT_EXEC
@@ -103,7 +103,7 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
     rsp_opcode_mnemonics[rdex_latch->opcode.id]);
 #endif
 
-  exdf_latch->dest = RSP_REGISTER_R0;
+  exdf_latch->result.dest = RSP_REGISTER_R0;
   exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
   return rsp_function_table[rdex_latch->opcode.id](
     rsp, iw, rs_reg, rt_reg);
@@ -143,7 +143,7 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
     rsp_vector_opcode_mnemonics[rdex_latch->opcode.id]);
 #endif
 
-  exdf_latch->dest = RSP_REGISTER_R0;
+  exdf_latch->result.dest = RSP_REGISTER_R0;
   exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
   return rsp_vector_function_table[rdex_latch->opcode.id](
     rsp, iw, vd_reg, acc, vs_reg, vt_reg, vt_shuf_reg, zero);
@@ -156,16 +156,14 @@ static inline void rsp_df_stage(struct rsp *rsp) {
   const struct rsp_mem_request *request = &exdf_latch->request;
 
   dfwb_latch->common = exdf_latch->common;
-  dfwb_latch->dest = exdf_latch->dest;
+  dfwb_latch->result = exdf_latch->result;
 
-  if (request->type == RSP_MEM_REQUEST_NONE) {
-    dfwb_latch->result = exdf_latch->result;
+  if (request->type == RSP_MEM_REQUEST_NONE)
     return;
-  }
 
   // Vector unit DMEM access.
-  if (exdf_latch->dest >= 32) {
-    uint16_t *regp = rsp->cp2.regs[exdf_latch->dest - 32];
+  if (exdf_latch->result.dest >= 32) {
+    uint16_t *regp = rsp->cp2.regs[exdf_latch->result.dest - 32];
     unsigned element = request->element;
     uint32_t addr = request->addr;
     rsp_vect_t reg, dqm;
@@ -200,7 +198,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
       word = byteswap_32(word);
       word = (int32_t) (word << lshiftamt) >> rshiftamt;
-      dfwb_latch->result = dqm & word;
+      dfwb_latch->result.result = dqm & word;
     }
 
     // DMEM scalar writes.
@@ -218,7 +216,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 static inline void rsp_wb_stage(struct rsp *rsp) {
   const struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
 
-  rsp->regs[dfwb_latch->dest] = dfwb_latch->result;
+  rsp->regs[dfwb_latch->result.dest] = dfwb_latch->result.result;
 }
 
 // Advances the processor pipeline by one clock.

@@ -39,6 +39,11 @@ struct rsp_latch {
   uint32_t pc;
 };
 
+struct rsp_result {
+  uint32_t result;
+  unsigned dest;
+};
+
 struct rsp_ifrd_latch {
   struct rsp_latch common;
   uint32_t pc, iw;
@@ -52,16 +57,14 @@ struct rsp_rdex_latch {
 
 struct rsp_exdf_latch {
   struct rsp_latch common;
-  uint32_t result;
-  uint32_t dest;
+  struct rsp_result result;
 
   struct rsp_mem_request request;
 };
 
 struct rsp_dfwb_latch {
   struct rsp_latch common;
-  uint32_t result;
-  uint32_t dest;
+  struct rsp_result result;
 };
 
 struct rsp_pipeline {

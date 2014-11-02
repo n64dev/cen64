@@ -27,9 +27,10 @@
 #define DEVICE_RAMSIZE 0x800000U
 
 struct cen64_device {
+  struct bus_controller bus;
+  uint8_t padding[32];
   struct vr4300 vr4300;
 
-  struct bus_controller bus;
   struct ai_controller ai;
   struct pi_controller pi;
   struct ri_controller ri;

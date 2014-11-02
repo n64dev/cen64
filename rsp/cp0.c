@@ -31,8 +31,8 @@ void RSP_MFC0(struct rsp *rsp,
   dest = GET_RT(iw);
   rt = rsp_read_cp0_reg(rsp, GET_RD(iw));
 
-  exdf_latch->result = rt;
-  exdf_latch->dest = dest;
+  exdf_latch->result.result = rt;
+  exdf_latch->result.dest = dest;
 }
 
 //
