@@ -500,11 +500,14 @@ void *glx_window_thread(void *opaque) {
       if (frame_count++ == 29) {
         cen64_time current_time;
         unsigned long long ns;
+        char window_title[64];
 
         get_time(&current_time);
         ns = compute_time_difference(&current_time, &last_report_time);
-        printf("VI/s: %.2f\n", (30 / ((double) ns / NS_PER_SEC)));
+        snprintf(window_title, sizeof(window_title), "CEN64 ["CEN64_COMPILER"]"
+          " - %.1f VI/s\n", (30 / ((double) ns / NS_PER_SEC)));
 
+        XStoreName(glx_window->display, glx_window->window, window_title);
         last_report_time = current_time;
         frame_count = 0;
       }
