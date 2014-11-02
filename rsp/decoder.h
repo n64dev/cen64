@@ -23,14 +23,14 @@
 #define GET_E(iw) ((iw) >> 21 & 0xF)
 
 #define OPCODE_INFO_NONE (0)
-#define OPCODE_INFO_VECTOR (1 << 1)
-#define OPCODE_INFO_BRANCH (1 << 31)
-#define OPCODE_INFO_NEEDRS (1 << 3)
-#define OPCODE_INFO_NEEDRT (1 << 4)
-#define OPCODE_INFO_NEEDVS (1 << 3)
-#define OPCODE_INFO_NEEDVT (1 << 4)
-#define OPCODE_INFO_LOAD   (1 << 5)
-#define OPCODE_INFO_STORE  (1 << 6)
+#define OPCODE_INFO_VECTOR (1U << 1)
+#define OPCODE_INFO_BRANCH (1U << 31)
+#define OPCODE_INFO_NEEDRS (1U << 3)
+#define OPCODE_INFO_NEEDRT (1U << 4)
+#define OPCODE_INFO_NEEDVS (1U << 3)
+#define OPCODE_INFO_NEEDVT (1U << 4)
+#define OPCODE_INFO_LOAD   (1U << 5)
+#define OPCODE_INFO_STORE  (1U << 6)
 
 struct rsp_opcode {
   uint32_t id;
