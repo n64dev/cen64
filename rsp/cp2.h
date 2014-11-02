@@ -15,7 +15,7 @@
 
 enum rsp_acc_t {
   RSP_ACC_LO = 16,
-  RSP_ACC_MID = 8,
+  RSP_ACC_MD = 8,
   RSP_ACC_HI = 0,
 };
 

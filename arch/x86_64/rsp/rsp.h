@@ -81,6 +81,9 @@ void rsp_vstore_dmem(struct rsp *rsp,
   uint32_t addr, unsigned element, __m128i reg, __m128i dqm);
 
 #include "arch/x86_64/rsp/vand.h"
+#include "arch/x86_64/rsp/vmudl.h"
+#include "arch/x86_64/rsp/vmudm.h"
+#include "arch/x86_64/rsp/vmudn.h"
 #include "arch/x86_64/rsp/vnand.h"
 #include "arch/x86_64/rsp/vnor.h"
 #include "arch/x86_64/rsp/vor.h"
