@@ -255,7 +255,7 @@ void os_poll_events(struct bus_controller *bus, struct gl_window *gl_window) {
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     if (msg.message == WM_QUIT)
-      cen64_return(bus);
+      device_request_exit(bus);
 
     else if (msg.message == WM_KEYDOWN) {
       keyboard_press_callback(bus, msg.wParam);

@@ -16,6 +16,9 @@ struct cen64_options {
 	const char *pifrom_path;
 	const char *cart_path;
 
+#ifdef _WIN32
+  bool console;
+#endif
 	bool extra_mode;
 };
 

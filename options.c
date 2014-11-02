@@ -12,6 +12,9 @@
 #include "options.h"
 
 const struct cen64_options default_cen64_options = {
+#ifdef _WIN32
+  false, // console
+#endif
   false, // extra_mode
 };
 
@@ -21,6 +24,13 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
   int i;
 
   for (i = 0; i < argc - 2; i++) {
+#ifdef _WIN32
+    if (!strcmp(argv[i], "-console"))
+      options->console = true;
+
+    else
+#endif
+
     if (!strcmp(argv[i], "-printsimstats"))
       options->extra_mode = true;
 
@@ -38,6 +48,9 @@ void print_command_line_usage(const char *invokation_string) {
   printf("%s [Options] <PIFROM Path> <ROM Path>\n\n"
 
     "Options:\n"
+#ifdef _WIN32
+      "  -console                   : Creates/shows the system console.\n"
+#endif
       "  -printsimstats             : Print simulation statistics at exit.\n",
 
     invokation_string
