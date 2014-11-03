@@ -24,6 +24,7 @@ static inline __m128i rsp_vmudn(__m128i vs, __m128i vt,
   vs = _mm_and_si128(vs, mask);
   hi = _mm_sub_epi16(hi, vs);
 
+
   *acc_lo = lo;
   *acc_md = hi;
   *acc_hi = _mm_srai_epi16(hi, 15);
