@@ -31,7 +31,7 @@ struct rsp;
 typedef void (*rsp_function)(struct rsp *,
   uint32_t, uint32_t, uint32_t);
 
-typedef void (*rsp_vector_function)(struct rsp *rsp, uint32_t iw, uint16_t *vd,
+typedef rsp_vect_t (*rsp_vector_function)(struct rsp *rsp, uint32_t iw,
   uint16_t *acc, rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle,
   rsp_vect_t zero);
 

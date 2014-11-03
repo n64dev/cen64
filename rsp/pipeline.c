@@ -114,8 +114,8 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
-  rsp_vect_t vs_reg, vt_reg, vt_shuf_reg, zero;
-  uint16_t *vd_reg, *acc;
+  rsp_vect_t vd_reg, vs_reg, vt_reg, vt_shuf_reg, zero;
+  uint16_t *acc;
 
   unsigned vs, vt, vd, e;
   uint32_t iw;
@@ -131,7 +131,6 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
 
   vs_reg = rsp_vect_load_unshuffled_operand(rsp->cp2.regs[vs]);
   vt_reg = rsp_vect_load_unshuffled_operand(rsp->cp2.regs[vt]);
-  vd_reg = rsp->cp2.regs[vd];
   acc = rsp->cp2.acc;
 
   vt_shuf_reg = rsp_vect_load_and_shuffle_operand(rsp->cp2.regs[vt], e);
@@ -145,8 +144,10 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
 
   exdf_latch->result.dest = RSP_REGISTER_R0;
   exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
-  return rsp_vector_function_table[rdex_latch->opcode.id](
-    rsp, iw, vd_reg, acc, vs_reg, vt_reg, vt_shuf_reg, zero);
+  vd_reg = rsp_vector_function_table[rdex_latch->opcode.id](
+    rsp, iw, acc, vs_reg, vt_reg, vt_shuf_reg, zero);
+
+  rsp_vect_write_operand(rsp->cp2.regs[vd], vd_reg);
 }
 
 // Data cache fetch stage.
