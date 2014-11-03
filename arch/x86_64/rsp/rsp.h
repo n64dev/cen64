@@ -52,6 +52,59 @@ static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
   _mm_store_si128((__m128i*) dest, src);
 }
 
+// Functions for reading/writing the accumulator.
+#if ((defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER))) \
+  && (defined(__i386__) || defined(__x86_64)))
+
+#ifdef __i386__
+register __m128i hr_acc_lo __asm__ ("xmm5");
+register __m128i hr_acc_md __asm__ ("xmm6");
+register __m128i hr_acc_hi __asm__ ("xmm7");
+#else
+register __m128i hr_acc_lo __asm__ ("xmm13");
+register __m128i hr_acc_md __asm__ ("xmm14");
+register __m128i hr_acc_hi __asm__ ("xmm15");
+#endif
+
+static inline void read_acc_lo(const uint16_t *acc, __m128i *acc_lo) {
+  *acc_lo = hr_acc_lo;
+}
+static inline void read_acc_md(const uint16_t *acc, __m128i *acc_md) {
+  *acc_md = hr_acc_md;
+}
+static inline void read_acc_hi(const uint16_t *acc, __m128i *acc_hi) {
+  *acc_hi = hr_acc_hi;
+}
+static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
+  hr_acc_lo = acc_lo;
+}
+static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
+  hr_acc_md = acc_md;
+}
+static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
+  hr_acc_hi = acc_hi;
+}
+#else
+static inline void read_acc_lo(const uint16_t *acc, __m128i *acc_lo) {
+  *acc_lo = rsp_vect_load_unshuffled_operand(acc + 16);
+}
+static inline void read_acc_md(const uint16_t *acc, __m128i *acc_md) {
+  *acc_md = rsp_vect_load_unshuffled_operand(acc + 8);
+}
+static inline void read_acc_hi(const uint16_t *acc, __m128i *acc_hi) {
+  *acc_hi = rsp_vect_load_unshuffled_operand(acc + 0);
+}
+static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
+  rsp_vect_write_operand(acc + 16, acc_lo);
+}
+static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
+  rsp_vect_write_operand(acc + 8, acc_md);
+}
+static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
+  rsp_vect_write_operand(acc + 0, acc_hi);
+}
+#endif
+
 // Zeroes out a register.
 static inline __m128i rsp_vzero(void) {
   return _mm_setzero_si128();

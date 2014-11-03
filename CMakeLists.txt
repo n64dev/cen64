@@ -14,7 +14,7 @@ find_package(Threads REQUIRED)
 
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
-  set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
 
   # Enable processor-specific optimizations?
   option(NATIVE_BUILD "Build binary for native architecture?" OFF)
@@ -31,6 +31,12 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 
   if (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
     set(CEN64_ARCH_DIR "x86_64")
+
+    if (${GCC_MACHINE} MATCHES "i.86.*")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm5 -ffixed-xmm6 -ffixed-xmm7")
+    else ()
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm13 -ffixed-xmm14 -ffixed-xmm15")
+    endif()
 
     if (NOT NATIVE_BUILD)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
@@ -75,7 +81,7 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 
 # If using Clang, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
-  set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-unused-parameter -std=c99")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
 
   # Enable processor-specific optimizations?
   option(NATIVE_BUILD "Build binary for native architecture?" OFF)

@@ -116,16 +116,34 @@ void device_request_exit(struct bus_controller *bus) {
 
 // Kicks off threads and starts the device.
 static int device_runmode_fast(struct cen64_device *device) {
+  rsp_vect_t acc_lo, acc_md, acc_hi;
+  struct rsp *rsp = &device->rsp;
+
   unsigned i;
 
-  if (setjmp(device->bus.unwind_data))
+  // Preserve host registers pinned to RSP accumulators.
+  // On many hosts, these will have no real effect.
+  read_acc_lo(rsp->cp2.acc, &acc_lo);
+  read_acc_md(rsp->cp2.acc, &acc_md);
+  read_acc_hi(rsp->cp2.acc, &acc_hi);
+
+  write_acc_lo(rsp->cp2.acc, rsp_vzero());
+  write_acc_md(rsp->cp2.acc, rsp_vzero());
+  write_acc_hi(rsp->cp2.acc, rsp_vzero());
+
+  if (setjmp(device->bus.unwind_data)) {
+    read_acc_lo(rsp->cp2.acc, &acc_lo);
+    read_acc_md(rsp->cp2.acc, &acc_md);
+    read_acc_hi(rsp->cp2.acc, &acc_hi);
+
     return 0;
+  }
 
   while (1) {
     for (i = 0; i < 2; i++) {
       vi_cycle(&device->vi);
 
-      rsp_cycle(&device->rsp);
+      rsp_cycle(rsp);
       vr4300_cycle(&device->vr4300);
     }
 
@@ -137,12 +155,29 @@ static int device_runmode_fast(struct cen64_device *device) {
 
 // Kicks off threads and starts the device.
 static int device_runmode_extra(struct cen64_device *device) {
+  rsp_vect_t acc_lo, acc_md, acc_hi;
+  struct rsp *rsp = &device->rsp;
+
   struct vr4300_stats vr4300_stats;
   unsigned i;
 
   memset(&vr4300_stats, 0, sizeof(vr4300_stats));
 
+  // Preserve host registers pinned to RSP accumulators.
+  // On many hosts, these will have no real effect.
+  read_acc_lo(rsp->cp2.acc, &acc_lo);
+  read_acc_md(rsp->cp2.acc, &acc_md);
+  read_acc_hi(rsp->cp2.acc, &acc_hi);
+
+  write_acc_lo(rsp->cp2.acc, rsp_vzero());
+  write_acc_md(rsp->cp2.acc, rsp_vzero());
+  write_acc_hi(rsp->cp2.acc, rsp_vzero());
+
   if (setjmp(device->bus.unwind_data)) {
+    read_acc_lo(rsp->cp2.acc, &acc_lo);
+    read_acc_md(rsp->cp2.acc, &acc_md);
+    read_acc_hi(rsp->cp2.acc, &acc_hi);
+
     vr4300_print_summary(&vr4300_stats);
     return 0;
   }
@@ -151,7 +186,7 @@ static int device_runmode_extra(struct cen64_device *device) {
     for (i = 0; i < 2; i++) {
       vi_cycle(&device->vi);
 
-      rsp_cycle(&device->rsp);
+      rsp_cycle(rsp);
       vr4300_cycle(&device->vr4300);
       vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
     }

@@ -12,6 +12,8 @@
 #include "options.h"
 
 const struct cen64_options default_cen64_options = {
+  NULL, // pifrom_path
+  NULL, // cart_path
 #ifdef _WIN32
   false, // console
 #endif
