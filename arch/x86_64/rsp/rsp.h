@@ -135,6 +135,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
 
 #include "arch/x86_64/rsp/clamp.h"
 
+#include "arch/x86_64/rsp/vadd.h"
 #include "arch/x86_64/rsp/vand.h"
 #include "arch/x86_64/rsp/vmadn.h"
 #include "arch/x86_64/rsp/vmudl.h"
@@ -144,6 +145,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
 #include "arch/x86_64/rsp/vnor.h"
 #include "arch/x86_64/rsp/vor.h"
 #include "arch/x86_64/rsp/vnxor.h"
+#include "arch/x86_64/rsp/vsub.h"
 #include "arch/x86_64/rsp/vxor.h"
 
 #endif
