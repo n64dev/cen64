@@ -20,7 +20,7 @@ static inline __m128i rsp_clamp_lo(__m128i acc_lo,
   use_val_mask = _mm_cmpeq_epi16(use_val_mask, zero);
   pos_val = _mm_and_si128(use_val_mask, acc_lo);
 
-#ifdef __SSE4__
+#ifndef __SSE4_1__
   neg_val = _mm_and_si128(neg_check, neg_val);
   pos_val = _mm_andnot_si128(neg_check, pos_val);
   return _mm_or_si128(neg_val, pos_val);
