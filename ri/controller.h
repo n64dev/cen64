@@ -44,7 +44,7 @@ struct ri_controller {
   uint32_t regs[NUM_RI_REGISTERS];
 };
 
-int ri_init(struct ri_controller *ri,
+cen64_cold int ri_init(struct ri_controller *ri,
   struct bus_controller *bus, uint8_t *ram);
 
 int read_rdram(void *opaque, uint32_t address, uint32_t *word);

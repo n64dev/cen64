@@ -46,10 +46,11 @@ rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 }
 
 //
-// VINV
+// VINVALID
 //
-rsp_vect_t RSP_VINV(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
+  uint16_t *acc, rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle,
+  rsp_vect_t zero) {
 #ifndef NDEBUG
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 

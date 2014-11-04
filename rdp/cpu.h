@@ -28,7 +28,7 @@ struct rdp {
   struct bus_controller *bus;
 };
 
-int rdp_init(struct rdp *rdp, struct bus_controller *bus);
+cen64_cold int rdp_init(struct rdp *rdp, struct bus_controller *bus);
 
 #endif
 

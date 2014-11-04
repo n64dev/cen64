@@ -42,13 +42,14 @@ struct gl_window_hints {
 };
 
 /* Default is 800x600, double-buffered; all else is don't care. */
-void get_default_gl_window_hints(struct gl_window_hints *hints);
+cen64_cold void get_default_gl_window_hints(struct gl_window_hints *hints);
 
-int destroy_gl_window(struct gl_window *window);
-int create_gl_window(struct bus_controller *bus,
+cen64_cold int destroy_gl_window(struct gl_window *window);
+cen64_cold int create_gl_window(struct bus_controller *bus,
   struct gl_window *window, const struct gl_window_hints *hints);
 
-int gl_swap_buffers(const struct gl_window *window); 
+cen64_hot int gl_swap_buffers(const struct gl_window *window);
+cen64_cold void gl_window_resize_cb(int width, int height);
 
 #endif
 

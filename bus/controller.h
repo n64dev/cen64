@@ -44,7 +44,7 @@ struct bus_controller {
   jmp_buf unwind_data;
 };
 
-int bus_init(struct bus_controller *bus);
+cen64_cold int bus_init(struct bus_controller *bus);
 
 // General-purpose accesssor functions.
 int bus_read_word(struct bus_controller *bus,

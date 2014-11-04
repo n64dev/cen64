@@ -242,9 +242,9 @@ void RSP_BREAK(struct rsp *rsp,
 }
 
 //
-// INV
+// INVALID
 //
-void RSP_INV(struct rsp *rsp,
+void RSP_INVALID(struct rsp *rsp,
   uint32_t iw, uint32_t unused(rs), uint32_t unused(rt)) {
 #ifndef NDEBUG
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;

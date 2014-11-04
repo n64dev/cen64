@@ -41,9 +41,9 @@ struct cen64_device {
   struct rsp rsp;
 };
 
-void device_request_exit(struct bus_controller *bus);
+cen64_cold void device_request_exit(struct bus_controller *bus);
 
-int device_run(struct cen64_device *device, struct cen64_options *options,
+cen64_hot int device_run(struct cen64_device *device, struct cen64_options *options,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
 
 #endif

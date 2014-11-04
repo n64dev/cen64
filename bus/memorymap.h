@@ -49,13 +49,13 @@ struct memory_map {
   unsigned next_map_index;
 };
 
-void create_memory_map(struct memory_map *map);
+cen64_cold void create_memory_map(struct memory_map *map);
 
-int map_address_range(struct memory_map *memory_map,
+cen64_cold int map_address_range(struct memory_map *memory_map,
   uint32_t start, uint32_t length, void *instance,
   memory_rd_function on_read, memory_wr_function on_write);
 
-const struct memory_mapping* resolve_mapped_address(
+cen64_hot const struct memory_mapping* resolve_mapped_address(
   const struct memory_map *memory_map, uint32_t address);
 
 #endif

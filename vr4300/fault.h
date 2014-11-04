@@ -24,5 +24,8 @@ extern const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS];
 #include "vr4300/fault.md"
 #undef X
 
+cen64_cold void VR4300_INV(struct vr4300 *vr4300);
+cen64_cold void VR4300_RST(struct vr4300 *vr4300);
+
 #endif
 

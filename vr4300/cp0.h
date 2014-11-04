@@ -62,7 +62,7 @@ int VR4300_TLBP(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_TLBR(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_TLBWI(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 
-void vr4300_cp0_init(struct vr4300 *vr4300);
+cen64_cold void vr4300_cp0_init(struct vr4300 *vr4300);
 
 #endif
 

@@ -36,7 +36,7 @@ struct si_controller {
   uint8_t input[4];
 };
 
-int si_init(struct si_controller *si,
+cen64_cold int si_init(struct si_controller *si,
   struct bus_controller *bus, const uint8_t *rom);
 
 int read_pif_ram(void *opaque, uint32_t address, uint32_t *word);

@@ -23,8 +23,6 @@
 
 static const wchar_t CLASSNAME[] = L"CEN64";
 
-void gl_window_resize_cb(int width, int height);
-
 static int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc);
 
 static int get_matching_pixel_format(struct winapi_window *winapi_window,

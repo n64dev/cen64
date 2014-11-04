@@ -11,7 +11,7 @@
 #define __common_debug_h__
 
 #ifndef NDEBUG
-int debug(const char *fmt, ...);
+cen64_cold int debug(const char *fmt, ...);
 #else
 #define debug(...) do {} while (0)
 #endif

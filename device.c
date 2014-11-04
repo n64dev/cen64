@@ -24,10 +24,8 @@
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 
-static struct cen64_device *device_create(struct cen64_device *device,
+cen64_cold static struct cen64_device *device_create(struct cen64_device *device,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
-
-static void device_destroy(struct cen64_device *device);
 
 static int device_runmode_fast(struct cen64_device *device);
 static int device_runmode_extra(struct cen64_device *device);
@@ -102,10 +100,6 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   return device;
-}
-
-// Deallocates and cleans up a device.
-void device_destroy(struct cen64_device *device) {
 }
 
 // Called when we should (probably?) leave simulation.
@@ -208,8 +202,6 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
     status = unlikely(options->extra_mode)
       ? device_runmode_extra(device)
       : device_runmode_fast(device);
-
-    device_destroy(device);
   }
 
   return status;

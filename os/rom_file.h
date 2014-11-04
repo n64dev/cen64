@@ -9,6 +9,7 @@
 
 #ifndef __os_rom_file_h__
 #define __os_rom_file_h__
+#include "common.h"
 #include <stddef.h>
 
 #ifdef _WIN32
@@ -29,8 +30,8 @@ struct rom_file {
 };
 #endif
 
-int close_rom_file(const struct rom_file *file);
-int open_rom_file(const char *path, struct rom_file *file);
+cen64_cold int close_rom_file(const struct rom_file *file);
+cen64_cold int open_rom_file(const char *path, struct rom_file *file);
 
 #endif
 

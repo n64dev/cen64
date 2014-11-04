@@ -23,8 +23,8 @@ struct ram_hunk {
   int fd;
 };
 
-static uint8_t *allocate_ram(struct ram_hunk *ram, size_t size);
-static void deallocate_ram(struct ram_hunk *ram, size_t size);
+cen64_cold static uint8_t *allocate_ram(struct ram_hunk *ram, size_t size);
+cen64_cold static void deallocate_ram(struct ram_hunk *ram, size_t size);
 
 // Allocates a large hunk of zeroed RAM.
 uint8_t *allocate_ram(struct ram_hunk *ram, size_t size) {

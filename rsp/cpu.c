@@ -26,7 +26,7 @@ static void rsp_connect_bus(struct rsp *rsp, struct bus_controller *bus) {
 }
 
 // Initializes the RSP component.
-int rsp_init(struct rsp *rsp, struct bus_controller *bus) {
+cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus) {
   rsp_connect_bus(rsp, bus);
 
   rsp_cp0_init(rsp);

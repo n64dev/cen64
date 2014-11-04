@@ -24,8 +24,8 @@ struct cen64_options {
 
 extern const struct cen64_options default_cen64_options;
 
-int parse_options(struct cen64_options *, int argc, const char *argv[]);
-void print_command_line_usage(const char *invokation_string);
+cen64_cold int parse_options(struct cen64_options *, int argc, const char *argv[]);
+cen64_cold void print_command_line_usage(const char *invokation_string);
 
 #endif
 

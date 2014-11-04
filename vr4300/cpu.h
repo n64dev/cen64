@@ -118,11 +118,11 @@ struct vr4300_stats {
   unsigned long long opcode_counts[NUM_VR4300_OPCODES];
 };
 
+cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);
+cen64_cold void vr4300_print_summary(struct vr4300_stats *stats);
+
 void vr4300_cycle(struct vr4300 *vr4300);
 void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats);
-int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);
-
-void vr4300_print_summary(struct vr4300_stats *stats);
 
 #endif
 

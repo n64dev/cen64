@@ -52,12 +52,13 @@ struct vi_controller {
   struct render_area render_area;
 };
 
-void gl_window_init(struct gl_window *window);
+cen64_cold void gl_window_init(struct gl_window *window);
 void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
   unsigned hres, unsigned vres, unsigned hskip, unsigned type);
 
+cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus);
+
 void vi_cycle(struct vi_controller *vi);
-int vi_init(struct vi_controller *vi, struct bus_controller *bus);
 
 int read_vi_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);

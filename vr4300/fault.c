@@ -269,6 +269,11 @@ void VR4300_INTR(unused(struct vr4300 *vr4300)) {
     : 0xFFFFFFFF80000080ULL;
 }
 
+// INV: Invalid operation exception.
+void VR4300_INV(unused(struct vr4300 *vr4300)) {
+  abort(); // Hammertime!
+}
+
 // LDI: Load delay interlock.
 void VR4300_LDI(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;

@@ -13,6 +13,7 @@
 #include "vr4300/cp1.h"
 #include "vr4300/cpu.h"
 #include "vr4300/decoder.h"
+#include "vr4300/fault.h"
 
 static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
 
@@ -24,11 +25,6 @@ static inline int vr4300_do_mci(struct vr4300 *vr4300, unsigned cycles) {
   vr4300->regs[PIPELINE_CYCLE_TYPE] = 3;
   return 1;
 }
-
-//
-// Invalid operation exception.
-//
-void VR4300_INV(struct vr4300 *vr4300);
 
 //
 // ABS.fmt

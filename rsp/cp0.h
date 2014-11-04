@@ -85,7 +85,7 @@ void RSP_MTC0(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
 uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src);
 void rsp_write_cp0_reg(struct rsp *rsp, unsigned dest, uint32_t rt);
 
-void rsp_cp0_init(struct rsp *rsp);
+cen64_cold void rsp_cp0_init(struct rsp *rsp);
 
 #endif
 

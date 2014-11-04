@@ -26,5 +26,8 @@ typedef int (*vr4300_function)(struct vr4300 *,
 extern const vr4300_function vr4300_function_table[NUM_VR4300_OPCODES];
 extern const char *vr4300_opcode_mnemonics[NUM_VR4300_OPCODES];
 
+cen64_cold int VR4300_INVALID(struct vr4300 *,
+  uint32_t, uint64_t, uint64_t);
+
 #endif
 

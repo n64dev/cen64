@@ -61,7 +61,7 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300, uint32_t iw, uint64_t fs, uint64_t ft)
 int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300, uint32_t iw, uint64_t fs, uint64_t ft);
 int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300, uint32_t iw, uint64_t fs, uint64_t ft);
 
-void vr4300_cp1_init(struct vr4300 *vr4300);
+cen64_cold void vr4300_cp1_init(struct vr4300 *vr4300);
 
 #endif
 

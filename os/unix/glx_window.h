@@ -48,8 +48,6 @@ struct glx_window {
   pthread_t thread;
 };
 
-void gl_window_resize_cb(int width, int height);
-
 bool glx_window_exit_requested(struct glx_window *window);
 void glx_window_render_frame(struct glx_window *window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type);

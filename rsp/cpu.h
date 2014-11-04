@@ -59,8 +59,9 @@ struct rsp {
   struct bus_controller *bus;
 };
 
+cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus);
+
 void rsp_cycle(struct rsp *rsp);
-int rsp_init(struct rsp *rsp, struct bus_controller *bus);
 
 #endif
 

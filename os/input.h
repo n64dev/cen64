@@ -9,11 +9,12 @@
 
 #ifndef __os_input_h__
 #define __os_input_h__
+#include "common.h"
 
 struct bus_controller;
 
-void keyboard_press_callback(struct bus_controller *bus, unsigned key);
-void keyboard_release_callback(struct bus_controller *bus, unsigned key);
+cen64_hot void keyboard_press_callback(struct bus_controller *bus, unsigned key);
+cen64_hot void keyboard_release_callback(struct bus_controller *bus, unsigned key);
 
 #endif
 

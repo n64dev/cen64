@@ -10,8 +10,9 @@
 
 #ifndef __cen64_h__
 #define __cen64_h__
+#include "common.h"
 
-int cen64_cmdline_main(int argc, const char *argv[]);
+cen64_cold int cen64_cmdline_main(int argc, const char *argv[]);
 
 #endif
 
