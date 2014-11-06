@@ -9,6 +9,7 @@
 
 #ifndef __common_debug_h__
 #define __common_debug_h__
+#include "common.h"
 
 #ifndef NDEBUG
 cen64_cold int debug(const char *fmt, ...);
