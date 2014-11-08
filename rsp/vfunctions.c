@@ -63,6 +63,23 @@ rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
 }
 
 //
+// VMADH
+//
+rsp_vect_t RSP_VMADH(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t acc_md, acc_hi, result;
+
+  read_acc_md(acc, &acc_md);
+  read_acc_hi(acc, &acc_hi);
+
+  result = rsp_vmadh(vs, vt_shuffle, zero, &acc_md, &acc_hi);
+
+  write_acc_md(acc, acc_md);
+  write_acc_hi(acc, acc_hi);
+  return result;
+}
+
+//
 // VMADL
 //
 rsp_vect_t RSP_VMADL(struct rsp *rsp, uint32_t iw, uint16_t *acc,
@@ -114,6 +131,21 @@ rsp_vect_t RSP_VMADN(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   result = rsp_vmadn(vs, vt_shuffle, zero, &acc_lo, &acc_md, &acc_hi);
 
   write_acc_lo(acc, acc_lo);
+  write_acc_md(acc, acc_md);
+  write_acc_hi(acc, acc_hi);
+  return result;
+}
+
+//
+// VMUDH
+//
+rsp_vect_t RSP_VMUDH(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t acc_md, acc_hi, result;
+
+  result = rsp_vmudh(vs, vt_shuffle, &acc_md, &acc_hi);
+
+  write_acc_lo(acc, zero);
   write_acc_md(acc, acc_md);
   write_acc_hi(acc, acc_hi);
   return result;
