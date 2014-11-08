@@ -1,5 +1,5 @@
 //
-// arch/x86_64/rsp/vmadn.h
+// arch/x86_64/rsp/vmadm.h
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
@@ -7,7 +7,7 @@
 
 #include "common.h"
 
-static inline __m128i rsp_vmadn(__m128i vs, __m128i vt, __m128i zero,
+static inline __m128i rsp_vmadm(__m128i vs, __m128i vt, __m128i zero,
   __m128i *acc_lo, __m128i *acc_md, __m128i *acc_hi) {
   __m128i lo, hi, sign, overflow_mask;
 
@@ -20,9 +20,9 @@ static inline __m128i rsp_vmadn(__m128i vs, __m128i vt, __m128i zero,
   // There's a trick to "fix" an unsigned product, though:
   // If vt was negative, take the upper 16-bits of the product
   // and subtract vs.
-  sign = _mm_srai_epi16(vt, 15); 
-  vs = _mm_and_si128(vs, sign);
-  hi = _mm_sub_epi16(hi, vs); 
+  sign = _mm_srai_epi16(vs, 15); 
+  vt = _mm_and_si128(vt, sign);
+  hi = _mm_sub_epi16(hi, vt); 
 
   // Tricky part: start accumulate everything.
   // Get/keep the carry as we'll add it in later.
@@ -49,6 +49,6 @@ static inline __m128i rsp_vmadn(__m128i vs, __m128i vt, __m128i zero,
   *acc_hi = _mm_add_epi16(*acc_hi, _mm_srai_epi16(hi, 15));
   *acc_hi = _mm_sub_epi16(*acc_hi, overflow_mask);
 
-  return rsp_uclamp_acc(*acc_lo, *acc_md, *acc_hi, zero);
+  return rsp_sclamp_acc_tomd(*acc_md, *acc_hi);
 }
 
