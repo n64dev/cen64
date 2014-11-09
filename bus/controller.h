@@ -47,10 +47,10 @@ struct bus_controller {
 cen64_cold int bus_init(struct bus_controller *bus);
 
 // General-purpose accesssor functions.
-int bus_read_word(struct bus_controller *bus,
+cen64_hot int bus_read_word(struct bus_controller *bus,
   uint32_t address, uint32_t *word);
 
-int bus_write_word(struct bus_controller *bus,
+cen64_hot int bus_write_word(struct bus_controller *bus,
   uint32_t address, uint32_t word, uint32_t dqm);
 
 // For asserting and deasserting RCP interrupts.

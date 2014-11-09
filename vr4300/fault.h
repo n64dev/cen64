@@ -20,12 +20,11 @@ enum vr4300_fault_id {
 
 extern const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS];
 
-#define X(fault) void VR4300_##fault(struct vr4300 *vr4300);
+#define X(fault) cen64_cold void VR4300_##fault(struct vr4300 *vr4300);
 #include "vr4300/fault.md"
 #undef X
 
 cen64_cold void VR4300_INV(struct vr4300 *vr4300);
-cen64_cold void VR4300_RST(struct vr4300 *vr4300);
 
 #endif
 
