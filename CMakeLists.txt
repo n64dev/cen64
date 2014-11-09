@@ -56,8 +56,8 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 
   # Set architecture-independent flags.
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
-  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -s")
-  set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -s")
+  set(CMAKE_C_FLAGS_MINSIZEREL "-Os -ffast-math -DNDEBUG -s -fmerge-all-constants")
+  set(CMAKE_C_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG -s -fmerge-all-constants")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
