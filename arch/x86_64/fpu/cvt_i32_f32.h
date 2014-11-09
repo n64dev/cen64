@@ -16,7 +16,7 @@ static inline void fpu_cvt_i32_f32(const uint32_t *fs, uint32_t *fd) {
   // Prevent aliasing.
   memcpy(&fs_float, fs, sizeof(fs_float));
 
-  fs_reg = _mm_load_ss(&fs_float);
+  fs_reg = _mm_set_ss(fs_float);
   *fd = _mm_cvtss_si32(fs_reg);
 }
 

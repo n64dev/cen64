@@ -18,8 +18,8 @@ static inline void fpu_sub_64(
   memcpy(&fs_double, fs, sizeof(fs_double));
   memcpy(&ft_double, ft, sizeof(ft_double));
 
-  fs_reg = _mm_load_sd(&fs_double);
-  ft_reg = _mm_load_sd(&ft_double);
+  fs_reg = _mm_set_sd(fs_double);
+  ft_reg = _mm_set_sd(ft_double);
   fd_reg = _mm_sub_sd(fs_reg, ft_reg);
   _mm_store_sd(&fd_double, fd_reg);
 

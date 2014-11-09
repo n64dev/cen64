@@ -19,7 +19,7 @@ static inline void fpu_cvt_f64_f32(const uint32_t *fs, uint64_t *fd) {
   memcpy(&fs_float, fs, sizeof(fs_float));
   fd_reg = _mm_setzero_pd();
 
-  fs_reg = _mm_load_ss(&fs_float);
+  fs_reg = _mm_set_ss(fs_float);
   fd_reg = _mm_cvtss_sd(fd_reg, fs_reg);
   _mm_store_sd(&fd_double, fd_reg);
 

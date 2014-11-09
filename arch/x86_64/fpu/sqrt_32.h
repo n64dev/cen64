@@ -16,7 +16,7 @@ static inline void fpu_sqrt_32(const uint32_t *fs, uint32_t *fd) {
   // Prevent aliasing.
   memcpy(&fs_float, fs, sizeof(fs_float));
 
-  fs_reg = _mm_load_ss(&fs_float);
+  fs_reg = _mm_set_ss(fs_float);
   fd_reg = _mm_sqrt_ss(fs_reg);
   _mm_store_ss(&fd_float, fd_reg);
 
