@@ -243,15 +243,13 @@ rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 rsp_vect_t RSP_VSAR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
-  unsigned e = GET_E(iw) & 0x3;
+  unsigned e = GET_E(iw);
   rsp_vect_t result;
 
-  assert(e < 3 && "Invalid element! Needs reversing.");
-
   switch (e) {
-    case 0: read_acc_hi(acc, &result); break;
-    case 1: read_acc_md(acc, &result); break;
-    case 2: read_acc_lo(acc, &result); break;
+    case 8: read_acc_hi(acc, &result); break;
+    case 9: read_acc_md(acc, &result); break;
+    case 10: read_acc_lo(acc, &result); break;
 
     default:
       return zero;
