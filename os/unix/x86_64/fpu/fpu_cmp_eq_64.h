@@ -18,8 +18,8 @@ static inline uint8_t fpu_cmp_eq_64(
   memcpy(&fs_double, fs, sizeof(fs_double));
   memcpy(&ft_double, ft, sizeof(ft_double));
 
-  fs_reg = _mm_load_sd(&fs_double);
-  ft_reg = _mm_load_sd(&ft_double);
+  fs_reg = _mm_set_sd(fs_double);
+  ft_reg = _mm_set_sd(ft_double);
 
   __asm__ __volatile__(
     "comisd %1, %2\n\t"

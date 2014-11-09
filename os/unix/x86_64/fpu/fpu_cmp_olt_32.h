@@ -18,8 +18,8 @@ static inline uint8_t fpu_cmp_olt_32(
   memcpy(&fs_float, fs, sizeof(fs_float));
   memcpy(&ft_float, ft, sizeof(ft_float));
 
-  fs_reg = _mm_load_ss(&fs_float);
-  ft_reg = _mm_load_ss(&ft_float);
+  fs_reg = _mm_set_ss(fs_float);
+  ft_reg = _mm_set_ss(ft_float);
 
   __asm__ __volatile__(
     "comiss %1, %2\n\t"
