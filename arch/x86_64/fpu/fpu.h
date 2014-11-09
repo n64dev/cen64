@@ -21,6 +21,14 @@ typedef uint16_t fpu_state_t;
 #define FPU_ROUND_POSINF  0x4000
 #define FPU_ROUND_TOZERO  0x6000
 
+static inline fpu_state_t fpu_get_state(void) {
+  return _mm_getcsr();
+}
+
+static inline void fpu_set_state(fpu_state_t state) {
+  _mm_setcsr(state);
+}
+
 #include "arch/x86_64/fpu/abs_32.h"
 #include "arch/x86_64/fpu/abs_64.h"
 #include "arch/x86_64/fpu/add_32.h"

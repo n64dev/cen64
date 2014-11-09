@@ -14,14 +14,6 @@
 
 #include "arch/x86_64/fpu/fpu.h"
 
-static inline fpu_state_t fpu_get_state(void) {
-  return _mm_getcsr();
-}
-
-static inline void fpu_set_state(fpu_state_t state) {
-  _mm_setcsr(state);
-}
-
 #include "os/unix/x86_64/fpu/fpu_cmp_eq_32.h"
 #include "os/unix/x86_64/fpu/fpu_cmp_eq_64.h"
 #include "os/unix/x86_64/fpu/fpu_cmp_f_32.h"
