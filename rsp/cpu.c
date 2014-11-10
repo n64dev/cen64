@@ -25,13 +25,18 @@ static void rsp_connect_bus(struct rsp *rsp, struct bus_controller *bus) {
   rsp->bus = bus;
 }
 
+// Releases memory acquired for the RSP component.
+void rsp_destroy(struct rsp *rsp) {
+  arch_rsp_destroy(rsp);
+}
+
 // Initializes the RSP component.
-cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus) {
+int rsp_init(struct rsp *rsp, struct bus_controller *bus) {
   rsp_connect_bus(rsp, bus);
 
   rsp_cp0_init(rsp);
-
   rsp_pipeline_init(&rsp->pipeline);
-  return 0;
+
+  return arch_rsp_init(rsp);
 }
 

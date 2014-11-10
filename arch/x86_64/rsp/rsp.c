@@ -9,7 +9,50 @@
 
 #include "common.h"
 #include "arch/x86_64/rsp/rsp.h"
+#include "os/dynarec.h"
 #include "rsp/cpu.h"
+
+// Deallocates dynarec buffers for SSE2.
+void arch_rsp_destroy(struct rsp *rsp) {
+#ifndef __SSSE3__
+  free_dynarec_slab(&rsp->vstore_dynarec);
+#endif
+}
+
+// Allocates dynarec buffers for SSE2.
+int arch_rsp_init(struct rsp *rsp) {
+#ifndef __SSSE3__
+  void *vload_buffer, *vstore_buffer;
+
+  // See rsp_vstore_dmem for code description.
+  static const uint8_t vstore_code[] = {
+    0x66, 0x0F, 0x73, 0xF8, 0x00,
+
+    0x66, 0x0F, 0x73, 0xD9, 0x00,
+    0x66, 0x0F, 0x73, 0xFA, 0x00,
+    0x66, 0x0F, 0xEB, 0xCA,
+
+    0x66, 0x0F, 0xDB, 0xC8,
+    0x66, 0x0F, 0xDF, 0xC3,
+    0x66, 0x0F, 0xEB, 0xC1,
+
+    0xC3
+  };
+
+  if ((vload_buffer = alloc_dynarec_slab(
+    &rsp->vload_dynarec, CACHE_LINE_SIZE)) == NULL)
+    return 1;
+
+  if ((vstore_buffer = alloc_dynarec_slab(
+    &rsp->vstore_dynarec, CACHE_LINE_SIZE)) == NULL) {
+    free_dynarec_slab(&rsp->vload_dynarec);
+    return 1;
+  }
+
+  memcpy(vstore_buffer, vstore_code, sizeof(vstore_code));
+#endif
+  return 0;
+}
 
 #ifdef __SSSE3__
 cen64_align(const uint16_t shuffle_keys[16][8], CACHE_LINE_SIZE)  = {
@@ -66,7 +109,9 @@ __m128i rsp_vect_load_and_shuffle_operand(
     __m128i vlo, vhi;
     int i;
 
-    for (i = -2; i < 6; i += 2)
+    dword = src[element - 2];
+
+    for (i = -1; i < 6; i += 2)
       dword = (dword << 16) | src[element + i];
 
     vlo = _mm_loadl_epi64((__m128i *) &dword);
@@ -133,7 +178,7 @@ cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
 };
 
 //
-// Accelerated loads. Byteswap big-endian to 2-byte little-endian
+// SSSE3+ accelerated loads. Byteswap big-endian to 2-byte little-endian
 // vector. Start at vector element offset, discarding any wraparound
 // as necessary. Lastly, don't load across cacheline boundary.
 //
@@ -178,6 +223,31 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
   reg = _mm_andnot_si128(dqm, reg);
   data = _mm_or_si128(data, reg);
 #endif
+
+  return data;
+}
+#else
+//
+// SSE2 accelerated loads. Byteswap big-endian to 2-byte little-endian
+// vector. Start at vector element offset, discarding any wraparound
+// as necessary. Lastly, don't load across cacheline boundary.
+//
+// TODO: Verify wraparound behavior.
+// TODO: Only tested for L{B/S/L/D/Q}V
+//
+__m128i rsp_vload_dmem(struct rsp *rsp,
+  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
+  __m128i datah, datal;
+
+  unsigned doffset = addr & 0xF;
+  uint32_t aligned_addr = addr & 0xFF0;
+
+  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
+
+  // TODO: Implement this correctly.
+  datah = _mm_slli_epi16(data, 8);
+  datal = _mm_srli_epi16(data, 8);
+  data = _mm_or_si128(datah, datal);
 
   return data;
 }
@@ -236,7 +306,7 @@ cen64_align(const uint16_t sll_l2b_keys[16][8], CACHE_LINE_SIZE) = {
 };
 
 //
-// Accelerated stores. Byteswap 2-byte little-endian vector back
+// SSE3+ accelerated stores. Byteswap 2-byte little-endian vector back
 // to big-endian. Start at vector element offset, wrapping around
 // as necessary. Lastly, only store upto the cacheline boundary.
 //
@@ -265,6 +335,71 @@ void rsp_vstore_dmem(struct rsp *rsp,
   data = _mm_andnot_si128(dqm, data);
   data = _mm_or_si128(data, reg);
 #endif
+
+  _mm_store_si128((__m128i *) (rsp->mem + aligned_addr), data);
+}
+
+#else
+//
+// SSE2 accelerated stores. Byteswap 2-byte little-endian vector back
+// to big-endian. Start at vector element offset, wrapping around
+// as necessary. Lastly, only store upto the cacheline boundary.
+//
+// TODO: Verify wraparound behavior.
+// TODO: Only tested for L{B/S/L/D/Q}V
+//
+void rsp_vstore_dmem(struct rsp *rsp,
+  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
+  __m128i dqmh, dqml, regh, regl;
+
+  unsigned doffset = addr & 0xF;
+  unsigned eoffset = (doffset - element) & 0xF;
+  uint32_t aligned_addr = addr & 0xFF0;
+
+  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
+
+  // Byteswap both vectors, first.
+  dqmh = _mm_slli_epi16(dqm, 8);
+  dqml = _mm_srli_epi16(dqm, 8);
+  dqm = _mm_or_si128(dqmh, dqml);
+
+  regh = _mm_slli_epi16(reg, 8);
+  regl = _mm_srli_epi16(reg, 8);
+  reg = _mm_or_si128(regh, regl);
+
+  //
+  // Since SSE2 only provides "fixed immediate" shuffles:
+  // Patch/call a dynarec buffer that does the following:
+  //
+  // Given:
+  //   xmm0 = byteswapped dqm
+  //   xmm1 = byteswapped reg
+  //   xmm2 = byteswapped reg
+  //   xmm3 = data [dmem]
+  //
+  // Perform:
+  //   1) [xmm0 -> xmm0]          Shift left:
+  //       66 0f 73 f8 0#         pslldq $0x#,%xmm0
+  //
+  //   2) [xmm1,xmm2 -> xmm1]     Rotate left:
+  //       66 0F 73 D9 0#         psrldq $0x#,%xmm1
+  //       66 0F 73 FA 0#         pslldq $0x#,%xmm2
+  //       66 0F EB CA            por    %xmm2,%xmm1
+  //
+  //   3)                         Mask/mux reg and data:
+  //       66 0F DB C8            pand   %xmm0,%xmm1
+  //       66 0F DF C3            pandn  %xmm3,%xmm0
+  //       66 0F EB C1            por    %xmm1,%xmm0
+  //
+  //   4)                         Return from dynarec:
+  //       C3                     retq
+  //
+  rsp->vstore_dynarec.ptr[4] = doffset;
+  rsp->vstore_dynarec.ptr[9] = eoffset;
+  rsp->vstore_dynarec.ptr[14] = 16 - eoffset;
+
+  data = ((__m128i (*)(__m128i, __m128i, __m128i, __m128i))
+    rsp->vstore_dynarec.ptr)(dqm, reg, reg, data);
 
   _mm_store_si128((__m128i *) (rsp->mem + aligned_addr), data);
 }

@@ -24,6 +24,7 @@
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 
+cen64_cold static void device_destroy(struct cen64_device *device);
 cen64_cold static struct cen64_device *device_create(struct cen64_device *device,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
 
@@ -100,6 +101,11 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   return device;
+}
+
+// Cleans up memory allocated for the device.
+void device_destroy(struct cen64_device *device) {
+  rsp_destroy(&device->rsp);
 }
 
 // Called when we should (probably?) leave simulation.
@@ -202,6 +208,8 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
     status = unlikely(options->extra_mode)
       ? device_runmode_extra(device)
       : device_runmode_fast(device);
+
+    device_destroy(device);
   }
 
   return status;

@@ -11,6 +11,7 @@
 #ifndef __rsp_cpu_h__
 #define __rsp_cpu_h__
 #include "common.h"
+#include "os/dynarec.h"
 #include "rsp/cp2.h"
 #include "rsp/pipeline.h"
 
@@ -57,9 +58,14 @@ struct rsp {
   uint8_t mem[0x2000];
 
   struct bus_controller *bus;
+
+  // TODO: Only for IA32/x86_64 SSE2; sloppy?
+  struct dynarec_slab vload_dynarec;
+  struct dynarec_slab vstore_dynarec;
 };
 
 cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus);
+cen64_cold void rsp_destroy(struct rsp *rsp);
 
 void rsp_cycle(struct rsp *rsp);
 

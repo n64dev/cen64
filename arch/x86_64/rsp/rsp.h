@@ -26,6 +26,10 @@
 struct rsp;
 typedef __m128i rsp_vect_t;
 
+// Gives the architecture backend a chance to initialize the RSP.
+void arch_rsp_destroy(struct rsp *rsp);
+int arch_rsp_init(struct rsp *rsp);
+
 // Loads and shuffles a 16x8 vector according to element.
 #ifdef __SSSE3__
 extern const uint16_t shuffle_keys[16][8];

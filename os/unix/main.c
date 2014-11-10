@@ -14,48 +14,59 @@
 #include "os/main.h"
 #include "os/unix/glx_window.h"
 #include <fcntl.h>
+#include <stddef.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 struct ram_hunk {
+  size_t size;
   void *ptr;
-  int fd;
 };
 
 cen64_cold static uint8_t *allocate_ram(struct ram_hunk *ram, size_t size);
-cen64_cold static void deallocate_ram(struct ram_hunk *ram, size_t size);
+cen64_cold static void deallocate_ram(struct ram_hunk *ram);
+
+// Global file descriptor for allocations.
+#ifdef __linux__
+const char *zero_page_path = "/dev/zero";
+#else
+const char *zero_page_path = "/dev/null";
+#endif
+
+int zero_page_fd;
 
 // Allocates a large hunk of zeroed RAM.
 uint8_t *allocate_ram(struct ram_hunk *ram, size_t size) {
-#ifdef __linux__
-  if ((ram->fd = open("/dev/zero", O_RDWR)) < 0)
-#else
-  if ((ram->fd = open("/dev/null", O_RDWR)) < 0)
-#endif
-    return NULL;
-
   if ((ram->ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
-    MAP_PRIVATE, ram->fd, 0)) == MAP_FAILED) {
-    close(ram->fd);
+    MAP_PRIVATE, zero_page_fd, 0)) == MAP_FAILED)
     return NULL;
-  }
 
 #ifndef __linux__
   memset(ram->ptr, 0, size);
 #endif
+  ram->size = size;
   return ram->ptr;
 }
 
 // Allocates a large hunk of RAM.
-void deallocate_ram(struct ram_hunk *ram, size_t size) {
-  munmap(ram->ptr, size);
-  close(ram->fd);
+void deallocate_ram(struct ram_hunk *ram) {
+  munmap(ram->ptr, ram->size);
 }
 
 // Unix application entry point.
-int main(int argc, const char *argv[]) {
-  return cen64_cmdline_main(argc, argv);
+cen64_cold int main(int argc, const char *argv[]) {
+  int status;
+
+  if ((zero_page_fd = open(zero_page_path, O_RDWR)) < 0) {
+    printf("Failed to open: %s\n", zero_page_path);
+    return EXIT_FAILURE;
+  }
+
+  status = cen64_cmdline_main(argc, argv);
+
+  close(zero_page_fd);
+  return status;
 }
 
 // Informs the simulation thread if an exit was requested.
@@ -92,14 +103,13 @@ int os_main(struct cen64_options *options,
   if (create_gl_window(&device.bus, &device.vi.gl_window, &hints)) {
     printf("Failed to create a window.\n");
 
-    deallocate_ram(&hunk, DEVICE_RAMSIZE);
+    deallocate_ram(&hunk);
     return 1;
   }
 
   status = device_run(&device, options, ram, pifrom, cart);
   destroy_gl_window(&device.vi.gl_window);
-  deallocate_ram(&hunk, DEVICE_RAMSIZE);
-
+  deallocate_ram(&hunk);
   return status;
 }
 

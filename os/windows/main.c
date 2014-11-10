@@ -24,6 +24,8 @@ static int load_roms(const char *pifrom_path, const char *cart_path,
 static void hide_console(void);
 static void show_console(void);
 
+HANDLE dynarec_heap;
+
 // Windows application entry point.
 int WINAPI WinMain(HINSTANCE hInstance,
   HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
@@ -37,9 +39,18 @@ int WINAPI WinMain(HINSTANCE hInstance,
     return status;
   }
 
-  status = cen64_win32_main(__argc, __argv);
+  if ((dynarec_heap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0)) == NULL) {
+    MessageBox(NULL, "Failed to create the dynarec heap.", "CEN64",
+      MB_OK | MB_ICONEXCLAMATION);
 
+    WSACleanup();
+    return EXIT_FAILURE;
+  }
+
+  status = cen64_win32_main(__argc, __argv);
+  HeapDestroy(dynarec_heap);
   WSACleanup();
+
   return status;
 }
 

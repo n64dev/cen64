@@ -11,15 +11,6 @@
 #ifndef __common_h__
 #define __common_h__
 
-// TODO: Remove me after SSE2 support is added.
-#ifndef __SSE3__
-#define __SSE3__
-#endif
-
-#ifndef __SSSE3__
-#define __SSSE3__
-#endif
-
 #define tostring(s)	#s
 #define stringify(s)	tostring(s)
 
