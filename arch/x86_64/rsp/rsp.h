@@ -133,9 +133,9 @@ static inline __m128i rsp_vset(void) {
 
 // Load and store aligner.
 __m128i rsp_vload_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i reg, __m128i dqm);
+  uint32_t addr, unsigned element, __m128i dqm, __m128i reg);
 void rsp_vstore_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i reg, __m128i dqm);
+  uint32_t addr, unsigned element, __m128i dqm, __m128i reg);
 
 #include "arch/x86_64/rsp/clamp.h"
 

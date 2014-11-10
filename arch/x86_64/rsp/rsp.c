@@ -24,18 +24,36 @@ int arch_rsp_init(struct rsp *rsp) {
 #ifndef __SSSE3__
   void *vload_buffer, *vstore_buffer;
 
+  // See rsp_vload_dmem for code description.
+  static const uint8_t vload_code[] = {
+    0x66, 0x0F, 0x75, 0xDB,
+    0x66, 0x0F, 0x73, 0xFA, 0x00,
+    0x66, 0x0F, 0x73, 0xF8, 0x00,
+    0x66, 0x0F, 0x73, 0xDB, 0x00,
+    0x66, 0x0F, 0xDB, 0xC3,
+    0x66, 0x0F, 0xDB, 0xD0,
+    0x66, 0x0F, 0xDF, 0xC1,
+    0x66, 0x0F, 0x6F, 0xDA,
+    0x66, 0x0F, 0x71, 0xF2, 0x08,
+    0x66, 0x0F, 0x71, 0xD3, 0x08,
+    0x66, 0x0F, 0xEB, 0xD3,
+    0x66, 0x0F, 0xEB, 0xC2,
+    0xC3
+  };
+
   // See rsp_vstore_dmem for code description.
   static const uint8_t vstore_code[] = {
-    0x66, 0x0F, 0x73, 0xF8, 0x00,
-
-    0x66, 0x0F, 0x73, 0xD9, 0x00,
-    0x66, 0x0F, 0x73, 0xFA, 0x00,
+    0x66, 0x0F, 0x71, 0xF1, 0x08,
+    0x66, 0x0F, 0x71, 0xD2, 0x08,
     0x66, 0x0F, 0xEB, 0xCA,
-
+    0x66, 0x0F, 0x73, 0xF8, 0x00,
+    0x66, 0x0F, 0x6F, 0xD1,
+    0x66, 0x0F, 0x73, 0xF9, 0x00,
+    0x66, 0x0F, 0x73, 0xDA, 0x00,
+    0x66, 0x0F, 0xEB, 0xCA,
     0x66, 0x0F, 0xDB, 0xC8,
     0x66, 0x0F, 0xDF, 0xC3,
     0x66, 0x0F, 0xEB, 0xC1,
-
     0xC3
   };
 
@@ -49,6 +67,7 @@ int arch_rsp_init(struct rsp *rsp) {
     return 1;
   }
 
+  memcpy(vload_buffer, vload_code, sizeof(vload_code));
   memcpy(vstore_buffer, vstore_code, sizeof(vstore_code));
 #endif
   return 0;
@@ -186,7 +205,7 @@ cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
 // TODO: Only tested for L{B/S/L/D/Q}V
 //
 __m128i rsp_vload_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
+  uint32_t addr, unsigned element, __m128i dqm, __m128i reg) {
   unsigned doffset = addr & 0xF;
   uint32_t aligned_addr = addr & 0xFF0;
 
@@ -236,20 +255,71 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
 // TODO: Only tested for L{B/S/L/D/Q}V
 //
 __m128i rsp_vload_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
-  __m128i datah, datal;
-
-  unsigned doffset = addr & 0xF;
+  uint32_t addr, unsigned element, __m128i dqm, __m128i reg) {
   uint32_t aligned_addr = addr & 0xFF0;
+  unsigned doffset = addr & 0xF;
+
+  //
+  // Since SSE2 only provides "fixed immediate" shuffles:
+  // Patch/call a dynarec buffer that does the following:
+  //
+  // Given:
+  //   xmm0 = DQM
+  //   xmm1 = REG
+  //   xmm2 = DATA
+  //
+  // Perform:
+  //
+  // 0)                          Mask generation:
+  //    0: 66 0F 75 DB           pcmpeqw %xmm3,%xmm3
+  //
+  // 1)                          L/R shift DATA:
+  //    4: 66 0F 73 FA xx        pslldq $0x0,%xmm2 ** OR **
+  //    4: 66 0F 73 DA xx        psrldq $0x0,%xmm2
+  //
+  // 2)                          L/R shift DQM:
+  //    9: 66 0F 73 F8 xx        pslldq $0x0,%xmm0
+  //    E: 66 0F 73 DB xx        psrldq $0x0,%xmm3
+  //   13: 66 0F DB C3           pand   %xmm3,%xmm0
+  //
+  // 3)                          Mux DATA & REG.
+  //   17: 66 0F DB D0           pand   %xmm0,%xmm2
+  //   1B: 66 0F DF C1           pandn  %xmm1,%xmm0
+  //
+  // 4)                          Byteswap DATA:
+  //   1F: 66 0F 6F DA           movdqa %xmm2,%xmm3
+  //   23: 66 0F 71 F2 08        psllw  $0x8,%xmm2
+  //   28: 66 0F 71 D3 08        psrlw  $0x8,%xmm3
+  //   2D: 66 0F EB D3           por    %xmm3,%xmm2
+  //
+  // 5)                          Return.
+  //   31: 66 0F EB C2           por    %xmm2,%xmm0
+  //   35: C3                    retq
+  //
+
+  rsp->vload_dynarec.ptr[13] = element;
+
+  // If the element is the bounding factor as to how much we
+  // load, we'll just select the data by pushing dqm over.
+  if (doffset <= element) {
+    rsp->vload_dynarec.ptr[7] = 0xFA;
+    rsp->vload_dynarec.ptr[8] = (element - doffset);
+    rsp->vload_dynarec.ptr[18] = 0;
+  }
+
+  // If the amount of data restricts how much we'll feed
+  // into the vector, we'll need to cut off the loose end
+  // in addition to pushing dqm over.
+  else {
+    rsp->vload_dynarec.ptr[7] = 0xDA;
+    rsp->vload_dynarec.ptr[8] = (doffset - element);
+    rsp->vload_dynarec.ptr[18] = (doffset - element);
+  }
 
   __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
 
-  // TODO: Implement this correctly.
-  datah = _mm_slli_epi16(data, 8);
-  datal = _mm_srli_epi16(data, 8);
-  data = _mm_or_si128(datah, datal);
-
-  return data;
+  return ((__m128i (*)(__m128i, __m128i, __m128i))
+    rsp->vload_dynarec.ptr)(dqm, reg, data);
 }
 #endif
 
@@ -314,7 +384,7 @@ cen64_align(const uint16_t sll_l2b_keys[16][8], CACHE_LINE_SIZE) = {
 // TODO: Only tested for L{B/S/L/D/Q}V
 //
 void rsp_vstore_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
+  uint32_t addr, unsigned element, __m128i dqm, __m128i reg) {
   unsigned doffset = addr & 0xF;
   unsigned eoffset = (doffset - element) & 0xF;
   uint32_t aligned_addr = addr & 0xFF0;
@@ -349,54 +419,50 @@ void rsp_vstore_dmem(struct rsp *rsp,
 // TODO: Only tested for L{B/S/L/D/Q}V
 //
 void rsp_vstore_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i reg, __m128i dqm) {
-  __m128i dqmh, dqml, regh, regl;
-
+  uint32_t addr, unsigned element, __m128i dqm, __m128i reg) {
   unsigned doffset = addr & 0xF;
   unsigned eoffset = (doffset - element) & 0xF;
   uint32_t aligned_addr = addr & 0xFF0;
-
-  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
-
-  // Byteswap both vectors, first.
-  dqmh = _mm_slli_epi16(dqm, 8);
-  dqml = _mm_srli_epi16(dqm, 8);
-  dqm = _mm_or_si128(dqmh, dqml);
-
-  regh = _mm_slli_epi16(reg, 8);
-  regl = _mm_srli_epi16(reg, 8);
-  reg = _mm_or_si128(regh, regl);
 
   //
   // Since SSE2 only provides "fixed immediate" shuffles:
   // Patch/call a dynarec buffer that does the following:
   //
   // Given:
-  //   xmm0 = byteswapped dqm
-  //   xmm1 = byteswapped reg
-  //   xmm2 = byteswapped reg
-  //   xmm3 = data [dmem]
+  //   xmm0 = DQM
+  //   xmm1 = REG
+  //   xmm2 = REG
+  //   xmm3 = DATA
   //
   // Perform:
-  //   1) [xmm0 -> xmm0]          Shift left:
-  //       66 0f 73 f8 0#         pslldq $0x#,%xmm0
   //
-  //   2) [xmm1,xmm2 -> xmm1]     Rotate left:
-  //       66 0F 73 D9 0#         psrldq $0x#,%xmm1
-  //       66 0F 73 FA 0#         pslldq $0x#,%xmm2
-  //       66 0F EB CA            por    %xmm2,%xmm1
+  // 1)                          Byteswap REG.
+  //    0: 66 0F 71 F1 08        psllw  $0x8,%xmm1
+  //    5: 66 0F 71 D2 08        psrlw  $0x8,%xmm2
+  //    A: 66 0F EB CA           por    %xmm2,%xmm1
   //
-  //   3)                         Mask/mux reg and data:
-  //       66 0F DB C8            pand   %xmm0,%xmm1
-  //       66 0F DF C3            pandn  %xmm3,%xmm0
-  //       66 0F EB C1            por    %xmm1,%xmm0
+  // 2)                          Shift DQM left.
+  //    E: 66 0F 73 F8 00        pslldq $0x0,%xmm0
   //
-  //   4)                         Return from dynarec:
-  //       C3                     retq
+  // 3)                          Rotate REG left.
+  //   13: 66 0F 6F D1           movdqa %xmm1,%xmm2
+  //   17: 66 0F 73 F9 xx        pslldq $0x0,%xmm1
+  //   1C: 66 0F 73 DA xx        psrldq $0x0,%xmm2
+  //   21: 66 0F EB CA           por    %xmm2,%xmm1
   //
-  rsp->vstore_dynarec.ptr[4] = doffset;
-  rsp->vstore_dynarec.ptr[9] = eoffset;
-  rsp->vstore_dynarec.ptr[14] = 16 - eoffset;
+  // 4)                          Mux DATA & REG.
+  //   25: 66 0F DB C8           pand   %xmm0,%xmm1
+  //   29: 66 0F DF C3           pandn  %xmm3,%xmm0
+  //   2D: 66 0F EB C1           por    %xmm1,%xmm0
+  //
+  // 5)                          Return.
+  //   2E: C3                    retq
+  //
+  rsp->vstore_dynarec.ptr[18] = doffset;
+  rsp->vstore_dynarec.ptr[27] = eoffset;
+  rsp->vstore_dynarec.ptr[32] = 16 - eoffset;
+
+  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
 
   data = ((__m128i (*)(__m128i, __m128i, __m128i, __m128i))
     rsp->vstore_dynarec.ptr)(dqm, reg, reg, data);

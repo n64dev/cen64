@@ -173,13 +173,13 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
     // DMEM vector reads.
     if (request->type == RSP_MEM_REQUEST_VECTOR_READ) {
-      reg = rsp_vload_dmem(rsp, addr, element, reg, dqm);
+      reg = rsp_vload_dmem(rsp, addr, element, dqm, reg);
       rsp_vect_write_operand(regp, reg);
     }
 
     // DMEM vector writes.
     else
-      rsp_vstore_dmem(rsp, addr, element, reg, dqm);
+      rsp_vstore_dmem(rsp, addr, element, dqm, reg);
   }
 
   // Scalar unit DMEM access.
