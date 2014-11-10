@@ -21,7 +21,7 @@ struct vr4300_icache {
   struct vr4300_icache_line lines[512];
 };
 
-void vr4300_icache_init(struct vr4300_icache *icache);
+cen64_cold void vr4300_icache_init(struct vr4300_icache *icache);
 
 void vr4300_icache_fill(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t paddr, const void *data);

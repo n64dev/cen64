@@ -461,7 +461,7 @@ void vr4300_cycle(struct vr4300 *vr4300) {
 }
 
 // Collects additional information about the pipeline each cycle.
-cen64_cold void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats) {
+void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats) {
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 

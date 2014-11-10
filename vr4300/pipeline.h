@@ -83,7 +83,7 @@ struct vr4300_pipeline {
   bool fault_present;
 };
 
-void vr4300_pipeline_init(struct vr4300_pipeline *pipeline);
+cen64_cold void vr4300_pipeline_init(struct vr4300_pipeline *pipeline);
 
 #endif
 

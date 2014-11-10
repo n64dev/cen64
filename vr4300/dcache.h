@@ -21,7 +21,7 @@ struct vr4300_dcache {
   struct vr4300_dcache_line lines[512];
 };
 
-void vr4300_dcache_init(struct vr4300_dcache *dcache);
+cen64_cold void vr4300_dcache_init(struct vr4300_dcache *dcache);
 
 void vr4300_dcache_create_dirty_exclusive(
   struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr);
