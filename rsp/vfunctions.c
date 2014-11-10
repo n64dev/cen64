@@ -21,7 +21,7 @@
 // VADD
 //
 rsp_vect_t RSP_VADD(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t carry, acc_lo;
 
   carry = rsp_vect_load_unshuffled_operand(rsp->cp2.vco[0]);
@@ -38,7 +38,7 @@ rsp_vect_t RSP_VADD(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VAND
 //
 rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vand(vs, vt_shuffle);
 
   write_acc_lo(acc, result);
@@ -49,8 +49,7 @@ rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VINVALID
 //
 rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
-  uint16_t *acc, rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle,
-  rsp_vect_t zero) {
+  uint16_t *acc, rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
 #ifndef NDEBUG
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
@@ -66,7 +65,7 @@ rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
 // VMADH
 //
 rsp_vect_t RSP_VMADH(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_md, acc_hi, result;
 
   read_acc_md(acc, &acc_md);
@@ -83,7 +82,7 @@ rsp_vect_t RSP_VMADH(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VMADL
 //
 rsp_vect_t RSP_VMADL(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
   read_acc_lo(acc, &acc_lo);
@@ -102,7 +101,7 @@ rsp_vect_t RSP_VMADL(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VMADM
 //
 rsp_vect_t RSP_VMADM(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
   read_acc_lo(acc, &acc_lo);
@@ -121,7 +120,7 @@ rsp_vect_t RSP_VMADM(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VMADN
 //
 rsp_vect_t RSP_VMADN(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
   read_acc_lo(acc, &acc_lo);
@@ -140,7 +139,7 @@ rsp_vect_t RSP_VMADN(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VMUDH
 //
 rsp_vect_t RSP_VMUDH(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_md, acc_hi, result;
 
   result = rsp_vmudh(vs, vt_shuffle, &acc_md, &acc_hi);
@@ -155,7 +154,7 @@ rsp_vect_t RSP_VMUDH(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VMUDL
 //
 rsp_vect_t RSP_VMUDL(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vmudl(vs, vt_shuffle);
 
   write_acc_lo(acc, result);
@@ -168,7 +167,7 @@ rsp_vect_t RSP_VMUDL(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VMUDM
 //
 rsp_vect_t RSP_VMUDM(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
   result = rsp_vmudm(vs, vt_shuffle, &acc_lo, &acc_md, &acc_hi);
@@ -183,7 +182,7 @@ rsp_vect_t RSP_VMUDM(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VMUDN
 //
 rsp_vect_t RSP_VMUDN(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
   result = rsp_vmudn(vs, vt_shuffle, &acc_lo, &acc_md, &acc_hi);
@@ -198,7 +197,7 @@ rsp_vect_t RSP_VMUDN(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VNAND
 //
 rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vnand(vs, vt_shuffle, zero);
 
   write_acc_lo(acc, result);
@@ -209,7 +208,7 @@ rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VNOR
 //
 rsp_vect_t RSP_VNOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vnor(vs, vt_shuffle, zero);
 
   write_acc_lo(acc, result);
@@ -220,7 +219,7 @@ rsp_vect_t RSP_VNOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VNXOR
 //
 rsp_vect_t RSP_VNXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vnxor(vs, vt_shuffle, zero);
 
   write_acc_lo(acc, result);
@@ -231,7 +230,7 @@ rsp_vect_t RSP_VNXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VOR
 //
 rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vor(vs, vt_shuffle);
 
   write_acc_lo(acc, result);
@@ -242,7 +241,7 @@ rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VSAR
 //
 rsp_vect_t RSP_VSAR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   unsigned e = GET_E(iw);
   rsp_vect_t result;
 
@@ -262,7 +261,7 @@ rsp_vect_t RSP_VSAR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VSUB
 //
 rsp_vect_t RSP_VSUB(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t carry, acc_lo;
 
   carry = rsp_vect_load_unshuffled_operand(rsp->cp2.vco[0]);
@@ -279,7 +278,7 @@ rsp_vect_t RSP_VSUB(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 // VXOR
 //
 rsp_vect_t RSP_VXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
-  rsp_vect_t vs, rsp_vect_t vt, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vxor(vs, vt_shuffle);
 
   write_acc_lo(acc, result);
