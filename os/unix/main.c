@@ -55,7 +55,7 @@ void deallocate_ram(struct ram_hunk *ram) {
 }
 
 // Unix application entry point.
-cen64_cold int main(int argc, const char *argv[]) {
+int main(int argc, const char *argv[]) {
   int status;
 
   if ((zero_page_fd = open(zero_page_path, O_RDWR)) < 0) {
