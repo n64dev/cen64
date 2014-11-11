@@ -37,7 +37,7 @@ struct memory_map_node {
   struct memory_map_node *parent;
   struct memory_map_node *right;
 
-	struct memory_mapping mapping;
+  struct memory_mapping mapping;
   enum memory_map_color color;
 };
 

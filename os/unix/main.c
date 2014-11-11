@@ -97,18 +97,23 @@ int os_main(struct cen64_options *options,
 
   // Prevent debugging tools from raising warnings
   // about uninitialized memory being read, etc.
-  device.vi.gl_window.window = &window;
-  get_default_gl_window_hints(&hints);
+  if (!options->no_interface) {
+    device.vi.gl_window.window = &window;
+    get_default_gl_window_hints(&hints);
 
-  if (create_gl_window(&device.bus, &device.vi.gl_window, &hints)) {
-    printf("Failed to create a window.\n");
+    if (create_gl_window(&device.bus, &device.vi.gl_window, &hints)) {
+      printf("Failed to create a window.\n");
 
-    deallocate_ram(&hunk);
-    return 1;
+      deallocate_ram(&hunk);
+      return 1;
+    }
   }
 
   status = device_run(&device, options, ram, pifrom, cart);
-  destroy_gl_window(&device.vi.gl_window);
+
+  if (!options->no_interface)
+    destroy_gl_window(&device.vi.gl_window);
+
   deallocate_ram(&hunk);
   return status;
 }

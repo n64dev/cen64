@@ -16,14 +16,14 @@
 
 // Writes a formatted string to standard output.
 int debug(const char *fmt, ...) {
-	va_list ap;
-	int ret;
+  va_list ap;
+  int ret;
 
-	va_start(ap, fmt);
-	ret = vfprintf(stdout, fmt, ap);
-	va_end(ap);
+  va_start(ap, fmt);
+  ret = vfprintf(stdout, fmt, ap);
+  va_end(ap);
 
-	return ret;
+  return ret;
 }
 
 #endif

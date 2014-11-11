@@ -66,11 +66,6 @@ void vi_cycle(struct vi_controller *vi) {
   offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
   buffer = vi->bus->ri->ram + offset;
 
-  // We're at a vertical interrupt...
-  // check if an exit was requested.
-  if (os_exit_requested(&vi->gl_window))
-    device_request_exit(vi->bus);
-
   // Calculate the bounding positions.
   ra->x.start = vi->regs[VI_H_START_REG] >> 16 & 0x3FF;
   ra->x.end = vi->regs[VI_H_START_REG] & 0x3FF;
@@ -89,7 +84,13 @@ void vi_cycle(struct vi_controller *vi) {
   if (hres <= 0 || vres <= 0)
     type = 0;
 
-  os_render_frame(&vi->gl_window, buffer, hres, vres, hskip, type);
+  // Interact with the user interface?
+  if (likely(vi->gl_window.window)) {
+    if (os_exit_requested(&vi->gl_window))
+      device_request_exit(vi->bus);
+
+    os_render_frame(&vi->gl_window, buffer, hres, vres, hskip, type);
+  }
 
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);

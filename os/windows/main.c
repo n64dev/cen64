@@ -56,7 +56,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 // Called when another simulation instance is desired.
 int cen64_win32_main(int argc, const char *argv[]) {
-	struct cen64_options options = default_cen64_options;
+  struct cen64_options options = default_cen64_options;
   struct rom_file pifrom, cart;
   int status;
 

@@ -198,26 +198,26 @@ int get_matching_pixel_format(struct winapi_window *winapi_window,
   const struct gl_window_hints *hints) {
   GLuint pixel_format;
 
-	PIXELFORMATDESCRIPTOR pfd = {
-		sizeof(PIXELFORMATDESCRIPTOR),
-		1,
-		PFD_DRAW_TO_WINDOW |
-		PFD_SUPPORT_OPENGL |
-		PFD_DOUBLEBUFFER,
-		PFD_TYPE_RGBA,
-		32,                      // Color depth
-		0, 0, 0, 0, 0, 0,        // Color bits
-		0,                       // Alpha buffer
-		0,                       // Shift bit
-		0,                       // Accumulation buffer
-		0, 0, 0, 0,              // Accumulation bits
-		16,                      // Depth buffer
-		0,                       // Stencil buffer
-		0,                       // Auxiliary buffer
-		PFD_MAIN_PLANE,          // Drawing layer
-		0,                       // Reserved
-		0, 0, 0                  // Layer masks
-	};
+  PIXELFORMATDESCRIPTOR pfd = {
+    sizeof(PIXELFORMATDESCRIPTOR),
+    1,
+    PFD_DRAW_TO_WINDOW |
+    PFD_SUPPORT_OPENGL |
+    PFD_DOUBLEBUFFER,
+    PFD_TYPE_RGBA,
+    32,                      // Color depth
+    0, 0, 0, 0, 0, 0,        // Color bits
+    0,                       // Alpha buffer
+    0,                       // Shift bit
+    0,                       // Accumulation buffer
+    0, 0, 0, 0,              // Accumulation bits
+    16,                      // Depth buffer
+    0,                       // Stencil buffer
+    0,                       // Auxiliary buffer
+    PFD_MAIN_PLANE,          // Drawing layer
+    0,                       // Reserved
+    0, 0, 0                  // Layer masks
+  };
 
   if (!(pixel_format = ChoosePixelFormat(winapi_window->h_dc, &pfd))) {
     debug("get_matching_pixel_format: No matching pixel formats found.\n");

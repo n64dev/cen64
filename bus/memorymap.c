@@ -18,13 +18,13 @@ static void rotate_right(struct memory_map *, struct memory_map_node *);
 // Creates a new memory map.
 void create_memory_map(struct memory_map *map) {
   map->next_map_index = 1;
-	map->nil = map->mappings;
+  map->nil = map->mappings;
   map->root = map->nil;
 }
 
 // Rebalances the tree after a node is inserted.
 void fixup(struct memory_map *map, struct memory_map_node *node) {
-	struct memory_map_node *cur;
+  struct memory_map_node *cur;
 
   // Rebalance the whole tree as needed. 
   while (node->parent->color == MEMORY_MAP_RED) {
@@ -91,10 +91,10 @@ int map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
   void *instance, memory_rd_function on_read, memory_wr_function on_write) {
   struct memory_map_node *check = map->root;
   struct memory_map_node *cur = map->nil;
-	uint32_t end = start + length - 1;
+  uint32_t end = start + length - 1;
 
   struct memory_map_node *new_node;
-	struct memory_mapping mapping;
+  struct memory_mapping mapping;
 
   // Make sure we have enough space in the map.
   const unsigned num_mappings = sizeof(map->mappings) /
@@ -115,7 +115,7 @@ int map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
       ? check->left : check->right;
   }
 
-	// Insert the entry.
+  // Insert the entry.
   if (cur == map->nil)
     map->root = new_node;
 
@@ -128,20 +128,20 @@ int map_address_range(struct memory_map *map, uint32_t start, uint32_t length,
   new_node->right = map->nil;
   new_node->parent = cur;
 
-	// Initialize the entry.
-	mapping.instance = instance;
-	mapping.on_read = on_read;
-	mapping.on_write = on_write;
+  // Initialize the entry.
+  mapping.instance = instance;
+  mapping.on_read = on_read;
+  mapping.on_write = on_write;
 
-	mapping.end = end;
-	mapping.length = length;
-	mapping.start = start;
+  mapping.end = end;
+  mapping.length = length;
+  mapping.start = start;
 
-	new_node->mapping = mapping;
+  new_node->mapping = mapping;
 
-	// Rebalance the tree.
+  // Rebalance the tree.
   new_node->color = MEMORY_MAP_RED;
-	fixup(map, new_node);
+  fixup(map, new_node);
   return 0;
 }
 

@@ -18,6 +18,7 @@ const struct cen64_options default_cen64_options = {
   false, // console
 #endif
   false, // extra_mode
+  false, // no_interface
 };
 
 // Parses the passed command line arguments.
@@ -33,7 +34,10 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     else
 #endif
 
-    if (!strcmp(argv[i], "-printsimstats"))
+    if (!strcmp(argv[i], "-nointerface"))
+      options->no_interface = true;
+
+    else if (!strcmp(argv[i], "-printsimstats"))
       options->extra_mode = true;
 
     else
@@ -53,6 +57,7 @@ void print_command_line_usage(const char *invokation_string) {
 #ifdef _WIN32
       "  -console                   : Creates/shows the system console.\n"
 #endif
+      "  -nointerface               : Run simulator without a user interface.\n"
       "  -printsimstats             : Print simulation statistics at exit.\n",
 
     invokation_string
