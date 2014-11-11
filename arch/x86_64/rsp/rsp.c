@@ -26,7 +26,6 @@ int arch_rsp_init(struct rsp *rsp) {
 
   // See rsp_vload_dmem for code description.
   static const uint8_t vload_code[] = {
-    0x66, 0x0F, 0x75, 0xDB,
     0x66, 0x0F, 0x73, 0xFA, 0x00,
     0x66, 0x0F, 0x73, 0xF8, 0x00,
     0x66, 0x0F, 0x73, 0xDB, 0x00,
@@ -275,62 +274,59 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
   //
   // Perform:
   //
-  // 0)                          Mask generation:
-  //    0: 66 0F 75 DB           pcmpeqw %xmm3,%xmm3
-  //
   // 1)                          L/R shift DATA:
-  //    4: 66 0F 73 FA xx        pslldq $0x0,%xmm2 ** OR **
-  //    4: 66 0F 73 DA xx        psrldq $0x0,%xmm2
+  //    0: 66 0F 73 FA xx        pslldq $0x0,%xmm2 ** OR **
+  //    0: 66 0F 73 DA xx        psrldq $0x0,%xmm2
   //
   // 2)                          L/R shift DQM:
-  //    9: 66 0F 73 F8 xx        pslldq $0x0,%xmm0
-  //    E: 66 0F 73 DB xx        psrldq $0x0,%xmm3
-  //   13: 66 0F DB C3           pand   %xmm3,%xmm0
+  //    5: 66 0F 73 F8 xx        pslldq $0x0,%xmm0
+  //    A: 66 0F 73 DB xx        psrldq $0x0,%xmm3
+  //    F: 66 0F DB C3           pand   %xmm3,%xmm0
   //
   // 3)                          Byteswap DATA:
-  //   17: 66 0F 6F DA           movdqa %xmm2,%xmm3
-  //   1B: 66 0F 71 F2 08        psllw  $0x8,%xmm2
-  //   20: 66 0F 71 D3 08        psrlw  $0x8,%xmm3
-  //   25: 66 0F EB D3           por    %xmm3,%xmm2
+  //   13: 66 0F 6F DA           movdqa %xmm2,%xmm3
+  //   17: 66 0F 71 F2 08        psllw  $0x8,%xmm2
+  //   1C: 66 0F 71 D3 08        psrlw  $0x8,%xmm3
+  //   21: 66 0F EB D3           por    %xmm3,%xmm2
   //
   // 4)                          Byteswap DQM:
-  //   29: 66 0f 6f d8           movdqa %xmm0,%xmm3
-  //   2D: 66 0f 71 f0 08        psllw  $0x8,%xmm0
-  //   32: 66 0f 71 d3 08        psrlw  $0x8,%xmm3
-  //   37: 66 0f eb c3           por    %xmm3,%xmm0
+  //   25: 66 0f 6f d8           movdqa %xmm0,%xmm3
+  //   29: 66 0f 71 f0 08        psllw  $0x8,%xmm0
+  //   2E: 66 0f 71 d3 08        psrlw  $0x8,%xmm3
+  //   33: 66 0f eb c3           por    %xmm3,%xmm0
   //
   // 5)                          Mux DATA & REG.
-  //   3B: 66 0F DB D0           pand   %xmm0,%xmm2
-  //   3F: 66 0F DF C1           pandn  %xmm1,%xmm0
-  //   43: 66 0F EB C2           por    %xmm2,%xmm0
+  //   37: 66 0F DB D0           pand   %xmm0,%xmm2
+  //   3B: 66 0F DF C1           pandn  %xmm1,%xmm0
+  //   3F: 66 0F EB C2           por    %xmm2,%xmm0
   //
   // 6)                          Return.
-  //   47: C3                    retq
+  //   43: C3                    retq
   //
 
-  rsp->vload_dynarec.ptr[13] = element;
+  rsp->vload_dynarec.ptr[9] = element;
 
   // If the element is the bounding factor as to how much we
   // load, we'll just select the data by pushing dqm over.
   if (doffset <= element) {
-    rsp->vload_dynarec.ptr[7] = 0xFA;
-    rsp->vload_dynarec.ptr[8] = (element - doffset);
-    rsp->vload_dynarec.ptr[18] = 0;
+    rsp->vload_dynarec.ptr[3] = 0xFA;
+    rsp->vload_dynarec.ptr[4] = (element - doffset);
+    rsp->vload_dynarec.ptr[14] = 0;
   }
 
   // If the amount of data restricts how much we'll feed
   // into the vector, we'll need to cut off the loose end
   // in addition to pushing dqm over.
   else {
-    rsp->vload_dynarec.ptr[7] = 0xDA;
-    rsp->vload_dynarec.ptr[8] = (doffset - element);
-    rsp->vload_dynarec.ptr[18] = (doffset - element);
+    rsp->vload_dynarec.ptr[3] = 0xDA;
+    rsp->vload_dynarec.ptr[4] = (doffset - element);
+    rsp->vload_dynarec.ptr[14] = (doffset - element);
   }
 
   data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
 
-  return ((__m128i (*)(__m128i, __m128i, __m128i))
-    rsp->vload_dynarec.ptr)(dqm, reg, data);
+  return ((__m128i (*)(__m128i, __m128i, __m128i, __m128i))
+    rsp->vload_dynarec.ptr)(dqm, reg, data, rsp_vset());
 }
 #endif
 
