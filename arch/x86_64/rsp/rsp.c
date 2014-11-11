@@ -31,12 +31,16 @@ int arch_rsp_init(struct rsp *rsp) {
     0x66, 0x0F, 0x73, 0xF8, 0x00,
     0x66, 0x0F, 0x73, 0xDB, 0x00,
     0x66, 0x0F, 0xDB, 0xC3,
-    0x66, 0x0F, 0xDB, 0xD0,
-    0x66, 0x0F, 0xDF, 0xC1,
     0x66, 0x0F, 0x6F, 0xDA,
     0x66, 0x0F, 0x71, 0xF2, 0x08,
     0x66, 0x0F, 0x71, 0xD3, 0x08,
     0x66, 0x0F, 0xEB, 0xD3,
+    0x66, 0x0F, 0x6F, 0xD8,
+    0x66, 0x0F, 0x71, 0xF0, 0x08,
+    0x66, 0x0F, 0x71, 0xD3, 0x08,
+    0x66, 0x0F, 0xEB, 0xC3,
+    0x66, 0x0F, 0xDB, 0xD0,
+    0x66, 0x0F, 0xDF, 0xC1,
     0x66, 0x0F, 0xEB, 0xC2,
     0xC3
   };
@@ -58,7 +62,7 @@ int arch_rsp_init(struct rsp *rsp) {
   };
 
   if ((vload_buffer = alloc_dynarec_slab(
-    &rsp->vload_dynarec, CACHE_LINE_SIZE)) == NULL)
+    &rsp->vload_dynarec, CACHE_LINE_SIZE * 2)) == NULL)
     return 1;
 
   if ((vstore_buffer = alloc_dynarec_slab(
@@ -258,6 +262,7 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
   uint32_t addr, unsigned element, __m128i dqm, __m128i reg) {
   uint32_t aligned_addr = addr & 0xFF0;
   unsigned doffset = addr & 0xF;
+  __m128i data;
 
   //
   // Since SSE2 only provides "fixed immediate" shuffles:
@@ -282,19 +287,25 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
   //    E: 66 0F 73 DB xx        psrldq $0x0,%xmm3
   //   13: 66 0F DB C3           pand   %xmm3,%xmm0
   //
-  // 3)                          Mux DATA & REG.
-  //   17: 66 0F DB D0           pand   %xmm0,%xmm2
-  //   1B: 66 0F DF C1           pandn  %xmm1,%xmm0
+  // 3)                          Byteswap DATA:
+  //   17: 66 0F 6F DA           movdqa %xmm2,%xmm3
+  //   1B: 66 0F 71 F2 08        psllw  $0x8,%xmm2
+  //   20: 66 0F 71 D3 08        psrlw  $0x8,%xmm3
+  //   25: 66 0F EB D3           por    %xmm3,%xmm2
   //
-  // 4)                          Byteswap DATA:
-  //   1F: 66 0F 6F DA           movdqa %xmm2,%xmm3
-  //   23: 66 0F 71 F2 08        psllw  $0x8,%xmm2
-  //   28: 66 0F 71 D3 08        psrlw  $0x8,%xmm3
-  //   2D: 66 0F EB D3           por    %xmm3,%xmm2
+  // 4)                          Byteswap DQM:
+  //   29: 66 0f 6f d8           movdqa %xmm0,%xmm3
+  //   2D: 66 0f 71 f0 08        psllw  $0x8,%xmm0
+  //   32: 66 0f 71 d3 08        psrlw  $0x8,%xmm3
+  //   37: 66 0f eb c3           por    %xmm3,%xmm0
   //
-  // 5)                          Return.
-  //   31: 66 0F EB C2           por    %xmm2,%xmm0
-  //   35: C3                    retq
+  // 5)                          Mux DATA & REG.
+  //   3B: 66 0F DB D0           pand   %xmm0,%xmm2
+  //   3F: 66 0F DF C1           pandn  %xmm1,%xmm0
+  //   43: 66 0F EB C2           por    %xmm2,%xmm0
+  //
+  // 6)                          Return.
+  //   47: C3                    retq
   //
 
   rsp->vload_dynarec.ptr[13] = element;
@@ -316,7 +327,7 @@ __m128i rsp_vload_dmem(struct rsp *rsp,
     rsp->vload_dynarec.ptr[18] = (doffset - element);
   }
 
-  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
+  data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
 
   return ((__m128i (*)(__m128i, __m128i, __m128i))
     rsp->vload_dynarec.ptr)(dqm, reg, data);
@@ -423,6 +434,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
   unsigned doffset = addr & 0xF;
   unsigned eoffset = (doffset - element) & 0xF;
   uint32_t aligned_addr = addr & 0xFF0;
+  __m128i data;
 
   //
   // Since SSE2 only provides "fixed immediate" shuffles:
@@ -462,7 +474,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
   rsp->vstore_dynarec.ptr[27] = eoffset;
   rsp->vstore_dynarec.ptr[32] = 16 - eoffset;
 
-  __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
+  data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
 
   data = ((__m128i (*)(__m128i, __m128i, __m128i, __m128i))
     rsp->vstore_dynarec.ptr)(dqm, reg, reg, data);
