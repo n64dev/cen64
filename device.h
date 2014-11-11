@@ -26,6 +26,9 @@
 
 #define DEVICE_RAMSIZE 0x800000U
 
+// Only used when passed -nointerface.
+extern bool device_exit_requested;
+
 struct cen64_device {
   struct bus_controller bus;
   uint8_t padding[32];

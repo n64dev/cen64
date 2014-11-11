@@ -9,6 +9,7 @@
 //
 
 #include <setjmp.h>
+#include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include "common.h"
@@ -24,6 +25,14 @@
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 
+// Only used when passed -nointerface.
+bool device_exit_requested;
+
+cen64_cold static void device_sigint(int signum) {
+  device_exit_requested = true;
+}
+
+// The usual declarations begin here.
 cen64_cold static void device_destroy(struct cen64_device *device);
 cen64_cold static struct cen64_device *device_create(struct cen64_device *device,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
@@ -203,8 +212,12 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart) {
   int status = EXIT_FAILURE;
 
+  // Register SIGTERM handler if we don't have an interface.
+  if (options->no_interface && signal(SIGINT, device_sigint) == SIG_ERR)
+    printf("Failed to register SIGINT handler.\n");
+
   // Memory is already allocated; just spawn the device.
-  if (device_create(device, ram, pifrom, cart) != NULL) {
+  else if (device_create(device, ram, pifrom, cart) != NULL) {
     status = unlikely(options->extra_mode)
       ? device_runmode_extra(device)
       : device_runmode_fast(device);

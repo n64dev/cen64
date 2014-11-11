@@ -92,6 +92,9 @@ void vi_cycle(struct vi_controller *vi) {
     os_render_frame(&vi->gl_window, buffer, hres, vres, hskip, type);
   }
 
+  else if (device_exit_requested)
+    device_request_exit(vi->bus);
+
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
   vi->counter = VI_COUNTER_START;
