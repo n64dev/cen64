@@ -55,6 +55,7 @@ void vi_cycle(struct vi_controller *vi) {
   struct render_area *ra = &vi->render_area;
   int hskip, vres, hres;
   float hcoeff, vcoeff;
+  unsigned type;
 
   const uint8_t *buffer;
   uint32_t offset;
@@ -83,23 +84,16 @@ void vi_cycle(struct vi_controller *vi) {
   vres = ra->height =((ra->y.end - ra->y.start) >> 1) * vcoeff;
   hres = ra->width = ((ra->x.end - ra->x.start)) * hcoeff;
   hskip = ra->hskip = vi->regs[VI_WIDTH_REG] - ra->width;
+  type = vi->regs[VI_STATUS_REG] & 0x3;
 
-  if (hres > 0 && vres > 0) {
-    if (hres > 640) {
-      hskip += (hres - 640);
-      hres = 640;
-    }
+  if (hres <= 0 || vres <= 0)
+    type = 0;
 
-    if (vres > 480)
-       vres = 480;
-
-    os_render_frame(&vi->gl_window, buffer, hres, vres,
-      hskip, vi->regs[VI_STATUS_REG] & 0x3);
-  }
+  os_render_frame(&vi->gl_window, buffer, hres, vres, hskip, type);
 
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
-    vi->counter = VI_COUNTER_START;
+  vi->counter = VI_COUNTER_START;
 }
 
 // Initializes the VI.

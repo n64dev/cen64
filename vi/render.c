@@ -50,11 +50,11 @@ void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
 
   switch(type) {
     case 0:
-      break;
+      return;
 
     case 1:
       assert(0 && "Attempted to use reserved frame type.");
-      break;
+      return;
 
     case 2:
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, hres + hskip, vres,
