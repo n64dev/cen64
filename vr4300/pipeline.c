@@ -132,25 +132,31 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
     VR4300_REGISTER_CP1_0, 0, // Source indexes
   };
 
-  unsigned rs, rt, rslutidx, rtlutidx, fr;
+  unsigned rs, rt, rslutidx, rtlutidx;
   uint64_t rs_reg, rt_reg, temp;
   uint32_t flags, iw;
 
   exdc_latch->common = rfex_latch->common;
   flags = rfex_latch->opcode.flags;
-  fr = (status >> 26 & 0x1) ^ 1;
   iw = rfex_latch->iw;
 
-  // CP1 register, or no?
-  rslutidx = flags & 0x1;
-  rtlutidx = flags & 0x2;
+  rs = GET_RS(iw);
+  rt = GET_RT(iw);
 
-  rs = (iw >> rs_select_lut[2 + rslutidx] & 0x1F) + rs_select_lut[rslutidx];
-  rt = (iw >> 16 & 0x1F) + rt_select_lut[rtlutidx];
+  // Check if one of the sources is an FPU register. Furthermore,
+  // if Status.FR bit is clear, we depend on even registers only.
+  if (flags & 0x3) {
+    unsigned fr = (status >> 26 & 0x1) ^ 1;
 
-  // If FR bit is set, we depend on even registers only.
-  rt &= ~((rtlutidx >> 1) & fr);
-  rs &= ~(rslutidx & fr);
+    rslutidx = flags & 0x1;
+    rtlutidx = flags & 0x2;
+
+    rs = (iw >> rs_select_lut[2 + rslutidx] & 0x1F) + rs_select_lut[rslutidx];
+    rt = (iw >> 16 & 0x1F) + rt_select_lut[rtlutidx];
+
+    rt &= ~((rtlutidx >> 1) & fr);
+    rs &= ~(rslutidx & fr);
+  }
 
   // Check to see if we should hold off execution due to a LDI.
   if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ && (
