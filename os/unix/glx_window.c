@@ -508,7 +508,7 @@ void *glx_window_thread(void *opaque) {
 
         snprintf(window_title, sizeof(window_title),
          "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]"
-          " - %.1f VI/s\n", (30 / ((double) ns / NS_PER_SEC)));
+          " - %.1f VI/s", (30 / ((double) ns / NS_PER_SEC)));
 
         XStoreName(glx_window->display, glx_window->window, window_title);
         last_report_time = current_time;
