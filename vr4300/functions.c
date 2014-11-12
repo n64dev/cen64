@@ -194,8 +194,12 @@ int VR4300_ANDI_ORI_XORI(struct vr4300 *vr4300,
   return 0;
 }
 
+#ifdef VR4300_BUSY_WAIT_DETECTION
 //
 // BEQ
+// BEQL
+// BNE
+// BNEL
 //
 // If VR4300_BUSY_WAIT_DETECTOR is defined, this version of BEQ
 // is used. Otherwise, the version below is used. The reason we
@@ -212,15 +216,21 @@ int VR4300_ANDI_ORI_XORI(struct vr4300 *vr4300,
 //      If we don't do both of these things, we could get ourselves
 //      into trouble.
 //
-int VR4300_BEQ(struct vr4300 *vr4300,
+int VR4300_BEQ_BEQL_BNE_BNEL_BWDETECT(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  int64_t offset = (uint64_t) ((int16_t) iw) << 2;
+  uint32_t mask = vr4300_branch_lut[iw >> 30 & 0x1];
+  uint64_t offset = (uint64_t) ((int16_t) iw) << 2;
 
-  if (rs != rt)
+  bool is_ne = iw >> 26 & 0x1;
+  bool cmp = rs == rt;
+
+  if (cmp == is_ne) {
+    rfex_latch->iw_mask = mask;
     return 0;
+  }
 
   icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
 
@@ -235,6 +245,7 @@ int VR4300_BEQ(struct vr4300 *vr4300,
   return 0;
 }
 
+#else
 //
 // BEQ
 // BEQL
@@ -259,6 +270,7 @@ int VR4300_BEQ_BEQL_BNE_BNEL(struct vr4300 *vr4300,
   icrf_latch->pc = rfex_latch->common.pc + (offset + 4);
   return 0;
 }
+#endif
 
 //
 // BGEZ
@@ -812,6 +824,7 @@ int VR4300_INVALID(struct vr4300 *vr4300,
   return 0;
 }
 
+#ifdef VR4300_BUSY_WAIT_DETECTION
 //
 // J
 //
@@ -831,12 +844,18 @@ int VR4300_INVALID(struct vr4300 *vr4300,
 //      If we don't do both of these things, we could get ourselves
 //      into trouble.
 //
-int VR4300_J(struct vr4300 *vr4300,
+int VR4300_J_JAL_BWDETECT(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+
+  bool is_jal = iw >> 26 & 0x1;
   uint32_t target = iw << 2 & 0x0FFFFFFF;
+  uint32_t mask = vr4300_branch_lut[is_jal];
+
+  exdc_latch->result = rfex_latch->common.pc + 8;
+  exdc_latch->dest = VR4300_REGISTER_RA & ~mask;
 
   icrf_latch->pc = (rfex_latch->common.pc & ~0x0FFFFFFFULL) | target;
 
@@ -850,6 +869,7 @@ int VR4300_J(struct vr4300 *vr4300,
   return 0;
 }
 
+#else
 //
 // J
 // JAL
@@ -870,6 +890,7 @@ int VR4300_J_JAL(struct vr4300 *vr4300,
   icrf_latch->pc = (rfex_latch->common.pc & ~0x0FFFFFFFULL) | target;
   return 0;
 }
+#endif
 
 //
 // JALR
