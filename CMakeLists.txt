@@ -16,13 +16,6 @@ find_package(Threads REQUIRED)
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
 
-  # Enable processor-specific optimizations?
-  option(NATIVE_BUILD "Build binary for native architecture?" OFF)
-
-  if (NATIVE_BUILD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
-  endif (NATIVE_BUILD)
-
   # Include architecture-specify machinery.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
     OUTPUT_VARIABLE GCC_MACHINE)
@@ -30,9 +23,22 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   string(REGEX MATCH "([a-zA-Z0-9])+" GCC_MACHINE ${GCC_MACHINE})
 
   if (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
-    set(CEN64_ARCH_DIR "x86_64")
+    set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
+    set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX Native)
 
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maccumulate-outgoing-args")
+    if (${CEN64_ARCH_SUPPORT} MATCHES "SSE2")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE3")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSSE3")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE4.1")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "AVX")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "Native")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    endif ()
 
     if (${GCC_MACHINE} MATCHES "i.86.*")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm5 -ffixed-xmm6 -ffixed-xmm7")
@@ -40,17 +46,16 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm13 -ffixed-xmm14 -ffixed-xmm15")
     endif()
 
-    if (NOT NATIVE_BUILD)
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
-    endif (NOT NATIVE_BUILD)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maccumulate-outgoing-args")
 
+    set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
   endif (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
 
   if (${GCC_MACHINE} STREQUAL "arm")
-    set(CEN64_ARCH_DIR "arm")
-
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
+
+    include_directories(${PROJECT_SOURCE_DIR}/arch/arm)
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
   endif (${GCC_MACHINE} STREQUAL "arm")
 
@@ -91,13 +96,6 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
 
-  # Enable processor-specific optimizations?
-  option(NATIVE_BUILD "Build binary for native architecture?" OFF)
-
-  if (NATIVE_BUILD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
-  endif (NATIVE_BUILD)
-
   # Include architecture-specify machinery.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
     OUTPUT_VARIABLE CLANG_MACHINE)
@@ -105,19 +103,31 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   string(REGEX MATCH "([a-zA-Z0-9])+" CLANG_MACHINE ${CLANG_MACHINE})
 
   if (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
-    set(CEN64_ARCH_DIR "x86_64")
+    set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
+    set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX Native)
 
-    if (NOT NATIVE_BUILD)
+    if (${CEN64_ARCH_SUPPORT} MATCHES "SSE2")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
-    endif (NOT NATIVE_BUILD)
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE3")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSSE3")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE4.1")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "AVX")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "Native")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    endif ()
 
+    set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
   endif (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
 
   if (${CLANG_MACHINE} STREQUAL "arm")
-    set(CEN64_ARCH_DIR "arm")
-
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=neon")
+
+    set(CEN64_ARCH_DIR "arm")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/arm)
   endif (${CLANG_MACHINE} STREQUAL "arm")
 
@@ -136,18 +146,24 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES Clang)
 if (${CMAKE_C_COMPILER_ID} MATCHES Intel)
   set(CMAKE_C_FLAGS "-Wall -Wno-unused-parameter -std=c99")
 
-  # Enable processor-specific optimizations?
-  option(NATIVE_BUILD "Build binary for native architecture?" OFF)
+  set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
+  set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX Native)
 
-  if (NATIVE_BUILD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHost")
-  else ()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xSSSE3")
-  endif ()
+    if (${CEN64_ARCH_SUPPORT} MATCHES "SSE2")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xSSE2")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE3")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xSSE3")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSSE3")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xSSSE3")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE4.1")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xSSE4.1")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "AVX")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xAVX")
+    elseif (${CEN64_ARCH_SUPPORT} MATCHES "Native")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHost")
+    endif ()
 
-  # Include architecture-specify machinery.
   set(CEN64_ARCH_DIR "x86_64")
-
   include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
 
   # Set architecture-independent flags.
@@ -160,11 +176,25 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
 # If using MSVC, configure it accordingly.
 if (MSVC)
+  set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
+  set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX)
+
+  if (${CEN64_ARCH_SUPPORT} MATCHES "SSE2")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D__SSE2__")
+  elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D__SSE2__ /D__SSE3__")
+  elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSSE3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D__SSE2__ /D__SSE3__ /D__SSSE3__")
+  elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE4.1")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__")
+  elseif (${CEN64_ARCH_SUPPORT} MATCHES "AVX")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /arch:AVX")
+  endif ()
+
   enable_language(ASM_MASM) # Are you kidding me? Really?
+  file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/x86_64/fpu/*.asm)
 
   set(CEN64_ARCH_DIR "x86_64")
-
-  file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/x86_64/fpu/*.asm)
   include_directories(${PROJECT_SOURCE_DIR}/os/windows/x86_64)
 endif (MSVC)
 

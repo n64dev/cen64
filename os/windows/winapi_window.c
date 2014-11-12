@@ -111,8 +111,8 @@ int create_gl_window(struct bus_controller *bus,
   dw_style = WS_OVERLAPPEDWINDOW;
   AdjustWindowRectEx(&window_rect, dw_style, FALSE, dw_ex_style);
 
-  if (!(winapi_window->h_wnd = CreateWindowEx(dw_ex_style,
-    CLASSNAME, "CEN64 ["CEN64_COMPILER"]",
+  if (!(winapi_window->h_wnd = CreateWindowEx(dw_ex_style, CLASSNAME,
+    "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]",
     dw_style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0,
     window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
     NULL, NULL, winapi_window->h_instance, NULL))) {

@@ -75,6 +75,9 @@ typedef char bool;
 #define CEN64_COMPILER "Unknown"
 #endif
 
+#cmakedefine CEN64_ARCH_DIR "@CEN64_ARCH_DIR@"
+#cmakedefine CEN64_ARCH_SUPPORT "@CEN64_ARCH_SUPPORT@"
+
 #define CACHE_LINE_SIZE 64
 
 // Define cen64_align().

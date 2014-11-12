@@ -177,7 +177,8 @@ int create_gl_window(struct bus_controller *bus,
   }
 
   XSetStandardProperties(glx_window->display, glx_window->window,
-    "CEN64 ["CEN64_COMPILER"]", "CEN64", None, NULL, 0, NULL);
+    "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]",
+    "CEN64", None, NULL, 0, NULL);
 
   XMapRaised(glx_window->display, glx_window->window);
 
@@ -504,7 +505,9 @@ void *glx_window_thread(void *opaque) {
 
         get_time(&current_time);
         ns = compute_time_difference(&current_time, &last_report_time);
-        snprintf(window_title, sizeof(window_title), "CEN64 ["CEN64_COMPILER"]"
+
+        snprintf(window_title, sizeof(window_title),
+         "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]"
           " - %.1f VI/s\n", (30 / ((double) ns / NS_PER_SEC)));
 
         XStoreName(glx_window->display, glx_window->window, window_title);
