@@ -70,14 +70,14 @@ register __m128i hr_acc_md __asm__ ("xmm14");
 register __m128i hr_acc_hi __asm__ ("xmm15");
 #endif
 
-static inline void read_acc_lo(const uint16_t *acc, __m128i *acc_lo) {
-  *acc_lo = hr_acc_lo;
+static inline __m128i read_acc_lo(const uint16_t *acc) {
+  return hr_acc_lo;
 }
-static inline void read_acc_md(const uint16_t *acc, __m128i *acc_md) {
-  *acc_md = hr_acc_md;
+static inline __m128i read_acc_md(const uint16_t *acc) {
+  return hr_acc_md;
 }
-static inline void read_acc_hi(const uint16_t *acc, __m128i *acc_hi) {
-  *acc_hi = hr_acc_hi;
+static inline __m128i read_acc_hi(const uint16_t *acc) {
+  return hr_acc_hi;
 }
 static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
   hr_acc_lo = acc_lo;
@@ -89,14 +89,14 @@ static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
   hr_acc_hi = acc_hi;
 }
 #else
-static inline void read_acc_lo(const uint16_t *acc, __m128i *acc_lo) {
-  *acc_lo = rsp_vect_load_unshuffled_operand(acc + 16);
+static inline __m128i read_acc_lo(const uint16_t *acc) {
+  return rsp_vect_load_unshuffled_operand(acc + 16);
 }
-static inline void read_acc_md(const uint16_t *acc, __m128i *acc_md) {
-  *acc_md = rsp_vect_load_unshuffled_operand(acc + 8);
+static inline __m128i read_acc_md(const uint16_t *acc) {
+  return rsp_vect_load_unshuffled_operand(acc + 8);
 }
-static inline void read_acc_hi(const uint16_t *acc, __m128i *acc_hi) {
-  *acc_hi = rsp_vect_load_unshuffled_operand(acc + 0);
+static inline __m128i read_acc_hi(const uint16_t *acc) {
+  return rsp_vect_load_unshuffled_operand(acc + 0);
 }
 static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
   rsp_vect_write_operand(acc + 16, acc_lo);

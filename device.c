@@ -132,18 +132,18 @@ static int device_runmode_fast(struct cen64_device *device) {
 
   // Preserve host registers pinned to RSP accumulators.
   // On many hosts, these will have no real effect.
-  read_acc_lo(rsp->cp2.acc, &acc_lo);
-  read_acc_md(rsp->cp2.acc, &acc_md);
-  read_acc_hi(rsp->cp2.acc, &acc_hi);
+  acc_lo = read_acc_lo(rsp->cp2.acc);
+  acc_md = read_acc_md(rsp->cp2.acc);
+  acc_hi = read_acc_hi(rsp->cp2.acc);
 
   write_acc_lo(rsp->cp2.acc, rsp_vzero());
   write_acc_md(rsp->cp2.acc, rsp_vzero());
   write_acc_hi(rsp->cp2.acc, rsp_vzero());
 
   if (setjmp(device->bus.unwind_data)) {
-    read_acc_lo(rsp->cp2.acc, &acc_lo);
-    read_acc_md(rsp->cp2.acc, &acc_md);
-    read_acc_hi(rsp->cp2.acc, &acc_hi);
+    write_acc_lo(rsp->cp2.acc, acc_lo);
+    write_acc_md(rsp->cp2.acc, acc_md);
+    write_acc_hi(rsp->cp2.acc, acc_hi);
 
     return 0;
   }
@@ -174,18 +174,18 @@ static int device_runmode_extra(struct cen64_device *device) {
 
   // Preserve host registers pinned to RSP accumulators.
   // On many hosts, these will have no real effect.
-  read_acc_lo(rsp->cp2.acc, &acc_lo);
-  read_acc_md(rsp->cp2.acc, &acc_md);
-  read_acc_hi(rsp->cp2.acc, &acc_hi);
+  acc_lo = read_acc_lo(rsp->cp2.acc);
+  acc_md = read_acc_md(rsp->cp2.acc);
+  acc_hi = read_acc_hi(rsp->cp2.acc);
 
   write_acc_lo(rsp->cp2.acc, rsp_vzero());
   write_acc_md(rsp->cp2.acc, rsp_vzero());
   write_acc_hi(rsp->cp2.acc, rsp_vzero());
 
   if (setjmp(device->bus.unwind_data)) {
-    read_acc_lo(rsp->cp2.acc, &acc_lo);
-    read_acc_md(rsp->cp2.acc, &acc_md);
-    read_acc_hi(rsp->cp2.acc, &acc_hi);
+    write_acc_lo(rsp->cp2.acc, acc_lo);
+    write_acc_md(rsp->cp2.acc, acc_md);
+    write_acc_hi(rsp->cp2.acc, acc_hi);
 
     vr4300_print_summary(&vr4300_stats);
     return 0;

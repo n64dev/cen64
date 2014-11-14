@@ -68,8 +68,8 @@ rsp_vect_t RSP_VMADH(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_md, acc_hi, result;
 
-  read_acc_md(acc, &acc_md);
-  read_acc_hi(acc, &acc_hi);
+  acc_md = read_acc_md(acc);
+  acc_hi = read_acc_hi(acc);
 
   result = rsp_vmadh(vs, vt_shuffle, zero, &acc_md, &acc_hi);
 
@@ -85,9 +85,9 @@ rsp_vect_t RSP_VMADL(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
-  read_acc_lo(acc, &acc_lo);
-  read_acc_md(acc, &acc_md);
-  read_acc_hi(acc, &acc_hi);
+  acc_lo = read_acc_lo(acc);
+  acc_md = read_acc_md(acc);
+  acc_hi = read_acc_hi(acc);
 
   result = rsp_vmadl(vs, vt_shuffle, zero, &acc_lo, &acc_md, &acc_hi);
 
@@ -104,9 +104,9 @@ rsp_vect_t RSP_VMADM(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
-  read_acc_lo(acc, &acc_lo);
-  read_acc_md(acc, &acc_md);
-  read_acc_hi(acc, &acc_hi);
+  acc_lo = read_acc_lo(acc);
+  acc_md = read_acc_md(acc);
+  acc_hi = read_acc_hi(acc);
 
   result = rsp_vmadm(vs, vt_shuffle, zero, &acc_lo, &acc_md, &acc_hi);
 
@@ -123,9 +123,9 @@ rsp_vect_t RSP_VMADN(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t acc_lo, acc_md, acc_hi, result;
 
-  read_acc_lo(acc, &acc_lo);
-  read_acc_md(acc, &acc_md);
-  read_acc_hi(acc, &acc_hi);
+  acc_lo = read_acc_lo(acc);
+  acc_md = read_acc_md(acc);
+  acc_hi = read_acc_hi(acc);
 
   result = rsp_vmadn(vs, vt_shuffle, zero, &acc_lo, &acc_md, &acc_hi);
 
@@ -243,18 +243,17 @@ rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 rsp_vect_t RSP_VSAR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   unsigned e = GET_E(iw);
-  rsp_vect_t result;
 
   switch (e) {
-    case 8: read_acc_hi(acc, &result); break;
-    case 9: read_acc_md(acc, &result); break;
-    case 10: read_acc_lo(acc, &result); break;
+    case 8: return read_acc_hi(acc);
+    case 9: return read_acc_md(acc);
+    case 10: return read_acc_lo(acc);
 
     default:
       return zero;
   }
 
-  return result;
+  return zero;
 }
 
 //
