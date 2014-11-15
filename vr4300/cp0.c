@@ -61,7 +61,14 @@ int VR4300_DMFC0(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
   unsigned src = GET_RD(iw);
 
-  exdc_latch->result = mask_reg(src, vr4300->regs[32 + src]);
+  if (src == (VR4300_CP0_REGISTER_COUNT - 32)) {
+    exdc_latch->result = (uint32_t)
+      (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1);
+  }
+
+  else
+    exdc_latch->result = mask_reg(src, vr4300->regs[32 + src]);
+
   exdc_latch->dest = dest;
   return 0;
 }
@@ -128,7 +135,14 @@ int VR4300_MFC0(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
   unsigned src = GET_RD(iw);
 
-  exdc_latch->result = mask_reg(src, vr4300->regs[32 + src]);
+  if (src == (VR4300_CP0_REGISTER_COUNT - 32)) {
+    exdc_latch->result = (uint32_t)
+      (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1);
+  }
+
+  else
+    exdc_latch->result = mask_reg(src, vr4300->regs[32 + src]);
+
   exdc_latch->dest = (int32_t) dest;
   return 0;
 }

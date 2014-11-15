@@ -429,9 +429,9 @@ void vr4300_cycle(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
 
   // Increment counters.
-  vr4300->regs[VR4300_CP0_REGISTER_COUNT] += ++(vr4300->cycles) & 0x1;
+  vr4300->regs[VR4300_CP0_REGISTER_COUNT]++;
 
-  if ((uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COUNT] ==
+  if ((uint32_t) (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1) ==
     (uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COMPARE])
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
 

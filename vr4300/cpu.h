@@ -100,7 +100,6 @@ struct vr4300 {
   struct vr4300_cp1 cp1;
 
   struct bus_controller *bus;
-  unsigned long long cycles;
   unsigned signals;
 
   uint64_t regs[NUM_VR4300_REGISTERS];
