@@ -121,7 +121,7 @@ cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);
 cen64_cold void vr4300_print_summary(struct vr4300_stats *stats);
 
 void vr4300_cycle(struct vr4300 *vr4300);
-void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats);
+cen64_cold void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats);
 
 #endif
 

@@ -228,7 +228,7 @@ int VR4300_TLBWI(struct vr4300 *vr4300,
 }
 
 // Initializes the coprocessor.
-cen64_cold void vr4300_cp0_init(struct vr4300 *vr4300) {
+void vr4300_cp0_init(struct vr4300 *vr4300) {
   tlb_init(&vr4300->cp0.tlb);
 }
 
