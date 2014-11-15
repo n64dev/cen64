@@ -11,7 +11,7 @@
 #define __arch_fpu_h__
 #include "common.h"
 
-typedef uint16_t fpu_state_t;
+typedef uint32_t fpu_state_t;
 
 #define FPU_MASK_EXCPS    0x1F80
 
