@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "common.h"
 #include "device.h"
+#include "fpu/fpu.h"
 #include "os/rom_file.h"
 
 #include "bus/controller.h"
@@ -24,6 +25,7 @@
 #include "rsp/cpu.h"
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
+#include "vr4300/cp1.h"
 
 // Only used when passed -nointerface.
 bool device_exit_requested;
@@ -37,8 +39,12 @@ cen64_cold static void device_destroy(struct cen64_device *device);
 cen64_cold static struct cen64_device *device_create(struct cen64_device *device,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
 
-static int device_runmode_fast(struct cen64_device *device);
-static int device_runmode_extra(struct cen64_device *device);
+#ifdef CEN64_EXTRAFEATURES
+cen64_hot static int device_spin_extra(struct cen64_device *device,
+  fpu_state_t *saved_fpu_state, struct vr4300_stats *vr4300_stats);
+#else
+cen64_hot static int device_spin_fast(struct cen64_device *device);
+#endif
 
 // Creates and initializes a device.
 struct cen64_device *device_create(struct cen64_device *device,
@@ -123,90 +129,6 @@ void device_request_exit(struct bus_controller *bus) {
   longjmp(bus->unwind_data, 1);
 }
 
-// Kicks off threads and starts the device.
-static int device_runmode_fast(struct cen64_device *device) {
-  rsp_vect_t acc_lo, acc_md, acc_hi;
-  struct rsp *rsp = &device->rsp;
-
-  unsigned i;
-
-  // Preserve host registers pinned to RSP accumulators.
-  // On many hosts, these will have no real effect.
-  acc_lo = read_acc_lo(rsp->cp2.acc);
-  acc_md = read_acc_md(rsp->cp2.acc);
-  acc_hi = read_acc_hi(rsp->cp2.acc);
-
-  write_acc_lo(rsp->cp2.acc, rsp_vzero());
-  write_acc_md(rsp->cp2.acc, rsp_vzero());
-  write_acc_hi(rsp->cp2.acc, rsp_vzero());
-
-  if (setjmp(device->bus.unwind_data)) {
-    write_acc_lo(rsp->cp2.acc, acc_lo);
-    write_acc_md(rsp->cp2.acc, acc_md);
-    write_acc_hi(rsp->cp2.acc, acc_hi);
-
-    return 0;
-  }
-
-  while (1) {
-    for (i = 0; i < 2; i++) {
-      vi_cycle(&device->vi);
-
-      rsp_cycle(rsp);
-      vr4300_cycle(&device->vr4300);
-    }
-
-    vr4300_cycle(&device->vr4300);
-  }
-
-  return 0;
-}
-
-// Kicks off threads and starts the device.
-static int device_runmode_extra(struct cen64_device *device) {
-  rsp_vect_t acc_lo, acc_md, acc_hi;
-  struct rsp *rsp = &device->rsp;
-
-  struct vr4300_stats vr4300_stats;
-  unsigned i;
-
-  memset(&vr4300_stats, 0, sizeof(vr4300_stats));
-
-  // Preserve host registers pinned to RSP accumulators.
-  // On many hosts, these will have no real effect.
-  acc_lo = read_acc_lo(rsp->cp2.acc);
-  acc_md = read_acc_md(rsp->cp2.acc);
-  acc_hi = read_acc_hi(rsp->cp2.acc);
-
-  write_acc_lo(rsp->cp2.acc, rsp_vzero());
-  write_acc_md(rsp->cp2.acc, rsp_vzero());
-  write_acc_hi(rsp->cp2.acc, rsp_vzero());
-
-  if (setjmp(device->bus.unwind_data)) {
-    write_acc_lo(rsp->cp2.acc, acc_lo);
-    write_acc_md(rsp->cp2.acc, acc_md);
-    write_acc_hi(rsp->cp2.acc, acc_hi);
-
-    vr4300_print_summary(&vr4300_stats);
-    return 0;
-  }
-
-  while (1) {
-    for (i = 0; i < 2; i++) {
-      vi_cycle(&device->vi);
-
-      rsp_cycle(rsp);
-      vr4300_cycle(&device->vr4300);
-      vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
-    }
-
-    vr4300_cycle(&device->vr4300);
-    vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
-  }
-
-  return 0;
-}
-
 // Create a device and proceed to the main loop.
 int device_run(struct cen64_device *device, struct cen64_options *options,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart) {
@@ -218,13 +140,96 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
 
   // Memory is already allocated; just spawn the device.
   else if (device_create(device, ram, pifrom, cart) != NULL) {
-    status = unlikely(options->extra_mode)
-      ? device_runmode_extra(device)
-      : device_runmode_fast(device);
+    rsp_vect_t acc_lo, acc_md, acc_hi;
+    fpu_state_t saved_fpu_state;
+
+    struct vr4300_stats vr4300_stats;
+    memset(&vr4300_stats, 0, sizeof(vr4300_stats));
+
+    // Preserve host registers pinned to the device.
+    acc_lo = read_acc_lo(device->rsp.cp2.acc);
+    acc_md = read_acc_md(device->rsp.cp2.acc);
+    acc_hi = read_acc_hi(device->rsp.cp2.acc);
+    saved_fpu_state = fpu_get_state();
+
+    write_acc_lo(device->rsp.cp2.acc, rsp_vzero());
+    write_acc_md(device->rsp.cp2.acc, rsp_vzero());
+    write_acc_hi(device->rsp.cp2.acc, rsp_vzero());
+    vr4300_cp1_init(&device->vr4300);
+
+    // Spin the device until we return (from setjmp).
+#ifdef CEN64_EXTRAFEATURES
+    device_spin_extra(device, &saved_fpu_state, &vr4300_stats);
+#else
+    device_spin_fast(device);
+#endif
+
+    // Restore host registers pinned to the device.
+    write_acc_lo(device->rsp.cp2.acc, acc_lo);
+    write_acc_md(device->rsp.cp2.acc, acc_md);
+    write_acc_hi(device->rsp.cp2.acc, acc_hi);
+    fpu_set_state(saved_fpu_state);
+
+    // Finalize simulation, release memory, etc.
+#ifdef CEN64_EXTRAFEATURES
+    if (options->print_sim_stats)
+      vr4300_print_summary(&vr4300_stats);
+#endif
 
     device_destroy(device);
   }
 
   return status;
+}
+
+// Continually cycles the device until setjmp returns.
+#ifdef CEN64_EXTRAFEATURES
+int device_spin_extra(struct cen64_device *device,
+  fpu_state_t *saved_fpu_state, struct vr4300_stats *vr4300_stats) {
+  if (setjmp(device->bus.unwind_data))
+    return 1;
+
+  while (1) {
+    unsigned i;
+
+    for (i = 0; i < 2; i++) {
+      vi_cycle(&device->vi);
+
+      rsp_cycle(&device->rsp);
+      vr4300_cycle(&device->vr4300);
+
+      // Perform additional simulation tasks NOW.
+      // Make sure to preserve the FPU state.
+      vr4300_cycle_extra(&device->vr4300, vr4300_stats);
+    }
+
+    vr4300_cycle(&device->vr4300);
+
+    // Perform additional simulation tasks NOW.
+    // Make sure to preserve the FPU state.
+    vr4300_cycle_extra(&device->vr4300, vr4300_stats);
+  }
+}
+#endif
+
+// Continually cycles the device until setjmp returns.
+int device_spin_fast(struct cen64_device *device) {
+  if (setjmp(device->bus.unwind_data))
+    return 1;
+
+  while (1) {
+    unsigned i;
+
+    for (i = 0; i < 2; i++) {
+      vi_cycle(&device->vi);
+
+      rsp_cycle(&device->rsp);
+      vr4300_cycle(&device->vr4300);
+    }
+
+    vr4300_cycle(&device->vr4300);
+  }
+
+  return 0;
 }
 

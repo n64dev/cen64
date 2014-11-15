@@ -51,7 +51,7 @@ extern const char *sp_register_mnemonics[NUM_SP_REGISTERS];
 
 struct rsp {
   struct rsp_pipeline pipeline;
-  uint32_t pad[3];
+  uint32_t pad[1];
   struct rsp_cp2 cp2;
 
   uint32_t regs[NUM_RSP_REGISTERS * 2];
@@ -67,7 +67,7 @@ struct rsp {
 cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus);
 cen64_cold void rsp_destroy(struct rsp *rsp);
 
-void rsp_cycle(struct rsp *rsp);
+cen64_hot void rsp_cycle(struct rsp *rsp);
 
 #endif
 

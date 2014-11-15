@@ -12,6 +12,9 @@ project(cen64)
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 
+# Ask if we should build with extra features (debugger, statistics, etc.).
+option(CEN64_EXTRAFEATURES "Build CEN64 with features for developers/debuggers." OFF)
+
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")

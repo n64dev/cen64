@@ -16,8 +16,6 @@
 struct vr4300;
 
 struct vr4300_cp1 {
-  fpu_state_t native_state;
-  fpu_state_t native_enables;
 };
 
 int VR4300_BC1(struct vr4300 *vr4300, uint32_t iw, uint64_t fs, uint64_t ft);

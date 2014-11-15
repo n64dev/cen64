@@ -140,11 +140,18 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   rs = GET_RS(iw);
   rt = GET_RT(iw);
 
-  // Check if one of the sources is an FPU register. Furthermore,
-  // if Status.FR bit is clear, we depend on even registers only.
-  if (flags & 0x3) {
-    unsigned fr = (status >> 26 & 0x1) ^ 1;
+  if (flags & OPCODE_INFO_FPU) {
+    unsigned fr;
 
+    // Dealing with FPU state, is CP1 usable?
+    if (!(status & 0x20000000U)) {
+      VR4300_CPU(vr4300);
+      return 1;
+    }
+
+    // Check if one of the sources is an FPU register. Furthermore,
+    // if Status.FR bit is clear, we depend on even registers only.
+    fr = (status >> 26 & 0x1) ^ 1;
     rslutidx = flags & 0x1;
     rtlutidx = flags & 0x2;
 

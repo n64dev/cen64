@@ -19,8 +19,9 @@ struct cen64_options {
 #ifdef _WIN32
   bool console;
 #endif
-  bool extra_mode;
+
   bool no_interface;
+  bool print_sim_stats;
 };
 
 extern const struct cen64_options default_cen64_options;

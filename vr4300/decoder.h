@@ -23,6 +23,7 @@
 #define GET_FMT(iw) ((iw) >> 21 & 0x1F)
 
 #define OPCODE_INFO_NONE (0)
+#define OPCODE_INFO_FPU (1U << 2)
 #define OPCODE_INFO_BRANCH (1U << 31)
 #define OPCODE_INFO_NEEDRS (1U << 3)
 #define OPCODE_INFO_NEEDFS ((1U << 3) | (1U << 0))

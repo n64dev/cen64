@@ -31,7 +31,6 @@ extern bool device_exit_requested;
 
 struct cen64_device {
   struct bus_controller bus;
-  uint8_t padding_bus[32];
   struct vr4300 vr4300;
 
   struct ai_controller ai;
@@ -46,8 +45,7 @@ struct cen64_device {
 };
 
 cen64_cold void device_request_exit(struct bus_controller *bus);
-
-cen64_hot int device_run(struct cen64_device *device, struct cen64_options *options,
+cen64_cold int device_run(struct cen64_device *device, struct cen64_options *options,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
 
 #endif

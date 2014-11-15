@@ -15,8 +15,6 @@
 #include "vr4300/decoder.h"
 #include "vr4300/fault.h"
 
-static bool vr4300_cp1_usable(const struct vr4300 *vr4300);
-
 //
 // Raises a MCI interlock for a set number of cycles.
 //
@@ -35,19 +33,9 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300,
 
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32, fd32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -62,13 +50,9 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -84,19 +68,9 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300,
 
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32, fd32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -112,13 +86,9 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -188,19 +158,9 @@ int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -217,13 +177,9 @@ int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -241,19 +197,9 @@ int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -270,13 +216,9 @@ int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -294,19 +236,9 @@ int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -323,13 +255,9 @@ int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -347,19 +275,9 @@ int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -376,13 +294,9 @@ int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -400,19 +314,9 @@ int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -429,13 +333,9 @@ int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -453,19 +353,9 @@ int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -482,13 +372,9 @@ int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -506,19 +392,9 @@ int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -535,13 +411,9 @@ int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -559,19 +431,9 @@ int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32;
   uint8_t flag;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -588,13 +450,9 @@ int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result | (flag << 23);
   exdc_latch->dest = dest;
@@ -610,20 +468,12 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
 
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint64_t result;
 
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state((vr4300->cp1.native_state &
-    ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
+  fpu_state_t saved_state = fpu_get_state();
+  fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -637,16 +487,12 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
 
-  vr4300->cp1.native_state =
-    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
-    (fpu_get_state() & ~FPU_ROUND_MASK);
-
-  fpu_set_state(saved_state);
+  fpu_set_state((saved_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK));
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -662,20 +508,12 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
 
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint32_t result;
 
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state((vr4300->cp1.native_state &
-    ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
+  fpu_state_t saved_state = fpu_get_state();
+  fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -689,16 +527,12 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
 
-  vr4300->cp1.native_state =
-    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
-    (fpu_get_state() & ~FPU_ROUND_MASK);
-
-  fpu_set_state(saved_state);
+  fpu_set_state((saved_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK));
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -715,11 +549,6 @@ int VR4300_CFC1(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
   unsigned src = GET_RD(iw);
   uint64_t result;
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   switch (src) {
     case 0: src = VR4300_CP1_FCR0; break;
@@ -759,11 +588,6 @@ int VR4300_CTC1(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_RD(iw);
 
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
   if (dest == 31)
     dest = VR4300_CP1_FCR31;
 
@@ -789,19 +613,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -821,13 +635,9 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -844,19 +654,9 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -870,13 +670,9 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -891,19 +687,9 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint32_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_D:
@@ -921,13 +707,9 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -943,19 +725,9 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint32_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -969,13 +741,9 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -990,19 +758,9 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32, fd32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1018,13 +776,9 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1040,11 +794,6 @@ int VR4300_DMFC1(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_RT(iw);
 
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
   exdc_latch->result = fs;
   exdc_latch->dest = dest;
   return 0;
@@ -1057,11 +806,6 @@ int VR4300_DMTC1(struct vr4300 *vr4300,
   uint32_t iw, uint64_t fs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_FS(iw);
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   exdc_latch->result = rt;
   exdc_latch->dest = dest;
@@ -1076,20 +820,12 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint64_t result;
 
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state((vr4300->cp1.native_state &
-    ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
+  fpu_state_t saved_state = fpu_get_state();
+  fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1103,16 +839,12 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
 
-  vr4300->cp1.native_state =
-    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
-    (fpu_get_state() & ~FPU_ROUND_MASK);
-
-  fpu_set_state(saved_state);
+  fpu_set_state((saved_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK));
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1127,20 +859,12 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint32_t result;
 
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state((vr4300->cp1.native_state &
-    ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
+  fpu_state_t saved_state = fpu_get_state();
+  fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1154,16 +878,12 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
 
-  vr4300->cp1.native_state =
-    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
-    (fpu_get_state() & ~FPU_ROUND_MASK);
-
-  fpu_set_state(saved_state);
+  fpu_set_state((saved_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK));
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1179,11 +899,6 @@ int VR4300_LDC1(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_FT(iw);
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.dqm = ~0ULL;
@@ -1211,11 +926,6 @@ int VR4300_LWC1(struct vr4300 *vr4300,
 
   uint64_t result = 0;
   unsigned postshift = 0;
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   if (!(status & 0x04000000)) {
     result = dest & 0x1
@@ -1246,19 +956,9 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32, fd32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1274,13 +974,9 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1297,11 +993,6 @@ int VR4300_MFC1(struct vr4300 *vr4300,
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   unsigned dest = GET_RT(iw);
   uint64_t result;
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   if (status & 0x04000000)
     result = (int32_t) fs;
@@ -1325,11 +1016,6 @@ int VR4300_CP1_MOV(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_FD(iw);
 
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
   exdc_latch->result = fs;
   exdc_latch->dest = dest;
   return 0;
@@ -1344,11 +1030,6 @@ int VR4300_MTC1(struct vr4300 *vr4300,
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   uint64_t result = (int32_t) rt;
   unsigned dest = GET_FS(iw);
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   if (!(status & 0x04000000)) {
     result = (dest & 0x1)
@@ -1371,19 +1052,9 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32, fd32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1398,13 +1069,9 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1419,20 +1086,12 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint64_t result;
 
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state((vr4300->cp1.native_state &
-    ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
+  fpu_state_t saved_state = fpu_get_state();
+  fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1446,16 +1105,12 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
 
-  vr4300->cp1.native_state =
-    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
-    (fpu_get_state() & ~FPU_ROUND_MASK);
-
-  fpu_set_state(saved_state);
+  fpu_set_state((saved_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK));
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1470,20 +1125,12 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint32_t result;
 
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state((vr4300->cp1.native_state &
-    ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
+  fpu_state_t saved_state = fpu_get_state();
+  fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1497,17 +1144,13 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
 
   }
 
-  vr4300->cp1.native_state =
-    (vr4300->cp1.native_state & FPU_ROUND_MASK) |
-    (fpu_get_state() & ~FPU_ROUND_MASK);
-
-  fpu_set_state(saved_state);
+  fpu_set_state((saved_state & FPU_ROUND_MASK) |
+    (fpu_get_state() & ~FPU_ROUND_MASK));
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1522,11 +1165,6 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
 int VR4300_SDC1(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t ft) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
@@ -1546,19 +1184,9 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32, fd32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1573,13 +1201,9 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1595,19 +1219,9 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32, ft32, fd32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1623,13 +1237,9 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1646,11 +1256,6 @@ int VR4300_SWC1(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   unsigned ft_reg = GET_FT(iw);
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
 
   if (!(status & 0x04000000))
     ft >>= ((ft_reg & 0x1) << 5);
@@ -1673,19 +1278,9 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint64_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1699,13 +1294,9 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300,
       break;
 
     default:
-      fpu_set_state(saved_state);
       VR4300_INV(vr4300);
       return 1;
   }
-
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1720,19 +1311,9 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
-  fpu_state_t saved_state;
 
   uint32_t fs32;
   uint32_t result;
-
-  saved_state = fpu_get_state();
-
-  if (unlikely(!vr4300_cp1_usable(vr4300))) {
-    VR4300_CPU(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
     case VR4300_FMT_S:
@@ -1750,9 +1331,6 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
       return 1;
   }
 
-  vr4300->cp1.native_state = fpu_get_state();
-  fpu_set_state(saved_state);
-
   exdc_latch->result = result;
   exdc_latch->dest = dest;
   return vr4300_do_mci(vr4300, 5);
@@ -1760,11 +1338,6 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
 
 // Initializes the coprocessor.
 void vr4300_cp1_init(struct vr4300 *vr4300) {
-  vr4300->cp1.native_state = FPU_ROUND_NEAREST | FPU_MASK_EXCPS;
-}
-
-// Determines if the coprocessor was used yet.
-bool vr4300_cp1_usable(const struct vr4300 *vr4300) {
-  return (vr4300->regs[VR4300_CP0_REGISTER_STATUS] & 0x20000000) != 0;
+  fpu_set_state(FPU_ROUND_NEAREST | FPU_MASK_EXCPS);
 }
 

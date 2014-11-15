@@ -166,6 +166,7 @@ void cen64_return(struct bus_controller *bus)
 #define debug_mmio_write(what, mnemonic, val, dqm) do {} while (0)
 #endif
 
+#cmakedefine CEN64_EXTRAFEATURES
 #cmakedefine VR4300_BUSY_WAIT_DETECTION
 
 #include "common/debug.h"
