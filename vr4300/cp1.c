@@ -36,6 +36,8 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
+
+  uint32_t fs32, fd32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -45,23 +47,25 @@ int VR4300_CP1_ABS(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t fd32;
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
 
-    fpu_abs_32(&fs32, &fd32);
-    result = fd32;
+      fpu_abs_32(&fs32, &fd32);
+      result = fd32;
+      break;
+
+    case VR4300_FMT_D:
+      fpu_abs_64(&fs, &result);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    fpu_abs_64(&fs, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -81,6 +85,8 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32, fd32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -90,24 +96,26 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
-    uint32_t fd32;
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-    fpu_add_32(&fs32, &ft32, &fd32);
-    result = fd32;
+      fpu_add_32(&fs32, &ft32, &fd32);
+      result = fd32;
+      break;
+
+    case VR4300_FMT_D:
+      fpu_add_64(&fs, &ft, &result);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    fpu_add_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -184,6 +192,8 @@ int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -193,25 +203,27 @@ int VR4300_CP1_C_EQ_C_SEQ(struct vr4300 *vr4300,
     return 1;
   }
 
-  if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_eq_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_eq_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_eq_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_eq_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -233,6 +245,8 @@ int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -242,25 +256,27 @@ int VR4300_CP1_C_F_C_SF(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_f_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_f_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_f_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_f_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -282,6 +298,8 @@ int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -291,25 +309,27 @@ int VR4300_CP1_C_OLE_C_LE(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ole_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_ole_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ole_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_ole_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -331,6 +351,8 @@ int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -340,25 +362,27 @@ int VR4300_CP1_C_OLT_C_LT(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_olt_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_olt_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_olt_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_olt_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -380,6 +404,8 @@ int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -389,25 +415,27 @@ int VR4300_CP1_C_UEQ_C_NGL(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ueq_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_ueq_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ueq_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_ueq_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -429,6 +457,8 @@ int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -438,25 +468,27 @@ int VR4300_CP1_C_ULE_C_NGT(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ule_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_ule_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ule_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_ule_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -478,6 +510,8 @@ int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -487,25 +521,27 @@ int VR4300_CP1_C_ULT_C_NGE(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ult_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_ult_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_ult_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_ult_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -527,6 +563,8 @@ int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300,
   unsigned dest = VR4300_CP1_FCR31;
   uint64_t result = vr4300->regs[dest];
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32;
   uint8_t flag;
 
   saved_state = fpu_get_state();
@@ -536,25 +574,27 @@ int VR4300_CP1_C_UN_C_NGLE(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  // Clear out C bit.
-  result &= ~(1 << 23);
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
+      result &= ~(1 << 23);
+      flag = fpu_cmp_un_32(&fs32, &ft32);
+      break;
 
-    flag = fpu_cmp_un_32(&fs32, &ft32);
+    case VR4300_FMT_D:
+      result &= ~(1 << 23);
+      flag = fpu_cmp_un_64(&fs, &ft);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    flag = fpu_cmp_un_64(&fs, &ft);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -575,7 +615,7 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -585,22 +625,24 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i64_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i64_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i64_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state =
@@ -625,7 +667,7 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint32_t result;
 
   saved_state = fpu_get_state();
@@ -635,22 +677,24 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i32_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i32_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i32_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state =
@@ -750,7 +794,7 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -760,22 +804,29 @@ int VR4300_CP1_CVT_D(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (fmt == VR4300_FMT_D) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_f64_f32(&fs32, &result); break;
-    case VR4300_FMT_W: fpu_cvt_f64_i32(&fs32, &result); break;
-    case VR4300_FMT_L: fpu_cvt_f64_i64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_f64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_W:
+      fs32 = fs;
+
+      fpu_cvt_f64_i32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_L:
+      fpu_cvt_f64_i64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
@@ -798,7 +849,7 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -808,21 +859,23 @@ int VR4300_CP1_CVT_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i64_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i64_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i64_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
@@ -843,7 +896,7 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint32_t result;
 
   saved_state = fpu_get_state();
@@ -853,22 +906,27 @@ int VR4300_CP1_CVT_S(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (fmt == VR4300_FMT_S) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
-    case VR4300_FMT_D: fpu_cvt_f32_f64(&fs, &result); break;
-    case VR4300_FMT_W: fpu_cvt_f32_i32(&fs32, &result); break;
-    case VR4300_FMT_L: fpu_cvt_f32_i64(&fs, &result); break;
+    case VR4300_FMT_D:
+      fpu_cvt_f32_f64(&fs, &result);
+      break;
+
+    case VR4300_FMT_W:
+      fs32 = fs;
+
+      fpu_cvt_f32_i32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_L:
+      fpu_cvt_f32_i64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
@@ -890,7 +948,7 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint32_t result;
 
   saved_state = fpu_get_state();
@@ -900,21 +958,23 @@ int VR4300_CP1_CVT_W(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i32_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i32_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i32_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
@@ -934,6 +994,8 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32, fd32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -943,24 +1005,26 @@ int VR4300_CP1_DIV(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
-    uint32_t fd32;
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-    fpu_div_32(&fs32, &ft32, &fd32);
-    result = fd32;
+      fpu_div_32(&fs32, &ft32, &fd32);
+      result = fd32;
+      break;
+
+    case VR4300_FMT_D:
+      fpu_div_64(&fs, &ft, &result);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    fpu_div_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1017,7 +1081,7 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -1027,22 +1091,24 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i64_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i64_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i64_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state =
@@ -1066,7 +1132,7 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint32_t result;
 
   saved_state = fpu_get_state();
@@ -1076,24 +1142,24 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
-  fpu_set_state(vr4300->cp1.native_state);
-
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i32_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i32_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i32_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state =
@@ -1184,6 +1250,8 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32, fd32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -1193,24 +1261,26 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
-    uint32_t fd32;
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-    fpu_mul_32(&fs32, &ft32, &fd32);
-    result = fd32;
+      fpu_mul_32(&fs32, &ft32, &fd32);
+      result = fd32;
+      break;
+
+    case VR4300_FMT_D:
+      fpu_mul_64(&fs, &ft, &result);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    fpu_mul_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1308,6 +1378,8 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
+
+  uint32_t fs32, fd32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -1317,23 +1389,25 @@ int VR4300_CP1_NEG(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t fd32;
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
 
-    fpu_neg_32(&fs32, &fd32);
-    result = fd32;
+      fpu_neg_32(&fs32, &fd32);
+      result = fd32;
+      break;
+
+    case VR4300_FMT_D:
+      fpu_neg_64(&fs, &result);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    fpu_neg_64(&fs, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1353,7 +1427,7 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -1363,22 +1437,24 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i64_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i64_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i64_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state =
@@ -1402,7 +1478,7 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint32_t result;
 
   saved_state = fpu_get_state();
@@ -1412,22 +1488,25 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_cvt_i32_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_cvt_i32_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_cvt_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_cvt_i32_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
+
   }
 
   vr4300->cp1.native_state =
@@ -1474,6 +1553,8 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
+
+  uint32_t fs32, fd32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -1483,23 +1564,25 @@ int VR4300_CP1_SQRT(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t fd32;
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
 
-    fpu_sqrt_32(&fs32, &fd32);
-    result = fd32;
+      fpu_sqrt_32(&fs32, &fd32);
+      result = fd32;
+      break;
+
+    case VR4300_FMT_D:
+      fpu_sqrt_64(&fs, &result);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    fpu_sqrt_64(&fs, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1519,6 +1602,8 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300,
   enum vr4300_fmt fmt = GET_FMT(iw);
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
+
+  uint32_t fs32, ft32, fd32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -1528,24 +1613,26 @@ int VR4300_CP1_SUB(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
-  if (fmt == VR4300_FMT_S) {
-    uint32_t fs32 = fs;
-    uint32_t ft32 = ft;
-    uint32_t fd32;
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+      ft32 = ft;
 
-    fpu_sub_32(&fs32, &ft32, &fd32);
-    result = fd32;
+      fpu_sub_32(&fs32, &ft32, &fd32);
+      result = fd32;
+      break;
+
+    case VR4300_FMT_D:
+      fpu_sub_64(&fs, &ft, &result);
+      break;
+
+    default:
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
-
-  else
-    fpu_sub_64(&fs, &ft, &result);
 
   vr4300->cp1.native_state = fpu_get_state();
   fpu_set_state(saved_state);
@@ -1594,7 +1681,7 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint64_t result;
 
   saved_state = fpu_get_state();
@@ -1604,21 +1691,23 @@ int VR4300_CP1_TRUNC_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_trunc_i64_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_trunc_i64_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_trunc_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_trunc_i64_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      fpu_set_state(saved_state);
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
@@ -1639,7 +1728,7 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
   unsigned dest = GET_FD(iw);
   fpu_state_t saved_state;
 
-  uint32_t fs32 = fs;
+  uint32_t fs32;
   uint32_t result;
 
   saved_state = fpu_get_state();
@@ -1649,21 +1738,22 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
     return 1;
   }
 
-  else if (unlikely(fmt != VR4300_FMT_S && fmt != VR4300_FMT_D)) {
-    VR4300_INV(vr4300);
-    return 1;
-  }
-
   fpu_set_state(vr4300->cp1.native_state);
 
   switch (fmt) {
-    case VR4300_FMT_S: fpu_trunc_i32_f32(&fs32, &result); break;
-    case VR4300_FMT_D: fpu_trunc_i32_f64(&fs, &result); break;
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_trunc_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_trunc_i32_f64(&fs, &result);
+      break;
 
     default:
-      assert(0 && "Unknown case?");
-      result = 0;
-      break;
+      VR4300_INV(vr4300);
+      return 1;
   }
 
   vr4300->cp1.native_state = fpu_get_state();
