@@ -20,8 +20,8 @@
 
 typedef void (*pipeline_function)(struct vr4300 *vr4300);
 
-static void vr4300_cycle_slow_wb(struct vr4300 *vr4300);
-static void vr4300_cycle_slow_dc(struct vr4300 *vr4300);
+cen64_cold static void vr4300_cycle_slow_wb(struct vr4300 *vr4300);
+cen64_cold static void vr4300_cycle_slow_dc(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_ex(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_rf(struct vr4300 *vr4300);
 static void vr4300_cycle_slow_ic(struct vr4300 *vr4300);
@@ -48,12 +48,10 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
 
   // Latch common pipeline values.
   icrf_latch->common.pc = pc;
+  icrf_latch->pc = pc + 4;
 
   // If decoding of prior instruction indicates this is a BD slot...
   icrf_latch->common.cause_data = (opcode->flags & OPCODE_INFO_BRANCH);
-
-  // Update the fetch PC for the new cycle.
-  icrf_latch->pc += 4;
 
   // Look up the segment that we're in.
   if ((pc - segment->start) >= segment->length) {
