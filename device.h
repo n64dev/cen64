@@ -31,7 +31,7 @@ extern bool device_exit_requested;
 
 struct cen64_device {
   struct bus_controller bus;
-  uint8_t padding[32];
+  uint8_t padding_bus[32];
   struct vr4300 vr4300;
 
   struct ai_controller ai;
@@ -41,6 +41,7 @@ struct cen64_device {
   struct vi_controller vi;
 
   struct rdp rdp;
+  uint8_t padding_rsp[8];
   struct rsp rsp;
 };
 
