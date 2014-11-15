@@ -590,10 +590,6 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_ceil_ss and _mm_ceil_sd.
-  //
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
@@ -607,10 +603,6 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
       break;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_ceil_ss and _mm_ceil_sd.
-  //
   vr4300->cp1.native_state =
     (vr4300->cp1.native_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK);
@@ -648,10 +640,6 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
     return 1;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_ceil_ss and _mm_ceil_sd.
-  //
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
@@ -665,10 +653,6 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
       break;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_ceil_ss and _mm_ceil_sd.
-  //
   vr4300->cp1.native_state =
     (vr4300->cp1.native_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK);
@@ -1048,10 +1032,6 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_floor_ss and _mm_floor_sd.
-  //
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
@@ -1065,10 +1045,6 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
       break;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_floor_ss and _mm_floor_sd.
-  //
   vr4300->cp1.native_state =
     (vr4300->cp1.native_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK);
@@ -1107,10 +1083,6 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
 
   fpu_set_state(vr4300->cp1.native_state);
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_floor_ss and _mm_floor_sd.
-  //
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
@@ -1124,10 +1096,6 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
       break;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_floor_ss and _mm_floor_sd.
-  //
   vr4300->cp1.native_state =
     (vr4300->cp1.native_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK);
@@ -1400,10 +1368,6 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
     return 1;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_round_ss and _mm_round_sd.
-  //
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
@@ -1417,10 +1381,6 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
       break;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_round_ss and _mm_round_sd.
-  //
   vr4300->cp1.native_state =
     (vr4300->cp1.native_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK);
@@ -1457,10 +1417,6 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
     return 1;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_round_ss and _mm_round_sd.
-  //
   fpu_set_state((vr4300->cp1.native_state &
     ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
@@ -1474,10 +1430,6 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
       break;
   }
 
-  //
-  // TODO: (Optionally) compile with
-  // _mm_round_ss and _mm_round_sd.
-  //
   vr4300->cp1.native_state =
     (vr4300->cp1.native_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK);
