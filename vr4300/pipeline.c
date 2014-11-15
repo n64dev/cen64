@@ -392,6 +392,8 @@ void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
 //
 // Starts from IC stage (RF resolved an interlock).
 void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
+  vr4300->pipeline.icrf_latch.common.fault = VR4300_FAULT_NONE;
+
   if (vr4300_ic_stage(vr4300))
     return;
 
