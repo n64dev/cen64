@@ -122,9 +122,6 @@ int VR4300_CP1_ADD(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-
-  vr4300->pipeline.cycles_to_stall = 2;
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 3;
   return vr4300_do_mci(vr4300, 3);
 }
 
@@ -1287,9 +1284,6 @@ int VR4300_CP1_MUL(struct vr4300 *vr4300,
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
-
-  vr4300->pipeline.cycles_to_stall = 7;
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 3;
   return vr4300_do_mci(vr4300,
     fmt == VR4300_FMT_D ? 8 : 5);
 }
