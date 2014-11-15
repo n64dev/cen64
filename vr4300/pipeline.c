@@ -47,7 +47,6 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   rfex_latch->iw_mask = ~0U;
 
   // Latch common pipeline values.
-  icrf_latch->common.fault = VR4300_FAULT_NONE;
   icrf_latch->common.pc = pc;
 
   // If decoding of prior instruction indicates this is a BD slot...
@@ -90,7 +89,7 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
     unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
     int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
 
-    if (index >= 0) {
+    if (likely(index >= 0)) {
       uint32_t page_mask = vr4300->cp0.page_mask[index];
       unsigned select = ((page_mask + 1) & vaddr) == 0 ? 0 : 1;
       paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
@@ -241,7 +240,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
       int index = tlb_probe(&vr4300->cp0.tlb, vaddr, asid);
 
-      if (index >= 0) {
+      if (likely(index >= 0)) {
         uint32_t page_mask = vr4300->cp0.page_mask[index];
         unsigned select = ((page_mask + 1) & vaddr) == 0 ? 0 : 1;
         paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);

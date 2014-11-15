@@ -56,7 +56,6 @@ static void vr4300_dc_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
   pipeline->dcwb_latch.common.fault = fault;
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
-  pipeline->icrf_latch.common.fault = fault;
 }
 
 // Raise a fault that originated in the EX stage.
@@ -66,7 +65,6 @@ static void vr4300_ex_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
   vr4300_common_exceptions(vr4300);
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
-  pipeline->icrf_latch.common.fault = fault;
 }
 
 // CPU: Coprocessor unusable exception.
