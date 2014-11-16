@@ -132,7 +132,6 @@ void device_request_exit(struct bus_controller *bus) {
 // Create a device and proceed to the main loop.
 int device_run(struct cen64_device *device, struct cen64_options *options,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart) {
-  int status = EXIT_FAILURE;
 
   // Register SIGTERM handler if we don't have an interface.
   if (options->no_interface && signal(SIGINT, device_sigint) == SIG_ERR)
@@ -177,9 +176,10 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
 #endif
 
     device_destroy(device);
+    return EXIT_SUCCESS;
   }
 
-  return status;
+  return EXIT_FAILURE;
 }
 
 // Continually cycles the device until setjmp returns.
