@@ -149,9 +149,6 @@ void cen64_return(struct bus_controller *bus)
 #endif
 ;
 
-#cmakedefine CEN64_OS_UNIX
-#cmakedefine CEN64_OS_WINDOWS
-
 #cmakedefine DEBUG_MMIO_REGISTER_ACCESS
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 #ifndef __cplusplus

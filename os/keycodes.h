@@ -10,12 +10,11 @@
 #ifndef __os_keycodes_h__
 #define __os_keycodes_h__
 
-#ifdef CEN64_OS_UNIX
-#include "os/unix/keycodes.h"
-#endif
-
-#ifdef CEN64_OS_WINDOWS
+#ifdef _WIN32
 #include "os/windows/keycodes.h"
+
+#else
+#include "os/unix/keycodes.h"
 #endif
 
 #endif
