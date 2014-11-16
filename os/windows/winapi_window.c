@@ -90,6 +90,8 @@ int create_gl_window(struct bus_controller *bus,
   winapi_window = (struct winapi_window *) (gl_window->window);
   memset(winapi_window, 0, sizeof(*winapi_window));
 
+  InitializeCriticalSection(&winapi_window->event_lock);
+
   winapi_window->h_instance = GetModuleHandle(NULL);
   wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
   wc.lpfnWndProc = (WNDPROC) WndProc;
@@ -176,6 +178,8 @@ int destroy_gl_window(struct gl_window *window) {
     UnregisterClass(CLASSNAME, winapi_window->h_instance);
     winapi_window->h_instance = NULL;
   }
+
+  DeleteCriticalSection(&gl_window->event_lock);
 
   free(winapi_window);
   window->window = NULL;

@@ -21,6 +21,7 @@ struct winapi_window {
   HDC h_dc;
   HGLRC h_glrc;
 
+  CRITICAL_SECTION event_lock;
   bool exit_requested;
 };
 

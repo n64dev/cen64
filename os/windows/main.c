@@ -117,6 +117,22 @@ int load_roms(const char *pifrom_path, const char *cart_path,
   return 0;
 }
 
+// Grabs the input lock.
+void os_acquire_input(struct gl_window *gl_window) {
+  struct winapi_window *winapi_window =
+    (struct winapi_window *) (gl_window->window);
+
+  EnterCriticalSection(&winapi_window->event_lock);
+}
+
+// Releases the input lock.
+void os_release_input(struct gl_window *gl_window) {
+  struct winapi_window *winapi_window =
+    (struct winapi_window *) (gl_window->window);
+
+  LeaveCriticalSection(&winapi_window->event_lock);
+}
+
 // Allocates memory for a new device, runs it.
 int os_main(struct cen64_options *options,
   struct rom_file *pifrom, struct rom_file *cart) {

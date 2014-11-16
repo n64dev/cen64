@@ -69,6 +69,20 @@ int main(int argc, const char *argv[]) {
   return status;
 }
 
+// Grabs the input lock.
+void os_acquire_input(struct gl_window *gl_window) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+
+  pthread_mutex_lock(&glx_window->event_lock);
+}
+
+// Releases the input lock.
+void os_release_input(struct gl_window *gl_window) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+
+  pthread_mutex_unlock(&glx_window->event_lock);
+}
+
 // Informs the simulation thread if an exit was requested.
 bool os_exit_requested(struct gl_window *gl_window) {
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);

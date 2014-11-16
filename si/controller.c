@@ -11,8 +11,10 @@
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
+#include "os/main.h"
 #include "ri/controller.h"
 #include "si/controller.h"
+#include "vi/controller.h"
 #include "vr4300/interface.h"
 #include <assert.h>
 
@@ -86,7 +88,9 @@ int pif_perform_command(struct si_controller *si,
     case 0x01:
       switch(channel) {
         case 0:
+          os_acquire_input(&si->bus->vi->gl_window);
           memcpy(recv_buf, si->input, sizeof(si->input));
+          os_release_input(&si->bus->vi->gl_window);
           break;
 
         default:

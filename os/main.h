@@ -20,5 +20,8 @@ cen64_hot bool os_exit_requested(struct gl_window *gl_window);
 cen64_hot void os_render_frame(struct gl_window *gl_window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type);
 
+cen64_hot void os_acquire_input(struct gl_window *gl_window);
+cen64_hot void os_release_input(struct gl_window *gl_window);
+
 #endif
 
