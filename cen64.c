@@ -10,7 +10,7 @@
 
 #include "bus/controller.h"
 #include "common.h"
-#include "options.h"
+#include "device/options.h"
 #include "os/main.h"
 #include "os/rom_file.h"
 #include <stdlib.h>

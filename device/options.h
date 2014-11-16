@@ -1,5 +1,5 @@
 //
-// options.h: CEN64 simulation options.
+// options.h: Common CEN64 simulation options.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.

@@ -39,11 +39,11 @@ cen64_cold static void device_destroy(struct cen64_device *device);
 cen64_cold static struct cen64_device *device_create(struct cen64_device *device,
   uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
 
-#ifdef CEN64_EXTRAFEATURES
-cen64_hot static int device_spin_extra(struct cen64_device *device,
+#ifdef CEN64_DEVFEATURES
+cen64_hot static int device_spin(struct cen64_device *device,
   fpu_state_t *saved_fpu_state, struct vr4300_stats *vr4300_stats);
 #else
-cen64_hot static int device_spin_fast(struct cen64_device *device);
+cen64_hot static int device_spin(struct cen64_device *device);
 #endif
 
 // Creates and initializes a device.
@@ -158,10 +158,10 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
     vr4300_cp1_init(&device->vr4300);
 
     // Spin the device until we return (from setjmp).
-#ifdef CEN64_EXTRAFEATURES
-    device_spin_extra(device, &saved_fpu_state, &vr4300_stats);
+#ifdef CEN64_DEVFEATURES
+    device_spin(device, &saved_fpu_state, &vr4300_stats);
 #else
-    device_spin_fast(device);
+    device_spin(device);
 #endif
 
     // Restore host registers pinned to the device.
@@ -171,7 +171,7 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
     fpu_set_state(saved_fpu_state);
 
     // Finalize simulation, release memory, etc.
-#ifdef CEN64_EXTRAFEATURES
+#ifdef CEN64_DEVFEATURES
     if (options->print_sim_stats)
       vr4300_print_summary(&vr4300_stats);
 #endif
@@ -183,8 +183,8 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
 }
 
 // Continually cycles the device until setjmp returns.
-#ifdef CEN64_EXTRAFEATURES
-int device_spin_extra(struct cen64_device *device,
+#ifdef CEN64_DEVFEATURES
+int device_spin(struct cen64_device *device,
   fpu_state_t *saved_fpu_state, struct vr4300_stats *vr4300_stats) {
   if (setjmp(device->bus.unwind_data))
     return 1;
@@ -210,10 +210,10 @@ int device_spin_extra(struct cen64_device *device,
     vr4300_cycle_extra(&device->vr4300, vr4300_stats);
   }
 }
-#endif
+#else
 
 // Continually cycles the device until setjmp returns.
-int device_spin_fast(struct cen64_device *device) {
+int device_spin(struct cen64_device *device) {
   if (setjmp(device->bus.unwind_data))
     return 1;
 
@@ -232,4 +232,5 @@ int device_spin_fast(struct cen64_device *device) {
 
   return 0;
 }
+#endif
 

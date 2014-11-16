@@ -6,18 +6,16 @@
 # 'LICENSE', which is part of this source code package.
 #
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(cen64)
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 
-# Ask if we should build with extra features (debugger, statistics, etc.).
-option(CEN64_EXTRAFEATURES "Build CEN64 with features for developers/debuggers." OFF)
-
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
+  set(CEN64_DEV_FLAG "-DCEN64_DEVFEATURES")
 
   # Include architecture-specify machinery.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
@@ -74,7 +72,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
     OUTPUT_VARIABLE GCC_VERSION)
 
   if (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
-    set(GCC_FLTO_FLAGS "-flto -flto-partition=none -fdata-sections -ffunction-sections")
+    set(GCC_FLTO_FLAGS "-flto -fuse-linker-plugin -fdata-sections -ffunction-sections")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${GCC_FLTO_FLAGS}")
     set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} ${GCC_FLTO_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE ${CMAKE_EXE_LINKER_FLAGS_RELEASE} "-Wl,--gc-sections")
@@ -87,17 +85,21 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
     set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -funsafe-loop-optimizations")
   endif (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
 
-    # When compiling with -flto, need to pass CFLAGS to the linker.
-
   # Check for undefined behaviour when debugging.
   if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined")
   endif (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
+
+  # Use fat LTO objects.
+  if (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffat-lto-objects")
+  endif (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
 endif (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 
 # If using Clang, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
+  set(CEN64_DEV_FLAG "-DCEN64_DEVFEATURES")
 
   # Include architecture-specify machinery.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
@@ -148,6 +150,7 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES Clang)
 # If using ICC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES Intel)
   set(CMAKE_C_FLAGS "-Wall -Wno-unused-parameter -std=c99")
+  set(CEN64_DEV_FLAG "-DCEN64_DEVFEATURES")
 
   set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
   set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX Native)
@@ -179,6 +182,8 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
 # If using MSVC, configure it accordingly.
 if (MSVC)
+  set(CEN64_DEV_FLAG "/DCEN64_DEVFEATURES")
+
   set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
   set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX)
 
@@ -215,7 +220,6 @@ include_directories(${PROJECT_SOURCE_DIR}/arch/${CEN64_ARCH_DIR})
 file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
 file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)
 file(GLOB COMMON_SOURCES ${PROJECT_SOURCE_DIR}/common/*.c)
-file(GLOB CEN64_SOURCES ${PROJECT_SOURCE_DIR}/*.c)
 file(GLOB OS_COMMON_SOURCES ${PROJECT_SOURCE_DIR}/os/*.c)
 file(GLOB PI_SOURCES ${PROJECT_SOURCE_DIR}/pi/*.c)
 file(GLOB RI_SOURCES ${PROJECT_SOURCE_DIR}/ri/*.c)
@@ -259,11 +263,38 @@ configure_file(
   "${PROJECT_BINARY_DIR}/common.h"
 )
 
-# Create the executable.
-add_executable(cen64 ${EXTRA_OS_EXE} ${ASM_SOURCES} ${OS_SOURCES} ${OS_COMMON_SOURCES}
-  ${COMMON_SOURCES} ${CEN64_SOURCES} ${AI_SOURCES} ${BUS_SOURCES} ${PI_SOURCES}
-  ${RDP_SOURCES} ${RSP_SOURCES} ${RI_SOURCES} ${SI_SOURCES} ${VI_SOURCES}
-  ${VR4300_SOURCES} ${ARCH_FPU_SOURCES} ${ARCH_RSP_SOURCES} ${ARCH_TLB_SOURCES})
+# Create static libraries.
+add_library(cen64arch STATIC ${ASM_SOURCES}
+  ${ARCH_FPU_SOURCES}
+  ${ARCH_RSP_SOURCES}
+  ${ARCH_TLB_SOURCES}
+)
 
-target_link_libraries(cen64 ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+add_library(cen64os STATIC "${PROJECT_SOURCE_DIR}/cen64.c"
+  ${COMMON_SOURCES}
+  ${OS_COMMON_SOURCES}
+  ${OS_SOURCES}
+)
+
+add_library(cen64ai STATIC ${AI_SOURCES})
+add_library(cen64bus STATIC ${BUS_SOURCES})
+add_library(cen64pi STATIC ${PI_SOURCES})
+add_library(cen64rdp STATIC ${RDP_SOURCES})
+add_library(cen64ri STATIC ${RI_SOURCES})
+add_library(cen64si STATIC ${SI_SOURCES})
+add_library(cen64rsp STATIC ${RSP_SOURCES})
+add_library(cen64vi STATIC ${VI_SOURCES})
+add_library(cen64vr4300 STATIC ${VR4300_SOURCES})
+
+# Create the executables.
+set_source_files_properties(${PROJECT_BINARY_DIR}/device.c PROPERTIES COMPILE_FLAGS ${CEN64_DEV_FLAG})
+
+add_executable(cen64 ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_fast.c)
+add_executable(cen64dev ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_dev.c)
+
+target_link_libraries(cen64 ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
+  cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi)
+
+target_link_libraries(cen64dev ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
+  cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi)
 

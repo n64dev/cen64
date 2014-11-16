@@ -1,5 +1,5 @@
 //
-// device.h: CEN64 device container.
+// device.h: Common CEN64 device container.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.

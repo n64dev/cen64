@@ -37,7 +37,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     if (!strcmp(argv[i], "-nointerface"))
       options->no_interface = true;
 
-#ifdef CEN64_EXTRAFEATURES
+#ifdef CEN64_DEVFEATURES
     else if (!strcmp(argv[i], "-printsimstats"))
       options->print_sim_stats = true;
 #endif
@@ -60,7 +60,7 @@ void print_command_line_usage(const char *invokation_string) {
       "  -console                   : Creates/shows the system console.\n"
 #endif
       "  -nointerface               : Run simulator without a user interface.\n"
-#ifdef CEN64_EXTRAFEATURES
+#ifdef CEN64_DEVFEATURES
       "  -printsimstats             : Print simulation statistics at exit.\n"
 #endif
 

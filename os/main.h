@@ -9,7 +9,7 @@
 
 #ifndef __os_main_h__
 #define __os_main_h__
-#include "options.h"
+#include "device/options.h"
 #include "os/gl_window.h"
 #include "rom_file.h"
 

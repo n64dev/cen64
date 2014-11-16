@@ -8,8 +8,8 @@
 //
 
 #include "cen64.h"
-#include "device.h"
-#include "options.h"
+#include "device/device.h"
+#include "device/options.h"
 #include "os/gl_window.h"
 #include "os/main.h"
 #include "os/unix/glx_window.h"

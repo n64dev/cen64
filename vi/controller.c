@@ -11,7 +11,7 @@
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
-#include "device.h"
+#include "device/device.h"
 #include "os/main.h"
 #include "ri/controller.h"
 #include "vi/controller.h"
