@@ -14,6 +14,10 @@
 #include "si/controller.h"
 
 bool shift_down;
+bool left_down;
+bool right_down;
+bool up_down;
+bool down_down;
 
 void keyboard_press_callback(struct bus_controller *bus, unsigned key) {
   struct si_controller *si = bus->si;
@@ -27,10 +31,25 @@ void keyboard_press_callback(struct bus_controller *bus, unsigned key) {
 
   switch (key) {
     // Analog stick.
-    case CEN64_KEY_LEFT: si->input[2] = shift_down ? -38 : -114; break;
-    case CEN64_KEY_RIGHT: si->input[2] = shift_down ? 38 : 114; break;
-    case CEN64_KEY_UP: si->input[3] = shift_down ? 38 : 114; break;
-    case CEN64_KEY_DOWN: si->input[3] = shift_down ? -38 : -114; break;
+    case CEN64_KEY_LEFT:
+      si->input[2] = shift_down ? -38 : -114;
+      left_down = true;
+      break;
+
+    case CEN64_KEY_RIGHT:
+      si->input[2] = shift_down ? 38 : 114;
+      right_down = true;
+      break;
+
+    case CEN64_KEY_UP:
+      si->input[3] = shift_down ? 38 : 114;
+      up_down = true;
+      break;
+
+    case CEN64_KEY_DOWN:
+      si->input[3] = shift_down ? -38 : -114;
+      down_down = true;
+      break;
 
     // L/R flippers.
     case CEN64_KEY_A: si->input[1] |= 1 << 5; break;
@@ -68,10 +87,25 @@ void keyboard_release_callback(struct bus_controller *bus, unsigned key) {
 
   switch (key) {
     // Analog stick.
-    case CEN64_KEY_LEFT: si->input[2] = 0; break;
-    case CEN64_KEY_RIGHT: si->input[2] = 0; break;
-    case CEN64_KEY_UP: si->input[3] = 0; break;
-    case CEN64_KEY_DOWN: si->input[3] = 0; break;
+    case CEN64_KEY_LEFT:
+      si->input[2] = right_down ? (shift_down ? 38 : 114) : 0;
+      left_down = false;
+      break;
+
+    case CEN64_KEY_RIGHT:
+      si->input[2] = left_down ? (shift_down ? -38 : -114) : 0;
+      right_down = false;
+      break;
+
+    case CEN64_KEY_UP:
+      si->input[3] = down_down ? (shift_down ? -38 : -114) : 0;
+      up_down = false;
+      break;
+
+    case CEN64_KEY_DOWN:
+      si->input[3] = up_down ? (shift_down ? 38 : 114) : 0;
+      down_down = false;
+      break;
 
     // L/R flippers.
     case CEN64_KEY_A: si->input[1] &= ~(1 << 5); break;

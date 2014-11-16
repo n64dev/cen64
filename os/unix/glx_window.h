@@ -43,6 +43,7 @@ struct glx_window {
 
   unsigned frame_xres, frame_yres, frame_xskip, frame_type;
   uint8_t frame_data[MAX_FRAME_DATA_SIZE];
+  bool frame_pending;
 
   // Event/rendering thread.
   pthread_t thread;

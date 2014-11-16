@@ -112,6 +112,7 @@ int os_main(struct cen64_options *options,
   // Prevent debugging tools from raising warnings
   // about uninitialized memory being read, etc.
   if (!options->no_interface) {
+
     device.vi.gl_window.window = &window;
     get_default_gl_window_hints(&hints);
 

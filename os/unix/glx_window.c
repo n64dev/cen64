@@ -16,6 +16,7 @@
 #include "os/unix/glx_window.h"
 #include "vi/controller.h"
 
+#include <errno.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <string.h>
@@ -45,6 +46,9 @@ static bool glx_window_poll_events(struct bus_controller *bus,
   struct glx_window *glx_window);
 
 static void *glx_window_thread(void *opaque);
+
+static void glx_window_update_window_title(
+  struct glx_window *glx_window, cen64_time *last_report_time);
 
 static int switch_to_fullscreen(struct glx_window *glx_window,
   const struct gl_window_hints *hints);
@@ -198,8 +202,14 @@ int destroy_gl_window(struct gl_window *gl_window) {
   // Wait for the window to tear down, first.
   pthread_join(glx_window->thread, NULL);
 
+  pthread_mutex_lock(&glx_window->event_lock);
+  pthread_mutex_lock(&glx_window->render_lock);
+  destroy_glx_window(glx_window);
+
   pthread_cond_destroy(&glx_window->render_cv);
+  pthread_mutex_unlock(&glx_window->render_lock);
   pthread_mutex_destroy(&glx_window->render_lock);
+  pthread_mutex_unlock(&glx_window->event_lock);
   pthread_mutex_destroy(&glx_window->event_lock);
 
   return 0;
@@ -387,16 +397,18 @@ bool glx_window_poll_events(struct bus_controller *bus,
 
   exit_requested = false;
 
-  while (XPending(glx_window->display)) {
+  if (!XPending(glx_window->display))
+    return false;
+
+  pthread_mutex_lock(&glx_window->event_lock);
+
+  do {
     XNextEvent(glx_window->display, &event);
 
     switch (event.type) {
       case ClientMessage:
-        if ((unsigned) event.xclient.data.l[0] == glx_window->wm_delete_message) {
-          pthread_mutex_lock(&glx_window->event_lock);
+        if ((unsigned) event.xclient.data.l[0] == glx_window->wm_delete_message)
           glx_window->exit_requested = exit_requested = true;
-          pthread_mutex_unlock(&glx_window->event_lock);
-        }
 
         break;
 
@@ -405,9 +417,7 @@ bool glx_window_poll_events(struct bus_controller *bus,
         break;
 
       case KeyPress:
-        pthread_mutex_lock(&glx_window->event_lock);
         keyboard_press_callback(bus, XLookupKeysym(&event.xkey, 0));
-        pthread_mutex_unlock(&glx_window->event_lock);
         break;
 
       case KeyRelease:
@@ -426,16 +436,14 @@ bool glx_window_poll_events(struct bus_controller *bus,
           }
         }
 
-        if (released) {
-          pthread_mutex_lock(&glx_window->event_lock);
+        if (released)
           keyboard_release_callback(bus, XLookupKeysym(&event.xkey, 0));
-          pthread_mutex_unlock(&glx_window->event_lock);
-        }
 
         break;
     }
-  }
+  } while (XPending(glx_window->display));
 
+  pthread_mutex_unlock(&glx_window->event_lock);
   return exit_requested;
 }
 
@@ -462,6 +470,7 @@ void glx_window_render_frame(struct glx_window *window, const void *data,
   copy_size *= xres * yres;
 
   // Grab the locks and dump the data.
+  // TODO: Check to make sure !frame_pending.
   pthread_mutex_lock(&window->render_lock);
 
   memcpy(window->frame_data, data, copy_size);
@@ -469,6 +478,7 @@ void glx_window_render_frame(struct glx_window *window, const void *data,
   window->frame_yres = yres;
   window->frame_xskip = xskip;
   window->frame_type = type;
+  window->frame_pending = true;
 
   pthread_mutex_unlock(&window->render_lock);
 }
@@ -480,54 +490,79 @@ void *glx_window_thread(void *opaque) {
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
 
   cen64_time last_report_time;
-  unsigned frame_count;
+  cen64_time refresh_timeout;
+  unsigned frame_count = 0;
+
+  pthread_mutex_lock(&glx_window->render_lock);
 
   // Activate the rendering context from THIS thread.
   // Any kind of GL call has to be done from here, or else.
   if (!glXMakeCurrent(glx_window->display,
-    glx_window->window, glx_window->context))
+    glx_window->window, glx_window->context)) {
     debug("glx_window_thread: Could not attach rendering context.\n");
 
-  else {
-    gl_window_init(gl_window);
-    get_time(&last_report_time);
-    frame_count = 0;
+    return NULL;
+  }
 
-    // Main loop; wait for frames, put them out.
-    // TODO: Pull/push events more aggressively now?
+  gl_window_init(gl_window);
+  pthread_mutex_unlock(&glx_window->render_lock);
+
+  get_time(&last_report_time);
+
+  // Poll for input periodically (~1000x a second) while checking
+  // to see if the simulator pushed out any frames in that time.
+  while (1) {
+    if (unlikely(frame_count == 60)) {
+      glx_window_update_window_title(glx_window, &last_report_time);
+      frame_count = 0;
+    }
+
+    if (glx_window_poll_events(bus, glx_window))
+      break;
+
+    get_time(&refresh_timeout);
+    refresh_timeout.tv_nsec += 1000000LL;
+
+    if (refresh_timeout.tv_nsec >= 1000000000LL) {
+      refresh_timeout.tv_nsec -= 1000000000LL;
+      refresh_timeout.tv_sec += 1;
+    }
+
+    // Check if we were signaled. If not, just sit around for now.
     pthread_mutex_lock(&glx_window->render_lock);
 
-    while (1) {
-      if (frame_count++ == 29) {
-        cen64_time current_time;
-        unsigned long long ns;
-        char window_title[64];
-
-        get_time(&current_time);
-        ns = compute_time_difference(&current_time, &last_report_time);
-
-        snprintf(window_title, sizeof(window_title),
-         "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]"
-          " - %.1f VI/s", (30 / ((double) ns / NS_PER_SEC)));
-
-        XStoreName(glx_window->display, glx_window->window, window_title);
-        last_report_time = current_time;
-        frame_count = 0;
-      }
-
-      pthread_cond_wait(&glx_window->render_cv, &glx_window->render_lock);
-
-      if (glx_window_poll_events(bus, glx_window))
-        break;
+    if (glx_window->frame_pending || pthread_cond_wait(
+      &glx_window->render_cv, &glx_window->render_lock) != ETIMEDOUT) {
+      glx_window->frame_pending = false;
+      frame_count++;
 
       gl_window_render_frame(gl_window, glx_window->frame_data,
         glx_window->frame_xres, glx_window->frame_yres,
         glx_window->frame_xskip, glx_window->frame_type);
     }
+
+    pthread_mutex_unlock(&glx_window->render_lock);
   }
 
-  destroy_glx_window(glx_window);
   return NULL;
+}
+
+// Updates the window title.
+void glx_window_update_window_title(
+  struct glx_window *glx_window, cen64_time *last_report_time) {
+  cen64_time current_time;
+  unsigned long long ns;
+  char window_title[64];
+
+  get_time(&current_time);
+  ns = compute_time_difference(&current_time, last_report_time);
+
+  snprintf(window_title, sizeof(window_title),
+    "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]"
+    " - %.1f VI/s", (60 / ((double) ns / NS_PER_SEC)));
+
+  XStoreName(glx_window->display, glx_window->window, window_title);
+  *last_report_time = current_time;
 }
 
 // Attempts to switch to fullscreen mode.
