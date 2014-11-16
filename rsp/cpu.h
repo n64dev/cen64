@@ -51,7 +51,7 @@ extern const char *sp_register_mnemonics[NUM_SP_REGISTERS];
 
 struct rsp {
   struct rsp_pipeline pipeline;
-  uint32_t pad[1];
+  uint32_t cp2_padding[3];
   struct rsp_cp2 cp2;
 
   uint32_t regs[NUM_RSP_REGISTERS * 2];

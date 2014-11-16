@@ -40,7 +40,6 @@ struct cen64_device {
   struct vi_controller vi;
 
   struct rdp rdp;
-  uint8_t padding_rsp[8];
   struct rsp rsp;
 };
 
