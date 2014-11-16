@@ -29,6 +29,24 @@ static inline void fpu_set_state(fpu_state_t state) {
   _mm_setcsr(state);
 }
 
+#ifdef __SSE4_1__
+#define CEN64_ARCH_HAS_CEIL
+#define CEN64_ARCH_HAS_FLOOR
+#define CEN64_ARCH_HAS_ROUND
+#include "arch/x86_64/fpu/ceil_i64_f32.h"
+#include "arch/x86_64/fpu/ceil_i64_f64.h"
+#include "arch/x86_64/fpu/ceil_i32_f32.h"
+#include "arch/x86_64/fpu/ceil_i32_f64.h"
+#include "arch/x86_64/fpu/floor_i64_f32.h"
+#include "arch/x86_64/fpu/floor_i64_f64.h"
+#include "arch/x86_64/fpu/floor_i32_f32.h"
+#include "arch/x86_64/fpu/floor_i32_f64.h"
+#include "arch/x86_64/fpu/round_i64_f32.h"
+#include "arch/x86_64/fpu/round_i64_f64.h"
+#include "arch/x86_64/fpu/round_i32_f32.h"
+#include "arch/x86_64/fpu/round_i32_f64.h"
+#endif
+
 #include "arch/x86_64/fpu/abs_32.h"
 #include "arch/x86_64/fpu/abs_64.h"
 #include "arch/x86_64/fpu/add_32.h"

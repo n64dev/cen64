@@ -472,6 +472,7 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
   uint32_t fs32;
   uint64_t result;
 
+#ifndef CEN64_ARCH_HAS_CEIL
   fpu_state_t saved_state = fpu_get_state();
   fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
@@ -493,6 +494,23 @@ int VR4300_CP1_CEIL_L(struct vr4300 *vr4300,
 
   fpu_set_state((saved_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK));
+#else
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_ceil_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_ceil_i64_f64(&fs, &result);
+      break;
+
+    default:
+      VR4300_INV(vr4300);
+      return 1;
+  }
+#endif
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -512,6 +530,7 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
   uint32_t fs32;
   uint32_t result;
 
+#ifndef CEN64_ARCH_HAS_CEIL
   fpu_state_t saved_state = fpu_get_state();
   fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_POSINF);
 
@@ -533,6 +552,23 @@ int VR4300_CP1_CEIL_W(struct vr4300 *vr4300,
 
   fpu_set_state((saved_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK));
+#else
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_ceil_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_ceil_i32_f64(&fs, &result);
+      break;
+
+    default:
+      VR4300_INV(vr4300);
+      return 1;
+  }
+#endif
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -824,6 +860,7 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
   uint32_t fs32;
   uint64_t result;
 
+#ifndef CEN64_ARCH_HAS_FLOOR
   fpu_state_t saved_state = fpu_get_state();
   fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
@@ -845,6 +882,23 @@ int VR4300_CP1_FLOOR_L(struct vr4300 *vr4300,
 
   fpu_set_state((saved_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK));
+#else
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_floor_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_floor_i64_f64(&fs, &result);
+      break;
+
+    default:
+      VR4300_INV(vr4300);
+      return 1;
+  }
+#endif
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -863,6 +917,7 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
   uint32_t fs32;
   uint32_t result;
 
+#ifndef CEN64_ARCH_HAS_FLOOR
   fpu_state_t saved_state = fpu_get_state();
   fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEGINF);
 
@@ -884,6 +939,23 @@ int VR4300_CP1_FLOOR_W(struct vr4300 *vr4300,
 
   fpu_set_state((saved_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK));
+#else
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_floor_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_floor_i32_f64(&fs, &result);
+      break;
+
+    default:
+      VR4300_INV(vr4300);
+      return 1;
+  }
+#endif
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1090,6 +1162,7 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
   uint32_t fs32;
   uint64_t result;
 
+#ifndef CEN64_ARCH_HAS_ROUND
   fpu_state_t saved_state = fpu_get_state();
   fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
@@ -1111,6 +1184,23 @@ int VR4300_CP1_ROUND_L(struct vr4300 *vr4300,
 
   fpu_set_state((saved_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK));
+#else
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_round_i64_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_round_i64_f64(&fs, &result);
+      break;
+
+    default:
+      VR4300_INV(vr4300);
+      return 1;
+  }
+#endif
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
@@ -1129,6 +1219,7 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
   uint32_t fs32;
   uint32_t result;
 
+#ifndef CEN64_ARCH_HAS_ROUND
   fpu_state_t saved_state = fpu_get_state();
   fpu_set_state((saved_state & ~FPU_ROUND_MASK) | FPU_ROUND_NEAREST);
 
@@ -1151,6 +1242,23 @@ int VR4300_CP1_ROUND_W(struct vr4300 *vr4300,
 
   fpu_set_state((saved_state & FPU_ROUND_MASK) |
     (fpu_get_state() & ~FPU_ROUND_MASK));
+#else
+  switch (fmt) {
+    case VR4300_FMT_S:
+      fs32 = fs;
+
+      fpu_round_i32_f32(&fs32, &result);
+      break;
+
+    case VR4300_FMT_D:
+      fpu_round_i32_f64(&fs, &result);
+      break;
+
+    default:
+      VR4300_INV(vr4300);
+      return 1;
+  }
+#endif
 
   exdc_latch->result = result;
   exdc_latch->dest = dest;
