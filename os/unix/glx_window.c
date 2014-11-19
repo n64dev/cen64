@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <GL/glx.h>
 #include <X11/Xatom.h>
