@@ -179,7 +179,7 @@ int destroy_gl_window(struct gl_window *window) {
     winapi_window->h_instance = NULL;
   }
 
-  DeleteCriticalSection(&gl_window->event_lock);
+  DeleteCriticalSection(&winapi_window->event_lock);
 
   free(winapi_window);
   window->window = NULL;

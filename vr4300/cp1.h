@@ -15,9 +15,6 @@
 
 struct vr4300;
 
-struct vr4300_cp1 {
-};
-
 int VR4300_BC1(struct vr4300 *vr4300, uint32_t iw, uint64_t fs, uint64_t ft);
 int VR4300_CFC1(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
 int VR4300_CTC1(struct vr4300 *vr4300, uint32_t iw, uint64_t rs, uint64_t rt);
