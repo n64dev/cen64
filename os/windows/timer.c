@@ -13,7 +13,7 @@
 // Computes the difference, in ns, between two times.
 unsigned long long compute_time_difference(
   const cen64_time *now, const cen64_time *before) {
-  (*now - *before) * 1000000ULL;
+  return (*now - *before) * 1000000ULL;
 }
 
 // Gets the time from the most monotonic source possible.

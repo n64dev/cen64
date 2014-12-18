@@ -72,7 +72,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
     OUTPUT_VARIABLE GCC_VERSION)
 
   if (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
-    set(GCC_FLTO_FLAGS "-flto -fuse-linker-plugin -fdata-sections -ffunction-sections")
+    set(GCC_FLTO_FLAGS "-flto -fdata-sections -ffunction-sections")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${GCC_FLTO_FLAGS}")
     set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} ${GCC_FLTO_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE ${CMAKE_EXE_LINKER_FLAGS_RELEASE} "-Wl,--gc-sections")
@@ -250,7 +250,7 @@ endif (DEFINED UNIX)
 
 if (DEFINED WIN32)
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
-  set(EXTRA_OS_LIBS ws2_32 Winmm Opengl32)
+  set(EXTRA_OS_LIBS ws2_32 winmm opengl32)
   set(EXTRA_OS_EXE WIN32)
 endif (DEFINED WIN32)
 
@@ -289,9 +289,11 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/device.c PROPERTIES COMPILE_FL
 add_executable(cen64 ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_fast.c)
 add_executable(cen64dev ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_dev.c)
 
-target_link_libraries(cen64 ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
-  cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi)
+target_link_libraries(cen64
+	cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
+	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
-target_link_libraries(cen64dev ${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
-  cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi)
+target_link_libraries(cen64dev
+	cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
+	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
