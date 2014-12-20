@@ -34,8 +34,8 @@ static inline __m128i rsp_vcl(__m128i vs, __m128i vt, __m128i zero,
   le_eq = _mm_or_si128(le_case1, le_case2);
 
   // Compute results for if (!sign && ne):
-  ge_eq = _mm_sub_epi16(vs, vt);
-  ge_eq = _mm_srai_epi16(ge_eq, 15);
+  ge_eq = _mm_subs_epu16(vt, vs);
+  ge_eq = _mm_cmpeq_epi16(ge_eq, zero);
 
   // Blend everything together. Caveat: we don't update
   // the results of ge/le if ne is false, so be careful.
