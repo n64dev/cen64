@@ -1,0 +1,4 @@
+- Fix/verify killed stages during exceptions. If debugging mode is enabled,
+  there are a lot of spurious bus_read_word messages that are concerning to
+  say the least.
+
