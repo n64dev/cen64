@@ -81,13 +81,13 @@ static inline __m128i read_acc_hi(const __m128i *acc) {
   return hr_acc_hi;
 }
 static inline void write_acc_lo(__m128i *acc, __m128i acc_lo) {
-  hr_acc_lo = acc_lo;
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_lo) : "x"(acc_lo));
 }
 static inline void write_acc_md(__m128i *acc, __m128i acc_md) {
-  hr_acc_md = acc_md;
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_md) : "x"(acc_md));
 }
 static inline void write_acc_hi(__m128i *acc, __m128i acc_hi) {
-  hr_acc_hi = acc_hi;
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_hi) : "x"(acc_hi));
 }
 #else
 static inline __m128i read_acc_lo(const __m128i *acc) {
