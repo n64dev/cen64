@@ -100,7 +100,8 @@ cen64_align(const uint16_t shuffle_keys[16][8], CACHE_LINE_SIZE)  = {
 };
 #else
 __m128i rsp_vect_load_and_shuffle_operand(
-  const uint16_t *src, unsigned element) {
+  const __m128i *srcp, unsigned element) {
+  const uint16_t *src = (const uint16_t *) srcp;
   uint16_t word_lo, word_hi;
   uint64_t dword;
 
@@ -143,7 +144,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
     return _mm_or_si128(vhi, vlo);
   }
 
-  return rsp_vect_load_unshuffled_operand(src);
+  return rsp_vect_load_unshuffled_operand(srcp);
 }
 #endif
 
