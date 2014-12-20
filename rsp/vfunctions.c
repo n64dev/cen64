@@ -46,6 +46,27 @@ rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VCL
+//
+rsp_vect_t RSP_VCL(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t ge, le, sign, eq, vce;
+
+  ge = rsp_vect_load_unshuffled_operand(&rsp->cp2.vcc[0]);
+  le = rsp_vect_load_unshuffled_operand(&rsp->cp2.vcc[1]);
+  sign = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[1]);
+  vce = rsp_vect_load_unshuffled_operand(&rsp->cp2.vce);
+
+  rsp_vect_t result = rsp_vcl(vs, vt_shuffle, zero, &ge, &le, sign, eq, vce);
+
+  rsp_vect_write_operand(&rsp->cp2.vcc[0], ge);
+  rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
 // VINVALID
 //
 rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,

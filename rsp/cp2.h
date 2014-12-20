@@ -1,5 +1,5 @@
 //
-// rsp/cp2.c: RSP control coprocessor.
+// rsp/cp2.h: RSP control coprocessor.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
@@ -28,6 +28,8 @@ struct rsp_cp2 {
 
   rsp_vect_t acc[3];
 };
+
+void RSP_CFC2(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
 
 #endif
 

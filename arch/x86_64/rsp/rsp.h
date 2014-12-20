@@ -57,6 +57,20 @@ static inline void rsp_vect_write_operand(__m128i *dest, __m128i src) {
   _mm_store_si128((__m128i*) dest, src);
 }
 
+// Returns scalar bitmasks for VCO, VCC, and VCE.
+static inline int16_t rsp_get_vco(const __m128i *vco) {
+  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(vco[1], vco[0]));
+}
+
+static inline int16_t rsp_get_vcc(const __m128i *vcc) {
+  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(vcc[1], vcc[0]));
+}
+
+// TODO: Sign-extended, or no?
+static inline uint8_t rsp_get_vce(const __m128i vce) {
+  return (uint8_t) _mm_movemask_epi8(vce);
+}
+
 // Functions for reading/writing the accumulator.
 #if ((defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER))) \
   && (defined(__i386__) || defined(__x86_64)))
@@ -142,6 +156,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
 
 #include "arch/x86_64/rsp/vadd.h"
 #include "arch/x86_64/rsp/vand.h"
+#include "arch/x86_64/rsp/vcl.h"
 #include "arch/x86_64/rsp/vmadh.h"
 #include "arch/x86_64/rsp/vmadl.h"
 #include "arch/x86_64/rsp/vmadm.h"
