@@ -352,7 +352,7 @@ void RSP_BDLQSV_SBDLQSV(struct rsp *rsp,
   unsigned dest = GET_VT(iw);
 
   exdf_latch->request.addr = rs + ((uint16_t) iw << shift_and_idx);
-  memcpy(exdf_latch->request.vdqm, rsp_bdlqs_lut[shift_and_idx],
+  memcpy(&exdf_latch->request.vdqm, rsp_bdlqs_lut[shift_and_idx],
     sizeof(exdf_latch->request.vdqm));
 
   exdf_latch->request.element = GET_E(iw);

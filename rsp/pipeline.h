@@ -25,8 +25,8 @@ enum rsp_mem_request_type {
 };
 
 struct rsp_mem_request {
-  uint16_t vdata[8];
-  uint16_t vdqm[8];
+  rsp_vect_t vdata;
+  rsp_vect_t vdqm;
   uint32_t addr;
   uint32_t data;
   uint32_t dqm;

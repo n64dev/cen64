@@ -20,13 +20,13 @@ enum rsp_acc_t {
 };
 
 struct rsp_cp2 {
-  uint16_t regs[32][8];
+  rsp_vect_t regs[32];
 
-  uint16_t vcc[2][8];
-  uint16_t vco[2][8];
-  uint16_t vce[8];
+  rsp_vect_t vcc[2];
+  rsp_vect_t vco[2];
+  rsp_vect_t vce;
 
-  uint16_t acc[24];
+  rsp_vect_t acc[3];
 };
 
 #endif

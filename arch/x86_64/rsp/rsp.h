@@ -25,6 +25,7 @@
 
 struct rsp;
 typedef __m128i rsp_vect_t;
+typedef __m128i *rsp_vect_ptr_t;
 
 // Gives the architecture backend a chance to initialize the RSP.
 void arch_rsp_destroy(struct rsp *rsp);
@@ -35,7 +36,7 @@ int arch_rsp_init(struct rsp *rsp);
 extern const uint16_t shuffle_keys[16][8];
 
 static inline __m128i rsp_vect_load_and_shuffle_operand(
-  const uint16_t *src, unsigned element) {
+  const __m128i *src, unsigned element) {
   __m128i operand = _mm_load_si128((__m128i*) src);
   __m128i key = _mm_load_si128((__m128i*) shuffle_keys[element]);
 
@@ -43,16 +44,16 @@ static inline __m128i rsp_vect_load_and_shuffle_operand(
 }
 #else
 __m128i rsp_vect_load_and_shuffle_operand(
-  const uint16_t *src, unsigned element);
+  const __m128i *src, unsigned element);
 #endif
 
 // Loads a vector without shuffling its elements.
-static inline __m128i rsp_vect_load_unshuffled_operand(const uint16_t *src) {
+static inline __m128i rsp_vect_load_unshuffled_operand(const __m128i *src) {
   return _mm_load_si128((__m128i*) src);
 }
 
 // Writes an operand back to memory.
-static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
+static inline void rsp_vect_write_operand(__m128i *dest, __m128i src) {
   _mm_store_si128((__m128i*) dest, src);
 }
 
@@ -70,41 +71,41 @@ register __m128i hr_acc_md __asm__ ("xmm14");
 register __m128i hr_acc_hi __asm__ ("xmm15");
 #endif
 
-static inline __m128i read_acc_lo(const uint16_t *acc) {
+static inline __m128i read_acc_lo(const __m128i *acc) {
   return hr_acc_lo;
 }
-static inline __m128i read_acc_md(const uint16_t *acc) {
+static inline __m128i read_acc_md(const __m128i *acc) {
   return hr_acc_md;
 }
-static inline __m128i read_acc_hi(const uint16_t *acc) {
+static inline __m128i read_acc_hi(const __m128i *acc) {
   return hr_acc_hi;
 }
-static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
+static inline void write_acc_lo(__m128i *acc, __m128i acc_lo) {
   hr_acc_lo = acc_lo;
 }
-static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
+static inline void write_acc_md(__m128i *acc, __m128i acc_md) {
   hr_acc_md = acc_md;
 }
-static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
+static inline void write_acc_hi(__m128i *acc, __m128i acc_hi) {
   hr_acc_hi = acc_hi;
 }
 #else
-static inline __m128i read_acc_lo(const uint16_t *acc) {
+static inline __m128i read_acc_lo(const __m128i *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 16);
 }
-static inline __m128i read_acc_md(const uint16_t *acc) {
+static inline __m128i read_acc_md(const __m128i *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 8);
 }
-static inline __m128i read_acc_hi(const uint16_t *acc) {
+static inline __m128i read_acc_hi(const __m128i *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 0);
 }
-static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
+static inline void write_acc_lo(__m128i *acc, __m128i acc_lo) {
   rsp_vect_write_operand(acc + 16, acc_lo);
 }
-static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
+static inline void write_acc_md(__m128i *acc, __m128i acc_md) {
   rsp_vect_write_operand(acc + 8, acc_md);
 }
-static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
+static inline void write_acc_hi(__m128i *acc, __m128i acc_hi) {
   rsp_vect_write_operand(acc + 0, acc_hi);
 }
 #endif
