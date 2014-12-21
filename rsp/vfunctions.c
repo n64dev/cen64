@@ -92,12 +92,33 @@ rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   rsp_vect_t le, eq;
 
   eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+
   rsp_vect_t result = rsp_veq(vs, vt_shuffle, &le, eq);
 
   rsp_vect_write_operand(&rsp->cp2.vcc[0], zero);
   rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
   rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], zero);
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
+// VGE
+//
+rsp_vect_t RSP_VGE(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t le, eq, sign;
+
+  eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  sign = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[1]);
+
+  rsp_vect_t result = rsp_vge(vs, vt_shuffle, &le, eq, sign);
+
+  rsp_vect_write_operand(&rsp->cp2.vcc[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
   rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], zero);
   write_acc_lo(acc, result);
   return result;
 }
@@ -116,6 +137,26 @@ rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
 #endif
 
   return zero;
+}
+
+//
+// VLT
+//
+rsp_vect_t RSP_VLT(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t le, eq, sign;
+
+  eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  sign = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[1]);
+
+  rsp_vect_t result = rsp_vlt(vs, vt_shuffle, &le, eq, sign);
+
+  rsp_vect_write_operand(&rsp->cp2.vcc[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
+  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], zero);
+  write_acc_lo(acc, result);
+  return result;
 }
 
 //
@@ -269,12 +310,13 @@ rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   rsp_vect_t le, eq;
 
   eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+
   rsp_vect_t result = rsp_vne(vs, vt_shuffle, zero, &le, eq);
 
   rsp_vect_write_operand(&rsp->cp2.vcc[0], zero);
   rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
   rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
-  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], zero);
   write_acc_lo(acc, result);
   return result;
 }
