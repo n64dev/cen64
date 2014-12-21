@@ -52,8 +52,8 @@ static inline __m128i rsp_vcl(__m128i vs, __m128i vt, __m128i zero,
 #ifdef __SSE4_1__
   *ge = _mm_blendv_epi8(ge_eq, *ge, do_ge);
 #else
-  ge_eq = _mm_and_si128(do_ge, *ge);
-  *ge = _mm_andnot_si128(do_ge, ge_eq);
+  *ge = _mm_and_si128(do_ge, *ge);
+  ge_eq = _mm_andnot_si128(do_ge, ge_eq);
   *ge = _mm_or_si128(ge_eq, *ge);
 #endif
 
