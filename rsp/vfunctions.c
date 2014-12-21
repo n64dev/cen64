@@ -85,6 +85,24 @@ rsp_vect_t RSP_VCL(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VEQ
+//
+rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t le, eq;
+
+  eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  rsp_vect_t result = rsp_veq(vs, vt_shuffle, &le, eq);
+
+  rsp_vect_write_operand(&rsp->cp2.vcc[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
+  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
 // VINVALID
 //
 rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
@@ -239,6 +257,24 @@ rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vnand(vs, vt_shuffle, zero);
 
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
+// VNE
+//
+rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t le, eq;
+
+  eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  rsp_vect_t result = rsp_vne(vs, vt_shuffle, zero, &le, eq);
+
+  rsp_vect_write_operand(&rsp->cp2.vcc[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
+  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
   write_acc_lo(acc, result);
   return result;
 }
