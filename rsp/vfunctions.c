@@ -18,6 +18,19 @@
 #include "rsp/rsp.h"
 
 //
+// VABS
+//
+rsp_vect_t RSP_VABS(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t acc_lo;
+
+  rsp_vect_t result = rsp_vabs(vs, vt_shuffle, zero, &acc_lo);
+
+  write_acc_lo(acc, acc_lo);
+  return result;
+}
+
+//
 // VADD
 //
 rsp_vect_t RSP_VADD(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
