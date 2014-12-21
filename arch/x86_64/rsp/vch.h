@@ -10,20 +10,20 @@
 static inline __m128i rsp_vch(__m128i vs, __m128i vt, __m128i zero,
   __m128i *ge, __m128i *le, __m128i *eq, __m128i *sign, __m128i *vce) {
 
-	__m128i sign_negvt, vt_neg;
-	__m128i diff, diff_zero, diff_sel_mask;
+  __m128i sign_negvt, vt_neg;
+  __m128i diff, diff_zero, diff_sel_mask;
   __m128i diff_gez, diff_lez;
 
   // sign = (vs ^ vt) < 0
   *sign = _mm_xor_si128(vs, vt);
   *sign = _mm_cmplt_epi16(*sign, zero);
 
-	// sign_negvt = sign ? -vt : vt
-	sign_negvt = _mm_xor_si128(vt, *sign);
-	sign_negvt = _mm_sub_epi16(sign_negvt, *sign);
+  // sign_negvt = sign ? -vt : vt
+  sign_negvt = _mm_xor_si128(vt, *sign);
+  sign_negvt = _mm_sub_epi16(sign_negvt, *sign);
 
   // Compute diff, diff_zero:
-	diff = _mm_sub_epi16(vs, sign_negvt);
+  diff = _mm_sub_epi16(vs, sign_negvt);
   diff_zero = _mm_cmpeq_epi16(diff, zero);
 
   // Compute le/ge.
