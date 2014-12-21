@@ -404,6 +404,21 @@ rsp_vect_t RSP_VSUB(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VSUBC
+//
+rsp_vect_t RSP_VSUBC(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t eq, sn;
+
+  rsp_vect_t result = rsp_vsubc(vs, vt_shuffle, zero, &eq, &sn);
+
+  rsp_vect_write_operand(&rsp->cp2.vco[0], eq);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], sn);
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
 // VXOR
 //
 rsp_vect_t RSP_VXOR(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
