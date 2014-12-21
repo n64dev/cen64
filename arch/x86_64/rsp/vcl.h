@@ -8,13 +8,13 @@
 #include "common.h"
 
 static inline __m128i rsp_vcl(__m128i vs, __m128i vt, __m128i zero,
-  __m128i *ge, __m128i *le, __m128i sign, __m128i eq, __m128i vce) {
+  __m128i *ge, __m128i *le, __m128i eq, __m128i sign, __m128i vce) {
 
   __m128i sign_negvt, diff, ncarry, nvce, diff_zero;
   __m128i le_case1, le_case2, le_eq, do_le;
   __m128i ge_eq, do_ge, mux_mask;
 
-  // sign_negvt ? -vt : vt
+  // sign_negvt = sign ? -vt : vt
   sign_negvt = _mm_xor_si128(vt, sign);
   sign_negvt = _mm_sub_epi16(sign_negvt, sign);
 

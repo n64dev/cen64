@@ -46,19 +46,37 @@ rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VCH
+//
+rsp_vect_t RSP_VCH(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t ge, le, sign, eq, vce;
+
+  rsp_vect_t result = rsp_vch(vs, vt_shuffle, zero, &ge, &le, &eq, &sign, &vce);
+
+  rsp_vect_write_operand(&rsp->cp2.vcc[0], ge);
+  rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
+  rsp_vect_write_operand(&rsp->cp2.vco[0], eq);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], sign);
+  rsp_vect_write_operand(&rsp->cp2.vce, vce);
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
 // VCL
 //
 rsp_vect_t RSP_VCL(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
-  rsp_vect_t ge, le, sign, eq, vce;
+  rsp_vect_t ge, le, eq, sign, vce;
 
   ge = rsp_vect_load_unshuffled_operand(&rsp->cp2.vcc[0]);
   le = rsp_vect_load_unshuffled_operand(&rsp->cp2.vcc[1]);
-  sign = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
-  eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[1]);
+  eq = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  sign = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[1]);
   vce = rsp_vect_load_unshuffled_operand(&rsp->cp2.vce);
 
-  rsp_vect_t result = rsp_vcl(vs, vt_shuffle, zero, &ge, &le, sign, eq, vce);
+  rsp_vect_t result = rsp_vcl(vs, vt_shuffle, zero, &ge, &le, eq, sign, vce);
 
   rsp_vect_write_operand(&rsp->cp2.vcc[0], ge);
   rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
