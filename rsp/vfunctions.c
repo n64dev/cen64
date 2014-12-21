@@ -262,6 +262,23 @@ rsp_vect_t RSP_VMADN(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VMRG
+//
+rsp_vect_t RSP_VMRG(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t le;
+
+  le = rsp_vect_load_unshuffled_operand(&rsp->cp2.vcc[1]);
+
+  rsp_vect_t result = rsp_vmrg(vs, vt_shuffle, le);
+
+  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], zero);
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
 // VMUDH
 //
 rsp_vect_t RSP_VMUDH(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
