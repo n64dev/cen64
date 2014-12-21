@@ -24,7 +24,7 @@ rsp_vect_t RSP_VADD(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t carry, acc_lo;
 
-  carry = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  carry = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[1]);
 
   rsp_vect_t result = rsp_vadd(vs, vt_shuffle, carry, &acc_lo);
 
@@ -380,9 +380,9 @@ rsp_vect_t RSP_VSUB(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t carry, acc_lo;
 
-  carry = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[0]);
+  carry = rsp_vect_load_unshuffled_operand(&rsp->cp2.vco[1]);
 
-  rsp_vect_t result = rsp_vsub(vs, vt_shuffle, zero, carry, &acc_lo);
+  rsp_vect_t result = rsp_vsub(vs, vt_shuffle, carry, &acc_lo);
 
   rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
   rsp_vect_write_operand(&rsp->cp2.vco[1], zero);

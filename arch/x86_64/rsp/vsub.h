@@ -8,25 +8,19 @@
 #include "common.h"
 
 static inline __m128i rsp_vsub(__m128i vs, __m128i vt,
-  __m128i zero, __m128i carry, __m128i *acc_lo) {
-  __m128i vd, unsat_diff, mask, vt_neg_mask, vt_pos_mask;
+  __m128i carry, __m128i *acc_lo) {
+  __m128i unsat_diff, sat_diff, overflow, vd;
 
-  // VCC uses unsaturated arithmetic.
-  unsat_diff = _mm_sub_epi16(vs, vt);
-  *acc_lo = _mm_sub_epi16(unsat_diff, carry);
+  // acc_lo uses saturated arithmetic.
+  unsat_diff = _mm_sub_epi16(vt, carry);
+  sat_diff = _mm_subs_epi16(vt, carry);
 
-  // VD is the signed sum of the two sources and the carry. Since we
-  // have to saturate the sum of all three, we have to be clever.
-  vt_neg_mask = _mm_cmplt_epi16(vt, zero);
-  vt_pos_mask = _mm_cmpeq_epi16(vt_neg_mask, zero);
+  *acc_lo = _mm_sub_epi16(vs, unsat_diff);
+  vd = _mm_subs_epi16(vs, sat_diff);
 
-  vd = _mm_subs_epi16(vs, vt);
-  mask = _mm_cmpeq_epi16(unsat_diff, vd);
-  mask = _mm_and_si128(vt_neg_mask, mask);
-
-  vt_neg_mask = _mm_and_si128(mask, carry);
-  vt_pos_mask = _mm_and_si128(vt_pos_mask, carry);
-  carry = _mm_or_si128(vt_neg_mask, vt_pos_mask);
-  return _mm_subs_epi16(vd, carry);
+  // VD is the signed diff of the two sources and the carry. Since we
+  // have to saturate the diff of all three, we have to be clever.
+  overflow = _mm_cmpgt_epi16(sat_diff, unsat_diff);
+  return _mm_adds_epi16(vd, overflow);
 }
 
