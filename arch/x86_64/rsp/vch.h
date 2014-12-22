@@ -26,7 +26,7 @@ static inline __m128i rsp_vch(__m128i vs, __m128i vt, __m128i zero,
   diff = _mm_sub_epi16(vs, sign_negvt);
   diff_zero = _mm_cmpeq_epi16(diff, zero);
 
-  // Compute le/ge.
+  // Compute le/ge:
   vt_neg = _mm_cmplt_epi16(vt, zero);
   diff_lez = _mm_cmpgt_epi16(diff, zero);
   diff_gez = _mm_or_si128(diff_lez, diff_zero);

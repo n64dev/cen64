@@ -113,6 +113,23 @@ rsp_vect_t RSP_VCL(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VCR
+//
+rsp_vect_t RSP_VCR(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t ge, le;
+
+  rsp_vect_t result = rsp_vcr(vs, vt_shuffle, zero, &ge, &le);
+
+  rsp_vect_write_operand(&rsp->cp2.vcc[0], ge);
+  rsp_vect_write_operand(&rsp->cp2.vcc[1], le);
+  rsp_vect_write_operand(&rsp->cp2.vco[0], zero);
+  rsp_vect_write_operand(&rsp->cp2.vco[1], zero);
+  write_acc_lo(acc, result);
+  return result;
+}
+
+//
 // VEQ
 //
 rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
