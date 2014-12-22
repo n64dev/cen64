@@ -1,0 +1,21 @@
+krom:              Thank you for your indisposable clean-room, micro-test
+                   ROMs. These, especially the RSP vector ROMs, have saved me
+                   hours of hair-pulling. And, with my impatience, there's no
+                   way I would have ever come close to developing something so
+                   intricate.
+
+Iconoclast:        Although we hardly ever see eye-to-eye with regards to
+                   development practices, your zilmar-spec RSP plugin was
+                   instrumental to getting CEN64 to the point where it is
+                   today. Without a basis of comparison, the initial SSE-
+                   ification of the RSP algorithms would have been even more
+                   testing than it already was.
+
+AIO:               Thank you for your RSP/SSE optimizations. It's always nice
+                   to see someone else's approaches to vectorizing some of the
+                   RSP instructions!
+
+#n64dev:           Thank you to everyone else that's helped out in the past:
+                   marshallh, mikeryan, balrog, jrra, and anyone else that
+                   I'm forgetting.
+
