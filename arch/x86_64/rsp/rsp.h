@@ -172,6 +172,7 @@ void rsp_vstore_dmem(struct rsp *rsp,
 #include "arch/x86_64/rsp/vmudl.h"
 #include "arch/x86_64/rsp/vmudm.h"
 #include "arch/x86_64/rsp/vmudn.h"
+#include "arch/x86_64/rsp/vmulf.h"
 #include "arch/x86_64/rsp/vnand.h"
 #include "arch/x86_64/rsp/vne.h"
 #include "arch/x86_64/rsp/vnor.h"
