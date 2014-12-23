@@ -174,6 +174,10 @@ static inline void rsp_df_stage(struct rsp *rsp) {
     dqm = rsp_vect_load_unshuffled_operand(&exdf_latch->request.vdqm);
     reg = rsp_vect_load_unshuffled_operand(regp);
 
+    // Make sure the scalar unit doesn't
+    // write past the edge of the RF.
+    dfwb_latch->result.dest = 0;
+
     exdf_latch->request.vldst_func(rsp, addr, element, regp, reg, dqm);
   }
 
