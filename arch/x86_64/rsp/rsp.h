@@ -153,7 +153,6 @@ void rsp_vstore_dmem(struct rsp *rsp,
   uint32_t addr, unsigned element, __m128i dqm, __m128i reg);
 
 #include "arch/x86_64/rsp/clamp.h"
-
 #include "arch/x86_64/rsp/vabs.h"
 #include "arch/x86_64/rsp/vadd.h"
 #include "arch/x86_64/rsp/vaddc.h"
@@ -182,6 +181,12 @@ void rsp_vstore_dmem(struct rsp *rsp,
 #include "arch/x86_64/rsp/vsub.h"
 #include "arch/x86_64/rsp/vsubc.h"
 #include "arch/x86_64/rsp/vxor.h"
+
+__m128i rsp_vrcp(struct rsp *rsp, int sp,
+  unsigned src, unsigned e, unsigned dest, unsigned de);
+
+__m128i rsp_vrcph(struct rsp *rsp,
+  unsigned src, unsigned e, unsigned dest, unsigned de);
 
 #endif
 

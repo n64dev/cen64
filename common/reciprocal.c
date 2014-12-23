@@ -1,5 +1,5 @@
 //
-// rsp/reciprocal.c: RSP reciprocal ROM contents.
+// common/reciprocal.c: RSP reciprocal ROM contents.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
@@ -9,7 +9,7 @@
 //
 
 #include "common.h"
-#include "rsp/reciprocal.h"
+#include "common/reciprocal.h"
 
 const uint16_t rsp_reciprocal_rom[1024] = {
   0xFFFF, 0xFF00, 0xFE01, 0xFD04, 0xFC07, 0xFB0C, 0xFA11, 0xF918,

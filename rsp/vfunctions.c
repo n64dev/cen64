@@ -432,6 +432,46 @@ rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VRCP
+// VRCPL
+//
+rsp_vect_t RSP_VRCP(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  unsigned de = GET_DE(iw) & 0x7;
+  unsigned e = GET_E(iw) & 0x7;
+
+  unsigned dest = GET_VD(iw);
+  unsigned src = GET_VT(iw);
+
+  write_acc_lo(acc, vt_shuffle);
+
+  // Force single precision for VRCP (but not VRCPL).
+  int sp = iw & rsp->cp2.sp_flag;
+  rsp->cp2.sp_flag = 1;
+
+  return rsp_vrcp(rsp, sp, src, e, dest, de);
+}
+
+//
+// VRCPH
+//
+rsp_vect_t RSP_VRCPH(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  unsigned de = GET_DE(iw) & 0x7;
+  unsigned e = GET_E(iw) & 0x7;
+
+  unsigned dest = GET_VD(iw);
+  unsigned src = GET_VT(iw);
+
+  write_acc_lo(acc, vt_shuffle);
+
+  // Specify double-precision for VRCPL on the next pass.
+  rsp->cp2.sp_flag = 0;
+
+  return rsp_vrcph(rsp, src, e, dest, de);
+}
+
+//
 // VSAR
 //
 rsp_vect_t RSP_VSAR(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,

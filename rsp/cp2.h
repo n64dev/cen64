@@ -27,9 +27,15 @@ struct rsp_cp2 {
   rsp_vect_t vce;
 
   rsp_vect_t acc[3];
+
+  int16_t div_out;
+  int16_t div_in;
+  char sp_flag;
 };
 
 void RSP_CFC2(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
+
+cen64_cold void rsp_cp2_init(struct rsp *rsp);
 
 #endif
 

@@ -36,3 +36,8 @@ void RSP_CFC2(struct rsp *rsp,
   exdf_latch->result.dest = dest;
 }
 
+// Initializes the coprocessor.
+void rsp_cp2_init(struct rsp *rsp) {
+  rsp->cp2.sp_flag = 1;
+}
+
