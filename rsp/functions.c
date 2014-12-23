@@ -195,7 +195,7 @@ void RSP_BGEZAL_BLTZAL(
   bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int32_t) rs < 0;
 
-  exdf_latch->result.result = rdex_latch->common.pc + 8;
+  exdf_latch->result.result = 0x1000 | (rdex_latch->common.pc + 8);
   exdf_latch->result.dest = RSP_REGISTER_RA;
 
   if (cmp == is_ge)
@@ -508,11 +508,10 @@ void RSP_STORE(struct rsp *rsp,
   uint32_t address = rs + (int16_t) iw;
   unsigned request_size = (iw >> 26 & 0x3) + 1;
   unsigned lshiftamt = (4 - request_size) << 3;
-  unsigned rshiftamt = (address & 0x3) << 3;
 
-  exdf_latch->request.addr = address & ~0x3ULL;
-  exdf_latch->request.data = (rt << lshiftamt) >> rshiftamt;
-  exdf_latch->request.dqm = (~0U << lshiftamt) >> rshiftamt;
+  exdf_latch->request.addr = address;
+  exdf_latch->request.data = rt << lshiftamt;
+  exdf_latch->request.dqm = ~0U << lshiftamt;
   exdf_latch->request.type = RSP_MEM_REQUEST_WRITE;
   exdf_latch->request.size = request_size;
 }

@@ -27,6 +27,8 @@ static inline void rsp_if_stage(struct rsp *rsp) {
   uint32_t pc = ifrd_latch->pc;
   uint32_t iw;
 
+  assert(!(pc & 0x1000) || "RSP $PC points past IMEM.");
+
   memcpy(&iw, rsp->mem + 0x1000 + pc, sizeof(iw));
   iw = byteswap_32(iw);
 
@@ -162,7 +164,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
   if (exdf_latch->result.dest >= 32) {
     rsp_vect_t *regp = rsp->cp2.regs + (exdf_latch->result.dest - 32);
     unsigned element = request->element;
-    uint32_t addr = request->addr;
+    uint32_t addr = request->addr & 0xFFC;
     rsp_vect_t reg, dqm;
 
     dqm = rsp_vect_load_unshuffled_operand(&exdf_latch->request.vdqm);
@@ -181,20 +183,19 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   // Scalar unit DMEM access.
   else {
-    unsigned offset = request->addr & 0x3;
-    uint32_t addr = request->addr & 0xFFC;
+    // TODO: Detect/handle wraparound?
+    uint32_t addr = request->addr & 0xFFF;
     uint32_t dqm = request->dqm;
     uint32_t word;
 
     // DMEM scalar reads.
     if (request->type == RSP_MEM_REQUEST_READ) {
       unsigned rshiftamt = (4 - request->size) << 3;
-      unsigned lshiftamt = (offset) << 3;
 
       memcpy(&word, rsp->mem + addr, sizeof(word));
 
       word = byteswap_32(word);
-      word = (int32_t) (word << lshiftamt) >> rshiftamt;
+      word = (int32_t) word >> rshiftamt;
       dfwb_latch->result.result = dqm & word;
     }
 
