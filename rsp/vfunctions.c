@@ -369,6 +369,21 @@ rsp_vect_t RSP_VMULF(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VMULU
+//
+rsp_vect_t RSP_VMULU(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t acc_lo, acc_md, acc_hi, result;
+
+  result = rsp_vmulu(vs, vt_shuffle, zero, &acc_lo, &acc_md, &acc_hi);
+
+  write_acc_lo(acc, acc_lo);
+  write_acc_md(acc, acc_md);
+  write_acc_hi(acc, acc_hi);
+  return result;
+}
+
+//
 // VNAND
 //
 rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
