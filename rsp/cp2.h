@@ -30,12 +30,10 @@ struct rsp_cp2 {
 
   int16_t div_out;
   int16_t div_in;
-  char sp_flag;
+  char dp_flag;
 };
 
 void RSP_CFC2(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
-
-cen64_cold void rsp_cp2_init(struct rsp *rsp);
 
 #endif
 

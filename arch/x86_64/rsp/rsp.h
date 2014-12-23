@@ -187,10 +187,10 @@ extern const uint16_t vdiv_mask_table[8][8];
 __m128i rsp_vdivh(struct rsp *rsp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
-__m128i rsp_vrcp(struct rsp *rsp, int sp,
+__m128i rsp_vrcp(struct rsp *rsp, int dp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
-__m128i rsp_vrsq(struct rsp *rsp, int sp,
+__m128i rsp_vrsq(struct rsp *rsp, int dp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
 #endif

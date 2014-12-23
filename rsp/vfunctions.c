@@ -446,10 +446,10 @@ rsp_vect_t RSP_VRCP(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   write_acc_lo(acc, vt_shuffle);
 
   // Force single precision for VRCP (but not VRCPL).
-  int sp = iw & rsp->cp2.sp_flag;
-  rsp->cp2.sp_flag = 1;
+  int dp = iw & rsp->cp2.dp_flag;
+  rsp->cp2.dp_flag = 0;
 
-  return rsp_vrcp(rsp, sp, src, e, dest, de);
+  return rsp_vrcp(rsp, dp, src, e, dest, de);
 }
 
 //
@@ -467,7 +467,7 @@ rsp_vect_t RSP_VRCPH_VRSQH(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   write_acc_lo(acc, vt_shuffle);
 
   // Specify double-precision for VRCPL on the next pass.
-  rsp->cp2.sp_flag = 0;
+  rsp->cp2.dp_flag = 1;
 
   return rsp_vdivh(rsp, src, e, dest, de);
 }
@@ -487,10 +487,10 @@ rsp_vect_t RSP_VRSQ(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
   write_acc_lo(acc, vt_shuffle);
 
   // Force single precision for VRSQ (but not VRSQL).
-  int sp = iw & rsp->cp2.sp_flag;
-  rsp->cp2.sp_flag = 1;
+  int dp = iw & rsp->cp2.dp_flag;
+  rsp->cp2.dp_flag = 0;
 
-  return rsp_vrsq(rsp, sp, src, e, dest, de);
+  return rsp_vrsq(rsp, dp, src, e, dest, de);
 }
 
 //

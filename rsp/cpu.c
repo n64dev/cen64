@@ -35,7 +35,6 @@ int rsp_init(struct rsp *rsp, struct bus_controller *bus) {
   rsp_connect_bus(rsp, bus);
 
   rsp_cp0_init(rsp);
-  rsp_cp2_init(rsp);
   rsp_pipeline_init(&rsp->pipeline);
 
   return arch_rsp_init(rsp);

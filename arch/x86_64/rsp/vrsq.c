@@ -23,7 +23,7 @@ cen64_align(static const uint16_t vrsq_mask_table[8][8], 16) = {
   {0, 0, 0, 0, 0, 0, 0, ~0}
 };
 
-__m128i rsp_vrsq(struct rsp *rsp, int sp,
+__m128i rsp_vrsq(struct rsp *rsp, int dp,
   unsigned src, unsigned e, unsigned dest, unsigned de) {
   __m128i vd, vd_mask, b_result;
 
@@ -47,7 +47,7 @@ __m128i rsp_vrsq(struct rsp *rsp, int sp,
   dp_input = ((uint32_t) rsp->cp2.div_in << 16) | (uint16_t) vt;
   sp_input = vt;
 
-  input = (sp) ? sp_input : dp_input;
+  input = (dp) ? dp_input : sp_input;
   input_mask = input >> 31;
   data = input ^ input_mask;
 
