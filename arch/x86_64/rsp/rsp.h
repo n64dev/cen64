@@ -182,10 +182,15 @@ void rsp_vstore_dmem(struct rsp *rsp,
 #include "arch/x86_64/rsp/vsubc.h"
 #include "arch/x86_64/rsp/vxor.h"
 
+extern const uint16_t vdiv_mask_table[8][8];
+
+__m128i rsp_vdivh(struct rsp *rsp,
+  unsigned src, unsigned e, unsigned dest, unsigned de);
+
 __m128i rsp_vrcp(struct rsp *rsp, int sp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
-__m128i rsp_vrcph(struct rsp *rsp,
+__m128i rsp_vrsq(struct rsp *rsp, int sp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
 #endif

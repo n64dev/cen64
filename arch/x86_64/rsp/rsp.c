@@ -480,3 +480,15 @@ void rsp_vstore_dmem(struct rsp *rsp,
 }
 #endif
 
+// Mask table for VRCP(LH) and VRSQ(LH) functions.
+cen64_align(const uint16_t vdiv_mask_table[8][8], 16) = {
+  {~0, 0, 0, 0, 0, 0, 0, 0},
+  {0, ~0, 0, 0, 0, 0, 0, 0},
+  {0, 0, ~0, 0, 0, 0, 0, 0},
+  {0, 0, 0, ~0, 0, 0, 0, 0},
+  {0, 0, 0, 0, ~0, 0, 0, 0},
+  {0, 0, 0, 0, 0, ~0, 0, 0},
+  {0, 0, 0, 0, 0, 0, ~0, 0},
+  {0, 0, 0, 0, 0, 0, 0, ~0}
+};
+
