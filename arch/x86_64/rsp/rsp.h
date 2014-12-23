@@ -146,11 +146,18 @@ static inline __m128i rsp_vset(void) {
   return _mm_cmpeq_epi32(junk, junk);
 }
 
-// Load and store aligner.
-__m128i rsp_vload_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i dqm, __m128i reg);
-void rsp_vstore_dmem(struct rsp *rsp,
-  uint32_t addr, unsigned element, __m128i dqm, __m128i reg);
+// Load and store functions.
+void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
+  __m128i *regp, __m128i reg, __m128i dqm);
+
+void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
+  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
+
+void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
+  __m128i *regp, __m128i reg, __m128i dqm);
+
+void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
+  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 
 #include "arch/x86_64/rsp/clamp.h"
 #include "arch/x86_64/rsp/vabs.h"

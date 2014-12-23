@@ -35,12 +35,33 @@ cen64_align(static const uint32_t rsp_bitwise_lut[4][2], 32) = {
 };
 
 // Mask to denote which part of the vector to load/store.
-cen64_align(static const uint16_t rsp_bdlqs_lut[5][8], CACHE_LINE_SIZE) = {
-  {0xFF00, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}, // B
-  {0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}, // S
-  {0xFFFF, 0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}, // L
-  {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000}, // D
-  {0xFFFF, 0xFFFF, 0xFFFF, 0XFFFF, 0xFFFF, 0xFFFF, 0XFFFF, 0XFFFF}, // Q
+cen64_align(static const uint16_t rsp_bdls_lut[4][4], 8) = {
+  {0xFF00, 0x0000, 0x0000, 0x0000}, // B
+  {0xFFFF, 0x0000, 0x0000, 0x0000}, // S
+  {0xFFFF, 0xFFFF, 0x0000, 0x0000}, // L
+  {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}, // D
+};
+
+cen64_align(static const uint16_t rsp_qr_lut[16][8], CACHE_LINE_SIZE) = {
+  {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x00FF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0x00FF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+
+  {0x0000, 0x0000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0x0000, 0x00FF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0x00FF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+
+  {0x0000, 0x0000, 0x0000, 0x0000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0x0000, 0x00FF, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xFFFF, 0xFFFF, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x00FF, 0xFFFF, 0xFFFF},
+
+  {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xFFFF, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x00FF, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xFFFF},
+  {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x00FF},
 };
 
 // Mask to select link address register for some branches.
@@ -337,30 +358,58 @@ void RSP_LUI(struct rsp *rsp,
 // LBV
 // LDV
 // LLV
-// LQV
 // LSV
 // SBV
 // SDV
 // SLV
-// SQV
 // SSV
 //
-void RSP_BDLQSV_SBDLQSV(struct rsp *rsp,
+void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-  unsigned shift_and_idx = iw >> 11 & 0x7;
+  unsigned shift_and_idx = iw >> 11 & 0x3;
   unsigned dest = GET_VT(iw);
 
   exdf_latch->request.addr = rs + ((uint16_t) iw << shift_and_idx);
-  memcpy(&exdf_latch->request.vdqm, rsp_bdlqs_lut[shift_and_idx],
+
+  __m128i vdqm = _mm_loadl_epi64((__m128i *) (rsp_bdls_lut + shift_and_idx));
+  _mm_store_si128(&exdf_latch->request.vdqm, vdqm);
+
+  exdf_latch->request.element = GET_E(iw);
+  exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
+    ? rsp_vstore_group1
+    : rsp_vload_group1;
+
+  exdf_latch->result.dest = dest + NUM_RSP_REGISTERS;
+}
+
+//
+// LQV
+// LRV
+// SQV
+// SRV
+//
+void RSP_LQRV_SQRV(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+  unsigned dest = GET_VT(iw);
+
+  exdf_latch->request.addr = rs + ((uint16_t) iw << 4);
+
+  memcpy(&exdf_latch->request.vdqm,
+    rsp_qr_lut[exdf_latch->request.addr  & 0xF],
     sizeof(exdf_latch->request.vdqm));
 
   exdf_latch->request.element = GET_E(iw);
-  exdf_latch->request.type = (iw >> 29 & 0x1)
-    ? RSP_MEM_REQUEST_VECTOR_WRITE
-    : RSP_MEM_REQUEST_VECTOR_READ;
+  exdf_latch->request.type = (iw >> 11 & 0x1)
+    ? RSP_MEM_REQUEST_REST
+    : RSP_MEM_REQUEST_QUAD;
 
-  exdf_latch->result.dest = dest + 32;
+  exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
+    ? rsp_vstore_group4
+    : rsp_vload_group4;
+
+  exdf_latch->result.dest = dest + NUM_RSP_REGISTERS;
 }
 
 //

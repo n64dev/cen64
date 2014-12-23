@@ -20,8 +20,8 @@ enum rsp_mem_request_type {
   RSP_MEM_REQUEST_NONE,
   RSP_MEM_REQUEST_READ,
   RSP_MEM_REQUEST_WRITE,
-  RSP_MEM_REQUEST_VECTOR_READ,
-  RSP_MEM_REQUEST_VECTOR_WRITE
+  RSP_MEM_REQUEST_QUAD,
+  RSP_MEM_REQUEST_REST,
 };
 
 struct rsp_mem_request {
@@ -33,6 +33,9 @@ struct rsp_mem_request {
 
   enum rsp_mem_request_type type;
   unsigned size, element;
+
+  void (*vldst_func)(struct rsp *rsp, uint32_t addr, unsigned element,
+    rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 };
 
 struct rsp_latch {
