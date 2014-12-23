@@ -376,6 +376,7 @@ void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
   _mm_store_si128(&exdf_latch->request.vdqm, vdqm);
 
   exdf_latch->request.element = GET_E(iw);
+  exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR;
   exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
     ? rsp_vstore_group1
     : rsp_vload_group1;
