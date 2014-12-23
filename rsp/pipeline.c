@@ -153,6 +153,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
   struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   const struct rsp_mem_request *request = &exdf_latch->request;
+  uint32_t addr;
 
   dfwb_latch->common = exdf_latch->common;
   dfwb_latch->result = exdf_latch->result;
@@ -160,13 +161,14 @@ static inline void rsp_df_stage(struct rsp *rsp) {
   if (request->type == RSP_MEM_REQUEST_NONE)
     return;
 
+  addr = request->addr & 0xFFF;
+
   // Vector unit DMEM access.
   if (exdf_latch->result.dest >= NUM_RSP_REGISTERS) {
     rsp_vect_t *regp = rsp->cp2.regs + (exdf_latch->result.dest -
       NUM_RSP_REGISTERS);
 
     unsigned element = request->element;
-    uint32_t addr = request->addr & 0xFFF;
     rsp_vect_t reg, dqm;
 
     dqm = rsp_vect_load_unshuffled_operand(&exdf_latch->request.vdqm);
@@ -178,7 +180,6 @@ static inline void rsp_df_stage(struct rsp *rsp) {
   // Scalar unit DMEM access.
   else {
     // TODO: Detect/handle wraparound?
-    uint32_t addr = request->addr & 0xFFF;
     uint32_t dqm = request->dqm;
     uint32_t word;
 
