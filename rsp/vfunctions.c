@@ -205,6 +205,24 @@ rsp_vect_t RSP_VLT(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
 }
 
 //
+// VMACF
+//
+rsp_vect_t RSP_VMACF(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
+  rsp_vect_t acc_lo, acc_md, acc_hi, result;
+  acc_lo = read_acc_lo(acc);
+  acc_md = read_acc_md(acc);
+  acc_hi = read_acc_hi(acc);
+
+  result = rsp_vmacf(vs, vt_shuffle, zero, &acc_lo, &acc_md, &acc_hi);
+
+  write_acc_lo(acc, acc_lo);
+  write_acc_md(acc, acc_md);
+  write_acc_hi(acc, acc_hi);
+  return result;
+}
+
+//
 // VMADH
 //
 rsp_vect_t RSP_VMADH(struct rsp *rsp, uint32_t iw, rsp_vect_t *acc,

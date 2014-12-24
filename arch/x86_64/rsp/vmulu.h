@@ -5,6 +5,10 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+//
+// TODO: CHECK ME.
+//
+
 static inline __m128i rsp_vmulu(__m128i vs, __m128i vt,
   __m128i zero, __m128i *acc_lo, __m128i *acc_md, __m128i *acc_hi) {
   __m128i lo, hi, round, sign1, sign2, eq, neg;
