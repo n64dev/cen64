@@ -177,6 +177,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
     // Make sure the scalar unit doesn't
     // write past the edge of the RF.
     dfwb_latch->result.dest = 0;
+    exdf_latch->result.dest = 0;
 
     exdf_latch->request.vldst_func(rsp, addr, element, regp, reg, dqm);
   }

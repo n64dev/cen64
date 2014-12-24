@@ -21,6 +21,7 @@
 #define GET_VT(iw) ((iw) >> 16 & 0x1F)
 #define GET_VD(iw) ((iw) >> 6 & 0x1F)
 #define GET_DE(iw) ((iw) >> 11 & 0x1F)
+#define GET_EL(iw) ((iw) >> 7 & 0xF)
 #define GET_E(iw) ((iw) >> 21 & 0xF)
 
 #define OPCODE_INFO_NONE (0)

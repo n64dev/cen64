@@ -21,6 +21,11 @@
 #include "rsp/pipeline.h"
 #include "vr4300/interface.h"
 
+// Function to sign-extend 6-bit values.
+static inline int sign_extend_6bit(int i) {
+  return i | -(i & 0x40);
+}
+
 // Mask to negate second operand if subtract operation.
 cen64_align(static const uint32_t rsp_addsub_lut[4], 16) = {
   0x0U, ~0x0U, ~0x0U, ~0x0U
@@ -74,6 +79,11 @@ cen64_align(static const uint32_t rsp_load_sex_mask[2][4], 32) = {
   {~0U,   ~0U,     0U, ~0U}, // sex
   {0xFFU, 0xFFFFU, 0U, ~0U}, // zex
 };
+
+// Function to sign-extend 6-bit values.
+static inline int sign_extend_6(int i) {
+  return i | -(i & 0x40);
+}
 
 //
 // ADDIU
@@ -370,12 +380,12 @@ void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
   unsigned shift_and_idx = iw >> 11 & 0x3;
   unsigned dest = GET_VT(iw);
 
-  exdf_latch->request.addr = rs + ((uint16_t) iw << shift_and_idx);
+  exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << shift_and_idx);
 
-  __m128i vdqm = _mm_loadl_epi64((__m128i *) (rsp_bdls_lut + shift_and_idx));
+  __m128i vdqm = _mm_loadl_epi64((__m128i *) (rsp_bdls_lut[shift_and_idx]));
   _mm_store_si128(&exdf_latch->request.vdqm, vdqm);
 
-  exdf_latch->request.element = GET_E(iw);
+  exdf_latch->request.element = GET_EL(iw);
   exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR;
   exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
     ? rsp_vstore_group1
@@ -395,13 +405,13 @@ void RSP_LQRV_SQRV(struct rsp *rsp,
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_VT(iw);
 
-  exdf_latch->request.addr = rs + ((uint16_t) iw << 4);
+  exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << 4);
 
   memcpy(&exdf_latch->request.vdqm,
     rsp_qr_lut[exdf_latch->request.addr & 0xF],
     sizeof(exdf_latch->request.vdqm));
 
-  exdf_latch->request.element = GET_E(iw);
+  exdf_latch->request.element = GET_EL(iw);
   exdf_latch->request.type = (iw >> 11 & 0x1)
     ? RSP_MEM_REQUEST_REST
     : RSP_MEM_REQUEST_QUAD;
