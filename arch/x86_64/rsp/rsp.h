@@ -157,10 +157,16 @@ static inline __m128i rsp_vset(void) {
 void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, __m128i reg, __m128i dqm);
 
+void rsp_vload_group2(struct rsp *rsp, uint32_t addr, unsigned element,
+  uint16_t *regp, __m128i reg, __m128i dqm);
+
 void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 
 void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
+  uint16_t *regp, __m128i reg, __m128i dqm);
+
+void rsp_vstore_group2(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, __m128i reg, __m128i dqm);
 
 void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,

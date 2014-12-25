@@ -253,20 +253,23 @@ __m128i rsp_vect_load_and_shuffle_operand(
 //
 void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
-  __m128i ekey, data, temp;
+  __m128i ekey, data;
 
-  uint32_t aligned_addr = addr & ~0x7;
   unsigned offset = addr & 0x7;
-  uint64_t datalow, datahigh;
 
   // Always load in 8-byte chunks to emulate wraparound.
-  memcpy(&datalow, rsp->mem + aligned_addr, sizeof(datalow));
-  memcpy(&datahigh, rsp->mem + ((aligned_addr + 8) & 0xFFF),
-    sizeof(datahigh));
+  if (offset) {
+    uint32_t aligned_addr_lo = addr & ~0x7;
+    uint32_t aligned_addr_hi = (aligned_addr_lo + 8) & 0xFFF;
+    __m128i temp;
 
-  temp = _mm_loadl_epi64((__m128i *) &datahigh);
-  data = _mm_loadl_epi64((__m128i *) &datalow);
-  data = _mm_unpacklo_epi64(data, temp);
+    data = _mm_loadl_epi64((__m128i *) (rsp->mem + aligned_addr_lo));
+    temp = _mm_loadl_epi64((__m128i *) (rsp->mem + aligned_addr_hi));
+    data = _mm_unpacklo_epi64(data, temp);
+  }
+
+  else
+    data = _mm_loadl_epi64((__m128i *) (rsp->mem + addr));
 
   // Shift the DQM up to the point where we mux in the data.
   ekey = _mm_load_si128((__m128i *) (sll_b2l_keys + element));
@@ -287,6 +290,50 @@ void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   reg = _mm_andnot_si128(dqm, reg);
   data = _mm_or_si128(data, reg);
 #endif
+
+  _mm_store_si128((__m128i *) regp, data);
+}
+
+//
+// SSSE3+ accelerated loads for group II.
+//
+// TODO: Reverse-engineer what happens when loads to vector elements must
+//       wraparound. Do we just discard the data, as below, or does the
+//       data effectively get rotated around the edge of the vector?
+//
+// TODO: Reverse-engineer what happens when element != 0.
+//
+void rsp_vload_group2(struct rsp *rsp, uint32_t addr, unsigned element,
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
+  unsigned offset = addr & 0x7;
+  __m128i data, zero;
+
+  // Always load in 8-byte chunks to emulate wraparound.
+  if (offset) {
+    uint32_t aligned_addr_lo = addr & ~0x7;
+    uint32_t aligned_addr_hi = (aligned_addr_lo + 8) & 0xFFF;
+    uint64_t datalow, datahigh;
+
+    memcpy(&datalow, rsp->mem + aligned_addr_lo, sizeof(datalow));
+    memcpy(&datahigh, rsp->mem + aligned_addr_hi, sizeof(datahigh));
+
+    // TODO: Test for endian issues?
+    datahigh >>= ((8 - offset) << 3);
+    datalow <<= (offset << 3);
+    datalow = datahigh | datalow;
+
+    data = _mm_loadl_epi64((__m128i *) &datalow);
+  }
+
+  else
+    data = _mm_loadl_epi64((__m128i *) (rsp->mem + addr));
+
+  // "Unpack" the data.
+  zero = _mm_setzero_si128();
+  data = _mm_unpacklo_epi8(zero, data);
+
+  if (rsp->pipeline.exdf_latch.request.type != RSP_MEM_REQUEST_PACK)
+    data = _mm_srli_epi16(data, 1);
 
   _mm_store_si128((__m128i *) regp, data);
 }
@@ -344,20 +391,8 @@ void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
 //
 void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
-  __m128i ekey, data, temp;
-
-  uint32_t aligned_addr_lo = addr & ~0x7;
-  uint32_t aligned_addr_hi = (aligned_addr_lo + 8) & 0xFFF;
   unsigned offset = addr & 0x7;
-  uint64_t datalow, datahigh;
-
-  // Always load in 8-byte chunks to emulate wraparound.
-  memcpy(&datalow, rsp->mem + aligned_addr_lo, sizeof(datalow));
-  memcpy(&datahigh, rsp->mem + aligned_addr_hi, sizeof(datahigh));
-
-  temp = _mm_loadl_epi64((__m128i *) &datahigh);
-  data = _mm_loadl_epi64((__m128i *) &datalow);
-  data = _mm_unpacklo_epi64(data, temp);
+  __m128i ekey, data;
 
   // Shift the DQM up to the point where we mux in the data.
   ekey = _mm_load_si128((__m128i *) (sll_l2b_keys + offset));
@@ -370,6 +405,16 @@ void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
 
   reg = _mm_shuffle_epi8(reg, ekey);
 
+  // Always load in 8-byte chunks to emulate wraparound.
+  if (offset) {
+    uint32_t aligned_addr_lo = addr & ~0x7;
+    uint32_t aligned_addr_hi = (aligned_addr_lo + 8) & 0xFFF;
+    __m128i temp;
+
+    data = _mm_loadl_epi64((__m128i *) (rsp->mem + aligned_addr_lo));
+    temp = _mm_loadl_epi64((__m128i *) (rsp->mem + aligned_addr_hi));
+    data = _mm_unpacklo_epi64(data, temp);
+
   // Mask and mux in the data.
 #ifdef __SSE4_1__
   data = _mm_blendv_epi8(data, reg, dqm);
@@ -379,11 +424,51 @@ void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   data = _mm_or_si128(data, reg);
 #endif
 
-  // Always store in 8-byte chunks to emulate wraparound.
-  _mm_storel_epi64((__m128i *) (rsp->mem + aligned_addr_lo), data);
+    _mm_storel_epi64((__m128i *) (rsp->mem + aligned_addr_lo), data);
 
-  data = _mm_srli_si128(data, 8);
-  _mm_storel_epi64((__m128i *) (rsp->mem + aligned_addr_hi), data);
+    data = _mm_srli_si128(data, 8);
+    _mm_storel_epi64((__m128i *) (rsp->mem + aligned_addr_hi), data);
+  }
+
+  else {
+    data = _mm_loadl_epi64((__m128i *) (rsp->mem + addr));
+
+  // Mask and mux in the data.
+#ifdef __SSE4_1__
+  data = _mm_blendv_epi8(data, reg, dqm);
+#else
+  data = _mm_andnot_si128(dqm, data);
+  reg = _mm_and_si128(dqm, reg);
+  data = _mm_or_si128(data, reg);
+#endif
+
+    _mm_storel_epi64((__m128i *) (rsp->mem + addr), data);
+  }
+}
+
+//
+// SSE3+ accelerated stores for group II. Byteswap 2-byte little-endian
+// vector back to big-endian. Start at vector element offset, wrapping
+// around the edge of the vector as necessary.
+//
+// TODO: Reverse-engineer what happens when stores from vector elements
+//       must wraparound. Do we just stop storing the data, or do we
+//       continue storing from the front of the vector, as below?
+//
+// TODO: Reverse-engineer what happens when element != 0.
+//
+void rsp_vstore_group2(struct rsp *rsp, uint32_t addr, unsigned element,
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
+
+  // "Pack" the data.
+  if (rsp->pipeline.exdf_latch.request.type != RSP_MEM_REQUEST_PACK)
+    reg = _mm_slli_epi16(reg, 1);
+
+  reg = _mm_srai_epi16(reg, 8);
+  reg = _mm_packs_epi16(reg, reg);
+
+  // TODO: Always store in 8-byte chunks to emulate wraparound.
+  _mm_storel_epi64((__m128i *) (rsp->mem + addr), reg);
 }
 
 //

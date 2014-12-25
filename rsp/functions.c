@@ -395,6 +395,38 @@ void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
 }
 
 //
+// LPV
+// LUV
+// SPV
+// SUV
+//
+void RSP_LFHPUV_SFHPUV(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+  unsigned dest = GET_VT(iw);
+
+  static const enum rsp_mem_request_type fhpu_type_lut[4] = {
+    RSP_MEM_REQUEST_PACK,
+    RSP_MEM_REQUEST_UPACK,
+    RSP_MEM_REQUEST_HALF,
+    RSP_MEM_REQUEST_FOURTH
+  };
+
+  exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << 3);
+
+//  memcpy(&exdf_latch->request.vdqm.e,
+//    rsp_fhpu_lut[exdf_latch->request.addr & 0xF],
+//    sizeof(exdf_latch->request.vdqm.e));
+
+  exdf_latch->request.type = fhpu_type_lut[(iw >> 11 & 0x1F) - 6];
+  exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
+    ? rsp_vstore_group2
+    : rsp_vload_group2;
+
+  exdf_latch->result.dest = dest + NUM_RSP_REGISTERS;
+}
+
+//
 // LQV
 // LRV
 // SQV
