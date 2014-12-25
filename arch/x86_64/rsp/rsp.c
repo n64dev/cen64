@@ -186,22 +186,6 @@ cen64_align(const uint16_t ror_l2b_keys[16][8], CACHE_LINE_SIZE) = {
 };
 #endif
 
-//
-// Mask table for VRCP(LH) and VRSQ(LH) functions, used
-// for muxing in/out only one element at a time.
-//
-cen64_align(const uint16_t vdiv_mask_table[8][8], 16) = {
-  {~0, 0, 0, 0, 0, 0, 0, 0},
-  {0, ~0, 0, 0, 0, 0, 0, 0},
-  {0, 0, ~0, 0, 0, 0, 0, 0},
-  {0, 0, 0, ~0, 0, 0, 0, 0},
-  {0, 0, 0, 0, ~0, 0, 0, 0},
-  {0, 0, 0, 0, 0, ~0, 0, 0},
-  {0, 0, 0, 0, 0, 0, ~0, 0},
-  {0, 0, 0, 0, 0, 0, 0, ~0}
-};
-
-
 // Deallocates dynarec buffers for SSE2.
 void arch_rsp_destroy(struct rsp *rsp) {}
 
