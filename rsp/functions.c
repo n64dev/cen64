@@ -21,11 +21,6 @@
 #include "rsp/pipeline.h"
 #include "vr4300/interface.h"
 
-// Function to sign-extend 6-bit values.
-static inline int sign_extend_6bit(int i) {
-  return i | -(i & 0x40);
-}
-
 // Mask to negate second operand if subtract operation.
 cen64_align(static const uint32_t rsp_addsub_lut[4], 16) = {
   0x0U, ~0x0U, ~0x0U, ~0x0U
@@ -40,7 +35,7 @@ cen64_align(static const uint32_t rsp_bitwise_lut[4][2], 32) = {
 };
 
 // Mask to denote which part of the vector to load/store.
-cen64_align(static const uint16_t rsp_bdls_lut[4][4], 8) = {
+cen64_align(static const uint16_t rsp_bdls_lut[4][4], CACHE_LINE_SIZE) = {
   {0xFF00, 0x0000, 0x0000, 0x0000}, // B
   {0xFFFF, 0x0000, 0x0000, 0x0000}, // S
   {0xFFFF, 0xFFFF, 0x0000, 0x0000}, // L
@@ -81,7 +76,7 @@ cen64_align(static const uint32_t rsp_load_sex_mask[2][4], 32) = {
 };
 
 // Function to sign-extend 6-bit values.
-static inline int sign_extend_6(int i) {
+static inline unsigned sign_extend_6(int i) {
   return i | -(i & 0x40);
 }
 

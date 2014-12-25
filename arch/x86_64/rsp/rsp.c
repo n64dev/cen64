@@ -284,14 +284,14 @@ void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
 
   // Mask and mux in the data.
 #ifdef __SSE4_1__
-  data = _mm_blendv_epi8(reg, data, dqm);
+  reg = _mm_blendv_epi8(reg, data, dqm);
 #else
   data = _mm_and_si128(dqm, data);
   reg = _mm_andnot_si128(dqm, reg);
-  data = _mm_or_si128(data, reg);
+  reg = _mm_or_si128(data, reg);
 #endif
 
-  _mm_store_si128((__m128i *) regp, data);
+  _mm_store_si128((__m128i *) regp, reg);
 }
 
 //
@@ -417,11 +417,11 @@ void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
 
   // Mask and mux in the data.
 #ifdef __SSE4_1__
-  data = _mm_blendv_epi8(data, reg, dqm);
+    data = _mm_blendv_epi8(data, reg, dqm);
 #else
-  data = _mm_andnot_si128(dqm, data);
-  reg = _mm_and_si128(dqm, reg);
-  data = _mm_or_si128(data, reg);
+    data = _mm_andnot_si128(dqm, data);
+    reg = _mm_and_si128(dqm, reg);
+    data = _mm_or_si128(data, reg);
 #endif
 
     _mm_storel_epi64((__m128i *) (rsp->mem + aligned_addr_lo), data);
@@ -435,11 +435,11 @@ void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
 
   // Mask and mux in the data.
 #ifdef __SSE4_1__
-  data = _mm_blendv_epi8(data, reg, dqm);
+    data = _mm_blendv_epi8(data, reg, dqm);
 #else
-  data = _mm_andnot_si128(dqm, data);
-  reg = _mm_and_si128(dqm, reg);
-  data = _mm_or_si128(data, reg);
+    data = _mm_andnot_si128(dqm, data);
+    reg = _mm_and_si128(dqm, reg);
+    data = _mm_or_si128(data, reg);
 #endif
 
     _mm_storel_epi64((__m128i *) (rsp->mem + addr), data);
