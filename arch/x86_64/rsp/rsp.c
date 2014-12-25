@@ -210,8 +210,7 @@ int arch_rsp_init(struct rsp *rsp) { return 0; }
 
 #ifndef __SSSE3__
 __m128i rsp_vect_load_and_shuffle_operand(
-  const __m128i *srcp, unsigned element) {
-  const uint16_t *src = (const uint16_t *) srcp;
+  const uint16_t *srcp, unsigned element) {
   uint16_t word_lo, word_hi;
   uint64_t dword;
 
@@ -254,7 +253,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
     return _mm_or_si128(vhi, vlo);
   }
 
-  return rsp_vect_load_unshuffled_operand(srcp);
+  return rsp_vect_load_unshuffled_operand((__m128i *) src);
 }
 #endif
 
@@ -269,7 +268,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
 //       data effectively get rotated around the edge of the vector?
 //
 void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
-  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
   __m128i ekey, data, temp;
 
   uint32_t aligned_addr = addr & ~0x7;
@@ -305,7 +304,7 @@ void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   data = _mm_or_si128(data, reg);
 #endif
 
-  _mm_store_si128(regp, data);
+  _mm_store_si128((__m128i *) regp, data);
 }
 
 //
@@ -317,7 +316,7 @@ void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
 //       element is large).
 //
 void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
-  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
   uint32_t aligned_addr = addr & 0xFF0;
   unsigned offset = addr & 0xF;
   unsigned rol;
@@ -347,7 +346,7 @@ void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
   data = _mm_or_si128(data, reg);
 #endif
 
-  _mm_store_si128(regp, data);
+  _mm_store_si128((__m128i *) regp, data);
 }
 
 //
@@ -360,7 +359,7 @@ void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
 //       continue storing from the front of the vector, as below?
 //
 void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
-  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
   __m128i ekey, data, temp;
 
   uint32_t aligned_addr_lo = addr & ~0x7;
@@ -408,7 +407,7 @@ void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
 // vector back to big-endian. Stop storing at quadword boundaries.
 //
 void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
-  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
   uint32_t aligned_addr = addr & 0xFF0; 
   unsigned offset = addr & 0xF;
   unsigned rol = offset;

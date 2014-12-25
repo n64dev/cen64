@@ -130,8 +130,8 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
   vd = GET_VD(iw);
   e  = GET_E (iw);
 
-  vs_reg = rsp_vect_load_unshuffled_operand(rsp->cp2.regs + vs);
-  vt_shuf_reg = rsp_vect_load_and_shuffle_operand(rsp->cp2.regs + vt, e);
+  vs_reg = rsp_vect_load_unshuffled_operand(rsp->cp2.regs[vs].e);
+  vt_shuf_reg = rsp_vect_load_and_shuffle_operand(rsp->cp2.regs[vt].e, e);
   zero = rsp_vzero();
 
   // Finally, execute the instruction.
@@ -143,7 +143,7 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
   exdf_latch->result.dest = RSP_REGISTER_R0;
   exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
   vd_reg = rsp_vector_function_table[rdex_latch->opcode.id](
-    rsp, iw, rsp->cp2.acc, vs_reg, vt_shuf_reg, zero);
+    rsp, iw, rsp->cp2.acc.e, vs_reg, vt_shuf_reg, zero);
 
   rsp_vect_write_operand(rsp->cp2.regs + vd, vd_reg);
 }
@@ -165,8 +165,8 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   // Vector unit DMEM access.
   if (exdf_latch->result.dest >= NUM_RSP_REGISTERS) {
-    rsp_vect_t *regp = rsp->cp2.regs + (exdf_latch->result.dest -
-      NUM_RSP_REGISTERS);
+    uint16_t *regp = rsp->cp2.regs[
+      exdf_latch->result.dest - NUM_RSP_REGISTERS].e;
 
     unsigned element = request->element;
     rsp_vect_t reg, dqm;

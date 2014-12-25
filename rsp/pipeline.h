@@ -36,7 +36,7 @@ struct rsp_mem_request {
   unsigned size, element;
 
   void (*vldst_func)(struct rsp *rsp, uint32_t addr, unsigned element,
-    rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
+    uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 };
 
 struct rsp_latch {

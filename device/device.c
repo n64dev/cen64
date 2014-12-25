@@ -146,14 +146,14 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
     memset(&vr4300_stats, 0, sizeof(vr4300_stats));
 
     // Preserve host registers pinned to the device.
-    acc_lo = read_acc_lo(device->rsp.cp2.acc);
-    acc_md = read_acc_md(device->rsp.cp2.acc);
-    acc_hi = read_acc_hi(device->rsp.cp2.acc);
+    acc_lo = read_acc_lo(device->rsp.cp2.acc.e);
+    acc_md = read_acc_md(device->rsp.cp2.acc.e);
+    acc_hi = read_acc_hi(device->rsp.cp2.acc.e);
     saved_fpu_state = fpu_get_state();
 
-    write_acc_lo(device->rsp.cp2.acc, rsp_vzero());
-    write_acc_md(device->rsp.cp2.acc, rsp_vzero());
-    write_acc_hi(device->rsp.cp2.acc, rsp_vzero());
+    write_acc_lo(device->rsp.cp2.acc.e, rsp_vzero());
+    write_acc_md(device->rsp.cp2.acc.e, rsp_vzero());
+    write_acc_hi(device->rsp.cp2.acc.e, rsp_vzero());
     vr4300_cp1_init(&device->vr4300);
 
     // Spin the device until we return (from setjmp).
@@ -164,9 +164,9 @@ int device_run(struct cen64_device *device, struct cen64_options *options,
 #endif
 
     // Restore host registers pinned to the device.
-    write_acc_lo(device->rsp.cp2.acc, acc_lo);
-    write_acc_md(device->rsp.cp2.acc, acc_md);
-    write_acc_hi(device->rsp.cp2.acc, acc_hi);
+    write_acc_lo(device->rsp.cp2.acc.e, acc_lo);
+    write_acc_md(device->rsp.cp2.acc.e, acc_md);
+    write_acc_hi(device->rsp.cp2.acc.e, acc_hi);
     fpu_set_state(saved_fpu_state);
 
     // Finalize simulation, release memory, etc.

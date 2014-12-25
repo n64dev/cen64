@@ -25,7 +25,6 @@
 
 struct rsp;
 typedef __m128i rsp_vect_t;
-typedef __m128i *rsp_vect_ptr_t;
 
 // Gives the architecture backend a chance to initialize the RSP.
 void arch_rsp_destroy(struct rsp *rsp);
@@ -36,7 +35,7 @@ int arch_rsp_init(struct rsp *rsp);
 extern const uint16_t shuffle_keys[16][8];
 
 static inline __m128i rsp_vect_load_and_shuffle_operand(
-  const __m128i *src, unsigned element) {
+  const uint16_t *src, unsigned element) {
   __m128i operand = _mm_load_si128((__m128i*) src);
   __m128i key = _mm_load_si128((__m128i*) shuffle_keys[element]);
 
@@ -44,31 +43,39 @@ static inline __m128i rsp_vect_load_and_shuffle_operand(
 }
 #else
 __m128i rsp_vect_load_and_shuffle_operand(
-  const __m128i *src, unsigned element);
+  const uint16_t *src, unsigned element);
 #endif
 
 // Loads a vector without shuffling its elements.
-static inline __m128i rsp_vect_load_unshuffled_operand(const __m128i *src) {
-  return _mm_load_si128((__m128i*) src);
+static inline __m128i rsp_vect_load_unshuffled_operand(uint16_t *src) {
+  return _mm_load_si128((__m128i *) src);
 }
 
 // Writes an operand back to memory.
-static inline void rsp_vect_write_operand(__m128i *dest, __m128i src) {
+static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
   _mm_store_si128((__m128i*) dest, src);
 }
 
 // Returns scalar bitmasks for VCO, VCC, and VCE.
-static inline int16_t rsp_get_vco(const __m128i *vco) {
-  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(vco[1], vco[0]));
+static inline int16_t rsp_get_vco(const uint16_t *vcolo, const uint16_t *vcohi) {
+  __m128i lo = _mm_load_si128((__m128i *) vcolo);
+  __m128i hi = _mm_load_si128((__m128i *) vcohi);
+
+  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(lo, hi));
 }
 
-static inline int16_t rsp_get_vcc(const __m128i *vcc) {
-  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(vcc[1], vcc[0]));
+static inline int16_t rsp_get_vcc(const uint16_t *vcclo, const uint16_t *vcchi) {
+  __m128i lo = _mm_load_si128((__m128i *) vcclo);
+  __m128i hi = _mm_load_si128((__m128i *) vcchi);
+
+  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(lo, hi));
 }
 
 // TODO: Sign-extended, or no?
-static inline uint8_t rsp_get_vce(const __m128i vce) {
-  return (uint8_t) _mm_movemask_epi8(vce);
+static inline uint8_t rsp_get_vce(const uint16_t *vce) {
+  __m128i v = _mm_load_si128((__m128i *) vce);
+
+  return (uint8_t) _mm_movemask_epi8(v);
 }
 
 // Functions for reading/writing the accumulator.
@@ -85,42 +92,42 @@ register __m128i hr_acc_md __asm__ ("xmm14");
 register __m128i hr_acc_hi __asm__ ("xmm15");
 #endif
 
-static inline __m128i read_acc_lo(const __m128i *acc) {
+static inline __m128i read_acc_lo(const uint16_t *acc) {
   return hr_acc_lo;
 }
-static inline __m128i read_acc_md(const __m128i *acc) {
+static inline __m128i read_acc_md(const uint16_t *acc) {
   return hr_acc_md;
 }
-static inline __m128i read_acc_hi(const __m128i *acc) {
+static inline __m128i read_acc_hi(const uint16_t *acc) {
   return hr_acc_hi;
 }
-static inline void write_acc_lo(__m128i *acc, __m128i acc_lo) {
+static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
   __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_lo) : "x"(acc_lo));
 }
-static inline void write_acc_md(__m128i *acc, __m128i acc_md) {
+static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
   __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_md) : "x"(acc_md));
 }
-static inline void write_acc_hi(__m128i *acc, __m128i acc_hi) {
+static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
   __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_hi) : "x"(acc_hi));
 }
 #else
-static inline __m128i read_acc_lo(const __m128i *acc) {
+static inline __m128i read_acc_lo(const uint16_t *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 16);
 }
-static inline __m128i read_acc_md(const __m128i *acc) {
+static inline __m128i read_acc_md(const uint16_t *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 8);
 }
-static inline __m128i read_acc_hi(const __m128i *acc) {
+static inline __m128i read_acc_hi(const uint16_t *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 0);
 }
-static inline void write_acc_lo(__m128i *acc, __m128i acc_lo) {
+static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
   rsp_vect_write_operand(acc + 16, acc_lo);
 }
-static inline void write_acc_md(__m128i *acc, __m128i acc_md) {
+static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
   rsp_vect_write_operand(acc + 8, acc_md);
 }
-static inline void write_acc_hi(__m128i *acc, __m128i acc_hi) {
-  rsp_vect_write_operand(acc + 0, acc_hi);
+static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
+  rsp_vect_write_operand(acc, acc_hi);
 }
 #endif
 
@@ -148,16 +155,16 @@ static inline __m128i rsp_vset(void) {
 
 // Load and store functions.
 void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
-  __m128i *regp, __m128i reg, __m128i dqm);
+  uint16_t *regp, __m128i reg, __m128i dqm);
 
 void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
-  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 
 void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
-  __m128i *regp, __m128i reg, __m128i dqm);
+  uint16_t *regp, __m128i reg, __m128i dqm);
 
 void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
-  rsp_vect_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
+  uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 
 #include "arch/x86_64/rsp/clamp.h"
 #include "arch/x86_64/rsp/vabs.h"
