@@ -383,7 +383,7 @@ void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
   exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << shift_and_idx);
 
   __m128i vdqm = _mm_loadl_epi64((__m128i *) (rsp_bdls_lut[shift_and_idx]));
-  _mm_store_si128(&exdf_latch->request.vdqm, vdqm);
+  _mm_store_si128((__m128i *) exdf_latch->request.vdqm.e, vdqm);
 
   exdf_latch->request.element = GET_EL(iw);
   exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR;
@@ -407,9 +407,9 @@ void RSP_LQRV_SQRV(struct rsp *rsp,
 
   exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << 4);
 
-  memcpy(&exdf_latch->request.vdqm,
+  memcpy(&exdf_latch->request.vdqm.e,
     rsp_qr_lut[exdf_latch->request.addr & 0xF],
-    sizeof(exdf_latch->request.vdqm));
+    sizeof(exdf_latch->request.vdqm.e));
 
   exdf_latch->request.element = GET_EL(iw);
   exdf_latch->request.type = (iw >> 11 & 0x1)

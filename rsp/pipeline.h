@@ -12,6 +12,7 @@
 #define __rsp_pipeline_h__
 #include "common.h"
 #include "rsp/decoder.h"
+#include "rsp/cp2.h"
 #include "rsp/rsp.h"
 
 struct rsp;
@@ -26,8 +27,7 @@ enum rsp_mem_request_type {
 };
 
 struct rsp_mem_request {
-  rsp_vect_t vdata;
-  rsp_vect_t vdqm;
+  union aligned_rsp_vect_t vdqm;
   uint32_t addr;
   uint32_t data;
   uint32_t dqm;

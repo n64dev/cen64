@@ -171,7 +171,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
     unsigned element = request->element;
     rsp_vect_t reg, dqm;
 
-    dqm = rsp_vect_load_unshuffled_operand(&exdf_latch->request.vdqm);
+    dqm = rsp_vect_load_unshuffled_operand(exdf_latch->request.vdqm.e);
     reg = rsp_vect_load_unshuffled_operand(regp);
 
     // Make sure the scalar unit doesn't

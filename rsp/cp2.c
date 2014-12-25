@@ -50,8 +50,8 @@ void RSP_MFC2(struct rsp *rsp,
   element = GET_EL(iw);
   dest = GET_RT(iw);
 
-  low = e[element & 0xE] >> ((element & 0x1) << 3);
-  high = e[(element + 1) & 0xE] >> (((element + 1) & 0x1) << 3);
+  low = e[element >> 1] >> ((element & 0x1) << 3);
+  high = e[(element + 1) >> 1] >> (((element + 1) & 0x1) << 3);
   data = (int16_t) ((high << 8) | low);
 
   exdf_latch->result.result = data;
