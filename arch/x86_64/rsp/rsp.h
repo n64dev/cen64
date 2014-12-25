@@ -47,7 +47,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
 #endif
 
 // Loads a vector without shuffling its elements.
-static inline __m128i rsp_vect_load_unshuffled_operand(uint16_t *src) {
+static inline __m128i rsp_vect_load_unshuffled_operand(const uint16_t *src) {
   return _mm_load_si128((__m128i *) src);
 }
 
@@ -201,6 +201,9 @@ void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
 extern const uint16_t vdiv_mask_table[8][8];
 
 __m128i rsp_vdivh(struct rsp *rsp,
+  unsigned src, unsigned e, unsigned dest, unsigned de);
+
+__m128i rsp_vmov(struct rsp *rsp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
 __m128i rsp_vrcp(struct rsp *rsp, int dp,

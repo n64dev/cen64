@@ -36,3 +36,25 @@ void RSP_CFC2(struct rsp *rsp,
   exdf_latch->result.dest = dest;
 }
 
+//
+// MFC2
+//
+void RSP_MFC2(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+  const uint16_t *e = rsp->cp2.regs[GET_RD(iw)].e;
+  unsigned dest, element;
+  uint8_t low, high;
+  uint32_t data;
+
+  element = GET_EL(iw);
+  dest = GET_RT(iw);
+
+  low = e[element & 0xE] >> ((element & 0x1) << 3);
+  high = e[(element + 1) & 0xE] >> (((element + 1) & 0x1) << 3);
+  data = (int16_t) ((high << 8) | low);
+
+  exdf_latch->result.result = data;
+  exdf_latch->result.dest = dest;
+}
+

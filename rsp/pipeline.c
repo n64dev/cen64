@@ -145,7 +145,7 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
   vd_reg = rsp_vector_function_table[rdex_latch->opcode.id](
     rsp, iw, rsp->cp2.acc.e, vs_reg, vt_shuf_reg, zero);
 
-  rsp_vect_write_operand(rsp->cp2.regs + vd, vd_reg);
+  rsp_vect_write_operand(rsp->cp2.regs[vd].e, vd_reg);
 }
 
 // Data cache fetch stage.
