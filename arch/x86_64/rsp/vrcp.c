@@ -21,7 +21,7 @@ __m128i rsp_vrcp(struct rsp *rsp, int dp,
   unsigned shift, idx;
 
   // Get the element from VT.
-  vt = rsp->cp2.regs[src].e[e];
+  vt = rsp->cp2.regs[src].e[e & 0x7];
 
   dp_input = ((uint32_t) rsp->cp2.div_in << 16) | (uint16_t) vt;
   sp_input = vt;
@@ -52,7 +52,7 @@ __m128i rsp_vrcp(struct rsp *rsp, int dp,
 
   // Write out the results.
   rsp->cp2.div_out = result >> 16;
-  rsp->cp2.regs[dest].e[de] = result;
+  rsp->cp2.regs[dest].e[de & 0x7] = result;
 
   return rsp_vect_load_unshuffled_operand(rsp->cp2.regs[dest].e);
 }
