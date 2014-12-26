@@ -55,8 +55,9 @@ void RSP_MFC2(struct rsp *rsp,
   if (element & 0x1) {
     unsigned hi = (element + 1) >> 1;
 
-    low = e[lo] >> 8;
-    high = e[hi] << 8;
+    high = e[lo] << 8;
+    low = e[hi] >> 8;
+
     data = (int16_t) (high | low);
   }
 
@@ -79,8 +80,8 @@ void RSP_MTC2(struct rsp *rsp,
   if (element & 0x1) {
     unsigned hi = (element + 1) >> 1;
 
-    e[lo] = (e[lo] & 0x00FF) | (rt << 8);
-    e[hi] = (e[hi] & 0xFF00) | (rt >> 8 & 0xFF);
+    e[lo] = (e[lo] & 0xFF00) | (rt >> 8 & 0xFF);
+    e[hi] = (e[hi] & 0x00FF) | ((rt & 0xFF) << 8);
   }
 
   else
