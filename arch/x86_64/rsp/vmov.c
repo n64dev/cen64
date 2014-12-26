@@ -14,7 +14,7 @@ __m128i rsp_vmov(struct rsp *rsp,
   uint16_t data;
 
   // Get the element from VT.
-  data = rsp->cp2.div_in = rsp->cp2.regs[src].e[e];
+  data = rsp->cp2.regs[src].e[e];
 
   // Write out the upper part of the result.
   rsp->cp2.regs[dest].e[de] = data;
