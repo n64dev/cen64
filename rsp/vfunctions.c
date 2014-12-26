@@ -108,6 +108,9 @@ rsp_vect_t RSP_VCL(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 
   rsp_vect_write_operand(rsp->cp2.vcc[0].e, ge);
   rsp_vect_write_operand(rsp->cp2.vcc[1].e, le);
+  rsp_vect_write_operand(rsp->cp2.vco[0].e, zero);
+  rsp_vect_write_operand(rsp->cp2.vco[1].e, zero);
+  rsp_vect_write_operand(rsp->cp2.vce.e, zero);
   write_acc_lo(acc, result);
   return result;
 }
