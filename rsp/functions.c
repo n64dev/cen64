@@ -434,7 +434,7 @@ void RSP_LQRV_SQRV(struct rsp *rsp,
 
   exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << 4);
 
-  memcpy(&exdf_latch->request.vdqm.e,
+  memcpy(exdf_latch->request.vdqm.e,
     rsp_qr_lut[exdf_latch->request.addr & 0xF],
     sizeof(exdf_latch->request.vdqm.e));
 
