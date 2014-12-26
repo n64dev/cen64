@@ -27,6 +27,8 @@
 #include "vr4300/cpu.h"
 #include "vr4300/cp1.h"
 
+cen64_cold int angrylion_rdp_init(struct cen64_device *device);
+
 // Only used when passed -nointerface.
 bool device_exit_requested;
 
@@ -115,6 +117,7 @@ struct cen64_device *device_create(struct cen64_device *device,
     return NULL;
   }
 
+  angrylion_rdp_init(device);
   return device;
 }
 

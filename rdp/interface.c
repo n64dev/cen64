@@ -13,6 +13,19 @@
 #include "rdp/cpu.h"
 #include "rdp/interface.h"
 
+#define DP_XBUS_DMEM_DMA          0x00000001
+#define DP_FREEZE                 0x00000002
+#define DP_FLUSH                  0x00000004
+
+#define DP_CLEAR_XBUS_DMEM_DMA    0x00000001
+#define DP_SET_XBUS_DMEM_DMA      0x00000002
+#define DP_CLEAR_FREEZE           0x00000004
+#define DP_SET_FREEZE             0x00000008
+#define DP_CLEAR_FLUSH            0x00000010
+#define DP_SET_FLUSH              0x00000020
+
+void rdp_process_list(void);
+
 // Reads a word from the DP MMIO register space.
 int read_dp_regs(void *opaque, uint32_t address, uint32_t *word) {
   struct rdp *rdp = (struct rdp *) opaque;
@@ -31,8 +44,41 @@ int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   enum dp_register reg = (offset >> 2);
 
   debug_mmio_write(dp, dp_register_mnemonics[reg], word, dqm);
-  rdp->regs[reg] &= ~dqm;
-  rdp->regs[reg] |= word;
+
+  switch (reg) {
+    case DPC_START_REG:
+      rdp->regs[DPC_CURRENT_REG] = word;
+      rdp->regs[DPC_START_REG] = word;
+      break;
+
+    case DPC_END_REG:
+      rdp->regs[DPC_END_REG] = word;
+      rdp_process_list();
+      break;
+
+    case DPC_STATUS_REG:
+      if (word & DP_CLEAR_XBUS_DMEM_DMA)
+        rdp->regs[DPC_STATUS_REG] &= ~DP_XBUS_DMEM_DMA;
+      else if (word & DP_SET_XBUS_DMEM_DMA)
+        rdp->regs[DPC_STATUS_REG] |= DP_XBUS_DMEM_DMA;
+
+      if (word & DP_CLEAR_FREEZE)
+        rdp->regs[DPC_STATUS_REG] &= ~DP_FREEZE;
+      else if (word & DP_SET_FREEZE)
+        rdp->regs[DPC_STATUS_REG] |= DP_FREEZE;
+
+      if (word & DP_CLEAR_FLUSH)
+        rdp->regs[DPC_STATUS_REG] &= ~DP_FLUSH;
+      else if (word & DP_SET_FLUSH)
+        rdp->regs[DPC_STATUS_REG] |= DP_FLUSH;
+      break;
+
+    default:
+      rdp->regs[reg] &= ~dqm;
+      rdp->regs[reg] |= word;
+      break;
+  }
+
   return 0;
 }
 
