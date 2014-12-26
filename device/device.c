@@ -29,6 +29,7 @@
 #include "vr4300/cp1.h"
 #include <setjmp.h>
 
+cen64_cold int angrylion_rdp_init(struct cen64_device *device);
 cen64_cold static int device_debug_spin(struct cen64_device *device);
 cen64_cold static int device_multithread_spin(struct cen64_device *device);
 cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
@@ -119,6 +120,7 @@ struct cen64_device *device_create(struct cen64_device *device,
     return NULL;
   }
 
+  angrylion_rdp_init(device);
   return device;
 }
 

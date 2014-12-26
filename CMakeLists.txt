@@ -333,6 +333,7 @@ set(PI_SOURCES
 set(RDP_SOURCES
   ${PROJECT_SOURCE_DIR}/rdp/cpu.c
   ${PROJECT_SOURCE_DIR}/rdp/interface.c
+  ${PROJECT_SOURCE_DIR}/rdp/n64video.c
 )
 
 set(RI_SOURCES
