@@ -115,7 +115,7 @@ cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0F80, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080},
 };
 
-cen64_align(const uint16_t rol_b2l_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(const uint16_t ror_b2l_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x0102, 0x0304, 0x0506, 0x0708, 0x090A, 0x0B0C, 0x0D0E, 0x0F00},
   {0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x0001},
@@ -256,6 +256,7 @@ void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   __m128i ekey, data;
 
   unsigned offset = addr & 0x7;
+  unsigned ror = offset - element;
 
   // Always load in 8-byte chunks to emulate wraparound.
   if (offset) {
@@ -272,14 +273,11 @@ void rsp_vload_group1(struct rsp *rsp, uint32_t addr, unsigned element,
     data = _mm_loadl_epi64((__m128i *) (rsp->mem + addr));
 
   // Shift the DQM up to the point where we mux in the data.
-  ekey = _mm_load_si128((__m128i *) (sll_b2l_keys + element));
+  ekey = _mm_load_si128((__m128i *) (sll_b2l_keys[element]));
   dqm = _mm_shuffle_epi8(dqm, ekey);
 
   // Align the data to the DQM so we can mask it in.
-  ekey = (element > offset)
-    ? _mm_load_si128((__m128i *) (sll_b2l_keys + (element - offset)))
-    : _mm_load_si128((__m128i *) (srl_b2l_keys + (offset - element)));
-
+  ekey = _mm_load_si128((__m128i *) (ror_b2l_keys[ror & 0xF]));
   data = _mm_shuffle_epi8(data, ekey);
 
   // Mask and mux in the data.
@@ -350,21 +348,21 @@ void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
   uint32_t aligned_addr = addr & 0xFF0;
   unsigned offset = addr & 0xF;
-  unsigned rol;
+  unsigned ror;
 
   __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
   __m128i dkey;
 
   if (rsp->pipeline.exdf_latch.request.type == RSP_MEM_REQUEST_QUAD)
-    rol = 16 - element + offset;
+    ror = 16 - element + offset;
 
   // TODO: How is this adjusted for LRV when e != 0?
   else {
     dqm = _mm_cmpeq_epi8(_mm_setzero_si128(), dqm);
-    rol = 16 - offset;
+    ror = 16 - offset;
   }
 
-  dkey = _mm_load_si128((__m128i *) (rol_b2l_keys[rol & 0xF]));
+  dkey = _mm_load_si128((__m128i *) (ror_b2l_keys[ror & 0xF]));
   data = _mm_shuffle_epi8(data, dkey);
   dqm = _mm_shuffle_epi8(dqm, dkey);
 
@@ -392,17 +390,15 @@ void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
 void rsp_vstore_group1(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm) {
   unsigned offset = addr & 0x7;
+  unsigned ror = element - offset;
   __m128i ekey, data;
 
   // Shift the DQM up to the point where we mux in the data.
-  ekey = _mm_load_si128((__m128i *) (sll_l2b_keys + offset));
+  ekey = _mm_load_si128((__m128i *) (sll_l2b_keys[offset]));
   dqm = _mm_shuffle_epi8(dqm, ekey);
 
   // Rotate the reg to align with the DQM.
-  ekey = (element > offset)
-    ? _mm_load_si128((__m128i *) (ror_l2b_keys + (element - offset)))
-    : _mm_load_si128((__m128i *) (sll_l2b_keys + (offset - element)));
-
+  ekey = _mm_load_si128((__m128i *) (ror_l2b_keys[ror & 0xF]));
   reg = _mm_shuffle_epi8(reg, ekey);
 
   // Always load in 8-byte chunks to emulate wraparound.
