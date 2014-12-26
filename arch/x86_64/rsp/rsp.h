@@ -75,7 +75,7 @@ static inline int16_t rsp_get_vcc(const uint16_t *vcclo, const uint16_t *vcchi) 
 static inline uint8_t rsp_get_vce(const uint16_t *vce) {
   __m128i v = _mm_load_si128((__m128i *) vce);
 
-  return (uint8_t) _mm_movemask_epi8(v);
+  return (uint8_t) _mm_movemask_epi8(_mm_packs_epi16(v, v));
 }
 
 // Functions for reading/writing the accumulator.
