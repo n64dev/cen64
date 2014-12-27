@@ -33,22 +33,17 @@ RSP_VEQ:
   movdqa %xmm0, %xmm5
   retq
 .else
-  movdqa %xmm0, %xmm3
-  pcmpeqw %xmm1, %xmm3
+  movdqa %xmm0, %xmm5
+  pcmpeqw %xmm1, %xmm0
   pxor %xmm12, %xmm12
-  pandn %xmm3, %xmm14
+  pandn %xmm0, %xmm14
   pxor %xmm13, %xmm13
   movdqa %xmm14, %xmm11
-.ifdef __SSE_4_1__
-  pblendvb %xmm14,%xmm0,%xmm1
-  movdqa %xmm1, %xmm0
-.else
-  pand %xmm14, %xmm0
+  pand %xmm14, %xmm5
   pandn %xmm1, %xmm14
-  por %xmm14, %xmm0
-.endif
+  por %xmm14, %xmm5
   pxor %xmm14, %xmm14
-  movdqa %xmm0, %xmm5
+  movdqa %xmm5, %xmm0
   retq
 .endif
 

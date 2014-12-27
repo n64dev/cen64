@@ -42,7 +42,7 @@ extern const char *rsp_vector_opcode_mnemonics[NUM_RSP_VECTOR_OPCODES];
 void RSP_INVALID(struct rsp *,
   uint32_t, uint32_t, uint32_t);
 
-rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
+cen64_cold rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
   uint16_t *acc, rsp_vect_t vs, rsp_vect_t vt_shuffle,
   rsp_vect_t zero);
 
