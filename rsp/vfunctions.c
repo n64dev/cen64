@@ -170,6 +170,7 @@ rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 // VGE
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VGE(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t le, eq, sign;
@@ -186,6 +187,10 @@ rsp_vect_t RSP_VGE(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VGE(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VINVALID
