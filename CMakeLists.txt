@@ -63,8 +63,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   # Set architecture-independent flags.
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -ffast-math -DNDEBUG -s -fmerge-all-constants")
-  set(CMAKE_C_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG -s -fmerge-all-constants")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -DNDEBUG -ggdb3 -g3 -fmerge-all-constants")
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
   # Enable link time optimization on recent versions.
@@ -140,7 +139,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
   set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -DNDEBUG -ggdb3 -g3")
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")
   set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-s")
 
@@ -176,7 +175,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Intel)
   set(CMAKE_C_FLAGS_DEBUG "-g3 -O0")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG -ipo -ffunction-sections -fdata-sections")
   set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -ipo -ffunction-sections -fdata-sections")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Og")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -DNDEBUG -ggdb3 -g3 -ipo -ffunction-sections -fdata-sections")
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 endif (${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
