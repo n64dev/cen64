@@ -24,7 +24,7 @@ RSP_VABS:
   vpxor %xmm3, %xmm0, %xmm2
   vpsubsw %xmm3, %xmm2, %xmm2
   vpsignw %xmm1, %xmm0, %xmm5
-  vpblendvb %xmm3, %xmm2, %xmm5, %xmm1
+  vpblendvb %xmm3, %xmm2, %xmm5, %xmm0
   retq
 .else
   movdqa %xmm1, %xmm3

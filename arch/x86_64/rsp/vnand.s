@@ -23,14 +23,14 @@ RSP_VNAND:
 .ifdef __AVX__
   vpcmpeqd %xmm2, %xmm2, %xmm2
   vpand %xmm0, %xmm1, %xmm0
-  vpxor %xmm2, %xmm0, %xmm1
-  movdqa %xmm1, %xmm5
+  vpxor %xmm2, %xmm0, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 .else
   pcmpeqd %xmm2, %xmm2
-  pand %xmm0, %xmm1
-  pxor %xmm2, %xmm1
-  movdqa %xmm1, %xmm5
+  pand %xmm1, %xmm0
+  pxor %xmm2, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 .endif
 

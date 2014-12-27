@@ -32,8 +32,8 @@ RSP_VGE:
   pxor %xmm13, %xmm13
   vpor %xmm3, %xmm4, %xmm11
   pxor %xmm12, %xmm12
-  vpblendvb %xmm11, %xmm1, %xmm0, %xmm1
-  movdqa %xmm1, %xmm5
+  vpblendvb %xmm11, %xmm1, %xmm0, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 
 .elseif __SSE4_1__ == 1
@@ -54,20 +54,20 @@ RSP_VGE:
   retq
 
 .else
+  movdqa %xmm1, %xmm5
   movdqa %xmm1, %xmm2
   pand %xmm13, %xmm14
-  movdqa %xmm0, %xmm5
   pcmpgtw %xmm0, %xmm1
-  pcmpeqw %xmm2, %xmm0
+  pcmpeqw %xmm0, %xmm2
   pxor %xmm12, %xmm12
-  pandn %xmm0, %xmm14
+  pandn %xmm2, %xmm14
   pxor %xmm13, %xmm13
   por %xmm14, %xmm1
   movdqa %xmm1,%xmm11
-  pand %xmm1, %xmm2
-  pandn %xmm5, %xmm1
-  por %xmm2, %xmm1
-  movdqa %xmm1, %xmm5
+  pand %xmm1, %xmm5
+  pandn %xmm0, %xmm1
+  por %xmm1, %xmm5
+  movdqa %xmm5, %xmm0
   pxor %xmm14, %xmm14
   retq
 .endif
