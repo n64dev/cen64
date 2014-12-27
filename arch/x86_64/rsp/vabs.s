@@ -9,8 +9,8 @@
 //
 
 #
-# xmm0 = vs
-# xmm1 = vt
+# xmm1 = vs
+# xmm0 = vt
 # xmm5 = acc_lo
 #
 
@@ -20,20 +20,20 @@
 RSP_VABS:
 
 .ifdef __AVX__
-  vpsraw $0xf, %xmm0, %xmm3
-  vpxor %xmm3, %xmm1, %xmm2
+  vpsraw $0xf, %xmm1, %xmm3
+  vpxor %xmm3, %xmm0, %xmm2
   vpsubsw %xmm3, %xmm2, %xmm2
-  vpsignw %xmm0, %xmm1, %xmm5
-  vpblendvb %xmm3, %xmm2, %xmm5, %xmm0
+  vpsignw %xmm1, %xmm0, %xmm5
+  vpblendvb %xmm3, %xmm2, %xmm5, %xmm1
   retq
 .else
-  movdqa %xmm0, %xmm3
-  pcmpeqw %xmm2, %xmm0
+  movdqa %xmm1, %xmm3
+  pcmpeqw %xmm2, %xmm1
   psraw $0xF, %xmm3
-  pandn %xmm1, %xmm0
-  pxor %xmm3, %xmm0
-  movdqa %xmm0, %xmm5
-  psubsw %xmm3, %xmm0
+  pandn %xmm0, %xmm1
+  pxor %xmm3, %xmm1
+  movdqa %xmm1, %xmm5
+  psubsw %xmm3, %xmm1
   psubw %xmm3, %xmm5
   retq
 .endif

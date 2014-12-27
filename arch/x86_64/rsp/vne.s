@@ -9,8 +9,8 @@
 //
 
 #
-# xmm0 = vs
-# xmm1 = vt
+# xmm1 = vs
+# xmm0 = vt
 # xmm5 = acc_lo
 # xmm11 = vcc_lo
 # xmm12 = vcc_hi
@@ -24,21 +24,20 @@
 RSP_VNE:
 
 .ifdef __AVX__
-  vpcmpeqw %xmm1, %xmm0, %xmm3
+  vpcmpeqw %xmm0, %xmm1, %xmm3
   vpcmpeqw %xmm3, %xmm2, %xmm2
   vpxor %xmm12, %xmm12, %xmm12
   vpand %xmm2, %xmm14, %xmm3
   vpor %xmm3, %xmm2, %xmm11
   vpxor %xmm13, %xmm13, %xmm13
-  vpblendvb %xmm11, %xmm0, %xmm1, %xmm0
+  vpblendvb %xmm11, %xmm1, %xmm0, %xmm1
   vpxor %xmm14, %xmm14, %xmm14
-  movdqa %xmm0, %xmm5
+  movdqa %xmm1, %xmm5
   retq
 .elseif __SSE4_1__
-  movdqa %xmm1, %xmm5
-  movdqa %xmm0, %xmm1
-  pcmpeqw %xmm5, %xmm0
-  pcmpeqw %xmm0, %xmm2
+  movdqa %xmm0, %xmm5
+  pcmpeqw %xmm1, %xmm0
+  pcmpeqw %xmm1, %xmm2
   pxor %xmm12, %xmm12
   pand %xmm14, %xmm0
   pxor %xmm13, %xmm13
@@ -49,19 +48,19 @@ RSP_VNE:
   movdqa %xmm5, %xmm0
   retq
 .else
-  movdqa %xmm1, %xmm3
-  pcmpeqw %xmm0, %xmm1
-  pcmpeqw %xmm1, %xmm2
+  movdqa %xmm0, %xmm3
+  pcmpeqw %xmm1, %xmm0
+  pcmpeqw %xmm0, %xmm2
   pxor %xmm12, %xmm12
-  pand %xmm14, %xmm1
+  pand %xmm14, %xmm0
   pxor %xmm13, %xmm13
-  por %xmm2, %xmm1
+  por %xmm2, %xmm0
   pxor %xmm14, %xmm14
-  pand %xmm1, %xmm0
-  movdqa %xmm1, %xmm11
-  pandn %xmm3, %xmm1
-  por %xmm1, %xmm0
-  movdqa %xmm0, %xmm5
+  pand %xmm0, %xmm1
+  movdqa %xmm0, %xmm11
+  pandn %xmm3, %xmm0
+  por %xmm0, %xmm1
+  movdqa %xmm1, %xmm5
   retq
 .endif
 
