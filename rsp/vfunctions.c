@@ -70,6 +70,7 @@ rsp_vect_t RSP_VADDC(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 // VAND
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vand(vs, vt_shuffle);
@@ -77,6 +78,10 @@ rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VCH
@@ -428,6 +433,7 @@ rsp_vect_t RSP_VMULU(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 // VNAND
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vnand(vs, vt_shuffle, zero);
@@ -435,6 +441,10 @@ rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VNE
@@ -458,6 +468,7 @@ rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 // VNOR
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VNOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vnor(vs, vt_shuffle, zero);
@@ -465,10 +476,15 @@ rsp_vect_t RSP_VNOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VNOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VNXOR
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VNXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vnxor(vs, vt_shuffle, zero);
@@ -476,10 +492,15 @@ rsp_vect_t RSP_VNXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VNXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VOR
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vor(vs, vt_shuffle);
@@ -487,6 +508,10 @@ rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VRCP
@@ -604,6 +629,7 @@ rsp_vect_t RSP_VSUBC(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 // VXOR
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t result = rsp_vxor(vs, vt_shuffle);
@@ -611,6 +637,10 @@ rsp_vect_t RSP_VXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VXOR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 // Function lookup table.
 cen64_align(const rsp_vector_function
