@@ -211,6 +211,7 @@ rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
 //
 // VLT
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VLT(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   rsp_vect_t le, eq, sign;
@@ -227,6 +228,9 @@ rsp_vect_t RSP_VLT(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+rsp_vect_t RSP_VLT(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
+#endif
 
 //
 // VMACF

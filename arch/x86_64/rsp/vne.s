@@ -34,7 +34,8 @@ RSP_VNE:
   vpxor %xmm14, %xmm14, %xmm14
   movdqa %xmm1, %xmm5
   retq
-.elseif __SSE4_1__
+
+.elseif __SSE4_1__ == 1
   movdqa %xmm0, %xmm5
   pcmpeqw %xmm1, %xmm0
   pcmpeqw %xmm1, %xmm2
@@ -47,6 +48,7 @@ RSP_VNE:
   movdqa %xmm0, %xmm11
   movdqa %xmm5, %xmm0
   retq
+
 .else
   movdqa %xmm0, %xmm3
   pcmpeqw %xmm1, %xmm0
