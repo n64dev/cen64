@@ -41,16 +41,17 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
     endif ()
 
-    if (${GCC_MACHINE} MATCHES "i.86.*")
+    if (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm5 -ffixed-xmm6 -ffixed-xmm7")
-    else ()
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm13 -ffixed-xmm14 -ffixed-xmm15")
-    endif()
+    endif (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maccumulate-outgoing-args")
 
     set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
+
+    enable_language(ASM-ATT)
+    file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/*.s)
   endif (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
 
   if (${GCC_MACHINE} STREQUAL "arm")
