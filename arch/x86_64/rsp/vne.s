@@ -34,24 +34,33 @@ RSP_VNE:
   vpxor %xmm14, %xmm14, %xmm14
   movdqa %xmm0, %xmm5
   retq
-.else
-  movdqa %xmm0, %xmm3
-  pcmpeqw %xmm1, %xmm3
-  pcmpeqw %xmm3, %xmm2
+.elseif __SSE4_1__
+  movdqa %xmm1, %xmm5
+  movdqa %xmm0, %xmm1
+  pcmpeqw %xmm5, %xmm0
+  pcmpeqw %xmm0, %xmm2
   pxor %xmm12, %xmm12
-  pand %xmm14, %xmm3
-  por %xmm2, %xmm3
+  pand %xmm14, %xmm0
   pxor %xmm13, %xmm13
-  movdqa %xmm3, %xmm11
-.ifdef __SSE_4_1__
-  pblendvb %xmm3, %xmm0, %xmm1
-  movdqa %xmm1, %xmm0
-.else
-  pand %xmm3, %xmm0
-  pandn %xmm1, %xmm3
-  por %xmm3, %xmm0
-.endif
+  por %xmm2, %xmm0
   pxor %xmm14, %xmm14
+  pblendvb %xmm0, %xmm1, %xmm5
+  movdqa %xmm0, %xmm11
+  movdqa %xmm5, %xmm0
+  retq
+.else
+  movdqa %xmm1, %xmm3
+  pcmpeqw %xmm0, %xmm1
+  pcmpeqw %xmm1, %xmm2
+  pxor %xmm12, %xmm12
+  pand %xmm14, %xmm1
+  pxor %xmm13, %xmm13
+  por %xmm2, %xmm1
+  pxor %xmm14, %xmm14
+  pand %xmm1, %xmm0
+  movdqa %xmm1, %xmm11
+  pandn %xmm3, %xmm1
+  por %xmm1, %xmm0
   movdqa %xmm0, %xmm5
   retq
 .endif
