@@ -31,7 +31,7 @@ enum rsp_mem_request_type {
 };
 
 struct rsp_mem_request {
-  union aligned_rsp_vect_t vdqm;
+  union aligned_rsp_1vect_t vdqm;
   uint32_t addr;
   uint32_t data;
   uint32_t dqm;

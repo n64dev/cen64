@@ -56,28 +56,6 @@ static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
   _mm_store_si128((__m128i*) dest, src);
 }
 
-// Returns scalar bitmasks for VCO, VCC, and VCE.
-static inline int16_t rsp_get_vco(const uint16_t *vcolo, const uint16_t *vcohi) {
-  __m128i lo = _mm_load_si128((__m128i *) vcolo);
-  __m128i hi = _mm_load_si128((__m128i *) vcohi);
-
-  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(lo, hi));
-}
-
-static inline int16_t rsp_get_vcc(const uint16_t *vcclo, const uint16_t *vcchi) {
-  __m128i lo = _mm_load_si128((__m128i *) vcclo);
-  __m128i hi = _mm_load_si128((__m128i *) vcchi);
-
-  return (int16_t) _mm_movemask_epi8(_mm_packs_epi16(lo, hi));
-}
-
-// TODO: Sign-extended, or no?
-static inline uint8_t rsp_get_vce(const uint16_t *vce) {
-  __m128i v = _mm_load_si128((__m128i *) vce);
-
-  return (uint8_t) _mm_movemask_epi8(_mm_packs_epi16(v, v));
-}
-
 // Functions for reading/writing the accumulator.
 #if ((defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER))) \
   && (defined(__i386__) || defined(__x86_64)))
@@ -85,6 +63,12 @@ static inline uint8_t rsp_get_vce(const uint16_t *vce) {
 register __m128i hr_acc_lo __asm__ ("xmm5");
 register __m128i hr_acc_md __asm__ ("xmm6");
 register __m128i hr_acc_hi __asm__ ("xmm7");
+
+register __m128i hr_vcc_lo __asm__ ("xmm11");
+register __m128i hr_vcc_hi __asm__ ("xmm12");
+register __m128i hr_vco_lo __asm__ ("xmm13");
+register __m128i hr_vco_hi __asm__ ("xmm14");
+register __m128i hr_vce    __asm__ ("xmm15");
 
 static inline __m128i read_acc_lo(const uint16_t *acc) {
   return hr_acc_lo;
@@ -95,6 +79,21 @@ static inline __m128i read_acc_md(const uint16_t *acc) {
 static inline __m128i read_acc_hi(const uint16_t *acc) {
   return hr_acc_hi;
 }
+static inline __m128i read_vcc_lo(const uint16_t *vcc) {
+  return hr_vcc_lo;
+}
+static inline __m128i read_vcc_hi(const uint16_t *vcc) {
+  return hr_vcc_hi;
+}
+static inline __m128i read_vco_lo(const uint16_t *vco) {
+  return hr_vco_lo;
+}
+static inline __m128i read_vco_hi(const uint16_t *vco) {
+  return hr_vco_hi;
+}
+static inline __m128i read_vce(const uint16_t *vce) {
+  return hr_vce;
+}
 static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
   __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_lo) : "x"(acc_lo));
 }
@@ -103,6 +102,21 @@ static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
 }
 static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
   __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_acc_hi) : "x"(acc_hi));
+}
+static inline void write_vcc_lo(uint16_t *vcc, __m128i vcc_lo) {
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_vcc_lo) : "x"(vcc_lo));
+}
+static inline void write_vcc_hi(uint16_t *vcc, __m128i vcc_hi) {
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_vcc_hi) : "x"(vcc_hi));
+}
+static inline void write_vco_lo(uint16_t *vco, __m128i vco_lo) {
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_vco_lo) : "x"(vco_lo));
+}
+static inline void write_vco_hi(uint16_t *vco, __m128i vco_hi) {
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_vco_hi) : "x"(vco_hi));
+}
+static inline void write_vce(uint16_t *vce, __m128i vce_r) {
+  __asm__ volatile("movdqa %1, %0\n\t" : "=x"(hr_vce) : "x"(vce_r));
 }
 #else
 static inline __m128i read_acc_lo(const uint16_t *acc) {
@@ -123,7 +137,40 @@ static inline void write_acc_md(uint16_t *acc, __m128i acc_md) {
 static inline void write_acc_hi(uint16_t *acc, __m128i acc_hi) {
   rsp_vect_write_operand(acc, acc_hi);
 }
+static inline void write_vcc_lo(uint16_t *vcc, __m128i vcc_lo) {
+  rsp_vect_write_operand(vcc + 8, vcc_lo);
+}
+static inline void write_vcc_hi(uint16_t *vcc, __m128i vcc_hi) {
+  rsp_vect_write_operand(vcc, vcc_hi);
+}
+static inline void write_vco_lo(uint16_t *vco, __m128i vco_lo) {
+  rsp_vect_write_operand(vco + 8, vco_lo);
+}
+static inline void write_vco_hi(uint16_t *vco, __m128i vco_hi) {
+  rsp_vect_write_operand(vco, vco_hi);
+}
+static inline void write_vce(uint16_t *vce, __m128i vce_r) {
+  rsp_vect_write_operand(vce, vce_r);
+}
 #endif
+
+// Returns scalar bitmasks for VCO, VCC, and VCE.
+static inline int16_t rsp_get_vcc(const uint16_t *vcc) {
+  return (int16_t) _mm_movemask_epi8(
+    _mm_packs_epi16(read_vcc_lo(vcc), read_vcc_hi(vcc))
+  );
+}
+
+static inline int16_t rsp_get_vco(const uint16_t *vco) {
+  return (int16_t) _mm_movemask_epi8(
+    _mm_packs_epi16(read_vco_lo(vco), read_vco_hi(vco))
+  );
+}
+
+// TODO: Sign-extended, or no?
+static inline uint8_t rsp_get_vce(const uint16_t *vce) {
+  return _mm_movemask_epi8(read_vce(vce));
+}
 
 // Zeroes out a register.
 static inline __m128i rsp_vzero(void) {

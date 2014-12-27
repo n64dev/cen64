@@ -19,24 +19,29 @@ enum rsp_acc_t {
   RSP_ACC_HI = 0,
 };
 
-union aligned_rsp_vect_t {
-  rsp_vect_t __align;
-  uint16_t e[8];
-};
-
-union aligned_rsp_acc_t {
+union aligned_rsp_3vect_t {
   rsp_vect_t __align[3];
   uint16_t e[24];
 };
 
+union aligned_rsp_2vect_t {
+  rsp_vect_t __align[2];
+  uint16_t e[16];
+};
+
+union aligned_rsp_1vect_t {
+  rsp_vect_t __align;
+  uint16_t e[8];
+};
+
 struct rsp_cp2 {
-  union aligned_rsp_vect_t regs[32];
+  union aligned_rsp_1vect_t regs[32];
 
-  union aligned_rsp_vect_t vcc[2];
-  union aligned_rsp_vect_t vco[2];
-  union aligned_rsp_vect_t vce;
+  union aligned_rsp_2vect_t vcc;
+  union aligned_rsp_2vect_t vco;
+  union aligned_rsp_1vect_t vce;
 
-  union aligned_rsp_acc_t acc;
+  union aligned_rsp_3vect_t acc;
 
   int16_t div_out;
   int16_t div_in;

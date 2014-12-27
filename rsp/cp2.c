@@ -26,8 +26,8 @@ void RSP_CFC2(struct rsp *rsp,
   rd = GET_RD(iw);
 
   switch (rd & 0x3) {
-    case 0: data = rsp_get_vco(cp2->vco[1].e, cp2->vco[0].e); break;
-    case 1: data = rsp_get_vcc(cp2->vcc[1].e, cp2->vcc[0].e); break;
+    case 0: data = rsp_get_vco(cp2->vco.e); break;
+    case 1: data = rsp_get_vcc(cp2->vcc.e); break;
     case 2: data = rsp_get_vce(cp2->vce.e); break;
     case 3: data = rsp_get_vce(cp2->vce.e); break;
   }
