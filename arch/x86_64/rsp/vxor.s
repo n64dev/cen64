@@ -20,12 +20,12 @@
 RSP_VXOR:
 
 .ifdef __AVX__
-  vpxor %xmm0, %xmm1, %xmm1
-  vmovdqa %xmm1, %xmm5
+  vpxor %xmm0, %xmm1, %xmm0
+  vmovdqa %xmm0, %xmm5
   retq
 .else
-  pxor %xmm0, %xmm1
-  movdqa %xmm1, %xmm5
+  pxor %xmm1, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 .endif
 

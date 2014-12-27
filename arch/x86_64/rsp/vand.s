@@ -20,12 +20,12 @@
 RSP_VAND:
 
 .ifdef __AVX__
-  vpand %xmm0, %xmm1, %xmm1
-  vmovdqa %xmm1, %xmm5
+  vpand %xmm0, %xmm1, %xmm0
+  vmovdqa %xmm0, %xmm5
   retq
 .else
-  pand %xmm0, %xmm1
-  movdqa %xmm1, %xmm5
+  pand %xmm1, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 .endif
 

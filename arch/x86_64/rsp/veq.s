@@ -28,10 +28,11 @@ RSP_VEQ:
   vpxor %xmm12, %xmm12, %xmm12
   vpandn %xmm11, %xmm14, %xmm11
   vpxor %xmm13, %xmm13, %xmm13
-  vpblendvb %xmm11, %xmm1, %xmm0, %xmm1
+  vpblendvb %xmm11, %xmm1, %xmm0, %xmm0
   vpxor %xmm14, %xmm14, %xmm14
-  movdqa %xmm1, %xmm5
+  movdqa %xmm0, %xmm5
   retq
+
 .elseif __SSE4_1__ == 1
   movdqa %xmm0, %xmm5
   pcmpeqw %xmm1, %xmm0
@@ -44,6 +45,7 @@ RSP_VEQ:
   movdqa %xmm0, %xmm11
   movdqa %xmm5, %xmm0
   retq
+
 .else
   movdqa %xmm1, %xmm5
   pcmpeqw %xmm0, %xmm1
@@ -55,7 +57,7 @@ RSP_VEQ:
   pandn %xmm0, %xmm14
   por %xmm14, %xmm5
   pxor %xmm14, %xmm14
-  movdqa %xmm5, %xmm1
+  movdqa %xmm5, %xmm0
   retq
 .endif
 

@@ -30,15 +30,15 @@ RSP_VNE:
   vpand %xmm2, %xmm14, %xmm3
   vpor %xmm3, %xmm2, %xmm11
   vpxor %xmm13, %xmm13, %xmm13
-  vpblendvb %xmm11, %xmm1, %xmm0, %xmm1
+  vpblendvb %xmm11, %xmm1, %xmm0, %xmm0
   vpxor %xmm14, %xmm14, %xmm14
-  movdqa %xmm1, %xmm5
+  movdqa %xmm0, %xmm5
   retq
 
 .elseif __SSE4_1__ == 1
   movdqa %xmm0, %xmm5
   pcmpeqw %xmm1, %xmm0
-  pcmpeqw %xmm1, %xmm2
+  pcmpeqw %xmm0, %xmm2
   pxor %xmm12, %xmm12
   pand %xmm14, %xmm0
   pxor %xmm13, %xmm13
@@ -61,8 +61,8 @@ RSP_VNE:
   pand %xmm0, %xmm1
   movdqa %xmm0, %xmm11
   pandn %xmm3, %xmm0
-  por %xmm0, %xmm1
-  movdqa %xmm1, %xmm5
+  por %xmm1, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 .endif
 
