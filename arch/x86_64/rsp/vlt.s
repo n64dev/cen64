@@ -1,5 +1,5 @@
 //
-// arch/x86_64/rsp/vge.s
+// arch/x86_64/rsp/vlt.s
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
@@ -18,59 +18,57 @@
 # xmm14 = vco_hi
 #
 
-.global RSP_VGE
-.type	RSP_VGE, @function
+.global RSP_VLT
+.type	RSP_VLT, @function
 
-RSP_VGE:
-
+RSP_VLT:
 .ifdef __AVX__
-  vpand %xmm13, %xmm14, %xmm2
   vpcmpeqw %xmm1, %xmm0, %xmm3
-  vpcmpgtw %xmm0, %xmm1, %xmm4
+  vpcmpgtw %xmm1, %xmm0, %xmm4
   pxor %xmm14, %xmm14
-  vpandn %xmm3, %xmm2, %xmm3
+  vpandn %xmm3, %xmm14, %xmm3
   pxor %xmm13, %xmm13
+  vpand %xmm3, %xmm13, %xmm3
   vpor %xmm3, %xmm4, %xmm11
   pxor %xmm12, %xmm12
-  vpblendvb %xmm11, %xmm1, %xmm0, %xmm1
-  movdqa %xmm1, %xmm5
+  vpblendvb %xmm11, %xmm1, %xmm0, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 
 .elseif __SSE4_1__ == 1
   movdqa %xmm0, %xmm5
   movdqa %xmm0, %xmm2
-  movdqa %xmm1, %xmm0
-  pand %xmm13, %xmm14
-  pcmpgtw %xmm2, %xmm0
-  pxor %xmm12, %xmm12
+  pcmpgtw %xmm1, %xmm0
   pcmpeqw %xmm1, %xmm2
+  pxor %xmm12, %xmm12
   pandn %xmm2, %xmm14
   pxor %xmm13, %xmm13
-  por %xmm14, %xmm0
+  pand %xmm14, %xmm13
   pxor %xmm14, %xmm14
+  por %xmm13, %xmm0
   pblendvb %xmm0, %xmm1, %xmm5
   movdqa %xmm0, %xmm11
   movdqa %xmm5, %xmm0
   retq
 
 .else
-  movdqa %xmm1, %xmm2
-  pand %xmm13, %xmm14
   movdqa %xmm0, %xmm5
-  pcmpgtw %xmm0, %xmm1
-  pcmpeqw %xmm2, %xmm0
+  movdqa %xmm0, %xmm2
+  pcmpgtw %xmm1, %xmm0
+  pcmpeqw %xmm1, %xmm2
   pxor %xmm12, %xmm12
-  pandn %xmm0, %xmm14
+  pandn %xmm2, %xmm14
   pxor %xmm13, %xmm13
-  por %xmm14, %xmm1
-  movdqa %xmm1,%xmm11
-  pand %xmm1, %xmm2
-  pandn %xmm5, %xmm1
-  por %xmm2, %xmm1
-  movdqa %xmm1, %xmm5
+  pand %xmm14, %xmm13
   pxor %xmm14, %xmm14
+  por %xmm13, %xmm0
+  movdqa %xmm0,%xmm11
+  pand %xmm0, %xmm1
+  pandn %xmm5, %xmm0
+  por %xmm1, %xmm0
+  movdqa %xmm0, %xmm5
   retq
 .endif
 
-.size RSP_VGE,.-RSP_VGE
+.size RSP_VLT,.-RSP_VLT
 
