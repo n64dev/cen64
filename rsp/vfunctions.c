@@ -146,6 +146,7 @@ rsp_vect_t RSP_VCR(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 // VEQ
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t le, eq;
@@ -161,6 +162,10 @@ rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VGE
@@ -450,6 +455,7 @@ rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw, uint16_t *acc,
 //
 // VNE
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero) {
   rsp_vect_t le, eq;
@@ -465,6 +471,10 @@ rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw, uint16_t *acc,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw, uint16_t *acc,
+  rsp_vect_t vs, rsp_vect_t vt_shuffle, rsp_vect_t zero);
+#endif
 
 //
 // VNOR
