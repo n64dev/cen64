@@ -81,7 +81,7 @@ static inline uint8_t rsp_get_vce(const uint16_t *vce) {
 // Functions for reading/writing the accumulator.
 #if ((defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER))) \
   && (defined(__i386__) || defined(__x86_64)))
-//#define REGISTER_CACHING
+#define REGISTER_CACHING
 register __m128i hr_acc_lo __asm__ ("xmm5");
 register __m128i hr_acc_md __asm__ ("xmm6");
 register __m128i hr_acc_hi __asm__ ("xmm7");
