@@ -18,16 +18,9 @@
 .type	RSP_VXOR, @function
 
 RSP_VXOR:
-
-.ifdef __AVX__
-  vpxor %xmm0, %xmm1, %xmm0
-  vmovdqa %xmm0, %xmm5
-  retq
-.else
   pxor %xmm1, %xmm0
   movdqa %xmm0, %xmm5
   retq
-.endif
 
 .size RSP_VXOR,.-RSP_VXOR
 

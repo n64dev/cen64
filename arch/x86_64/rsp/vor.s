@@ -18,16 +18,9 @@
 .type	RSP_VOR, @function
 
 RSP_VOR:
-
-.ifdef __AVX__
-  vpor %xmm0, %xmm1, %xmm0
-  vmovdqa %xmm0, %xmm5
-  retq
-.else
   por %xmm1, %xmm0
   movdqa %xmm0, %xmm5
   retq
-.endif
 
 .size RSP_VOR,.-RSP_VOR
 
