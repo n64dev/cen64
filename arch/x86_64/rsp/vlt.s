@@ -18,10 +18,17 @@
 # xmm14 = vco_hi
 #
 
+.ifdef __MINGW32__
+.globl RSP_VLT
+.def RSP_VLT; .scl 2; .type 32; .endef
+.seh_proc RSP_VLT
+RSP_VLT:
+.else
 .global RSP_VLT
 .type	RSP_VLT, @function
-
 RSP_VLT:
+.endif
+
 .ifdef __AVX__
   vpcmpeqw %xmm1, %xmm0, %xmm3
   vpcmpgtw %xmm1, %xmm0, %xmm4
@@ -70,5 +77,9 @@ RSP_VLT:
   retq
 .endif
 
+.ifdef __MINGW32__
+.seh_endproc
+.else
 .size RSP_VLT,.-RSP_VLT
+.endif
 

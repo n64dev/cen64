@@ -15,8 +15,16 @@
 # xmm5 = acc_lo
 #
 
+.ifdef __MINGW32__
+.globl RSP_VNXOR
+.def RSP_VNXOR; .scl 2; .type 32; .endef
+.seh_proc RSP_VNXOR
+RSP_VNXOR:
+.else
 .global RSP_VNXOR
 .type	RSP_VNXOR, @function
+RSP_VNXOR:
+.endif
 
 RSP_VNXOR:
   pcmpeqd %xmm2, %xmm2
@@ -25,5 +33,9 @@ RSP_VNXOR:
   movdqa %xmm0, %xmm5
   retq
 
+.ifdef __MINGW32__
+.seh_endproc
+.else
 .size RSP_VNXOR,.-RSP_VNXOR
+.endif
 

@@ -14,13 +14,26 @@
 # xmm5 = acc_lo
 #
 
+.text
+
+.ifdef __MINGW32__
+.globl RSP_VAND
+.def RSP_VAND; .scl 2; .type 32; .endef
+.seh_proc RSP_VAND
+RSP_VAND:
+.else
 .global RSP_VAND
 .type	RSP_VAND, @function
-
 RSP_VAND:
+.endif
+
   pand %xmm1, %xmm0
   movdqa %xmm0, %xmm5
   retq
 
+.ifdef __MINGW32__
+.seh_endproc
+.else
 .size RSP_VAND,.-RSP_VAND
+.endif
 

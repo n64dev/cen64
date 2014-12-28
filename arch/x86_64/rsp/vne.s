@@ -18,10 +18,16 @@
 # xmm14 = vco_hi
 #
 
+.ifdef __MINGW32__
+.globl RSP_VNE
+.def RSP_VNE; .scl 2; .type 32; .endef
+.seh_proc RSP_VNE
+RSP_VNE:
+.else
 .global RSP_VNE
 .type	RSP_VNE, @function
-
 RSP_VNE:
+.endif
 
 .ifdef __AVX__
   vpcmpeqw %xmm0, %xmm1, %xmm3
@@ -66,5 +72,9 @@ RSP_VNE:
   retq
 .endif
 
+.ifdef __MINGW32__
+.seh_endproc
+.else
 .size RSP_VNE,.-RSP_VNE
+.endif
 

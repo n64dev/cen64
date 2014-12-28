@@ -18,10 +18,18 @@
 # xmm14 = vco_hi
 #
 
+.text
+
+.ifdef __MINGW32__
+.globl RSP_VEQ
+.def RSP_VEQ; .scl 2; .type 32; .endef
+.seh_proc RSP_VEQ
+RSP_VEQ:
+.else
 .global RSP_VEQ
 .type	RSP_VEQ, @function
-
 RSP_VEQ:
+.endif
 
 .ifdef __AVX__
   vpcmpeqw %xmm0, %xmm1, %xmm11
@@ -61,5 +69,9 @@ RSP_VEQ:
   retq
 .endif
 
+.ifdef __MINGW32__
+.seh_endproc
+.else
 .size RSP_VEQ,.-RSP_VEQ
+.endif
 
