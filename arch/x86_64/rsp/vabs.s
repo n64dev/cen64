@@ -26,15 +26,16 @@ RSP_VABS:
   vpsignw %xmm1, %xmm0, %xmm5
   vpblendvb %xmm3, %xmm2, %xmm5, %xmm0
   retq
+
 .else
-  movdqa %xmm1, %xmm3
-  pcmpeqw %xmm2, %xmm1
-  psraw $0xF, %xmm3
-  pandn %xmm0, %xmm1
-  pxor %xmm3, %xmm1
-  movdqa %xmm1, %xmm5
-  psubsw %xmm3, %xmm1
-  psubw %xmm3, %xmm5
+  pcmpeqw %xmm1, %xmm2
+  psraw $0xF, %xmm1
+  pandn %xmm0, %xmm2
+  pxor %xmm1, %xmm2
+  movdqa %xmm2, %xmm5
+  psubsw %xmm1, %xmm2
+  psubw %xmm1, %xmm5
+  movdqa %xmm2, %xmm0
   retq
 .endif
 
