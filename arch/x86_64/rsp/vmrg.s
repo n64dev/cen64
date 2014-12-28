@@ -17,10 +17,16 @@
 # xmm14 = vco_hi
 #
 
+.ifdef __MINGW32__
+.globl RSP_VMRG
+.def RSP_VMRG; .scl 2; .type 32; .endef
+.seh_proc RSP_VMRG
+RSP_VMRG:
+.else
 .global RSP_VMRG
 .type	RSP_VMRG, @function
-
 RSP_VMRG:
+.endif
 
 .ifdef __AVX__
   vpblendvb %xmm11, %xmm1, %xmm0, %xmm0
@@ -49,5 +55,9 @@ RSP_VMRG:
   retq
 .endif
 
+.ifdef __MINGW32__
+.seh_endproc
+.else
 .size RSP_VMRG,.-RSP_VMRG
+.endif
 

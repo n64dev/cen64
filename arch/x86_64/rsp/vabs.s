@@ -14,10 +14,18 @@
 # xmm5 = acc_lo
 #
 
+.text
+
+.ifdef __MINGW32__
+.globl RSP_VABS
+.def RSP_VABS; .scl 2; .type 32; .endef
+.seh_proc RSP_VABS
+RSP_VABS:
+.else
 .global RSP_VABS
 .type	RSP_VABS, @function
-
 RSP_VABS:
+.endif
 
 .ifdef __AVX__
   vpsraw $0xf, %xmm1, %xmm3
@@ -39,5 +47,9 @@ RSP_VABS:
   retq
 .endif
 
+.ifdef __MINGW32__
+.seh_endproc
+.else
 .size RSP_VABS,.-RSP_VABS
+.endif
 
