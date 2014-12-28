@@ -18,16 +18,9 @@
 .type	RSP_VAND, @function
 
 RSP_VAND:
-
-.ifdef __AVX__
-  vpand %xmm0, %xmm1, %xmm0
-  vmovdqa %xmm0, %xmm5
-  retq
-.else
   pand %xmm1, %xmm0
   movdqa %xmm0, %xmm5
   retq
-.endif
 
 .size RSP_VAND,.-RSP_VAND
 

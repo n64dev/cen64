@@ -19,20 +19,11 @@
 .type	RSP_VNXOR, @function
 
 RSP_VNXOR:
-
-.ifdef __AVX__
-  vpcmpeqd %xmm2, %xmm2, %xmm2
-  vpxor %xmm0, %xmm1, %xmm0
-  vpxor %xmm2, %xmm0, %xmm0
-  movdqa %xmm0, %xmm5
-  retq
-.else
   pcmpeqd %xmm2, %xmm2
   pxor %xmm1, %xmm0
   pxor %xmm2, %xmm0
   movdqa %xmm0, %xmm5
   retq
-.endif
 
 .size RSP_VNXOR,.-RSP_VNXOR
 
