@@ -1,5 +1,5 @@
 //
-// arch/x86_64/rsp/vand.s
+// arch/x86_64/rsp/gcc/vand.s
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
@@ -8,30 +8,26 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#
-# xmm1 = vs
-# xmm0 = vt
-# xmm5 = acc_lo
-#
+.include "rsp/gcc/defs.h"
 
 .text
 
-.ifdef __MINGW32__
+.ifdef __MINGW__
 .globl RSP_VAND
 .def RSP_VAND; .scl 2; .type 32; .endef
 .seh_proc RSP_VAND
-RSP_VAND:
 .else
 .global RSP_VAND
 .type	RSP_VAND, @function
-RSP_VAND:
 .endif
 
+RSP_VAND:
+
   pand %xmm1, %xmm0
-  movdqa %xmm0, %xmm5
+  movdqa %xmm0, acc_lo
   retq
 
-.ifdef __MINGW32__
+.ifdef __MINGW__
 .seh_endproc
 .else
 .size RSP_VAND,.-RSP_VAND

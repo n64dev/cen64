@@ -1,5 +1,5 @@
 //
-// arch/x86_64/rsp/vabs.s
+// arch/x86_64/rsp/gcc/vabs.s
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
@@ -8,31 +8,27 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#
-# xmm1 = vs
-# xmm0 = vt
-# xmm5 = acc_lo
-#
+.include "rsp/gcc/defs.h"
 
 .text
 
-.ifdef __MINGW32__
+.ifdef __MINGW__
 .globl RSP_VABS
 .def RSP_VABS; .scl 2; .type 32; .endef
 .seh_proc RSP_VABS
-RSP_VABS:
 .else
 .global RSP_VABS
 .type	RSP_VABS, @function
-RSP_VABS:
 .endif
+
+RSP_VABS:
 
 .ifdef __AVX__
   vpsraw $0xf, %xmm1, %xmm3
   vpxor %xmm3, %xmm0, %xmm2
   vpsubsw %xmm3, %xmm2, %xmm2
-  vpsignw %xmm1, %xmm0, %xmm5
-  vpblendvb %xmm3, %xmm2, %xmm5, %xmm0
+  vpsignw %xmm1, %xmm0, acc_lo
+  vpblendvb %xmm3, %xmm2, acc_lo, %xmm0
   retq
 
 .else
@@ -40,14 +36,14 @@ RSP_VABS:
   psraw $0xF, %xmm1
   pandn %xmm0, %xmm2
   pxor %xmm1, %xmm2
-  movdqa %xmm2, %xmm5
+  movdqa %xmm2, acc_lo
   psubsw %xmm1, %xmm2
-  psubw %xmm1, %xmm5
+  psubw %xmm1, acc_lo
   movdqa %xmm2, %xmm0
   retq
 .endif
 
-.ifdef __MINGW32__
+.ifdef __MINGW__
 .seh_endproc
 .else
 .size RSP_VABS,.-RSP_VABS
