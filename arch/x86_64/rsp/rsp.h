@@ -58,7 +58,7 @@ static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
 
 // Functions for reading/writing the accumulator.
 #if ((defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER))) \
-  && (defined(__i386__) || defined(__x86_64)))
+  && !(defined(__MINGW32__) || defined(__MINGW64__)) && defined(__x86_64))
 #define REGISTER_CACHING
 register __m128i hr_acc_lo __asm__ ("xmm5");
 register __m128i hr_acc_md __asm__ ("xmm6");
@@ -127,6 +127,21 @@ static inline __m128i read_acc_md(const uint16_t *acc) {
 }
 static inline __m128i read_acc_hi(const uint16_t *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 0);
+}
+static inline __m128i read_vcc_lo(const uint16_t *vcc) {
+  return rsp_vect_load_unshuffled_operand(vcc + 8);
+}
+static inline __m128i read_vcc_hi(const uint16_t *vcc) {
+  return rsp_vect_load_unshuffled_operand(vcc);
+}
+static inline __m128i read_vco_lo(const uint16_t *vco) {
+  return rsp_vect_load_unshuffled_operand(vco + 8);
+}
+static inline __m128i read_vco_hi(const uint16_t *vco) {
+  return rsp_vect_load_unshuffled_operand(vco);
+}
+static inline __m128i read_vce(const uint16_t *vce) {
+  return rsp_vect_load_unshuffled_operand(vce);
 }
 static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
   rsp_vect_write_operand(acc + 16, acc_lo);
