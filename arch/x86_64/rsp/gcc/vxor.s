@@ -1,5 +1,5 @@
 //
-// arch/x86_64/rsp/vxor.s
+// arch/x86_64/rsp/gcc/vxor.s
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
@@ -8,29 +8,26 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#
-# xmm1 = vs
-# xmm0 = vt
-# xmm5 = acc_lo
-#
+.include "rsp/gcc/defs.h"
 
-.ifdef __MINGW32__
+.text
+
+.ifdef __MINGW__
 .globl RSP_VXOR
 .def RSP_VXOR; .scl 2; .type 32; .endef
 .seh_proc RSP_VXOR
-RSP_VXOR:
 .else
 .global RSP_VXOR
 .type	RSP_VXOR, @function
-RSP_VXOR:
 .endif
 
 RSP_VXOR:
+
   pxor %xmm1, %xmm0
-  movdqa %xmm0, %xmm5
+  movdqa %xmm0, acc_lo
   retq
 
-.ifdef __MINGW32__
+.ifdef __MINGW__
 .seh_endproc
 .else
 .size RSP_VXOR,.-RSP_VXOR
