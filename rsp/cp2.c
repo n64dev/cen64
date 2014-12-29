@@ -88,3 +88,12 @@ void RSP_MTC2(struct rsp *rsp,
     e[lo] = rt;
 }
 
+// Initializes the coprocessor.
+void rsp_cp2_init(struct rsp *rsp) {
+  write_vcc_lo(rsp->cp2.vcc.e, rsp_vzero());
+  write_vcc_hi(rsp->cp2.vcc.e, rsp_vzero());
+  write_vco_lo(rsp->cp2.vco.e, rsp_vzero());
+  write_vco_hi(rsp->cp2.vco.e, rsp_vzero());
+  write_vce   (rsp->cp2.vce.e, rsp_vzero());
+}
+
