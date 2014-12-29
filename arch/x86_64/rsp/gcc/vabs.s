@@ -31,6 +31,14 @@ RSP_VABS:
   vpblendvb %xmm3, %xmm2, acc_lo, %xmm0
   retq
 
+.elseif __SSSE3__ == 1
+  psignw %xmm1, %xmm0
+  psraw $0xF, %xmm1
+  movdqa %xmm0, %xmm5
+  paddw %xmm1, %xmm0
+  psubsw %xmm1, %xmm0
+  retq
+
 .else
   pcmpeqw %xmm1, %xmm2
   psraw $0xF, %xmm1
