@@ -16,12 +16,17 @@
 .globl RSP_VXOR
 .def RSP_VXOR; .scl 2; .type 32; .endef
 .seh_proc RSP_VXOR
+.ifndef __VECTORCALL__
+RSP_VXOR:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  #pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VXOR
 .type	RSP_VXOR, @function
-.endif
-
 RSP_VXOR:
+.endif
 
   pxor %xmm1, %xmm0
   movdqa %xmm0, acc_lo

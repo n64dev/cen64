@@ -16,12 +16,17 @@
 .globl RSP_VNAND
 .def RSP_VNAND; .scl 2; .type 32; .endef
 .seh_proc RSP_VNAND
+.ifndef __VECTORCALL__
+RSP_VNAND:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VNAND
 .type	RSP_VMRG, @function
-.endif
-
 RSP_VNAND:
+.endif
 
   pcmpeqd %xmm2, %xmm2
   pand %xmm1, %xmm0
