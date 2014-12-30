@@ -35,8 +35,8 @@ static inline __m128i rsp_uclamp_acc(__m128i val,
   clamped_val = _mm_cmpeq_epi16(hi_negative, zero);
 
 #ifndef __SSE4_1__
-  clamped_val = _mm_and_si128(clamp_mask, clamped_val);
-  val = _mm_andnot_si128(clamp_mask, val);
+  clamped_val = _mm_and_si128(clamp_mask,_val);
+  val = _mm_andnot_si128(clamp_mask, clamped_val);
   return _mm_or_si128(val, clamped_val);
 #else
   return _mm_blendv_epi8(clamped_val, val, clamp_mask);
