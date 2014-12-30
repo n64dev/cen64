@@ -36,38 +36,19 @@ RSP_VLT:
   movdqa %xmm0, acc_lo
   retq
 
-.elseif __SSE4_1__ == 1
-  movdqa %xmm0, acc_lo
-  movdqa %xmm0, %xmm2
-  pcmpgtw %xmm1, %xmm0
-  pcmpeqw %xmm1, %xmm2
-  pxor vcc_hi, vcc_hi
-  pandn %xmm2, vco_hi
-  pand vco_hi, vco_lo
-  pxor vco_hi, vco_hi
-  por vco_lo, %xmm0
-  pxor vco_lo, vco_lo
-  pblendvb %xmm0, %xmm1, acc_lo
-  movdqa %xmm0, vcc_lo
-  movdqa acc_lo, %xmm0
-  retq
-
 .else
-  movdqa %xmm0, acc_lo
-  movdqa %xmm0, %xmm2
-  pcmpgtw %xmm1, %xmm0
-  pcmpeqw %xmm1, %xmm2
+  movdqa %xmm1, %xmm3
+  movdqa %xmm0, vcc_lo
+  pcmpeqw %xmm0, %xmm3
+  pcmpgtw %xmm1, vcc_lo
+  pandn vco_lo, vco_hi
+  pminsw %xmm1, %xmm0
+  pand %xmm3, vco_hi
   pxor vcc_hi, vcc_hi
-  pandn %xmm2, vco_hi
-  pand vco_hi, vco_lo
-  pxor vco_hi, vco_hi
-  por vco_lo, %xmm0
-  pxor vco_lo, vco_lo
-  movdqa %xmm0,vcc_lo
-  pand %xmm0, %xmm1
-  pandn acc_lo, %xmm0
-  por %xmm1, %xmm0
   movdqa %xmm0, acc_lo
+  por vco_hi, vcc_lo
+  pxor vco_lo, vco_lo
+  pxor vco_hi, vco_hi
   retq
 .endif
 
