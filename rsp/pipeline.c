@@ -143,7 +143,7 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
   exdf_latch->result.dest = RSP_REGISTER_R0;
   exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
   vd_reg = rsp_vector_function_table[rdex_latch->opcode.id](
-    rsp, iw, rsp->cp2.acc.e, vt_shuf_reg, vs_reg, zero);
+    rsp, iw, vt_shuf_reg, vs_reg, zero);
 
   rsp_vect_write_operand(rsp->cp2.regs[vd].e, vd_reg);
 }

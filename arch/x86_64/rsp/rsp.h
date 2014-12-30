@@ -57,8 +57,7 @@ static inline void rsp_vect_write_operand(uint16_t *dest, __m128i src) {
 }
 
 // Functions for reading/writing the accumulator.
-#if ((defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER))) \
-  && !(defined(__MINGW32__) || defined(__MINGW64__)) && defined(__x86_64))
+#if ((defined(__GNUC__) && !(defined(__clang__) || defined(__INTEL_COMPILER))) && defined(__x86_64))
 #define REGISTER_CACHING
 register __m128i hr_acc_lo __asm__ ("xmm5");
 register __m128i hr_acc_md __asm__ ("xmm6");

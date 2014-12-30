@@ -16,12 +16,17 @@
 .globl RSP_VOR
 .def RSP_VOR; .scl 2; .type 32; .endef
 .seh_proc RSP_VOR
+.ifndef __VECTORCALL__
+RSP_VOR:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  #pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VOR
 .type	RSP_VOR, @function
-.endif
-
 RSP_VOR:
+.endif
 
   por %xmm1, %xmm0
   movdqa %xmm0, acc_lo

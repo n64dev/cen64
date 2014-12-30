@@ -16,12 +16,17 @@
 .globl RSP_VMRG
 .def RSP_VMRG; .scl 2; .type 32; .endef
 .seh_proc RSP_VMRG
+.ifndef __VECTORCALL__
+RSP_VMRG:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  #pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VMRG
 .type	RSP_VMRG, @function
-.endif
-
 RSP_VMRG:
+.endif
 
 .ifdef __AVX__
   vpblendvb vcc_lo, %xmm1, %xmm0, %xmm0

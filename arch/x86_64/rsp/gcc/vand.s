@@ -16,12 +16,17 @@
 .globl RSP_VAND
 .def RSP_VAND; .scl 2; .type 32; .endef
 .seh_proc RSP_VAND
+.ifndef __VECTORCALL__
+RSP_VAND:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  #pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VAND
 .type	RSP_VAND, @function
-.endif
-
 RSP_VAND:
+.endif
 
   pand %xmm1, %xmm0
   movdqa %xmm0, acc_lo

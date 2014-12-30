@@ -16,12 +16,17 @@
 .globl RSP_VNOR
 .def RSP_VNOR; .scl 2; .type 32; .endef
 .seh_proc RSP_VNOR
+.ifndef __VECTORCALL__
+RSP_VNOR:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VNOR
 .type	RSP_VNOR, @function
-.endif
-
 RSP_VNOR:
+.endif
 
   pcmpeqd %xmm2, %xmm2
   por %xmm1, %xmm0

@@ -16,12 +16,17 @@
 .globl RSP_VNE
 .def RSP_VNE; .scl 2; .type 32; .endef
 .seh_proc RSP_VNE
+.ifndef __VECTORCALL__
+RSP_VNE:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VNE
 .type	RSP_VNE, @function
-.endif
-
 RSP_VNE:
+.endif
 
 .ifdef __AVX__
   vpcmpeqw %xmm0, %xmm1, %xmm3

@@ -16,12 +16,17 @@
 .globl RSP_VLT
 .def RSP_VLT; .scl 2; .type 32; .endef
 .seh_proc RSP_VLT
+.ifndef __VECTORCALL__
+RSP_VLT:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  #pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VLT
 .type	RSP_VLT, @function
-.endif
-
 RSP_VLT:
+.endif
 
 .ifdef __AVX__
   vpcmpeqw %xmm1, %xmm0, %xmm3

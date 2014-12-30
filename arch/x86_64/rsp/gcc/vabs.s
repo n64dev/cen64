@@ -16,12 +16,17 @@
 .globl RSP_VABS
 .def RSP_VABS; .scl 2; .type 32; .endef
 .seh_proc RSP_VABS
+.ifndef __VECTORCALL__
+RSP_VABS:
+  movdqa (%r8), %xmm0
+  movdqa (%r9), %xmm1
+  pxor %xmm2, %xmm2
+.endif
 .else
 .global RSP_VABS
 .type	RSP_VABS, @function
-.endif
-
 RSP_VABS:
+.endif
 
 .ifdef __AVX__
   vpsraw $0xf, %xmm1, %xmm3
