@@ -54,7 +54,16 @@ __m128i rsp_vrsq(struct rsp *rsp, int dp,
 
   // Main case: compute the reciprocal.
   else {
+
+    //TODO: Clean this up.
+#ifdef _MSC_VER
+    unsigned long bsf_index;
+    _BitScanReverse(&bsf_index, data);
+    shift = 31 - bsf_index;
+#else
     shift = __builtin_clz(data);
+#endif
+
     idx = ((data << shift) & 0x7FC00000U) >> 22;
     idx = (idx | 0x200) & 0x3FE | (shift % 2);
     result = rsp_reciprocal_rom[idx];
