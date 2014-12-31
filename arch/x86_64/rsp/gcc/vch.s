@@ -35,31 +35,31 @@ RSP_VCH:
   psubw vco_lo, %xmm3
   vpsubw %xmm3, %xmm1, %xmm4
   psraw $0xF, %xmm0
-  vpcmpeqw %xmm4, %xmm2, %xmm5
+  vpcmpeqw %xmm4, %xmm2, acc_lo
 
   # vce
   vpcmpeqw vco_lo, %xmm4, vce
   pand vco_lo, vce
 
   # !eq
-  vpor %xmm5, vce, vco_hi
+  vpor acc_lo, vce, vco_hi
   pcmpeqw %xmm2, vco_hi
 
   # le/ge
   pcmpgtw %xmm2, %xmm4
-  por %xmm4, %xmm5
-  vpblendvb vco_lo, %xmm0, %xmm5, vcc_hi
+  por %xmm4, acc_lo
+  vpblendvb vco_lo, %xmm0, acc_lo, vcc_hi
   pcmpeqw %xmm2, %xmm4
   vpblendvb vco_lo, %xmm4, %xmm0, vcc_lo
 
   # vd
   vpblendvb vco_lo, vcc_lo, vcc_hi, %xmm2
   vpblendvb %xmm2, %xmm3, %xmm1, %xmm0
-  movdqa %xmm0, %xmm5
+  movdqa %xmm0, acc_lo
   retq
 
 .elseif __SSE4_1__ == 1
-  movdqa %xmm1, %xmm5
+  movdqa %xmm1, acc_lo
   movdqa %xmm0, vcc_lo
   movdqa %xmm0, %xmm3
   pxor %xmm1, %xmm0
@@ -93,8 +93,8 @@ RSP_VCH:
   movdqa %xmm0, vco_lo
   pblendvb %xmm0, vcc_lo, %xmm4
   movdqa %xmm4, %xmm0
-  pblendvb %xmm0, %xmm3, %xmm5
-  movdqa %xmm5, %xmm0
+  pblendvb %xmm0, %xmm3, acc_lo
+  movdqa acc_lo, %xmm0
   retq
 
 .else
