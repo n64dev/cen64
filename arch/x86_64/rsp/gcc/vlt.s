@@ -32,7 +32,8 @@ RSP_VLT:
   vpcmpeqw %xmm1, %xmm0, %xmm3
   vpcmpgtw %xmm1, %xmm0, %xmm4
   pxor vcc_hi, vcc_hi
-  vpandn %xmm3, vco_hi, %xmm3
+//  vpandn %xmm3, vco_hi, %xmm3
+  vpand %xmm3, vco_hi, %xmm3
   pxor vco_hi, vco_hi
   pand vco_lo, %xmm3
   vpor %xmm3, %xmm4, vcc_lo
@@ -46,7 +47,8 @@ RSP_VLT:
   movdqa %xmm0, vcc_lo
   pcmpeqw %xmm0, %xmm3
   pcmpgtw %xmm1, vcc_lo
-  pandn vco_lo, vco_hi
+//  pandn vco_lo, vco_hi
+  pand vco_lo, vco_hi
   pminsw %xmm1, %xmm0
   pand %xmm3, vco_hi
   pxor vcc_hi, vcc_hi
