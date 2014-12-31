@@ -110,10 +110,10 @@ struct vr4300 {
 };
 
 struct vr4300_stats {
-  unsigned long long executed_instructions;
-  unsigned long long total_cycles;
+  unsigned long executed_instructions;
+  unsigned long total_cycles;
 
-  unsigned long long opcode_counts[NUM_VR4300_OPCODES];
+  unsigned long opcode_counts[NUM_VR4300_OPCODES];
 };
 
 cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);

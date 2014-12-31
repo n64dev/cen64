@@ -74,8 +74,8 @@ void vr4300_print_summary(struct vr4300_stats *stats) {
   cpi = (float) stats->executed_instructions / stats->total_cycles;
 
   printf(" * Performance statistics:\n\n"
-         "   %16s: %llu\n"
-         "   %16s: %llu\n"
+         "   %16s: %lu\n"
+         "   %16s: %lu\n"
          "   %16s: %1.2f\n"
          "\n\n",
 
@@ -89,7 +89,7 @@ void vr4300_print_summary(struct vr4300_stats *stats) {
 
   for (i = 1; i < NUM_VR4300_OPCODES; i += 2) {
     for (j = 0; i + j < NUM_VR4300_OPCODES && j < 2; j++) {
-      printf("   %16s: %16llu", vr4300_opcode_mnemonics[i + j],
+      printf("   %16s: %16lu", vr4300_opcode_mnemonics[i + j],
         stats->opcode_counts[i + j]);
 
       if (j == 0)
