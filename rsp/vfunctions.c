@@ -91,6 +91,7 @@ rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw,
 //
 // VCH
 //
+#ifndef REGISTER_CACHING
 rsp_vect_t RSP_VCH(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   uint16_t *acc = rsp->cp2.acc.e;
@@ -106,6 +107,10 @@ rsp_vect_t RSP_VCH(struct rsp *rsp, uint32_t iw,
   write_acc_lo(acc, result);
   return result;
 }
+#else
+rsp_vect_t RSP_VCH(struct rsp *rsp, uint32_t iw,
+  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
+#endif
 
 //
 // VCL
