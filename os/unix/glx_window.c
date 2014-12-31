@@ -83,6 +83,15 @@ int create_glx_context(struct glx_window *glx_window, GLXContext *context) {
   return 0;
 }
 
+// Kicks off the window's management thrad.
+int activate_gl_window(struct gl_window *gl_window,
+  struct bus_controller *bus) {
+  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
+
+  // All ready; kickoff the thread.
+  return pthread_create(&glx_window->thread, NULL, glx_window_thread, bus);
+}
+
 // Creates a new rendering window.
 int create_gl_window(struct bus_controller *bus,
   struct gl_window *gl_window, const struct gl_window_hints *hints) {
@@ -186,10 +195,7 @@ int create_gl_window(struct bus_controller *bus,
     "CEN64", None, NULL, 0, NULL);
 
   XMapRaised(glx_window->display, glx_window->window);
-
-  // All ready; kickoff the thread.
-  return pthread_create(&glx_window->thread, NULL,
-    glx_window_thread, bus);
+  return 0;
 
 create_out_destroy:
   destroy_glx_window(glx_window);

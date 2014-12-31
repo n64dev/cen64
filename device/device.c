@@ -15,6 +15,7 @@
 #include "common.h"
 #include "device.h"
 #include "fpu/fpu.h"
+#include "os/gl_window.h"
 #include "os/rom_file.h"
 
 #include "bus/controller.h"
@@ -96,6 +97,8 @@ struct cen64_device *device_create(struct cen64_device *device,
     printf("create_device: Failed to initialize the VI.\n");
     return NULL;
   }
+
+  activate_gl_window(&device->vi.gl_window, &device->bus);
 
   // Initialize the RDP.
   if (rdp_init(&device->rdp, &device->bus)) {
