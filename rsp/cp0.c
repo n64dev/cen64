@@ -90,8 +90,11 @@ uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
 void rsp_status_write(struct rsp *rsp, uint32_t rt) {
   uint32_t status = rsp->regs[RSP_CP0_REGISTER_SP_STATUS];
 
-  if (rt & SP_CLR_HALT)
+  if (rt & SP_CLR_HALT) {
+    rsp_pipeline_init(&rsp->pipeline);
     status &= ~SP_STATUS_HALT;
+  }
+
   else if (rt & SP_SET_HALT)
     status |= SP_STATUS_HALT;
 
