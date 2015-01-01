@@ -102,7 +102,7 @@ int create_gl_window(struct bus_controller *bus,
   InitializeCriticalSection(&winapi_window->render_lock);
   InitializeCriticalSection(&winapi_window->event_lock);
   winapi_window->render_semaphore = CreateSemaphore(
-    NULL, 0, 0x7FFFFFFFU, NULL);
+    NULL, 0, 1, NULL);
 
   winapi_window->h_instance = GetModuleHandle(NULL);
   wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -373,8 +373,6 @@ int winapi_window_thread(struct gl_window *gl_window,
   // Poll for input periodically (~1000x a second) while checking
   // to see if the simulator pushed out any frames in that time.
   while (1) {
-    DWORD status;
-
     if (unlikely(frame_count == 60)) {
       winapi_window_update_window_title(winapi_window, &last_report_time);
       frame_count = 0;
@@ -384,33 +382,18 @@ int winapi_window_thread(struct gl_window *gl_window,
       break;
 
     // Check if we were signaled. If not, just sit around for now.
-    EnterCriticalSection(&winapi_window->render_lock);
-
-    if (!winapi_window->frame_pending) {
-      status = SignalObjectAndWait(&winapi_window->render_lock,
-        winapi_window->render_semaphore, 1, FALSE);
-
-
-      if (status == WAIT_OBJECT_0)
-        EnterCriticalSection(&winapi_window->render_lock);
-    }
-
-    else
-      status = WAIT_OBJECT_0;
-
-    if (status == WAIT_OBJECT_0) {
-//    if (winapi_window->frame_pending && SignalObjectAndWait(
-//      &winapi_window->render_lock, winapi_window->render_semaphore,
-//      1, FALSE) != WAIT_TIMEOUT) {
+    if (WaitForSingleObject(winapi_window->
+      render_semaphore, 1) == WAIT_OBJECT_0) {
+      EnterCriticalSection(&winapi_window->render_lock);
       winapi_window->frame_pending = false;
       frame_count++;
 
       gl_window_render_frame(gl_window, winapi_window->frame_data,
         winapi_window->frame_xres, winapi_window->frame_yres,
         winapi_window->frame_xskip, winapi_window->frame_type);
-    }
 
-    LeaveCriticalSection(&winapi_window->render_lock);
+      LeaveCriticalSection(&winapi_window->render_lock);
+    }
   }
 
   return 0;
@@ -428,7 +411,7 @@ void winapi_window_update_window_title(
 
   sprintf(window_title,
     "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]"
-    " - %u VI/s", (unsigned) (60 / ((double) ns / NS_PER_SEC)));
+    " -  %.1f VI/s", (60 / ((double) ns / NS_PER_SEC)));
 
   SetWindowText(winapi_window->h_wnd, window_title);
   *last_report_time = current_time;
