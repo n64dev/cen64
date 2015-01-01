@@ -9,7 +9,6 @@
 //
 
 #include <setjmp.h>
-#include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include "common.h"
@@ -27,18 +26,6 @@
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 #include "vr4300/cp1.h"
-
-// Only used when passed -nointerface.
-bool device_exit_requested;
-
-cen64_cold static void device_sigint(int signum) {
-  device_exit_requested = true;
-}
-
-// The usual declarations begin here.
-cen64_cold static void device_destroy(struct cen64_device *device);
-cen64_cold static struct cen64_device *device_create(struct cen64_device *device,
-  uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart);
 
 #ifdef CEN64_DEVFEATURES
 cen64_hot static int device_spin(struct cen64_device *device,
@@ -98,8 +85,6 @@ struct cen64_device *device_create(struct cen64_device *device,
     return NULL;
   }
 
-  activate_gl_window(&device->vi.gl_window, &device->bus);
-
   // Initialize the RDP.
   if (rdp_init(&device->rdp, &device->bus)) {
     printf("create_device: Failed to initialize the RDP.\n");
@@ -128,61 +113,48 @@ void device_destroy(struct cen64_device *device) {
 
 // Called when we should (probably?) leave simulation.
 // After calling this function, we return to device_runmode_*.
-void device_request_exit(struct bus_controller *bus) {
+void device_exit(struct bus_controller *bus) {
   longjmp(bus->unwind_data, 1);
 }
 
 // Create a device and proceed to the main loop.
-int device_run(struct cen64_device *device, struct cen64_options *options,
-  uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart) {
-
-  // Register SIGTERM handler if we don't have an interface.
-  if (options->no_interface && signal(SIGINT, device_sigint) == SIG_ERR)
-    printf("Failed to register SIGINT handler.\n");
+void device_run(struct cen64_device *device) {
+  struct vr4300_stats vr4300_stats;
+  rsp_vect_t acc_lo, acc_md, acc_hi;
+  fpu_state_t saved_fpu_state;
 
   // Memory is already allocated; just spawn the device.
-  else if (device_create(device, ram, pifrom, cart) != NULL) {
-    rsp_vect_t acc_lo, acc_md, acc_hi;
-    fpu_state_t saved_fpu_state;
+  memset(&vr4300_stats, 0, sizeof(vr4300_stats));
 
-    struct vr4300_stats vr4300_stats;
-    memset(&vr4300_stats, 0, sizeof(vr4300_stats));
+  // Preserve host registers pinned to the device.
+  acc_lo = read_acc_lo(device->rsp.cp2.acc.e);
+  acc_md = read_acc_md(device->rsp.cp2.acc.e);
+  acc_hi = read_acc_hi(device->rsp.cp2.acc.e);
+  saved_fpu_state = fpu_get_state();
 
-    // Preserve host registers pinned to the device.
-    acc_lo = read_acc_lo(device->rsp.cp2.acc.e);
-    acc_md = read_acc_md(device->rsp.cp2.acc.e);
-    acc_hi = read_acc_hi(device->rsp.cp2.acc.e);
-    saved_fpu_state = fpu_get_state();
+  write_acc_lo(device->rsp.cp2.acc.e, rsp_vzero());
+  write_acc_md(device->rsp.cp2.acc.e, rsp_vzero());
+  write_acc_hi(device->rsp.cp2.acc.e, rsp_vzero());
+  vr4300_cp1_init(&device->vr4300);
 
-    write_acc_lo(device->rsp.cp2.acc.e, rsp_vzero());
-    write_acc_md(device->rsp.cp2.acc.e, rsp_vzero());
-    write_acc_hi(device->rsp.cp2.acc.e, rsp_vzero());
-    vr4300_cp1_init(&device->vr4300);
-
-    // Spin the device until we return (from setjmp).
+  // Spin the device until we return (from setjmp).
 #ifdef CEN64_DEVFEATURES
-    device_spin(device, &saved_fpu_state, &vr4300_stats);
+  device_spin(device, &saved_fpu_state, &vr4300_stats);
 #else
-    device_spin(device);
+  device_spin(device);
 #endif
 
-    // Restore host registers pinned to the device.
-    write_acc_lo(device->rsp.cp2.acc.e, acc_lo);
-    write_acc_md(device->rsp.cp2.acc.e, acc_md);
-    write_acc_hi(device->rsp.cp2.acc.e, acc_hi);
-    fpu_set_state(saved_fpu_state);
+  // Restore host registers pinned to the device.
+  write_acc_lo(device->rsp.cp2.acc.e, acc_lo);
+  write_acc_md(device->rsp.cp2.acc.e, acc_md);
+  write_acc_hi(device->rsp.cp2.acc.e, acc_hi);
+  fpu_set_state(saved_fpu_state);
 
-    // Finalize simulation, release memory, etc.
+  // Finalize simulation, release memory, etc.
 #ifdef CEN64_DEVFEATURES
-    if (options->print_sim_stats)
-      vr4300_print_summary(&vr4300_stats);
+  //if (options->print_sim_stats)
+  //  vr4300_print_summary(&vr4300_stats);
 #endif
-
-    device_destroy(device);
-    return EXIT_SUCCESS;
-  }
-
-  return EXIT_FAILURE;
 }
 
 // Continually cycles the device until setjmp returns.
