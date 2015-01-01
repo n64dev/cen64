@@ -6896,15 +6896,16 @@ static void rdp_tex_rect(uint32_t w1, uint32_t w2)
 	int32_t t = (w3 >>  0) & 0xffff;
 	int32_t dsdx = (w4 >> 16) & 0xffff;
 	int32_t dtdy = (w4 >>  0) & 0xffff;
-	
+  uint32_t xlint, xhint;
+
 	dsdx = SIGN16(dsdx);
 	dtdy = SIGN16(dtdy);
 	
 	if (other_modes.cycle_type == CYCLE_TYPE_FILL || other_modes.cycle_type == CYCLE_TYPE_COPY)
 		yl |= 3;
 
-	uint32_t xlint = (xl >> 2) & 0x3ff;
-	uint32_t xhint = (xh >> 2) & 0x3ff;
+	xlint = (xl >> 2) & 0x3ff;
+	xhint = (xh >> 2) & 0x3ff;
 
 	int32_t ewdata[44];
 	ewdata[0] = (0x24 << 24) | ((0x80 | tilenum) << 16) | yl;
@@ -6956,15 +6957,16 @@ static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
 	int32_t t = (w3 >>  0) & 0xffff;
 	int32_t dsdx = (w4 >> 16) & 0xffff;
 	int32_t dtdy = (w4 >>  0) & 0xffff;
-	
+  uint32_t xlint, xhint;
+
 	dsdx = SIGN16(dsdx);
 	dtdy = SIGN16(dtdy);
 
 	if (other_modes.cycle_type == CYCLE_TYPE_FILL || other_modes.cycle_type == CYCLE_TYPE_COPY)
 		yl |= 3;
 
-	uint32_t xlint = (xl >> 2) & 0x3ff;
-	uint32_t xhint = (xh >> 2) & 0x3ff;
+	xlint = (xl >> 2) & 0x3ff;
+	xhint = (xh >> 2) & 0x3ff;
 
 	int32_t ewdata[44];
 	ewdata[0] = (0x25 << 24) | ((0x80 | tilenum) << 16) | yl;
@@ -7344,12 +7346,13 @@ static void rdp_fill_rect(uint32_t w1, uint32_t w2)
 	uint32_t yl = (w1 >>  0) & 0xfff;
 	uint32_t xh = (w2 >> 12) & 0xfff;
 	uint32_t yh = (w2 >>  0) & 0xfff;
+  uint32_t xlint, xhint;
 
 	if (other_modes.cycle_type == CYCLE_TYPE_FILL || other_modes.cycle_type == CYCLE_TYPE_COPY)
 		yl |= 3;
 
-	uint32_t xlint = (xl >> 2) & 0x3ff;
-	uint32_t xhint = (xh >> 2) & 0x3ff;
+	xlint = (xl >> 2) & 0x3ff;
+	xhint = (xh >> 2) & 0x3ff;
 
 	int32_t ewdata[44];
 	ewdata[0] = (0x3680 << 16) | yl;
@@ -8348,6 +8351,10 @@ static inline uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t dzpix
 
 	uint32_t oz, dzmem, zval, hval;
 	int32_t rawdzmem;
+  uint32_t dzmemmodifier;
+  uint32_t dznew;
+  uint32_t dznotshift;
+  uint32_t farther;
 
 	if (other_modes.z_compare_en)
 	{
@@ -8363,7 +8370,6 @@ static inline uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t dzpix
 		int precision_factor = (zval >> 13) & 0xf;
 
 		
-		uint32_t dzmemmodifier; 
 		if (precision_factor < 3)
 		{
 			if (dzmem != 0x8000)
@@ -8383,12 +8389,12 @@ static inline uint32_t z_compare(uint32_t zcurpixel, uint32_t sz, uint16_t dzpix
 		if (dzmem > 0x8000)
 			dzmem = 0xffff;
 
-		uint32_t dznew = (dzmem > dzpix) ? dzmem : (uint32_t)dzpix;
-		uint32_t dznotshift = dznew;
+		dznew = (dzmem > dzpix) ? dzmem : (uint32_t)dzpix;
+		dznotshift = dznew;
 		dznew <<= 3;
 		
 
-		uint32_t farther = force_coplanar || ((sz + dznew) >= oz);
+		farther = force_coplanar || ((sz + dznew) >= oz);
 		
 		int overflow = (curpixel_memcvg + *curpixel_cvg) & 8;
 		*blend_en = other_modes.force_blend || (!overflow && other_modes.antialias_en && farther);

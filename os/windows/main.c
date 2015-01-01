@@ -13,6 +13,7 @@
 #include "os/gl_window.h"
 #include "os/main.h"
 #include "os/windows/winapi_window.h"
+#include <signal.h>
 #include <stdlib.h>
 #include <tchar.h>
 #include <windows.h>
@@ -24,7 +25,16 @@ static int load_roms(const char *pifrom_path, const char *cart_path,
 static void hide_console(void);
 static void show_console(void);
 
+cen64_cold static DWORD run_device_thread(void *opaque);
+
 HANDLE dynarec_heap;
+
+// Only used when passed -nointerface.
+bool device_exit_requested;
+
+cen64_cold static void device_sigint(int signum) {
+  device_exit_requested = true;
+}
 
 // Windows application entry point.
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -137,36 +147,68 @@ void os_release_input(struct gl_window *gl_window) {
 int os_main(struct cen64_options *options,
   struct rom_file *pifrom, struct rom_file *cart) {
   struct gl_window_hints hints;
+  struct winapi_window window;
   int status;
+
+  // Event/rendering thread.
+  HANDLE t_hnd;
 
   // Allocate the device on the stack.
   struct cen64_device device;
-  memset(&device, 0, sizeof(device));
 
   // Prevent debugging tools from raising warnings
   // about uninitialized memory being read, etc.
-  get_default_gl_window_hints(&hints);
+  memset(&device, 0, sizeof(device));
 
-  if (create_gl_window(bus, &device.vi.gl_window, &hints)) {
-    MessageBox(NULL, "Failed to create a window.", "CEN64",
-      MB_OK | MB_ICONEXCLAMATION);
+  //if (options->console)
+    show_console();
 
+  if (device_create(&device, malloc(DEVICE_RAMSIZE), pifrom, cart) == NULL) {
+    printf("Failed to create a device.\n");
+
+    //deallocate_ram(&hunk);
     return 1;
   }
 
-  if (options->console)
-    show_console();
+  // Spawn the user interface (or signal handler).
+  if (!options->no_interface) {
+    device.vi.gl_window.window = &window;
+    get_default_gl_window_hints(&hints);
 
-  // TODO: Temporary fixes until we're threaded...
-  gl_window_init(&device.vi.gl_window);
+    if (create_gl_window(&device.bus, &device.vi.gl_window, &hints)) {
+      MessageBox(NULL, "Failed to create a window.", "CEN64",
+        MB_OK | MB_ICONEXCLAMATION);
 
-  status = device_run(&device, options, malloc(DEVICE_RAMSIZE), pifrom, cart);
-  destroy_gl_window(&device.vi.gl_window);
+      //free(ram);
+      return 1;
+    }
+  }
 
-  if (options->console)
+  else {
+    if (signal(SIGINT, device_sigint) == SIG_ERR)
+      MessageBox(NULL, "Failed to register SIGINT handler.", "CEN64",
+        MB_OK | MB_ICONEXCLAMATION);
+  }
+
+  // Start the device thread, hand over control to the UI thread on success.
+  if ((t_hnd = CreateThread(NULL, 0,
+    run_device_thread, &device, 0, NULL)) != NULL) {
+    gl_window_thread(&device.vi.gl_window, &device.bus);
+    WaitForSingleObject(t_hnd, INFINITE);
+  }
+
+  else
+    MessageBox(NULL, "Unable to spawn a thread for the device.", "CEN64",
+      MB_OK | MB_ICONEXCLAMATION);
+
+  if (!options->no_interface)
+    destroy_gl_window(&device.vi.gl_window);
+
+  //if (options->console)
     hide_console();
 
-  return status;
+
+    return status;
 }
 
 // TODO: Temporary fixes until we're threaded...
@@ -174,15 +216,19 @@ bool os_exit_requested(struct gl_window *gl_window) {
   struct winapi_window *winapi_window =
     (struct winapi_window *) (gl_window->window);
 
-  return winapi_window->exit_requested;
+  return winapi_window_exit_requested(winapi_window);
 }
 
 // TODO: Temporary fixes until we're threaded...
 void os_render_frame(struct gl_window *gl_window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type) {
+  struct winapi_window *winapi_window =
+    (struct winapi_window *) (gl_window->window);
 
-  gl_window_render_frame(gl_window, data,
+  winapi_window_render_frame(winapi_window, data,
     xres, yres, xskip, type);
+
+  ReleaseSemaphore(winapi_window->render_semaphore, 1, 0);
 }
 
 // "Unhides" the console window.
@@ -191,5 +237,13 @@ void show_console(void) {
 
   freopen("CONOUT$", "wb", stdout);
   freopen("CONOUT$", "wb", stderr);
+}
+
+// Runs the device, always returns 0.
+DWORD run_device_thread(void *opaque) {
+  struct cen64_device *device = (struct cen64_device *) opaque;
+
+  device_run(device);
+  return 0;
 }
 

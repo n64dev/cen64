@@ -173,7 +173,7 @@ void os_render_frame(struct gl_window *gl_window, const void *data,
 }
 
 // Runs the device, always returns NULL.
-cen64_cold void *run_device_thread(void *opaque) {
+void *run_device_thread(void *opaque) {
   struct cen64_device *device = (struct cen64_device *) opaque;
 
   device_run(device);

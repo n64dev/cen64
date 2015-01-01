@@ -1,5 +1,5 @@
 //
-// os/windows/gl_window.c
+// os/windows/winapi_window.c
 //
 // Convenience functions for managing rendering windows.
 //
@@ -9,8 +9,10 @@
 
 #include "common.h"
 #include "common/debug.h"
+#include "device/device.h"
 #include "os/gl_window.h"
 #include "os/input.h"
+#include "os/timer.h"
 #include "os/windows/winapi_window.h"
 
 #include <stddef.h>
@@ -21,12 +23,19 @@
 #include <tchar.h>
 #include <GL/gl.h>
 
-static const wchar_t CLASSNAME[] = L"CEN64";
-
 static int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc);
 
 static int get_matching_pixel_format(struct winapi_window *winapi_window,
   const struct gl_window_hints *hints);
+
+cen64_hot static int winapi_window_thread(struct gl_window *gl_window,
+  struct winapi_window *winapi_window, struct bus_controller *bus);
+
+static void winapi_window_update_window_title(
+  struct winapi_window *winapi_window, cen64_time *last_report_time);
+
+// Classname. TODO: Make this unique?
+static const LPCSTR CLASSNAME = "CEN64";
 
 // Callback function to handle message sent to the window.
 LRESULT CALLBACK WndProc(HWND hWnd,
@@ -67,7 +76,7 @@ int create_gl_context(struct winapi_window *winapi_window, HGLRC *h_rc) {
 int create_gl_window(struct bus_controller *bus,
   struct gl_window *gl_window, const struct gl_window_hints *hints) {
   struct winapi_window *winapi_window;
-  int fullscreen;
+  unsigned fullscreen;
 
   WNDCLASS wc;
   DWORD dw_ex_style;
@@ -90,7 +99,10 @@ int create_gl_window(struct bus_controller *bus,
   winapi_window = (struct winapi_window *) (gl_window->window);
   memset(winapi_window, 0, sizeof(*winapi_window));
 
+  InitializeCriticalSection(&winapi_window->render_lock);
   InitializeCriticalSection(&winapi_window->event_lock);
+  winapi_window->render_semaphore = CreateSemaphore(
+    NULL, 0, 0x7FFFFFFFU, NULL);
 
   winapi_window->h_instance = GetModuleHandle(NULL);
   wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -137,14 +149,17 @@ int create_gl_window(struct bus_controller *bus,
     goto create_out_destroy;
   }
 
-  if (!wglMakeCurrent(winapi_window->h_dc, winapi_window->h_glrc)) {
-    debug("create_glx_window: Could not attach the GL rendering context.\n");
-    goto create_out_destroy;
-  }
-
   ShowWindow(winapi_window->h_wnd, SW_SHOW);
   SetForegroundWindow(winapi_window->h_wnd);
   SetFocus(winapi_window->h_wnd);
+
+  // All ready; kickoff the thread.
+  if ((winapi_window->frame_data = malloc(MAX_FRAME_DATA_SIZE)) == NULL) {
+    debug("create_gl_window: Failed to allocate memory for frame data.\n");
+
+    goto create_out_destroy;
+  }
+
   return 0;
 
 create_out_destroy:
@@ -179,7 +194,9 @@ int destroy_gl_window(struct gl_window *window) {
     winapi_window->h_instance = NULL;
   }
 
+  CloseHandle(winapi_window->render_semaphore);
   DeleteCriticalSection(&winapi_window->event_lock);
+  DeleteCriticalSection(&winapi_window->render_lock);
 
   free(winapi_window);
   window->window = NULL;
@@ -244,13 +261,38 @@ int gl_swap_buffers(const struct gl_window *window) {
   return SwapBuffers(winapi_window->h_dc) != TRUE;
 }
 
+// Jumps to the entry point for the user interface code.
+int gl_window_thread(struct gl_window *gl_window, struct bus_controller *bus) {
+  struct winapi_window *winapi_window =
+    (struct winapi_window *) (gl_window->window);
+
+  return winapi_window_thread(gl_window, winapi_window, bus);
+}
+
+// Informs the caller if an exit was requested.
+bool winapi_window_exit_requested(struct winapi_window *window) {
+  bool exit_requested;
+
+  EnterCriticalSection(&window->event_lock);
+  exit_requested = window->exit_requested;
+  LeaveCriticalSection(&window->event_lock);
+
+  return exit_requested;
+}
+
 // Handles events that get sent to the window thread.
-void winapi_window_poll_events(struct bus_controller *bus) {
+bool winapi_window_poll_events(struct bus_controller *bus,
+  struct winapi_window *winapi_window) {
+  bool exit_requested;
   MSG msg;
+
+  exit_requested = false;
+
+  EnterCriticalSection(&winapi_window->event_lock);
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     if (msg.message == WM_QUIT)
-      device_request_exit(bus);
+      winapi_window->exit_requested = exit_requested = true;
 
     else if (msg.message == WM_KEYDOWN) {
       keyboard_press_callback(bus, msg.wParam);
@@ -265,5 +307,130 @@ void winapi_window_poll_events(struct bus_controller *bus) {
       DispatchMessage(&msg);
     }
   }
+
+  LeaveCriticalSection(&winapi_window->event_lock);
+  return exit_requested;
+}
+
+// Copies the frame data to the render thread.
+void winapi_window_render_frame(struct winapi_window *window, const void *data,
+  unsigned xres, unsigned yres, unsigned xskip, unsigned type) {
+  size_t copy_size;
+
+  switch (type & 0x3) {
+    case 0:
+    case 1:
+      copy_size = 0;
+      break;
+
+    case 2:
+      copy_size = 2;
+      break;
+
+    case 3:
+      copy_size = 4;
+      break;
+  }
+
+  copy_size *= xres * yres;
+
+  // Grab the locks and dump the data.
+  // TODO: Check to make sure !frame_pending.
+  EnterCriticalSection(&window->render_lock);
+
+  memcpy(window->frame_data, data, copy_size);
+  window->frame_xres = xres;
+  window->frame_yres = yres;
+  window->frame_xskip = xskip;
+  window->frame_type = type;
+  window->frame_pending = true;
+
+  LeaveCriticalSection(&window->render_lock);
+}
+
+// Main window thread. Handles and pumps events.
+int winapi_window_thread(struct gl_window *gl_window,
+  struct winapi_window *winapi_window, struct bus_controller *bus) {
+  cen64_time last_report_time;
+  cen64_time refresh_timeout;
+  unsigned frame_count = 0;
+
+  EnterCriticalSection(&winapi_window->render_lock);
+
+  // Activate the rendering context from THIS thread.
+  // Any kind of GL call has to be done from here, or else.
+  if (!wglMakeCurrent(winapi_window->h_dc, winapi_window->h_glrc)) {
+    debug("winapi_window_thread: Could not attach rendering context.\n");
+
+    return 1;
+  }
+
+  gl_window_init(gl_window);
+  LeaveCriticalSection(&winapi_window->render_lock);
+
+  get_time(&last_report_time);
+
+  // Poll for input periodically (~1000x a second) while checking
+  // to see if the simulator pushed out any frames in that time.
+  while (1) {
+    DWORD status;
+
+    if (unlikely(frame_count == 60)) {
+      winapi_window_update_window_title(winapi_window, &last_report_time);
+      frame_count = 0;
+    }
+
+    if (winapi_window_poll_events(bus, winapi_window))
+      break;
+
+    // Check if we were signaled. If not, just sit around for now.
+    EnterCriticalSection(&winapi_window->render_lock);
+
+    if (!winapi_window->frame_pending) {
+      status = SignalObjectAndWait(&winapi_window->render_lock,
+        winapi_window->render_semaphore, 1, FALSE);
+
+
+      if (status == WAIT_OBJECT_0)
+        EnterCriticalSection(&winapi_window->render_lock);
+    }
+
+    else
+      status = WAIT_OBJECT_0;
+
+    if (status == WAIT_OBJECT_0) {
+//    if (winapi_window->frame_pending && SignalObjectAndWait(
+//      &winapi_window->render_lock, winapi_window->render_semaphore,
+//      1, FALSE) != WAIT_TIMEOUT) {
+      winapi_window->frame_pending = false;
+      frame_count++;
+
+      gl_window_render_frame(gl_window, winapi_window->frame_data,
+        winapi_window->frame_xres, winapi_window->frame_yres,
+        winapi_window->frame_xskip, winapi_window->frame_type);
+    }
+
+    LeaveCriticalSection(&winapi_window->render_lock);
+  }
+
+  return 0;
+}
+
+// Updates the window title.
+void winapi_window_update_window_title(
+  struct winapi_window *winapi_window, cen64_time *last_report_time) {
+  cen64_time current_time;
+  unsigned long long ns;
+  char window_title[64];
+
+  get_time(&current_time);
+  ns = compute_time_difference(&current_time, last_report_time);
+
+  sprintf(window_title,
+    "CEN64 ["CEN64_COMPILER" - "CEN64_ARCH_DIR"/"CEN64_ARCH_SUPPORT"]"
+    " - %u VI/s", (unsigned) (60 / ((double) ns / NS_PER_SEC)));
+
+  SetWindowText(winapi_window->h_wnd, window_title);
+  *last_report_time = current_time;
 }
 
