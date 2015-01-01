@@ -13,6 +13,7 @@
 #include "bus/controller.h"
 #include "os/main.h"
 #include "ri/controller.h"
+#include "si/cic.h"
 #include "si/controller.h"
 #include "vi/controller.h"
 #include "vr4300/interface.h"
@@ -31,13 +32,22 @@ static int pif_perform_command(struct si_controller *si, unsigned channel,
   uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes);
 
 // Initializes the SI.
-int si_init(struct si_controller *si,
-  struct bus_controller *bus, const uint8_t *rom) {
-  si->bus = bus;
-  si->rom = rom;
+int si_init(struct si_controller *si, struct bus_controller *bus,
+  const uint8_t *pif_rom, const uint8_t *cart_rom) {
+  uint32_t cic_seed;
 
-  si->ram[0x26] = 0x3F;
-  si->ram[0x27] = 0x3F;
+  si->bus = bus;
+  si->rom = pif_rom;
+
+  if (get_cic_seed(cart_rom, &cic_seed)) {
+    printf("Unknown CIC type; is this a byte-swapped ROM?\n");
+    return 1;
+  }
+
+  si->ram[0x24] = cic_seed >> 24;
+  si->ram[0x25] = cic_seed >> 16;
+  si->ram[0x26] = cic_seed >>  8;
+  si->ram[0x27] = cic_seed >>  0;
 
   // Specify 8MiB RDRAM for 6102/6105 carts.
   if (si->ram[0x26] == 0x3F && si->ram[0x27] == 0x3F)

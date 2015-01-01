@@ -76,7 +76,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the SI.
-  if (si_init(&device->si, &device->bus, pifrom->ptr) < 0) {
+  if (si_init(&device->si, &device->bus, pifrom->ptr, cart->ptr) < 0) {
     printf("create_device: Failed to initialize the SI.\n");
     return NULL;
   }
