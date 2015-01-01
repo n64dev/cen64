@@ -24,7 +24,34 @@ const char *pi_register_mnemonics[NUM_PI_REGISTERS] = {
 };
 #endif
 
+static int pi_dma_read(struct pi_controller *pi);
 static int pi_dma_write(struct pi_controller *pi);
+
+// Copies data from the the PI into RDRAM.
+static int pi_dma_read(struct pi_controller *pi) {
+  uint32_t dest = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFF;
+  uint32_t source = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
+  uint32_t length = (pi->regs[PI_RD_LEN_REG] & 0xFFFFFF) + 1;
+
+  if (pi->regs[PI_DRAM_ADDR_REG] == 0xFFFFFFFF) {
+    pi->regs[PI_STATUS_REG] &= ~0x1;
+    pi->regs[PI_STATUS_REG] |= 0x8;
+
+    signal_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
+    return 0;
+  }
+
+  if (length & 7)
+    length = (length + 7) & ~7;
+
+  pi->regs[PI_DRAM_ADDR_REG] += length;
+  pi->regs[PI_CART_ADDR_REG] += length;
+  pi->regs[PI_STATUS_REG] &= ~0x1;
+  pi->regs[PI_STATUS_REG] |= 0x8;
+
+  signal_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
+  return 0;
+}
 
 // Copies data from the the PI into RDRAM.
 static int pi_dma_write(struct pi_controller *pi) {
@@ -43,9 +70,14 @@ static int pi_dma_write(struct pi_controller *pi) {
   if (length & 7)
     length = (length + 7) & ~7;
 
-  if (!(source & 0x0E000000)) {
-    if (source + length > pi->rom_size)
+  if (source & 0x08000000) {
+  }
+
+  else if (!(source & 0x06000000)) {
+    if (source + length > pi->rom_size) {
       length = pi->rom_size - source;
+      //assert(0);
+    }
 
      memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
   }
@@ -73,6 +105,14 @@ int pi_init(struct pi_controller *pi, struct bus_controller *bus,
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word) {
   struct pi_controller *pi = (struct pi_controller *) opaque;
   unsigned offset = (address - ROM_CART_BASE_ADDRESS) & ~0x3;
+
+  // TODO: Need to figure out correct behaviour.
+  // Should this even happen to begin with?
+  if (offset > pi->rom_size) {
+    *word = 0;
+    return 0;
+  }
+
   memcpy(word, pi->rom + offset, sizeof(*word));
   *word = byteswap_32(*word);
   return 0;
@@ -108,6 +148,9 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   debug_mmio_write(pi, pi_register_mnemonics[reg], word, dqm);
 
   if (reg == PI_STATUS_REG) {
+    pi->regs[reg] &= ~dqm;
+    pi->regs[reg] |= word;
+
     if (word & 0x1)
       pi->regs[reg] = 0;
 
@@ -123,6 +166,9 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
     if (reg == PI_WR_LEN_REG)
       return pi_dma_write(pi);
+
+    else if (reg == PI_RD_LEN_REG)
+      return pi_dma_read(pi);
   }
 
   return 0;
