@@ -227,6 +227,28 @@ int VR4300_TLBWI(struct vr4300 *vr4300,
   return 0;
 }
 
+//
+// TLBWR
+//
+int VR4300_TLBWR(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+  uint64_t entry_hi = mask_reg(10, vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI]);
+  uint64_t entry_lo_0 = mask_reg(2, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO0]);
+  uint64_t entry_lo_1 = mask_reg(3, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO1]);
+  uint32_t page_mask = mask_reg(5, vr4300->regs[VR4300_CP0_REGISTER_PAGEMASK]);
+  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_WIRED] & 0x3F;
+
+  index = rand() % (32 - index) + index;
+  tlb_write(&vr4300->cp0.tlb, index, entry_hi, entry_lo_0, entry_lo_1, page_mask);
+
+  vr4300->cp0.page_mask[index] = (page_mask | 0x1FFF) >> 1;
+  vr4300->cp0.pfn[index][0] = (entry_lo_0 << 6) & ~0xFFFU;
+  vr4300->cp0.pfn[index][1] = (entry_lo_1 << 6) & ~0xFFFU;
+  vr4300->cp0.state[index][0] = entry_lo_0 & 0x3F;
+  vr4300->cp0.state[index][1] = entry_lo_1 & 0x3F;
+  return 0;
+}
+
 // Initializes the coprocessor.
 void vr4300_cp0_init(struct vr4300 *vr4300) {
   tlb_init(&vr4300->cp0.tlb);

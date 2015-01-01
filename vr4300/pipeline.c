@@ -90,11 +90,25 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
     if (likely(index >= 0)) {
       uint32_t page_mask = vr4300->cp0.page_mask[index];
       unsigned select = ((page_mask + 1) & vaddr) == 0 ? 0 : 1;
+
+      if (unlikely((vr4300->cp0.state[index][select] & 2) == 0)) {
+        VR4300_ITLB(vr4300);
+
+        vr4300->pipeline.icrf_latch.pc = (vr4300->regs[
+          VR4300_CP0_REGISTER_STATUS] & 0x400000)
+          ? 0xFFFFFFFFBFC00380ULL
+          : 0xFFFFFFFF80000180ULL;
+
+        return 1;
+      }
+
       paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
     }
 
-    else
-      abort();
+    else {
+      VR4300_ITLB(vr4300);
+      return 1;
+    }
   }
 
   // If we're in a cached region and miss, it's a ICB.
@@ -248,11 +262,25 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       if (likely(index >= 0)) {
         uint32_t page_mask = vr4300->cp0.page_mask[index];
         unsigned select = ((page_mask + 1) & vaddr) == 0 ? 0 : 1;
+
+        if (unlikely((vr4300->cp0.state[index][select] & 2) == 0)) {
+          VR4300_DTLB(vr4300);
+
+          vr4300->pipeline.icrf_latch.pc = (vr4300->regs[
+            VR4300_CP0_REGISTER_STATUS] & 0x400000)
+            ? 0xFFFFFFFFBFC00380ULL
+            : 0xFFFFFFFF80000180ULL;
+
+          return 1;
+        }
+
         paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
       }
 
-      else
-        abort();
+      else {
+        VR4300_DTLB(vr4300);
+        return 1;
+      }
     }
 
     // If we're in a cached region and miss, it's a DCM.
