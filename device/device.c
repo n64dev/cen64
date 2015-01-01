@@ -53,55 +53,55 @@ struct cen64_device *device_create(struct cen64_device *device,
 
   // Initialize the bus.
   if (bus_init(&device->bus)) {
-    printf("create_device: Failed to initialize the bus.\n");
+    debug("create_device: Failed to initialize the bus.\n");
     return NULL;
   }
 
   // Initialize the AI.
-  if (ai_init(&device->ai, &device->bus) < 0) {
-    printf("create_device: Failed to initialize the AI.\n");
+  if (ai_init(&device->ai, &device->bus)) {
+    debug("create_device: Failed to initialize the AI.\n");
     return NULL;
   }
 
   // Initialize the PI.
-  if (pi_init(&device->pi, &device->bus, cart->ptr, cart->size) < 0) {
-    printf("create_device: Failed to initialize the PI.\n");
+  if (pi_init(&device->pi, &device->bus, cart->ptr, cart->size)) {
+    debug("create_device: Failed to initialize the PI.\n");
     return NULL;
   }
 
   // Initialize the RI.
-  if (ri_init(&device->ri, &device->bus, ram) < 0) {
-    printf("create_device: Failed to initialize the RI.\n");
+  if (ri_init(&device->ri, &device->bus, ram)) {
+    debug("create_device: Failed to initialize the RI.\n");
     return NULL;
   }
 
   // Initialize the SI.
-  if (si_init(&device->si, &device->bus, pifrom->ptr, cart->ptr) < 0) {
-    printf("create_device: Failed to initialize the SI.\n");
+  if (si_init(&device->si, &device->bus, pifrom->ptr, cart->ptr)) {
+    debug("create_device: Failed to initialize the SI.\n");
     return NULL;
   }
 
   // Initialize the VI.
-  if (vi_init(&device->vi, &device->bus) < 0) {
-    printf("create_device: Failed to initialize the VI.\n");
+  if (vi_init(&device->vi, &device->bus)) {
+    debug("create_device: Failed to initialize the VI.\n");
     return NULL;
   }
 
   // Initialize the RDP.
   if (rdp_init(&device->rdp, &device->bus)) {
-    printf("create_device: Failed to initialize the RDP.\n");
+    debug("create_device: Failed to initialize the RDP.\n");
     return NULL;
   }
 
   // Initialize the RSP.
   if (rsp_init(&device->rsp, &device->bus)) {
-    printf("create_device: Failed to initialize the RSP.\n");
+    debug("create_device: Failed to initialize the RSP.\n");
     return NULL;
   }
 
   // Initialize the VR4300.
   if (vr4300_init(&device->vr4300, &device->bus)) {
-    printf("create_device: Failed to initialize the VR4300.\n");
+    debug("create_device: Failed to initialize the VR4300.\n");
     return NULL;
   }
 
