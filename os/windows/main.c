@@ -160,9 +160,6 @@ int os_main(struct cen64_options *options,
   // about uninitialized memory being read, etc.
   memset(&device, 0, sizeof(device));
 
-  //if (options->console)
-    show_console();
-
   if (device_create(&device, malloc(DEVICE_RAMSIZE), pifrom, cart) == NULL) {
     printf("Failed to create a device.\n");
 
@@ -191,8 +188,12 @@ int os_main(struct cen64_options *options,
   }
 
   // Start the device thread, hand over control to the UI thread on success.
+  if (options->console)
+    show_console();
+
   if ((t_hnd = CreateThread(NULL, 0,
     run_device_thread, &device, 0, NULL)) != NULL) {
+
     gl_window_thread(&device.vi.gl_window, &device.bus);
     WaitForSingleObject(t_hnd, INFINITE);
   }
@@ -201,17 +202,15 @@ int os_main(struct cen64_options *options,
     MessageBox(NULL, "Unable to spawn a thread for the device.", "CEN64",
       MB_OK | MB_ICONEXCLAMATION);
 
-  if (!options->no_interface)
-    destroy_gl_window(&device.vi.gl_window);
-
-  //if (options->console)
+  if (options->console)
     hide_console();
 
+  if (!options->no_interface)
+    destroy_gl_window(&device.vi.gl_window);
 
     return status;
 }
 
-// TODO: Temporary fixes until we're threaded...
 bool os_exit_requested(struct gl_window *gl_window) {
   struct winapi_window *winapi_window =
     (struct winapi_window *) (gl_window->window);
@@ -219,7 +218,6 @@ bool os_exit_requested(struct gl_window *gl_window) {
   return winapi_window_exit_requested(winapi_window);
 }
 
-// TODO: Temporary fixes until we're threaded...
 void os_render_frame(struct gl_window *gl_window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type) {
   struct winapi_window *winapi_window =
