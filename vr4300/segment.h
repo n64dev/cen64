@@ -17,6 +17,7 @@ struct segment {
   uint64_t length;
   uint64_t offset;
 
+  uint8_t xmode_mask;
   bool mapped;
   bool cached;
 };

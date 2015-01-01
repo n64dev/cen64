@@ -26,6 +26,7 @@ static const struct segment USEGs[] = {
   0x0000000080000000ULL, /* length */
   0x0000000000000000ULL, /* offset */
 
+  0x20,                  /* ux mask */
   true,                  /* mapped */
   true,                  /* cached */
 
@@ -34,6 +35,7 @@ static const struct segment USEGs[] = {
   0x0000010000000000ULL, /* length */
   0x0000000000000000ULL, /* offset */
 
+  0x20,                  /* ux mask */
   true,                  /* mapped */
   true,                  /* cached */
 }};
@@ -44,6 +46,7 @@ static const struct segment XSSEG = {
   0x0000010000000000ULL, /* length */
   0x0000000000000000ULL, /* offset */
 
+  0x40,                  /* sx mask */
   true,                  /* mapped */
   true,                  /* cached */
 };
@@ -54,6 +57,7 @@ static const struct segment KSEGs[] = {
   0x0000000020000000ULL, /* length */
   0xFFFFFFFF80000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                  /* cached */
 
@@ -62,6 +66,7 @@ static const struct segment KSEGs[] = {
   0x0000000020000000ULL, /* length */
   0xFFFFFFFFA0000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   false,                 /* cached */
 
@@ -70,6 +75,7 @@ static const struct segment KSEGs[] = {
   0x0000000020000000ULL, /* length */
   0x0000000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   true,                  /* mapped */
   true,                  /* cached */
 
@@ -78,6 +84,7 @@ static const struct segment KSEGs[] = {
   0x0000000020000000ULL, /* length */
   0x0000000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   true,                  /* mapped */
   true,                  /* cached */
 }};
@@ -87,6 +94,7 @@ static const struct segment XKSEG = {
   0x0000010000000000ULL, /* length */
   0x0000000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   true,                  /* mapped */
   true,                  /* cached */
 };
@@ -96,6 +104,7 @@ static const struct segment XKPHYS0 = {
   0x0000000100000000ULL, /* length */
   0x8000000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                   /* cached */
 };
@@ -105,6 +114,7 @@ static const struct segment XKPHYS1 = {
   0x0000000100000000ULL, /* length */
   0x8800000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                  /* cached */
 };
@@ -114,6 +124,7 @@ static const struct segment XKPHYS2 = {
   0x0000000100000000ULL, /* length */
   0x9000000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   false,                 /* cached */
 };
@@ -123,6 +134,7 @@ static const struct segment XKPHYS3 = {
   0x0000000100000000ULL, /* length */
   0x9800000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                  /* cached */
 };
@@ -132,6 +144,7 @@ static const struct segment XKPHYS4 = {
   0x0000000100000000ULL, /* length */
   0xA000000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                  /* cached */
 };
@@ -141,6 +154,7 @@ static const struct segment XKPHYS5 = {
   0x0000000100000000ULL, /* length */
   0xA800000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                  /* cached */
 };
@@ -150,6 +164,7 @@ static const struct segment XKPHYS6 = {
   0x0000000100000000ULL, /* length */
   0xB000000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                  /* cached */
 };
@@ -159,6 +174,7 @@ static const struct segment XKPHYS7 = {
   0x0000000100000000ULL, /* length */
   0xB800000000000000ULL, /* offset */
 
+  0x80,                  /* kx mask */
   false,                 /* mapped */
   true,                  /* cached */
 };
@@ -190,6 +206,7 @@ const struct segment* get_default_segment(void) {
     1ULL,
     0ULL,
     0ULL,
+    0x0,
     false,
     false,
   };
