@@ -70,6 +70,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -ffast-math -DNDEBUG -s -fmerge-all-constants")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -DNDEBUG -ggdb3 -g3 -fmerge-all-constants")
+  set(CMAKE_C_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG -fmerge-all-constants")
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
   # Enable link time optimization on recent versions.
