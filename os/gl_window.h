@@ -48,9 +48,7 @@ cen64_cold int destroy_gl_window(struct gl_window *window);
 cen64_cold int create_gl_window(struct bus_controller *bus,
   struct gl_window *window, const struct gl_window_hints *hints);
 
-cen64_cold int activate_gl_window(
-  struct gl_window *gl_window,
-  struct bus_controller *bus);
+int gl_window_thread(struct gl_window *window, struct bus_controller *bus);
 
 cen64_hot int gl_swap_buffers(const struct gl_window *window);
 cen64_cold void gl_window_resize_cb(int width, int height);

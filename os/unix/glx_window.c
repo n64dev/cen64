@@ -46,7 +46,8 @@ static int get_matching_window_mode(struct glx_window *glx_window,
 static bool glx_window_poll_events(struct bus_controller *bus,
   struct glx_window *glx_window);
 
-static void *glx_window_thread(void *opaque);
+cen64_hot static int glx_window_thread(struct gl_window *gl_window,
+  struct glx_window *glx_window, struct bus_controller *bus);
 
 static void glx_window_update_window_title(
   struct glx_window *glx_window, cen64_time *last_report_time);
@@ -83,13 +84,10 @@ int create_glx_context(struct glx_window *glx_window, GLXContext *context) {
   return 0;
 }
 
-// Kicks off the window's management thrad.
-int activate_gl_window(struct gl_window *gl_window,
-  struct bus_controller *bus) {
+// Jumps to the entry point for the user interface code.
+int gl_window_thread(struct gl_window *gl_window, struct bus_controller *bus) {
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
-
-  // All ready; kickoff the thread.
-  return pthread_create(&glx_window->thread, NULL, glx_window_thread, bus);
+  return glx_window_thread(gl_window, glx_window, bus);
 }
 
 // Creates a new rendering window.
@@ -491,11 +489,8 @@ void glx_window_render_frame(struct glx_window *window, const void *data,
 }
 
 // Main window threads. Handles and pumps events.
-void *glx_window_thread(void *opaque) {
-  struct bus_controller *bus = (struct bus_controller *) opaque;
-  struct gl_window *gl_window = (struct gl_window *) (&bus->vi->gl_window);
-  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
-
+int glx_window_thread(struct gl_window *gl_window,
+  struct glx_window *glx_window, struct bus_controller *bus) {
   cen64_time last_report_time;
   cen64_time refresh_timeout;
   unsigned frame_count = 0;
@@ -508,7 +503,7 @@ void *glx_window_thread(void *opaque) {
     glx_window->window, glx_window->context)) {
     debug("glx_window_thread: Could not attach rendering context.\n");
 
-    return NULL;
+    return 1;
   }
 
   gl_window_init(gl_window);
@@ -551,7 +546,7 @@ void *glx_window_thread(void *opaque) {
     pthread_mutex_unlock(&glx_window->render_lock);
   }
 
-  return NULL;
+  return 0;
 }
 
 // Updates the window title.

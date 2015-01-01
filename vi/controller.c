@@ -87,13 +87,13 @@ void vi_cycle(struct vi_controller *vi) {
   // Interact with the user interface?
   if (likely(vi->gl_window.window)) {
     if (os_exit_requested(&vi->gl_window))
-      device_request_exit(vi->bus);
+      device_exit(vi->bus);
 
     os_render_frame(&vi->gl_window, buffer, hres, vres, hskip, type);
   }
 
   else if (device_exit_requested)
-    device_request_exit(vi->bus);
+    device_exit(vi->bus);
 
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
