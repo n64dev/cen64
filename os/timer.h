@@ -16,6 +16,10 @@
 #include <windows.h>
 typedef DWORD cen64_time;
 
+#elif defined(__APPLE__)
+#include <time.h>
+typedef struct timeval cen64_time;
+
 #else
 #include <time.h>
 typedef struct timespec cen64_time;
