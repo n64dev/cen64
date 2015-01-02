@@ -125,7 +125,7 @@ static inline __m128i read_acc_md(const uint16_t *acc) {
   return rsp_vect_load_unshuffled_operand(acc + 8);
 }
 static inline __m128i read_acc_hi(const uint16_t *acc) {
-  return rsp_vect_load_unshuffled_operand(acc + 0);
+  return rsp_vect_load_unshuffled_operand(acc);
 }
 static inline __m128i read_vcc_lo(const uint16_t *vcc) {
   return rsp_vect_load_unshuffled_operand(vcc + 8);
@@ -183,7 +183,9 @@ static inline int16_t rsp_get_vco(const uint16_t *vco) {
 
 // TODO: Sign-extended, or no?
 static inline uint8_t rsp_get_vce(const uint16_t *vce) {
-  return _mm_movemask_epi8(read_vce(vce));
+  return (uint16_t) _mm_movemask_epi8(
+    _mm_packs_epi16(read_vce(vce), _mm_setzero_si128())
+  );
 }
 
 // Zeroes out a register.
