@@ -8,9 +8,9 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-.set acc_lo, %xmm5
-.set acc_md, %xmm6
-.set acc_hi, %xmm7
+.set acc_lo, %xmm8
+.set acc_md, %xmm9
+.set acc_hi, %xmm10
 
 .set vcc_lo, %xmm11
 .set vcc_hi, %xmm12
