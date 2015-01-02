@@ -120,22 +120,15 @@ void device_exit(struct bus_controller *bus) {
 // Create a device and proceed to the main loop.
 void device_run(struct cen64_device *device) {
   struct vr4300_stats vr4300_stats;
-  rsp_vect_t acc_lo, acc_md, acc_hi;
   fpu_state_t saved_fpu_state;
 
   // Memory is already allocated; just spawn the device.
   memset(&vr4300_stats, 0, sizeof(vr4300_stats));
 
-  // Preserve host registers pinned to the device.
-  acc_lo = read_acc_lo(device->rsp.cp2.acc.e);
-  acc_md = read_acc_md(device->rsp.cp2.acc.e);
-  acc_hi = read_acc_hi(device->rsp.cp2.acc.e);
+  // TODO: Preserve host registers pinned to the device.
   saved_fpu_state = fpu_get_state();
-
-  write_acc_lo(device->rsp.cp2.acc.e, rsp_vzero());
-  write_acc_md(device->rsp.cp2.acc.e, rsp_vzero());
-  write_acc_hi(device->rsp.cp2.acc.e, rsp_vzero());
   vr4300_cp1_init(&device->vr4300);
+  rsp_late_init(&device->rsp);
 
   // Spin the device until we return (from setjmp).
 #ifdef CEN64_DEVFEATURES
@@ -143,12 +136,6 @@ void device_run(struct cen64_device *device) {
 #else
   device_spin(device);
 #endif
-
-  // Restore host registers pinned to the device.
-  write_acc_lo(device->rsp.cp2.acc.e, acc_lo);
-  write_acc_md(device->rsp.cp2.acc.e, acc_md);
-  write_acc_hi(device->rsp.cp2.acc.e, acc_hi);
-  fpu_set_state(saved_fpu_state);
 
   // Finalize simulation, release memory, etc.
 #ifdef CEN64_DEVFEATURES

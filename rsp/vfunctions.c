@@ -524,6 +524,14 @@ rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw,
 #endif
 
 //
+// VNOP
+//
+rsp_vect_t RSP_VNOP(struct rsp *rsp, uint32_t iw,
+  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
+  return vs;
+}
+
+//
 // VNOR
 //
 #ifndef REGISTER_CACHING
