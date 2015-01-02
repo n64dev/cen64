@@ -523,10 +523,17 @@ int glx_window_thread(struct gl_window *gl_window,
       break;
 
     get_time(&refresh_timeout);
+#ifdef __APPLE__
+    refresh_timeout.tv_usec += 1000LL;
+
+    if (refresh_timeout.tv_usec >= 1000000LL) {
+      refresh_timeout.tv_usec -= 1000000LL;
+#else
     refresh_timeout.tv_nsec += 1000000LL;
 
     if (refresh_timeout.tv_nsec >= 1000000000LL) {
       refresh_timeout.tv_nsec -= 1000000000LL;
+#endif
       refresh_timeout.tv_sec += 1;
     }
 
