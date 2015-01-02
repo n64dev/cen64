@@ -30,15 +30,15 @@ RSP_VABS:
 
 .ifdef __AVX__
   vpsraw $0xf, %xmm1, %xmm3
-  vpsignw %xmm1, %xmm0, %xmm5
-  vpaddw %xmm3, %xmm5, %xmm2
+  vpsignw %xmm1, %xmm0, acc_lo
+  vpaddw %xmm3, acc_lo, %xmm2
   vpsubsw %xmm3, %xmm2, %xmm0
   retq
 
 .elseif __SSSE3__ == 1
   psignw %xmm1, %xmm0
   psraw $0xF, %xmm1
-  movdqa %xmm0, %xmm5
+  movdqa %xmm0, acc_lo
   paddw %xmm1, %xmm0
   psubsw %xmm1, %xmm0
   retq

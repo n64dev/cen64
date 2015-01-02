@@ -47,7 +47,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
     endif ()
 
     if (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm5 -ffixed-xmm6 -ffixed-xmm7")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm8 -ffixed-xmm9 -ffixed-xmm10")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm11 -ffixed-xmm12 -ffixed-xmm13 -ffixed-xmm14 -ffixed-xmm15")
     endif (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
 
