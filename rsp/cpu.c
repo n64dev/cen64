@@ -35,9 +35,20 @@ int rsp_init(struct rsp *rsp, struct bus_controller *bus) {
   rsp_connect_bus(rsp, bus);
 
   rsp_cp0_init(rsp);
-  rsp_cp2_init(rsp);
   rsp_pipeline_init(&rsp->pipeline);
 
   return arch_rsp_init(rsp);
 }
 
+// Initializes (host) registers.
+void rsp_late_init(struct rsp *rsp) {
+  write_acc_lo(rsp->cp2.acc.e, rsp_vzero());
+  write_acc_md(rsp->cp2.acc.e, rsp_vzero());
+  write_acc_hi(rsp->cp2.acc.e, rsp_vzero());
+
+  write_vcc_lo(rsp->cp2.vcc.e, rsp_vzero());
+  write_vcc_hi(rsp->cp2.vcc.e, rsp_vzero());
+  write_vco_lo(rsp->cp2.vco.e, rsp_vzero());
+  write_vco_hi(rsp->cp2.vco.e, rsp_vzero());
+  write_vce   (rsp->cp2.vce.e, rsp_vzero());
+}

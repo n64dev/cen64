@@ -141,7 +141,7 @@ cen64_align(static const struct rsp_opcode
 //  100 |  VLT  |  VEQ  |  VNE  |  VGE  |  VCL  |  VCH  |  VCR  | VMRG  |
 //  101 | VAND  | VNAND |  VOR  | VNOR  | VXOR  | VNXOR |  ---  |  ---  |
 //  110 | VRCP  | VRCPL | VRCPH | VMOV  | VRSQ  | VRSQL | VRSQH | VNOP  |
-//  111 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
+//  111 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  | VNULL |
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
@@ -162,7 +162,7 @@ cen64_align(static const struct rsp_opcode
   {VRCP},     {VRCPL},    {VRCPH},    {VMOV},
   {VRSQ},     {VRSQL},    {VRSQH},    {VNOP},
   {VINVALID}, {VINVALID}, {VINVALID}, {VINVALID},
-  {VINVALID}, {VINVALID}, {VINVALID}, {VINVALID},
+  {VINVALID}, {VINVALID}, {VINVALID}, {VNULL},
 };
 
 // ============================================================================
