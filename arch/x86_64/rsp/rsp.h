@@ -241,6 +241,7 @@ void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
 #include "arch/x86_64/rsp/vge.h"
 #include "arch/x86_64/rsp/vlt.h"
 #include "arch/x86_64/rsp/vmacf.h"
+#include "arch/x86_64/rsp/vmacu.h"
 #include "arch/x86_64/rsp/vmadh.h"
 #include "arch/x86_64/rsp/vmadl.h"
 #include "arch/x86_64/rsp/vmadm.h"
