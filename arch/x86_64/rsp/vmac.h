@@ -5,8 +5,9 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-static inline __m128i rsp_vmacf(__m128i vs, __m128i vt, 
+static inline __m128i rsp_vmacf_vmacu(uint32_t iw, __m128i vs, __m128i vt,
   __m128i zero, __m128i *acc_lo, __m128i *acc_md, __m128i *acc_hi) {
+  __m128i overflow_hi_mask, overflow_md_mask;
   __m128i lo, md, hi, carry, overflow_mask;
 
   // Get the product and shift it over
@@ -46,6 +47,19 @@ static inline __m128i rsp_vmacf(__m128i vs, __m128i vt,
   // Finish up the accumulation of the... accumulator.
   *acc_hi = _mm_add_epi16(*acc_hi, hi);
   *acc_hi = _mm_sub_epi16(*acc_hi, overflow_mask);
-  return rsp_sclamp_acc_tomd(*acc_md, *acc_hi);
+
+  // VMACU
+  if (iw & 0x1) {
+    overflow_hi_mask = _mm_srai_epi16(*acc_hi, 15);
+    overflow_md_mask = _mm_srai_epi16(*acc_md, 15);
+    md = _mm_or_si128(overflow_md_mask, *acc_md);
+    overflow_mask = _mm_cmpgt_epi16(*acc_hi, zero);
+    md = _mm_andnot_si128(overflow_hi_mask, md);
+    return _mm_or_si128(overflow_mask, md);
+  }
+
+  // VMACF
+  else
+    return rsp_sclamp_acc_tomd(*acc_md, *acc_hi);
 }
 
