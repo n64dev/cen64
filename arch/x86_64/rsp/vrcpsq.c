@@ -1,5 +1,5 @@
 //
-// arch/x86_64/rsp/vrcp.c
+// arch/x86_64/rsp/vrcpsq.c
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
@@ -11,7 +11,7 @@
 #include "rsp/rsp.h"
 #include <string.h>
 
-__m128i rsp_vrcp(struct rsp *rsp, int dp,
+__m128i rsp_vrcp_vrsq(struct rsp *rsp, uint32_t iw, int dp,
   unsigned src, unsigned e, unsigned dest, unsigned de) {
   uint32_t dp_input, sp_input;
   int32_t input, result;
@@ -51,10 +51,24 @@ __m128i rsp_vrcp(struct rsp *rsp, int dp,
 #else
     shift = __builtin_clz(data);
 #endif
-    idx = (((unsigned long long) data << shift) & 0x7FC00000U) >> 22;
-    result = rsp_reciprocal_rom[idx];
 
-    result = ((0x10000 | result) << 14) >> (31 - shift);
+    // VRSQ
+    if (iw & 0x4) {
+      idx = (((unsigned long long) data << shift) & 0x7FC00000U) >> 22;
+      idx = (idx | 0x200) & 0x3FE | (shift % 2);
+      result = rsp_reciprocal_rom[idx];
+
+      result = ((0x10000 | result) << 14) >> ((31 - shift) >> 1);
+    }
+
+    // VRCP
+    else {
+      idx = (((unsigned long long) data << shift) & 0x7FC00000U) >> 22;
+      result = rsp_reciprocal_rom[idx];
+
+      result = ((0x10000 | result) << 14) >> (31 - shift);
+    }
+
     result = result ^ input_mask;
   }
 

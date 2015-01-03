@@ -30,6 +30,9 @@ typedef __m128i rsp_vect_t;
 void arch_rsp_destroy(struct rsp *rsp);
 int arch_rsp_init(struct rsp *rsp);
 
+// Masks for AND/OR/XOR and NAND/NOR/NXOR.
+extern const uint16_t rsp_vlogic_mask[2][8];
+
 // Loads and shuffles a 16x8 vector according to element.
 #ifdef __SSSE3__
 extern const uint16_t shuffle_keys[16][8];
@@ -236,11 +239,9 @@ void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
 #include "arch/x86_64/rsp/vaddc.h"
 #include "arch/x86_64/rsp/vand.h"
 #include "arch/x86_64/rsp/vch.h"
+#include "arch/x86_64/rsp/vcmp.h"
 #include "arch/x86_64/rsp/vcl.h"
 #include "arch/x86_64/rsp/vcr.h"
-#include "arch/x86_64/rsp/veq.h"
-#include "arch/x86_64/rsp/vge.h"
-#include "arch/x86_64/rsp/vlt.h"
 #include "arch/x86_64/rsp/vmac.h"
 #include "arch/x86_64/rsp/vmrg.h"
 #include "arch/x86_64/rsp/vmul.h"
@@ -248,11 +249,7 @@ void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
 #include "arch/x86_64/rsp/vmull.h"
 #include "arch/x86_64/rsp/vmulm.h"
 #include "arch/x86_64/rsp/vmuln.h"
-#include "arch/x86_64/rsp/vnand.h"
-#include "arch/x86_64/rsp/vne.h"
-#include "arch/x86_64/rsp/vnor.h"
 #include "arch/x86_64/rsp/vor.h"
-#include "arch/x86_64/rsp/vnxor.h"
 #include "arch/x86_64/rsp/vsub.h"
 #include "arch/x86_64/rsp/vsubc.h"
 #include "arch/x86_64/rsp/vxor.h"
@@ -265,10 +262,7 @@ __m128i rsp_vdivh(struct rsp *rsp,
 __m128i rsp_vmov(struct rsp *rsp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
-__m128i rsp_vrcp(struct rsp *rsp, int dp,
-  unsigned src, unsigned e, unsigned dest, unsigned de);
-
-__m128i rsp_vrsq(struct rsp *rsp, int dp,
+__m128i rsp_vrcp_vrsq(struct rsp *rsp, uint32_t iw, int dp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
 #endif
