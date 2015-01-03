@@ -28,17 +28,17 @@ const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #undef X
 };
 
-// Sets attributes common to all exceptions.
-static void vr4300_common_exceptions(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  pipeline->icrf_latch.segment = get_default_segment();
-  pipeline->exdc_latch.segment = get_default_segment();
+static void vr4300_exception_prolog(struct vr4300 *vr4300,
+  const struct vr4300_latch *l, uint32_t *cause, uint32_t *status,
+  uint64_t *epc);
 
-  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
-  pipeline->exception_history = 0;
-  pipeline->fault_present = true;
-  pipeline->cycles_to_stall = 2;
-}
+static void vr4300_tlb_exception_prolog(struct vr4300 *vr4300,
+  const struct vr4300_latch *l, uint32_t *cause, uint32_t *status,
+  uint64_t *epc, const struct segment *segment, uint64_t vaddr,
+  unsigned *offs);
+
+static void vr4300_exception_epilogue(struct vr4300 *vr4300,
+  uint32_t cause, uint32_t status, uint64_t epc, uint64_t offs);
 
 // Sets attributes common to all interlocks.
 static void vr4300_common_interlocks(struct vr4300 *vr4300,
@@ -52,7 +52,6 @@ static void vr4300_common_interlocks(struct vr4300 *vr4300,
 static void vr4300_dc_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
 
-  vr4300_common_exceptions(vr4300);
   pipeline->dcwb_latch.common.fault = fault;
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
@@ -62,7 +61,6 @@ static void vr4300_dc_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
 static void vr4300_ex_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
 
-  vr4300_common_exceptions(vr4300);
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
 }
@@ -71,42 +69,147 @@ static void vr4300_ex_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
 static void vr4300_rf_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
 
-  vr4300_common_exceptions(vr4300);
   pipeline->rfex_latch.common.fault = fault;
+}
+
+// Prolog for most exceptions: load CP0 registers.
+static void vr4300_exception_prolog(struct vr4300 *vr4300,
+  const struct vr4300_latch *l, uint32_t *cause, uint32_t *status,
+  uint64_t *epc) {
+
+  bool in_bd_slot = l->cause_data >> 31;
+
+  *status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  *cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+  *epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
+
+  if (!(*status & 0x2)) {
+    if (in_bd_slot) {
+      *cause |= 0x80000000U;
+      *epc = l->pc - 4;
+    }
+
+    else {
+      *cause &= ~0x80000000U;
+      *epc = l->pc;
+    }
+  }
+}
+
+// Prolog for TLB exceptions: load/set CP0 registers.
+void vr4300_tlb_exception_prolog(struct vr4300 *vr4300,
+  const struct vr4300_latch *l, uint32_t *cause, uint32_t *status,
+  uint64_t *epc, const struct segment *segment,
+  uint64_t vaddr, unsigned *offs) {
+
+  bool in_bd_slot = l->cause_data >> 31;
+  uint64_t entryhi;
+  uint64_t context;
+
+  *status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  *cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+  *epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
+
+  // Record branch delay slot?
+  // TODO: CHECK ME!
+  if (in_bd_slot) {
+    if (!(*status & 0x2)) {
+      *cause |= 0x80000000U;
+      *epc = l->pc - 4;
+
+      *offs = (*status & segment->xmode_mask) ? 0x080 : 0x000;
+    }
+
+    else
+      *offs = 0x180;
+  }
+
+  else {
+    if (!(*status & 0x2)) {
+      *cause &= ~0x80000000U;
+      *epc = l->pc;
+
+      *offs = (*status & segment->xmode_mask) ? 0x080 : 0x000;
+    }
+
+    else
+      *offs = 0x180;
+  }
+
+  // Write registers with exception data.
+  if (*status & segment->xmode_mask) {
+    uint64_t vpn2 = vaddr >> 13 & 0x7FFFFFF;
+    uint8_t asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI];
+    uint8_t region = vaddr >> 62 & 0x3;
+
+    entryhi = ((uint64_t) region << 62) | (vpn2 << 13) | asid;
+
+    context = vr4300->regs[VR4300_CP0_REGISTER_XCONTEXT];
+    context &= ~(0x1FFFFFFFULL << 4);
+    context |= (uint64_t) region << 31;
+    context |= vpn2 << 4;
+
+    vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] = entryhi;
+    vr4300->regs[VR4300_CP0_REGISTER_XCONTEXT] = context;
+  }
+
+  else {
+    uint32_t vpn2 = vaddr >> 13 & 0x7FFFF;
+    uint8_t asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI];
+
+    entryhi = (int32_t) ((vpn2 << 13) | asid);
+
+    context = vr4300->regs[VR4300_CP0_REGISTER_CONTEXT];
+    context &= ~(0x7FFFFULL << 4);
+    context |= vpn2 << 4;
+
+    vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] = entryhi;
+    vr4300->regs[VR4300_CP0_REGISTER_CONTEXT] = context;
+  }
+
+  vr4300->regs[VR4300_CP0_REGISTER_BADVADDR] = vaddr;
+}
+
+// Epilogue for all CPU exceptions.
+void vr4300_exception_epilogue(struct vr4300 *vr4300,
+  uint32_t cause, uint32_t status, uint64_t epc, uint64_t offs) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+
+  // Reset the segment ptrs as we might change access level.
+  pipeline->icrf_latch.segment = get_default_segment();
+  pipeline->exdc_latch.segment = get_default_segment();
+
+  // Reset the exception history count, signal the presence
+  // of a fault, and stall for the mandatory cycle count.
+  //
+  // TODO: Is the cycle count just the killing of IC/RF,
+  // or do we actually delay an additional two cycles?
+  vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
+  pipeline->exception_history = 0;
+  pipeline->fault_present = true;
+  pipeline->cycles_to_stall = 2;
+
+  // Set CP0 registers in accordance with the exception.
+  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
+  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = cause;
+  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
+
+  vr4300->pipeline.icrf_latch.pc = ((status & 0x400000)
+    ? (0xFFFFFFFFBFC00200ULL + offs)
+    : (0xFFFFFFFF80000000ULL + offs)
+  );
 }
 
 // CPU: Coprocessor unusable exception.
 void VR4300_CPU(unused(struct vr4300 *vr4300)) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_latch *common = &pipeline->exdc_latch.common;
-
-  bool in_bd_slot = common->cause_data >> 31;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
-  uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
-
-  // Record branch delay slot?
-  if (!(status & 0x2)) {
-    if (in_bd_slot) {
-      cause |= 0x80000000U;
-      epc = common->pc - 4;
-    }
-
-    else {
-      cause &= ~0x80000000U;
-      epc = common->pc;
-    }
-  }
-
-  // Prepare pipeline for restart.
-  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0xFF) | (1 << 28) | 0x2C;
-  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
+  struct vr4300_latch *common = &vr4300->pipeline.exdc_latch.common;
+  uint32_t cause, status;
+  uint64_t epc;
 
   vr4300_ex_fault(vr4300, VR4300_FAULT_CPU);
-  vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
-    ? 0xFFFFFFFFBFC00280ULL
-    : 0xFFFFFFFF80000080ULL;
+  vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (1 << 28) | 0x2C,
+    status, epc, 0x80);
 }
 
 // DADE: Data address error exception.
@@ -206,89 +309,22 @@ void VR4300_DCM(struct vr4300 *vr4300) {
 
 // DTLB: Data TLB exception.
 void VR4300_DTLB(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_exdc_latch *exdc_latch = &pipeline->exdc_latch;
-  struct vr4300_latch *common = &pipeline->dcwb_latch.common;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  struct vr4300_latch *common = &exdc_latch->common;
+  uint32_t cause, status;
+  uint64_t epc;
 
-  bool in_bd_slot = common->cause_data >> 31;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
-  uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
   unsigned offs, type;
-
-  uint64_t entryhi;
-  uint64_t context;
-
-  // Record branch delay slot?
-  if (in_bd_slot) {
-    if (!(status & 0x2)) {
-      cause |= 0x80000000U;
-      epc = common->pc - 4;
-
-      offs = (status & exdc_latch->segment->xmode_mask) ? 0x080 : 0x000;
-    }
-
-    else
-      offs = 0x180;
-  }
-
-  else {
-    if (!(status & 0x2)) {
-      cause &= ~0x80000000U;
-      epc = common->pc;
-
-      offs = (status & exdc_latch->segment->xmode_mask) ? 0x080 : 0x000;
-    }
-
-    else
-      offs = 0x180;
-  }
 
   // TLB load/fetch or store exception?
   type = (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) ? 0x2: 0x3;
 
-  // Write registers with exception data.
-  if (status & exdc_latch->segment->xmode_mask) {
-    uint64_t vpn2 = exdc_latch->request.vaddr >> 13 & 0x7FFFFFF;
-    uint8_t asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI];
-    uint8_t region = exdc_latch->request.vaddr >> 62 & 0x3;
-
-    entryhi = ((uint64_t) region << 62) | (vpn2 << 13) | asid;
-
-    context = vr4300->regs[VR4300_CP0_REGISTER_XCONTEXT];
-    context &= ~(0x1FFFFFFFULL << 4);
-    context |= (uint64_t) region << 31;
-    context |= vpn2 << 4;
-
-    vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] = entryhi;
-    vr4300->regs[VR4300_CP0_REGISTER_XCONTEXT] = context;
-  }
-
-  else {
-    uint32_t vpn2 = exdc_latch->request.vaddr >> 13 & 0x7FFFF;
-    uint8_t asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI];
-
-    entryhi = (int32_t) ((vpn2 << 13) | asid);
-
-    context = vr4300->regs[VR4300_CP0_REGISTER_CONTEXT];
-    context &= ~(0x7FFFFULL << 4);
-    context |= vpn2 << 4;
-
-    vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] = entryhi;
-    vr4300->regs[VR4300_CP0_REGISTER_CONTEXT] = context;
-  }
-
-  vr4300->regs[VR4300_CP0_REGISTER_BADVADDR] = exdc_latch->request.vaddr;
-
-  // Prepare pipeline for restart.
-  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0xFF) | (type << 2);
-  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
-
   vr4300_dc_fault(vr4300, VR4300_FAULT_DTLB);
-  vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
-    ? 0xFFFFFFFFBFC00200ULL + offs
-    : 0xFFFFFFFF80000000ULL + offs;
+  vr4300_tlb_exception_prolog(vr4300, common, &cause, &status,
+    &epc, exdc_latch->segment, exdc_latch->request.vaddr, &offs);
+
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (type << 2),
+    status, epc, offs);
 }
 
 // IADE: Instruction address error exception.
@@ -329,37 +365,16 @@ void VR4300_ICB(unused(struct vr4300 *vr4300)) {
 }
 
 // INTR: Interrupt exception.
-void VR4300_INTR(unused(struct vr4300 *vr4300)) {
+void VR4300_INTR(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
   struct vr4300_latch *common = &pipeline->dcwb_latch.common;
+  uint32_t cause, status;
+  uint64_t epc;
 
-  bool in_bd_slot = common->cause_data >> 31;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
-  uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
-
-  // Record branch delay slot?
-  if (!(status & 0x2)) {
-    if (in_bd_slot) {
-      cause |= 0x80000000U;
-      epc = common->pc - 4;
-    }
-
-    else {
-      cause &= ~0x80000000U;
-      epc = common->pc;
-    }
-  }
-
-  // Prepare pipeline for restart.
-  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = cause & ~0xFF;
-  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
+  vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
+  vr4300_exception_epilogue(vr4300, cause & ~0xFF, status, epc, 0x80);
 
   vr4300_dc_fault(vr4300, VR4300_FAULT_INTR);
-  vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
-    ? 0xFFFFFFFFBFC00280ULL
-    : 0xFFFFFFFF80000080ULL;
 }
 
 // INV: Invalid operation exception.
@@ -369,89 +384,19 @@ void VR4300_INV(unused(struct vr4300 *vr4300)) {
 
 // ITLB: Instruction TLB exception.
 void VR4300_ITLB(struct vr4300 *vr4300) {
-  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-  struct vr4300_icrf_latch *icrf_latch = &pipeline->icrf_latch;
-  struct vr4300_latch *common = &pipeline->icrf_latch.common;
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_latch *common = &icrf_latch->common;
+  uint32_t cause, status;
+  uint64_t epc;
 
-  bool in_bd_slot = common->cause_data >> 31;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
-  uint64_t epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
-  unsigned offs, type;
-
-  uint64_t entryhi;
-  uint64_t context;
-
-  // Record branch delay slot?
-  if (in_bd_slot) {
-    if (!(status & 0x2)) {
-      cause |= 0x80000000U;
-      epc = common->pc - 4;
-
-      offs = (status & icrf_latch->segment->xmode_mask) ? 0x080 : 0x000;
-    }
-
-    else
-      offs = 0x180;
-  }
-
-  else {
-    if (!(status & 0x2)) {
-      cause &= ~0x80000000U;
-      epc = common->pc;
-
-      offs = (status & icrf_latch->segment->xmode_mask) ? 0x080 : 0x000;
-    }
-
-    else
-      offs = 0x180;
-  }
-
-  // TLB load/fetch or store exception?
-  type = 2;
-
-  // Write registers with exception data.
-  if (status & icrf_latch->segment->xmode_mask) {
-    uint64_t vpn2 = icrf_latch->common.pc >> 13 & 0x7FFFFFF;
-    uint8_t asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI];
-    uint8_t region = icrf_latch->common.pc >> 62 & 0x3;
-
-    entryhi = ((uint64_t) region << 62) | (vpn2 << 13) | asid;
-
-    context = vr4300->regs[VR4300_CP0_REGISTER_XCONTEXT];
-    context &= ~(0x1FFFFFFFULL << 4);
-    context |= (uint64_t) region << 31;
-    context |= vpn2 << 4;
-
-    vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] = entryhi;
-    vr4300->regs[VR4300_CP0_REGISTER_XCONTEXT] = context;
-  }
-
-  else {
-    uint32_t vpn2 = icrf_latch->common.pc >> 13 & 0x7FFFF;
-    uint8_t asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI];
-
-    entryhi = (int32_t) ((vpn2 << 13) | asid);
-
-    context = vr4300->regs[VR4300_CP0_REGISTER_CONTEXT];
-    context &= ~(0x7FFFFULL << 4);
-    context |= vpn2 << 4;
-
-    vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] = entryhi;
-    vr4300->regs[VR4300_CP0_REGISTER_CONTEXT] = context;
-  }
-
-  vr4300->regs[VR4300_CP0_REGISTER_BADVADDR] = icrf_latch->common.pc;
-
-  // Prepare pipeline for restart.
-  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
-  vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = (cause & ~0xFF) | (type << 2);
-  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
+  unsigned offs;
 
   vr4300_rf_fault(vr4300, VR4300_FAULT_ITLB);
-  vr4300->pipeline.icrf_latch.pc = (status & 0x400000)
-    ? 0xFFFFFFFFBFC00200ULL + offs
-    : 0xFFFFFFFF80000000ULL + offs;
+  vr4300_tlb_exception_prolog(vr4300, common, &cause, &status,
+    &epc, icrf_latch->segment, icrf_latch->common.pc, &offs);
+
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (0x2 << 2),
+    status, epc, offs);
 }
 
 // LDI: Load delay interlock.
@@ -466,8 +411,21 @@ void VR4300_LDI(struct vr4300 *vr4300) {
 
 // RST: External reset exception.
 void VR4300_RST(struct vr4300 *vr4300) {
-  vr4300->pipeline.icrf_latch.pc = 0xFFFFFFFFBFC00000ULL;
-  vr4300_dc_fault(vr4300, VR4300_FAULT_RST);
+  //vr4300->pipeline.icrf_latch.pc = 0xFFFFFFFFBFC00000ULL;
+
+  // Reset the segment ptrs as we might change access level.
+  //vr4300->pipeline.icrf_latch.segment = get_default_segment();
+  //vr4300->pipeline.exdc_latch.segment = get_default_segment();
+
+  // Reset the exception history count, signal the presence
+  // of a fault, and stall for the mandatory cycle count.
+  //
+  // TODO: Is the cycle count just the killing of IC/RF,
+  // or do we actually delay an additional two cycles?
+  //vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
+  //vr4300->pipeline.exception_history = 0;
+  //vr4300->pipeline.fault_present = true;
+  //vr4300->pipeline.cycles_to_stall = 2;
 
   // Cold reset exception.
   if (vr4300->signals & VR4300_SIGNAL_COLDRESET) {
@@ -485,5 +443,13 @@ void VR4300_RST(struct vr4300 *vr4300) {
   // Soft reset exception.
   else
     abort();
+
+  vr4300_dc_fault(vr4300, VR4300_FAULT_RST);
+
+  vr4300_exception_epilogue(vr4300,
+    vr4300->regs[VR4300_CP0_REGISTER_CAUSE],
+    vr4300->regs[VR4300_CP0_REGISTER_STATUS],
+    vr4300->regs[VR4300_CP0_REGISTER_EPC],
+    -0x200ULL);
 }
 
