@@ -72,13 +72,14 @@ rsp_vect_t RSP_VADDC(struct rsp *rsp, uint32_t iw,
 
 //
 // VAND
+// VNAND
 //
 #ifndef REGISTER_CACHING
-rsp_vect_t RSP_VAND(struct rsp *rsp, uint32_t iw,
+rsp_vect_t RSP_VAND_VNAND(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   uint16_t *acc = rsp->cp2.acc.e;
 
-  rsp_vect_t result = rsp_vand(vs, vt_shuffle);
+  rsp_vect_t result = rsp_vand_vnand(iw, vs, vt_shuffle);
 
   write_acc_lo(acc, result);
   return result;
@@ -158,34 +159,12 @@ rsp_vect_t RSP_VCR(struct rsp *rsp, uint32_t iw,
 
 //
 // VEQ
-//
-#ifndef REGISTER_CACHING
-rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  uint16_t *acc = rsp->cp2.acc.e;
-  rsp_vect_t le, eq;
-
-  eq = read_vco_hi(rsp->cp2.vco.e);
-
-  rsp_vect_t result = rsp_veq(vs, vt_shuffle, &le, eq);
-
-  write_vcc_hi(rsp->cp2.vcc.e, zero);
-  write_vcc_lo(rsp->cp2.vcc.e, le);
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
-  write_acc_lo(acc, result);
-  return result;
-}
-#else
-rsp_vect_t RSP_VEQ(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
-#endif
-
-//
 // VGE
+// VLT
+// VNE
 //
 #ifndef REGISTER_CACHING
-rsp_vect_t RSP_VGE(struct rsp *rsp, uint32_t iw,
+rsp_vect_t RSP_VEQ_VGE_VLT_VNE(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   uint16_t *acc = rsp->cp2.acc.e;
   rsp_vect_t le, eq, sign;
@@ -193,7 +172,8 @@ rsp_vect_t RSP_VGE(struct rsp *rsp, uint32_t iw,
   eq = read_vco_hi(rsp->cp2.vco.e);
   sign = read_vco_lo(rsp->cp2.vco.e);
 
-  rsp_vect_t result = rsp_vge(vs, vt_shuffle, &le, eq, sign);
+  rsp_vect_t result = rsp_veq_vge_vlt_vne(iw, vs, vt_shuffle,
+    zero, &le, eq, sign);
 
   write_vcc_hi(rsp->cp2.vcc.e, zero);
   write_vcc_lo(rsp->cp2.vcc.e, le);
@@ -222,32 +202,6 @@ rsp_vect_t RSP_VINVALID(struct rsp *rsp, uint32_t iw,
 
   return zero;
 }
-
-//
-// VLT
-//
-#ifndef REGISTER_CACHING
-rsp_vect_t RSP_VLT(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  uint16_t *acc = rsp->cp2.acc.e;
-  rsp_vect_t le, eq, sign;
-
-  eq = read_vco_hi(rsp->cp2.vco.e);
-  sign = read_vco_lo(rsp->cp2.vco.e);
-
-  rsp_vect_t result = rsp_vlt(vs, vt_shuffle, &le, eq, sign);
-
-  write_vcc_hi(rsp->cp2.vcc.e, zero);
-  write_vcc_lo(rsp->cp2.vcc.e, le);
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
-  write_acc_lo(acc, result);
-  return result;
-}
-#else
-rsp_vect_t RSP_VLT(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
-#endif
 
 //
 // VMACF
@@ -411,49 +365,6 @@ rsp_vect_t RSP_VMULF_VMULU(struct rsp *rsp, uint32_t iw,
 }
 
 //
-// VNAND
-//
-#ifndef REGISTER_CACHING
-rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  uint16_t *acc = rsp->cp2.acc.e;
-
-  rsp_vect_t result = rsp_vnand(vs, vt_shuffle, zero);
-
-  write_acc_lo(acc, result);
-  return result;
-}
-#else
-rsp_vect_t RSP_VNAND(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
-#endif
-
-//
-// VNE
-//
-#ifndef REGISTER_CACHING
-rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  uint16_t *acc = rsp->cp2.acc.e;
-  rsp_vect_t le, eq;
-
-  eq = read_vco_hi(rsp->cp2.vco.e);
-
-  rsp_vect_t result = rsp_vne(vs, vt_shuffle, zero, &le, eq);
-
-  write_vcc_hi(rsp->cp2.vcc.e, zero);
-  write_vcc_lo(rsp->cp2.vcc.e, le);
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
-  write_acc_lo(acc, result);
-  return result;
-}
-#else
-rsp_vect_t RSP_VNE(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
-#endif
-
-//
 // VNOP
 //
 rsp_vect_t RSP_VNOP(struct rsp *rsp, uint32_t iw,
@@ -462,50 +373,15 @@ rsp_vect_t RSP_VNOP(struct rsp *rsp, uint32_t iw,
 }
 
 //
+// VOR
 // VNOR
 //
 #ifndef REGISTER_CACHING
-rsp_vect_t RSP_VNOR(struct rsp *rsp, uint32_t iw,
+rsp_vect_t RSP_VOR_VNOR(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   uint16_t *acc = rsp->cp2.acc.e;
 
-  rsp_vect_t result = rsp_vnor(vs, vt_shuffle, zero);
-
-  write_acc_lo(acc, result);
-  return result;
-}
-#else
-rsp_vect_t RSP_VNOR(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
-#endif
-
-//
-// VNXOR
-//
-#ifndef REGISTER_CACHING
-rsp_vect_t RSP_VNXOR(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  uint16_t *acc = rsp->cp2.acc.e;
-
-  rsp_vect_t result = rsp_vnxor(vs, vt_shuffle, zero);
-
-  write_acc_lo(acc, result);
-  return result;
-}
-#else
-rsp_vect_t RSP_VNXOR(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero);
-#endif
-
-//
-// VOR
-//
-#ifndef REGISTER_CACHING
-rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  uint16_t *acc = rsp->cp2.acc.e;
-
-  rsp_vect_t result = rsp_vor(vs, vt_shuffle);
+  rsp_vect_t result = rsp_vor_vnor(iw, vs, vt_shuffle);
 
   write_acc_lo(acc, result);
   return result;
@@ -518,8 +394,10 @@ rsp_vect_t RSP_VOR(struct rsp *rsp, uint32_t iw,
 //
 // VRCP
 // VRCPL
+// VRSQ
+// VRSQL
 //
-rsp_vect_t RSP_VRCP(struct rsp *rsp, uint32_t iw,
+rsp_vect_t RSP_VRCP_VRSQ(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   uint16_t *acc = rsp->cp2.acc.e;
   unsigned de = GET_DE(iw) & 0x7;
@@ -534,7 +412,7 @@ rsp_vect_t RSP_VRCP(struct rsp *rsp, uint32_t iw,
   int dp = iw & rsp->cp2.dp_flag;
   rsp->cp2.dp_flag = 0;
 
-  return rsp_vrcp(rsp, dp, src, e, dest, de);
+  return rsp_vrcp_vrsq(rsp, iw, dp, src, e, dest, de);
 }
 
 //
@@ -556,28 +434,6 @@ rsp_vect_t RSP_VRCPH_VRSQH(struct rsp *rsp, uint32_t iw,
   rsp->cp2.dp_flag = 1;
 
   return rsp_vdivh(rsp, src, e, dest, de);
-}
-
-//
-// VRSQ
-// VRSQL
-//
-rsp_vect_t RSP_VRSQ(struct rsp *rsp, uint32_t iw,
-  rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  uint16_t *acc = rsp->cp2.acc.e;
-  unsigned de = GET_DE(iw) & 0x7;
-  unsigned e = GET_E(iw) & 0x7;
-
-  unsigned dest = GET_VD(iw);
-  unsigned src = GET_VT(iw);
-
-  write_acc_lo(acc, vt_shuffle);
-
-  // Force single precision for VRSQ (but not VRSQL).
-  int dp = iw & rsp->cp2.dp_flag;
-  rsp->cp2.dp_flag = 0;
-
-  return rsp_vrsq(rsp, dp, src, e, dest, de);
 }
 
 //
@@ -636,13 +492,14 @@ rsp_vect_t RSP_VSUBC(struct rsp *rsp, uint32_t iw,
 
 //
 // VXOR
+// VNXOR
 //
 #ifndef REGISTER_CACHING
-rsp_vect_t RSP_VXOR(struct rsp *rsp, uint32_t iw,
+rsp_vect_t RSP_VXOR_VNXOR(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   uint16_t *acc = rsp->cp2.acc.e;
 
-  rsp_vect_t result = rsp_vxor(vs, vt_shuffle);
+  rsp_vect_t result = rsp_vxor_vnxor(iw, vs, vt_shuffle);
 
   write_acc_lo(acc, result);
   return result;

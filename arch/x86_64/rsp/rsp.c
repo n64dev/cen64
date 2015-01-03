@@ -13,6 +13,14 @@
 #include "rsp/pipeline.h"
 #include "rsp/rsp.h"
 
+//
+// Masks for AND/OR/XOR and NAND/NOR/NXOR.
+//
+cen64_align(const uint16_t rsp_vlogic_mask[2][8], CACHE_LINE_SIZE) = {
+  { 0,  0,  0,  0,  0,  0,  0,  0},
+  {~0, ~0, ~0, ~0, ~0, ~0, ~0, ~0}
+};
+
 #ifdef __SSSE3__
 //
 // This table is used to "shuffle" the RSP vector after loading it.
