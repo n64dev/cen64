@@ -55,6 +55,7 @@ static void vr4300_dc_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
   pipeline->dcwb_latch.common.fault = fault;
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
+  pipeline->icrf_latch.common.fault = fault;
 }
 
 // Raise a fault that originated in the EX stage.
@@ -63,6 +64,7 @@ static void vr4300_ex_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
 
   pipeline->exdc_latch.common.fault = fault;
   pipeline->rfex_latch.common.fault = fault;
+  pipeline->icrf_latch.common.fault = fault;
 }
 
 // Raise a fault that originated in the EX stage.
@@ -70,6 +72,7 @@ static void vr4300_rf_fault(struct vr4300 *vr4300, enum vr4300_fault_id fault) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
 
   pipeline->rfex_latch.common.fault = fault;
+  pipeline->icrf_latch.common.fault = fault;
 }
 
 // Prolog for most exceptions: load CP0 registers.
