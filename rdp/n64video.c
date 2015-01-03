@@ -659,7 +659,6 @@ static inline void vi_vl_lerp(CCVG* up, CCVG down, uint32_t frac);
 static inline void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, int a, int* z, uint32_t curpixel_cvg);
 static inline void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres);
 static inline void vi_fetch_filter32(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres);
-int IsBadPtrW32(void *ptr, uint32_t bytes);
 uint32_t vi_integer_sqrt(uint32_t a);
 void deduce_derivatives(void);
 static inline int32_t irand();
@@ -1158,25 +1157,10 @@ cen64_cold int angrylion_rdp_init(struct cen64_device *device)
 
 	precalculate_everything();
 
-#ifdef WIN32
-	if (IsBadPtrW32(&rdram[0x7f0000 >> 2],16))
-	{
-		plim = 0x3fffff;
-		idxlim16 = 0x1fffff;
-		idxlim32 = 0xfffff;
-	}
-	else
-	{
-		plim = 0x7fffff;
-		idxlim16 = 0x3fffff;
-		idxlim32 = 0x1fffff;
-	}
-#else
-	plim = 0x3fffff;
-	idxlim16 = 0x1fffff;
-	idxlim32 = 0xfffff;
-#endif
-
+  // TODO: Set limits based on RDRAM size.
+	plim = 0x7fffff;
+	idxlim16 = 0x3fffff;
+	idxlim32 = 0x1fffff;
 	
 	rdram_8 = (uint8_t*)rdram;
 	rdram_16 = (uint16_t*)rdram;
@@ -9303,31 +9287,6 @@ static inline void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, i
 		case 2: *z = 0x3ffff;							break;
 		case 3: *z = 0;									break;
 	}
-}
-
-
-
-int IsBadPtrW32(void *ptr, uint32_t bytes)
-{
-#ifdef WIN32
-	SIZE_T dwSize;
-    MEMORY_BASIC_INFORMATION meminfo;
-    if (!ptr)
-        return 1;
-    memset(&meminfo, 0x00, sizeof(meminfo));
-    dwSize = VirtualQuery(ptr, &meminfo, sizeof(meminfo));
-    if (!dwSize)
-        return 1;
-    if (MEM_COMMIT != meminfo.State)
-        return 1;
-    if (!(meminfo.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
-        return 1;
-    if (bytes > meminfo.RegionSize)
-        return 1;
-    if ((uint64_t)((char*)ptr - (char*)meminfo.BaseAddress) > (uint64_t)(meminfo.RegionSize - bytes))
-        return 1;
-#endif
-    return 0;
 }
 
 uint32_t vi_integer_sqrt(uint32_t a)
