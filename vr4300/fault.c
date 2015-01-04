@@ -212,7 +212,7 @@ void VR4300_CPU(unused(struct vr4300 *vr4300)) {
   vr4300_ex_fault(vr4300, VR4300_FAULT_CPU);
   vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (1 << 28) | 0x2C,
-    status, epc, 0x80);
+    status, epc, 0x180);
 }
 
 // DADE: Data address error exception.
@@ -375,7 +375,7 @@ void VR4300_INTR(struct vr4300 *vr4300) {
   uint64_t epc;
 
   vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
-  vr4300_exception_epilogue(vr4300, cause & ~0xFF, status, epc, 0x80);
+  vr4300_exception_epilogue(vr4300, cause & ~0xFF, status, epc, 0x180);
 
   vr4300_dc_fault(vr4300, VR4300_FAULT_INTR);
 }
@@ -454,5 +454,19 @@ void VR4300_RST(struct vr4300 *vr4300) {
     vr4300->regs[VR4300_CP0_REGISTER_STATUS],
     vr4300->regs[VR4300_CP0_REGISTER_EPC],
     -0x200ULL);
+}
+
+// WAT: Watch exception.
+void VR4300_WAT(struct vr4300 *vr4300) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+  struct vr4300_latch *common = &pipeline->dcwb_latch.common;
+  uint32_t cause, status;
+  uint64_t epc;
+
+  vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (23 << 2),
+    status, epc, 0x180);
+
+  vr4300_dc_fault(vr4300, VR4300_FAULT_WAT);
 }
 

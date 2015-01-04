@@ -283,6 +283,18 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       }
     }
 
+    // Check to see if we should raise a WAT exception.
+    if (unlikely((paddr & ~0x80000007U) == (vr4300->regs[
+      VR4300_CP0_REGISTER_WATCHLO] & ~0x80000007U))) {
+
+      // We hit the address, just check load/store.
+      // TODO: Postposted if EXL bit is set.
+      if (vr4300->regs[VR4300_CP0_REGISTER_WATCHLO] & request->type & 0x3) {
+        VR4300_WAT(vr4300);
+        return 1;
+      }
+    }
+
     // If we're in a cached region and miss, it's a DCM.
     if (!segment->cached || (line = vr4300_dcache_probe
       (&vr4300->dcache, vaddr, paddr)) == NULL) {

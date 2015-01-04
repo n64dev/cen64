@@ -904,9 +904,10 @@ int VR4300_JALR_JR(struct vr4300 *vr4300,
 
   bool is_jalr = iw & 0x1;
   uint32_t mask = vr4300_branch_lut[is_jalr];
+  uint32_t rd = GET_RD(iw);
 
   exdc_latch->result = rfex_latch->common.pc + 8;
-  exdc_latch->dest = VR4300_REGISTER_RA & ~mask;
+  exdc_latch->dest = rd & ~mask;
 
   icrf_latch->pc = rs;
   return 0;
