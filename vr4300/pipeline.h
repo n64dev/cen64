@@ -19,8 +19,8 @@ struct vr4300;
 
 enum vr4300_bus_request_type {
   VR4300_BUS_REQUEST_NONE,
-  VR4300_BUS_REQUEST_READ,
   VR4300_BUS_REQUEST_WRITE,
+  VR4300_BUS_REQUEST_READ,
 };
 
 enum vr4300_access_type {
