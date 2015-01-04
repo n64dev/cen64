@@ -114,7 +114,6 @@ void vr4300_tlb_exception_prolog(struct vr4300 *vr4300,
   *epc = vr4300->regs[VR4300_CP0_REGISTER_EPC];
 
   // Record branch delay slot?
-  // TODO: CHECK ME!
   if (in_bd_slot) {
     if (!(*status & 0x2)) {
       *cause |= 0x80000000U;
@@ -123,6 +122,8 @@ void vr4300_tlb_exception_prolog(struct vr4300 *vr4300,
       *offs = (*status & segment->xmode_mask) ? 0x080 : 0x000;
     }
 
+    // MIPS says 0x80, but that doesn't make
+    // any sense, so let's use 0x180 (GPE).
     else
       *offs = 0x180;
   }
@@ -135,6 +136,8 @@ void vr4300_tlb_exception_prolog(struct vr4300 *vr4300,
       *offs = (*status & segment->xmode_mask) ? 0x080 : 0x000;
     }
 
+    // MIPS says 0x80, but that doesn't make
+    // any sense, so let's use 0x180 (GPE).
     else
       *offs = 0x180;
   }
@@ -204,7 +207,7 @@ void vr4300_exception_epilogue(struct vr4300 *vr4300,
 }
 
 // CPU: Coprocessor unusable exception.
-void VR4300_CPU(unused(struct vr4300 *vr4300)) {
+void VR4300_CPU(struct vr4300 *vr4300) {
   struct vr4300_latch *common = &vr4300->pipeline.exdc_latch.common;
   uint32_t cause, status;
   uint64_t epc;
@@ -216,7 +219,7 @@ void VR4300_CPU(unused(struct vr4300 *vr4300)) {
 }
 
 // DADE: Data address error exception.
-void VR4300_DADE(unused(struct vr4300 *vr4300)) {
+void VR4300_DADE(struct vr4300 *vr4300) {
   abort(); // Hammertime!
 }
 
@@ -311,7 +314,7 @@ void VR4300_DCM(struct vr4300 *vr4300) {
 }
 
 // DTLB: Data TLB exception.
-void VR4300_DTLB(struct vr4300 *vr4300) {
+void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_latch *common = &exdc_latch->common;
   uint32_t cause, status;
@@ -326,17 +329,21 @@ void VR4300_DTLB(struct vr4300 *vr4300) {
   vr4300_tlb_exception_prolog(vr4300, common, &cause, &status,
     &epc, exdc_latch->segment, exdc_latch->request.vaddr, &offs);
 
+  // Invalid TLB exceptions always use the GPE.
+  if (!miss)
+    offs = 0x180;
+
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (type << 2),
     status, epc, offs);
 }
 
 // IADE: Instruction address error exception.
-void VR4300_IADE(unused(struct vr4300 *vr4300)) {
+void VR4300_IADE(struct vr4300 *vr4300) {
   abort(); // Hammertime!
 }
 
 // ICB: Instruction cache busy interlock.
-void VR4300_ICB(unused(struct vr4300 *vr4300)) {
+void VR4300_ICB(struct vr4300 *vr4300) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct segment *segment = icrf_latch->segment;
@@ -381,12 +388,12 @@ void VR4300_INTR(struct vr4300 *vr4300) {
 }
 
 // INV: Invalid operation exception.
-void VR4300_INV(unused(struct vr4300 *vr4300)) {
+void VR4300_INV(struct vr4300 *vr4300) {
   abort(); // Hammertime!
 }
 
 // ITLB: Instruction TLB exception.
-void VR4300_ITLB(struct vr4300 *vr4300) {
+void VR4300_ITLB(struct vr4300 *vr4300, unsigned miss) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_latch *common = &icrf_latch->common;
   uint32_t cause, status;
@@ -397,6 +404,10 @@ void VR4300_ITLB(struct vr4300 *vr4300) {
   vr4300_rf_fault(vr4300, VR4300_FAULT_ITLB);
   vr4300_tlb_exception_prolog(vr4300, common, &cause, &status,
     &epc, icrf_latch->segment, icrf_latch->common.pc, &offs);
+
+  // Invalid TLB exceptions always use the GPE.
+  if (!miss)
+    offs = 0x180;
 
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (0x2 << 2),
     status, epc, offs);
@@ -414,21 +425,6 @@ void VR4300_LDI(struct vr4300 *vr4300) {
 
 // RST: External reset exception.
 void VR4300_RST(struct vr4300 *vr4300) {
-  //vr4300->pipeline.icrf_latch.pc = 0xFFFFFFFFBFC00000ULL;
-
-  // Reset the segment ptrs as we might change access level.
-  //vr4300->pipeline.icrf_latch.segment = get_default_segment();
-  //vr4300->pipeline.exdc_latch.segment = get_default_segment();
-
-  // Reset the exception history count, signal the presence
-  // of a fault, and stall for the mandatory cycle count.
-  //
-  // TODO: Is the cycle count just the killing of IC/RF,
-  // or do we actually delay an additional two cycles?
-  //vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
-  //vr4300->pipeline.exception_history = 0;
-  //vr4300->pipeline.fault_present = true;
-  //vr4300->pipeline.cycles_to_stall = 2;
 
   // Cold reset exception.
   if (vr4300->signals & VR4300_SIGNAL_COLDRESET) {

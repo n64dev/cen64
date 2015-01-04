@@ -314,7 +314,7 @@ void RSP_JALR_JR(struct rsp *rsp,
 
   bool is_jalr = iw & 0x1;
   uint32_t mask = rsp_branch_lut[is_jalr];
-	unsigned rd = GET_RD(iw);
+  unsigned rd = GET_RD(iw);
 
   exdf_latch->result.result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
   exdf_latch->result.dest = rd & ~mask;

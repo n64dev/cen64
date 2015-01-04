@@ -20,11 +20,20 @@ enum vr4300_fault_id {
 
 extern const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS];
 
-#define X(fault) cen64_cold void VR4300_##fault(struct vr4300 *vr4300);
-#include "vr4300/fault.md"
-#undef X
-
+cen64_cold void VR4300_CPU(struct vr4300 *vr4300);
+cen64_cold void VR4300_DADE(struct vr4300 *vr4300);
+cen64_cold void VR4300_DCB(struct vr4300 *vr4300);
+cen64_cold void VR4300_DCM(struct vr4300 *vr4300);
+cen64_cold void VR4300_IADE(struct vr4300 *vr4300);
+cen64_cold void VR4300_ICB(struct vr4300 *vr4300);
+cen64_cold void VR4300_INTR(struct vr4300 *vr4300);
 cen64_cold void VR4300_INV(struct vr4300 *vr4300);
+cen64_cold void VR4300_LDI(struct vr4300 *vr4300);
+cen64_cold void VR4300_RST(struct vr4300 *vr4300);
+cen64_cold void VR4300_WAT(struct vr4300 *vr4300);
+
+cen64_cold void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss);
+cen64_cold void VR4300_ITLB(struct vr4300 *vr4300, unsigned miss);
 
 #endif
 
