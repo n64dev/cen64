@@ -174,11 +174,11 @@ int VR4300_MTC0(struct vr4300 *vr4300,
 int VR4300_TLBP(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   uint64_t entry_hi = mask_reg(10, vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI]);
-  int index;
+  unsigned index;
 
   vr4300->regs[VR4300_CP0_REGISTER_INDEX] |= 0x80000000U;
 
-  if ((index = tlb_probe(&vr4300->cp0.tlb, entry_hi, entry_hi & 0xFF)) != -1)
+  if (!tlb_probe(&vr4300->cp0.tlb, entry_hi, entry_hi & 0xFF, &index))
     vr4300->regs[VR4300_CP0_REGISTER_INDEX] = index;
 
   return 0;

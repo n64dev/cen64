@@ -21,7 +21,8 @@ void tlb_init(struct cen64_tlb *tlb) {
 }
 
 // Probes the TLB for matching entry. Returns the index or -1.
-int tlb_probe(const struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
+unsigned tlb_probe(const struct cen64_tlb *tlb,
+  uint64_t vaddr, uint8_t vasid, unsigned *index) {
   int one_hot_idx;
   uint32_t vpn2;
   unsigned i;
@@ -60,11 +61,14 @@ int tlb_probe(const struct cen64_tlb *tlb, uint64_t vaddr, uint8_t vasid) {
 
     // Match only on VPN match && (asid match || global)
     check = _mm_and_si128(vpn_check, asid_check);
-    if ((one_hot_idx = _mm_movemask_epi8(check)) != 0)
-      return i + cen64_one_hot_lut[one_hot_idx & 0xFF];
+    if ((one_hot_idx = _mm_movemask_epi8(check)) != 0) {
+      *index = i + cen64_one_hot_lut[one_hot_idx & 0xFF];
+      return 0;
+    }
   }
 
-  return -1;
+  *index = 0;
+  return 1;
 }
 
 // Reads data from the specified TLB index.
