@@ -463,8 +463,9 @@ void glx_window_render_frame(struct glx_window *window, const void *data,
       copy_size = 0;
       break;
 
+		// TODO: Why 4?
     case 2:
-      copy_size = 2;
+      copy_size = 4;
       break;
 
     case 3:
