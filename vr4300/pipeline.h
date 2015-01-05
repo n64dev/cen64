@@ -17,10 +17,14 @@
 
 struct vr4300;
 
+typedef void (*vr4300_cacheop_func_t)(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr);
+
 enum vr4300_bus_request_type {
   VR4300_BUS_REQUEST_NONE,
   VR4300_BUS_REQUEST_WRITE,
   VR4300_BUS_REQUEST_READ,
+  VR4300_BUS_REQUEST_CACHE = 4,
 };
 
 enum vr4300_access_type {
@@ -32,6 +36,8 @@ struct vr4300_bus_request {
   uint64_t vaddr;
   uint64_t data;
   uint64_t dqm;
+
+  vr4300_cacheop_func_t cacheop;
   uint32_t paddr;
 
   enum vr4300_access_type access_type;

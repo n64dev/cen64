@@ -312,8 +312,12 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     // TODO: Perform other CACHE instruction operations here.
-    else
-      assert(0 && "Unsupported DC stage request type.");
+    else {
+      assert(request->type == VR4300_BUS_REQUEST_CACHE
+        && "Unsupported DC stage request type.");
+
+      request->cacheop(vr4300, vaddr, paddr);
+    }
   }
 
   return 0;
