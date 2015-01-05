@@ -336,7 +336,7 @@ void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss, unsigned inv, unsigned mo
 
   // We calculated the vector offset for TLB miss exceptions.
   // TLB invalid and modification exceptions always use the GPE.
-  if (inv | mod)
+  if (!miss)
     offs = 0x180;
 
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (type << 2),
