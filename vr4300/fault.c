@@ -236,7 +236,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   uint32_t data[4];
   unsigned i;
 
-  if (!segment->cached) {
+  if (!exdc_latch->cached) {
     unsigned mask = request->access_type ==
       VR4300_ACCESS_DWORD ? 0x7 : 0x3;
 
@@ -346,12 +346,11 @@ void VR4300_IADE(struct vr4300 *vr4300) {
 void VR4300_ICB(struct vr4300 *vr4300) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
-  const struct segment *segment = icrf_latch->segment;
   uint64_t vaddr = icrf_latch->common.pc;
   uint32_t paddr = rfex_latch->paddr;
   unsigned delay;
 
-  if (!segment->cached) {
+  if (!rfex_latch->cached) {
     bus_read_word(vr4300->bus, paddr, &rfex_latch->iw);
     delay = MEMORY_WORD_DELAY;
   }
