@@ -61,6 +61,7 @@ struct vr4300_rfex_latch {
   struct vr4300_latch common;
   struct vr4300_opcode opcode;
   uint32_t iw, iw_mask, paddr;
+  bool cached;
 };
 
 struct vr4300_exdc_latch {
@@ -70,6 +71,7 @@ struct vr4300_exdc_latch {
   uint32_t dest;
 
   struct vr4300_bus_request request;
+  bool cached;
 };
 
 struct vr4300_dcwb_latch {

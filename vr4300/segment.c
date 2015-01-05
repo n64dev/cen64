@@ -106,7 +106,7 @@ static const struct segment XKPHYS0 = {
 
   0x80,                  /* kx mask */
   false,                 /* mapped */
-  true,                   /* cached */
+  true,                  /* cached */
 };
 
 static const struct segment XKPHYS1 = {

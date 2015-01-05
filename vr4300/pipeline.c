@@ -77,11 +77,13 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   const struct vr4300_icache_line *line;
   uint64_t vaddr = icrf_latch->common.pc;
   uint32_t paddr;
+  bool cached;
 
   rfex_latch->common = icrf_latch->common;
 
   // If we're in a mapped region, do a TLB translation.
   paddr = vaddr - segment->offset;
+  cached = segment->cached;
 
   if (segment->mapped) {
     unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
@@ -97,13 +99,18 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
       return 1;
     }
 
+    if ((vr4300->cp0.state[index][select] & 0x38) == 0x10)
+      cached = false;
+
     paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
   }
 
-  // If we're in a cached region and miss, it's a ICB.
-  if (!segment->cached || (line = vr4300_icache_probe(
+  // If not cached or we miss in the IC, it's an ICB.
+  if (!cached || (line = vr4300_icache_probe(
     &vr4300->icache, icrf_latch->common.pc, paddr)) == NULL) {
     rfex_latch->paddr = paddr;
+    rfex_latch->cached = cached;
+
     VR4300_ICB(vr4300);
     return 1;
   }
@@ -204,6 +211,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
   uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
   const struct segment *segment = exdc_latch->segment;
+  bool cached;
 
   dcwb_latch->common = exdc_latch->common;
   dcwb_latch->result = exdc_latch->result;
@@ -243,6 +251,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // If we're in a mapped region, do a TLB translation.
     paddr = vaddr - segment->offset;
+    cached = segment->cached;
 
     if (segment->mapped) {
       unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
@@ -257,6 +266,9 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         VR4300_DTLB(vr4300, tlb_miss);
         return 1;
       }
+
+      if ((vr4300->cp0.state[index][select] & 0x38) == 0x10)
+        cached = false;
 
       paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
     }
@@ -273,10 +285,11 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
       }
     }
 
-    // If we're in a cached region and miss, it's a DCM.
-    if (!segment->cached || (line = vr4300_dcache_probe
+    // If not cached or we miss in the DC, it's an DCB.
+    if (!cached || (line = vr4300_dcache_probe
       (&vr4300->dcache, vaddr, paddr)) == NULL) {
       request->paddr = paddr;
+      exdc_latch->cached = cached;
 
       VR4300_DCM(vr4300);
       return 1;
