@@ -355,135 +355,151 @@ int VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
 //
 // CACHE
 //
+cen64_cold static void vr4300_cacheop_unimplemented(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  debug("Unimplemented CACHE operation!\n");
+}
+
+cen64_cold static void vr4300_cacheop_ic_invalidate(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  vr4300_icache_invalidate(&vr4300->icache, vaddr);
+}
+
+cen64_cold static void vr4300_cacheop_ic_set_taglo(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  vr4300_icache_set_taglo(&vr4300->icache, vaddr,
+    vr4300->regs[VR4300_CP0_REGISTER_TAGLO]);
+}
+
+cen64_cold static void vr4300_cacheop_ic_invalidate_hit(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  vr4300_icache_invalidate_hit(&vr4300->icache, vaddr, paddr);
+}
+
+cen64_cold static void vr4300_cacheop_dc_wb_invalidate(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  struct vr4300_dcache_line *line;
+
+  uint32_t bus_address;
+  uint32_t data[4];
+  unsigned i;
+
+  if (!(line = vr4300_dcache_wb_invalidate(&vr4300->dcache, vaddr)))
+    return;
+
+  bus_address = vr4300_dcache_get_tag(line);
+  memcpy(data, line->data, sizeof(data));
+
+  for (i = 0; i < 4; i++)
+    bus_write_word(vr4300->bus, bus_address + i * 4,
+      data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
+}
+
+cen64_cold static void vr4300_cacheop_dc_create_dirty_ex(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  struct vr4300_dcache_line *line;
+
+  uint32_t bus_address;
+  uint32_t data[4];
+  unsigned i;
+
+  if ((line = vr4300_dcache_should_flush_line(&vr4300->dcache, vaddr))) {
+    bus_address = vr4300_dcache_get_tag(line);
+    memcpy(data, line->data, sizeof(data));
+
+    for (i = 0; i < 4; i++)
+      bus_write_word(vr4300->bus, bus_address + i * 4,
+        data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
+  }
+
+  vr4300_dcache_create_dirty_exclusive(&vr4300->dcache, vaddr, paddr);
+}
+
+cen64_cold static void vr4300_cacheop_dc_hit_invalidate(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  struct vr4300_dcache_line *line;
+
+  if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)))
+    vr4300_dcache_invalidate(line);
+}
+
+cen64_cold static void vr4300_cacheop_dc_hit_wb_invalidate(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  struct vr4300_dcache_line *line;
+
+  uint32_t bus_address;
+  uint32_t data[4];
+  unsigned i;
+
+  if (!(line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)))
+    return;
+
+  if (line->metadata & 0x2) {
+    bus_address = vr4300_dcache_get_tag(line);
+    memcpy(data, line->data, sizeof(data));
+
+    for (i = 0; i < 4; i++)
+      bus_write_word(vr4300->bus, bus_address + i * 4,
+        data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
+  }
+
+  line->metadata &= ~0x1;
+}
+
+cen64_cold static void vr4300_cacheop_dc_hit_wb(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  struct vr4300_dcache_line *line;
+
+  uint32_t bus_address;
+  uint32_t data[4];
+  unsigned i;
+
+  if (!(line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)))
+    return;
+
+  if (line->metadata & 0x2) {
+    bus_address = vr4300_dcache_get_tag(line);
+    memcpy(data, line->data, sizeof(data));
+
+    for (i = 0; i < 4; i++)
+      bus_write_word(vr4300->bus, bus_address + i * 4,
+        data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
+  }
+}
+
 int VR4300_CACHE(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
-  uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  struct vr4300_dcache_line *line;
-  const struct segment *segment;
+
+  cen64_align(static vr4300_cacheop_func_t cacheop_lut[32], CACHE_LINE_SIZE) = {
+    vr4300_cacheop_ic_invalidate,     vr4300_cacheop_unimplemented,
+    vr4300_cacheop_ic_set_taglo,      vr4300_cacheop_unimplemented,
+    vr4300_cacheop_ic_invalidate_hit, vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+
+    vr4300_cacheop_dc_wb_invalidate,  vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_dc_create_dirty_ex,
+    vr4300_cacheop_dc_hit_invalidate, vr4300_cacheop_dc_hit_wb_invalidate,
+    vr4300_cacheop_dc_hit_wb,         vr4300_cacheop_unimplemented,
+
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
+    vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented 
+  };
+
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
   uint64_t vaddr = rs + (int16_t) iw;
-  unsigned code = iw >> 16 & 0x3;
-  unsigned op = iw >> 18 & 0x7;
-  uint32_t paddr;
+  unsigned op = (iw >> 13 & 0x18) | (iw >> 18 & 0x7);
 
-  // Look up the segment that we're in.
-  if ((segment = get_segment(vaddr, cp0_status)) == NULL)
-    abort();
-
-  assert(!segment->mapped);
-  paddr = vaddr - segment->offset;
-
-  switch(code) {
-    case 0: // Instruction cache
-      switch(op) {
-        case 0:
-          vr4300_icache_invalidate(&vr4300->icache, vaddr);
-          break;
-
-        case 2:
-          vr4300_icache_set_taglo(&vr4300->icache, vaddr,
-            vr4300->regs[VR4300_CP0_REGISTER_TAGLO]);
-          break;
-
-        case 4:
-          vr4300_icache_invalidate_hit(&vr4300->icache, vaddr, paddr);
-          break;
-
-        default:
-          debug("Unimplemented ICACHE operation: %u\n", op);
-          break;
-      }
-
-      break;
-
-    case 1: // Data cache
-      switch(op) {
-        case 0:
-          if ((line = vr4300_dcache_wb_invalidate(&vr4300->dcache, vaddr))) {
-            uint32_t bus_address;
-            uint32_t data[4];
-            unsigned i;
-
-            bus_address = vr4300_dcache_get_tag(line);
-            memcpy(data, line->data, sizeof(data));
-
-            for (i = 0; i < 4; i++)
-              bus_write_word(vr4300->bus, bus_address + i * 4,
-                data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
-          }
-
-          break;
-
-        case 3:
-          if ((line = vr4300_dcache_should_flush_line(&vr4300->dcache, vaddr))) {
-            uint32_t bus_address;
-            uint32_t data[4];
-            unsigned i;
-
-            bus_address = vr4300_dcache_get_tag(line);
-            memcpy(data, line->data, sizeof(data));
-
-            for (i = 0; i < 4; i++)
-              bus_write_word(vr4300->bus, bus_address + i * 4,
-                data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
-          }
-
-          vr4300_dcache_create_dirty_exclusive(&vr4300->dcache, vaddr, paddr);
-          break;
-
-        case 4:
-          if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr)))
-            vr4300_dcache_invalidate(line);
-          break;
-
-        case 5:
-          if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr))) {
-            uint32_t bus_address;
-            uint32_t data[4];
-            unsigned i;
-
-            if (line->metadata & 0x2) {
-              bus_address = vr4300_dcache_get_tag(line);
-              memcpy(data, line->data, sizeof(data));
-
-              for (i = 0; i < 4; i++)
-                bus_write_word(vr4300->bus, bus_address + i * 4,
-                  data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
-            }
-
-            line->metadata &= ~0x1;
-          }
-
-          break;
-
-        case 6:
-          if ((line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr))) {
-            uint32_t bus_address;
-            uint32_t data[4];
-            unsigned i;
-
-            if (line->metadata & 0x2) {
-              bus_address = vr4300_dcache_get_tag(line);
-              memcpy(data, line->data, sizeof(data));
-
-              for (i = 0; i < 4; i++)
-                bus_write_word(vr4300->bus, bus_address + i * 4,
-                  data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
-            }
-          }
-
-          break;
-
-        default:
-          debug("Unimplemented DCACHE operation: %u\n", op);
-          break;
-      }
-
-      break;
-
-    default:
-      break;
-  }
+  exdc_latch->request.vaddr = vaddr;
+  exdc_latch->request.cacheop = cacheop_lut[op];
+  exdc_latch->request.type = VR4300_BUS_REQUEST_CACHE;
 
   return 0;
 }
