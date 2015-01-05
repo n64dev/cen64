@@ -38,6 +38,10 @@ struct vr4300_dcache_line *vr4300_dcache_should_flush_line(
   struct vr4300_dcache *dcache, uint64_t vaddr);
 struct vr4300_dcache_line *vr4300_dcache_wb_invalidate(
   struct vr4300_dcache *dcache, uint64_t vaddr);
+uint32_t vr4300_dcache_get_taglo(struct vr4300_dcache *dcache,
+  uint64_t vadd);
+void vr4300_dcache_set_taglo(struct vr4300_dcache *dcache,
+  uint64_t vaddr, uint32_t tag);
 
 #endif
 
