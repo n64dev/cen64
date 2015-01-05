@@ -376,6 +376,18 @@ cen64_cold static void vr4300_cacheop_ic_invalidate_hit(
   vr4300_icache_invalidate_hit(&vr4300->icache, vaddr, paddr);
 }
 
+cen64_cold static void vr4300_cacheop_dc_get_taglo(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  vr4300->regs[VR4300_CP0_REGISTER_TAGLO] =
+    vr4300_dcache_get_taglo(&vr4300->dcache, vaddr);
+}
+
+cen64_cold static void vr4300_cacheop_dc_set_taglo(
+  struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
+  vr4300_dcache_set_taglo(&vr4300->dcache, vaddr,
+    vr4300->regs[VR4300_CP0_REGISTER_TAGLO]);
+}
+
 cen64_cold static void vr4300_cacheop_dc_wb_invalidate(
   struct vr4300 *vr4300, uint64_t vaddr, uint32_t paddr) {
   struct vr4300_dcache_line *line;
@@ -476,8 +488,8 @@ int VR4300_CACHE(struct vr4300 *vr4300,
     vr4300_cacheop_ic_invalidate_hit, vr4300_cacheop_unimplemented,
     vr4300_cacheop_unimplemented,     vr4300_cacheop_unimplemented,
 
-    vr4300_cacheop_dc_wb_invalidate,  vr4300_cacheop_unimplemented,
-    vr4300_cacheop_unimplemented,     vr4300_cacheop_dc_create_dirty_ex,
+    vr4300_cacheop_dc_wb_invalidate,  vr4300_cacheop_dc_get_taglo,
+    vr4300_cacheop_dc_set_taglo,      vr4300_cacheop_dc_create_dirty_ex,
     vr4300_cacheop_dc_hit_invalidate, vr4300_cacheop_dc_hit_wb_invalidate,
     vr4300_cacheop_dc_hit_wb,         vr4300_cacheop_unimplemented,
 
@@ -500,6 +512,11 @@ int VR4300_CACHE(struct vr4300 *vr4300,
   exdc_latch->request.vaddr = vaddr;
   exdc_latch->request.cacheop = cacheop_lut[op];
   exdc_latch->request.type = VR4300_BUS_REQUEST_CACHE;
+
+  if (cacheop_lut[op] == vr4300_cacheop_unimplemented) {
+    fprintf(stderr, "op: %u\n", op);
+    abort();
+  }
 
   return 0;
 }

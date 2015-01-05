@@ -20,6 +20,7 @@ static bool is_dirty(const struct vr4300_dcache_line *line);
 static bool is_valid(const struct vr4300_dcache_line *line);
 static void set_dirty(struct vr4300_dcache_line *line);
 static void set_tag(struct vr4300_dcache_line *line, uint32_t tag);
+static void set_taglo(struct vr4300_dcache_line *line, uint32_t taglo);
 static void validate_line(struct vr4300_dcache_line *line, uint32_t tag);
 
 // Returns the line for a given virtual address.
@@ -58,6 +59,11 @@ void set_tag(struct vr4300_dcache_line *line, uint32_t tag) {
   line->metadata = tag | (line->metadata & 0x1);
 }
 
+// Sets the tag of the specified line and valid bit.
+void set_taglo(struct vr4300_dcache_line *line, uint32_t taglo) {
+  line->metadata = (taglo << 4 & 0xFFFFF000) | (taglo >> 7 & 0x1);
+}
+
 // Sets the line's physical tag and validates the line.
 static void validate_line(struct vr4300_dcache_line *line, uint32_t tag) {
   line->metadata = tag | 0x1;
@@ -84,6 +90,14 @@ void vr4300_dcache_fill(struct vr4300_dcache *dcache,
 // Returns the tag of the line associated with vaddr.
 uint32_t vr4300_dcache_get_tag(const struct vr4300_dcache_line *line) {
   return get_tag(line);
+}
+
+// Gets the physical tag associated with the line.
+uint32_t vr4300_dcache_get_taglo(struct vr4300_dcache *dcache, uint64_t vaddr) {
+  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
+
+  uint32_t taglo = is_valid(line) ? 0xC0 : 0x00;
+  return taglo | (line->metadata >> 4 & 0x0FFFFF00U);
 }
 
 // Initializes the instruction cache.
@@ -120,6 +134,14 @@ struct vr4300_dcache_line* vr4300_dcache_probe(
 // Marks the line as dirty.
 void vr4300_dcache_set_dirty(struct vr4300_dcache_line *line) {
   set_dirty(line);
+}
+
+// Sets the physical tag associated with the line.
+void vr4300_dcache_set_taglo(struct vr4300_dcache *dcache,
+  uint64_t vaddr, uint32_t taglo) {
+  struct vr4300_dcache_line *line = get_line(dcache, vaddr);
+
+  set_taglo(line, taglo);
 }
 
 // Returns the line if it's dirty and valid.

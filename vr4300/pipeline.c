@@ -286,51 +286,49 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     // If not cached or we miss in the DC, it's an DCB.
-    if (!cached || (line = vr4300_dcache_probe
-      (&vr4300->dcache, vaddr, paddr)) == NULL) {
-      request->paddr = paddr;
-      exdc_latch->cached = cached;
+    if (likely(exdc_latch->request.type != VR4300_BUS_REQUEST_CACHE)) {
+      if (!cached || (line = vr4300_dcache_probe
+        (&vr4300->dcache, vaddr, paddr)) == NULL) {
+        request->paddr = paddr;
+        exdc_latch->cached = cached;
 
-      VR4300_DCM(vr4300);
-      return 1;
+        VR4300_DCM(vr4300);
+        return 1;
+      }
+
+      // Data cache reads.
+      if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
+        unsigned rshiftamt = (8 - request->size) << 3;
+        unsigned lshiftamt = (paddr & 0x7) << 3;
+        uint64_t data;
+
+        memcpy(&data, line->data + (paddr & 0x8), sizeof(data));
+        data = (int64_t) (data << lshiftamt) >> rshiftamt;
+
+        dcwb_latch->result |= (data & request->dqm) << request->postshift;
+      }
+
+      // Data cache writes.
+      else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
+        unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3);
+        uint64_t data, dword, dqm;
+
+        shiftamt &= request->access_type;
+        data = request->data << shiftamt;
+        dqm = request->dqm << shiftamt;
+        paddr &= 0x8;
+
+        memcpy(&dword, line->data + paddr, sizeof(dword));
+        dword = (dword & ~dqm) | (data & dqm);
+        memcpy(line->data + paddr, &dword, sizeof(dword));
+
+        vr4300_dcache_set_dirty(line);
+      }
     }
 
-    // Data cache reads.
-    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-      unsigned rshiftamt = (8 - request->size) << 3;
-      unsigned lshiftamt = (paddr & 0x7) << 3;
-      uint64_t data;
-
-      memcpy(&data, line->data + (paddr & 0x8), sizeof(data));
-      data = (int64_t) (data << lshiftamt) >> rshiftamt;
-
-      dcwb_latch->result |= (data & request->dqm) << request->postshift;
-    }
-
-    // Data cache writes.
-    else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-      unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3);
-      uint64_t data, dword, dqm;
-
-      shiftamt &= request->access_type;
-      data = request->data << shiftamt;
-      dqm = request->dqm << shiftamt;
-      paddr &= 0x8;
-
-      memcpy(&dword, line->data + paddr, sizeof(dword));
-      dword = (dword & ~dqm) | (data & dqm);
-      memcpy(line->data + paddr, &dword, sizeof(dword));
-
-      vr4300_dcache_set_dirty(line);
-    }
-
-    // TODO: Perform other CACHE instruction operations here.
-    else {
-      assert(request->type == VR4300_BUS_REQUEST_CACHE
-        && "Unsupported DC stage request type.");
-
+    // Not a load/store, so execute cache operation.
+    else
       request->cacheop(vr4300, vaddr, paddr);
-    }
   }
 
   return 0;
