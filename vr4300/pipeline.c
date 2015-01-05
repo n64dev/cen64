@@ -255,15 +255,21 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     if (segment->mapped) {
       unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
-      unsigned select, tlb_miss, index;
+      unsigned select, tlb_inv, tlb_miss, tlb_mod, index;
       uint32_t page_mask;
 
       tlb_miss = tlb_probe(&vr4300->cp0.tlb, vaddr, asid, &index);
       page_mask = vr4300->cp0.page_mask[index];
       select = ((page_mask + 1) & vaddr) != 0;
 
-      if (unlikely(tlb_miss || !(vr4300->cp0.state[index][select] & 2))) {
-        VR4300_DTLB(vr4300, tlb_miss);
+      tlb_inv = !(vr4300->cp0.state[index][select] & 2);
+
+      // TODO: How do cache operations impact this?
+      tlb_mod = !(vr4300->cp0.state[index][select] & 4) &&
+        request->type == VR4300_BUS_REQUEST_WRITE;
+
+      if (unlikely(tlb_miss | tlb_inv | tlb_mod)) {
+        VR4300_DTLB(vr4300, tlb_miss, tlb_inv, tlb_mod);
         return 1;
       }
 

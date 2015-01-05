@@ -314,7 +314,7 @@ void VR4300_DCM(struct vr4300 *vr4300) {
 }
 
 // DTLB: Data TLB exception.
-void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss) {
+void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss, unsigned inv, unsigned mod) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_latch *common = &exdc_latch->common;
   uint32_t cause, status;
@@ -322,15 +322,21 @@ void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss) {
 
   unsigned offs, type;
 
-  // TLB load/fetch or store exception?
-  type = (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) ? 0x2: 0x3;
+  // TLB miss/invalid exceptions are either TLBL or TLBS.
+  if (miss | inv)
+    type = (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) ? 0x2: 0x3;
+
+  // OTOH, TLB modification exceptions are TLBM.
+  else
+    type = 0x1;
 
   vr4300_dc_fault(vr4300, VR4300_FAULT_DTLB);
   vr4300_tlb_exception_prolog(vr4300, common, &cause, &status,
     &epc, exdc_latch->segment, exdc_latch->request.vaddr, &offs);
 
-  // Invalid TLB exceptions always use the GPE.
-  if (!miss)
+  // We calculated the vector offset for TLB miss exceptions.
+  // TLB invalid and modification exceptions always use the GPE.
+  if (inv | mod)
     offs = 0x180;
 
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (type << 2),
