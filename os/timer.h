@@ -25,10 +25,10 @@ typedef struct timeval cen64_time;
 typedef struct timespec cen64_time;
 #endif
 
-cen64_hot unsigned long long compute_time_difference(
+cen64_cold unsigned long long compute_time_difference(
   const cen64_time *now, const cen64_time *before);
 
-cen64_hot void get_time(cen64_time *t);
+cen64_cold void get_time(cen64_time *t);
 
 #endif
 

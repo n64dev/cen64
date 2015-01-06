@@ -47,12 +47,14 @@ struct ri_controller {
 cen64_cold int ri_init(struct ri_controller *ri,
   struct bus_controller *bus, uint8_t *ram);
 
-int read_rdram(void *opaque, uint32_t address, uint32_t *word);
-int read_rdram_regs(void *opaque, uint32_t address, uint32_t *word);
-int read_ri_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_rdram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-int write_rdram_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-int write_ri_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+cen64_hot int read_rdram(void *opaque, uint32_t address, uint32_t *word);
+cen64_hot int write_rdram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
+cen64_cold int read_rdram_regs(void *opaque, uint32_t address, uint32_t *word);
+cen64_cold int read_ri_regs(void *opaque, uint32_t address, uint32_t *word);
+
+cen64_cold int write_rdram_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+cen64_cold int write_ri_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

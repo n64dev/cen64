@@ -29,30 +29,30 @@
 #include <X11/extensions/xf86vmode.h>
 
 // Functions to assist in taming X11.
-static int create_glx_context(
+cen64_cold static int create_glx_context(
   struct glx_window *glx_window, GLXContext *context);
 
-static int destroy_glx_window(struct glx_window *glx_window);
+cen64_cold static int destroy_glx_window(struct glx_window *glx_window);
 
-static void generate_attribute_list(int *attribute_list,
+cen64_cold static void generate_attribute_list(int *attribute_list,
   const struct gl_window_hints *hints);
 
-static int get_matching_visual_info(struct glx_window *glx_window,
+cen64_cold static int get_matching_visual_info(struct glx_window *glx_window,
   int *attribute_list, XVisualInfo **visual_info);
 
-static int get_matching_window_mode(struct glx_window *glx_window,
+cen64_cold static int get_matching_window_mode(struct glx_window *glx_window,
   const struct gl_window_hints *hints, XF86VidModeModeInfo *mode);
 
-static bool glx_window_poll_events(struct bus_controller *bus,
+cen64_cold static bool glx_window_poll_events(struct bus_controller *bus,
   struct glx_window *glx_window);
 
-cen64_hot static int glx_window_thread(struct gl_window *gl_window,
+cen64_cold static int glx_window_thread(struct gl_window *gl_window,
   struct glx_window *glx_window, struct bus_controller *bus);
 
-static void glx_window_update_window_title(
+cen64_cold static void glx_window_update_window_title(
   struct glx_window *glx_window, cen64_time *last_report_time);
 
-static int switch_to_fullscreen(struct glx_window *glx_window,
+cen64_cold static int switch_to_fullscreen(struct glx_window *glx_window,
   const struct gl_window_hints *hints);
 
 // Creates a new rendering context.

@@ -235,19 +235,5 @@ void rsp_cycle(struct rsp *rsp) {
 // Initializes the pipeline with default values.
 void rsp_pipeline_init(struct rsp_pipeline *pipeline) {
   memset(pipeline, 0, sizeof(*pipeline));
-
-#if 0
-  struct rsp_dfwb_latch *dfwb_latch = &pipeline->dfwb_latch;
-  struct rsp_exdf_latch *exdf_latch = &pipeline->exdf_latch;
-  struct rsp_rdex_latch *rdex_latch = &pipeline->rdex_latch;
-
-  dfwb_latch->result.dest = RSP_REGISTER_R0;
-  exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
-  exdf_latch->result.dest = RSP_REGISTER_R0;
-
-  rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
-  rdex_latch->iw = 0x00000000U;
-  ifrd_latch->iw = 0x00000000U;
-#endif
 }
 

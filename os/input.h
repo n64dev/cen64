@@ -13,8 +13,8 @@
 
 struct bus_controller;
 
-cen64_hot void keyboard_press_callback(struct bus_controller *bus, unsigned key);
-cen64_hot void keyboard_release_callback(struct bus_controller *bus, unsigned key);
+cen64_cold void keyboard_press_callback(struct bus_controller *bus, unsigned key);
+cen64_cold void keyboard_release_callback(struct bus_controller *bus, unsigned key);
 
 #endif
 
