@@ -186,10 +186,10 @@ int device_spin(struct cen64_device *device) {
     unsigned i;
 
     for (i = 0; i < 2; i++) {
+      vr4300_cycle(&device->vr4300);
+      rsp_cycle(&device->rsp);
       vi_cycle(&device->vi);
 
-      rsp_cycle(&device->rsp);
-      vr4300_cycle(&device->vr4300);
     }
 
     vr4300_cycle(&device->vr4300);
