@@ -269,6 +269,37 @@ void RSP_BREAK(struct rsp *rsp,
 }
 
 //
+// LB
+// LBU
+// LH
+// LHU
+// LW
+// SB
+// SH
+// SW
+//
+cen64_hot void RSP_INT_MEM(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
+
+  uint32_t address = rs + (int16_t) iw;
+  uint32_t sel_mask = (int32_t) (iw << 2) >> 31;
+  unsigned request_size = (iw >> 26 & 0x3);
+  unsigned lshiftamt = (3 - request_size) << 3;
+  uint32_t rdqm = rsp_load_sex_mask[iw >> 28 & 0x1][request_size];
+  uint32_t wdqm = ~0U << lshiftamt;
+
+  exdf_latch->request.addr = address;
+  exdf_latch->request.data = rt << lshiftamt;
+  exdf_latch->request.rdqm = rdqm;
+  exdf_latch->request.type = RSP_MEM_REQUEST_INT_MEM;
+  exdf_latch->request.rshift = lshiftamt;
+  exdf_latch->request.wdqm = sel_mask & wdqm;
+
+  exdf_latch->result.dest = ~sel_mask & GET_RT(iw);
+}
+
+//
 // INVALID
 //
 void RSP_INVALID(struct rsp *rsp,
@@ -320,31 +351,6 @@ void RSP_JALR_JR(struct rsp *rsp,
   exdf_latch->result.dest = rd & ~mask;
 
   ifrd_latch->pc = rs & 0xFFC;
-}
-
-//
-// LB
-// LBU
-// LH
-// LHU
-// LW
-//
-// TODO/FIXME: Check for unaligned addresses.
-//
-void RSP_LOAD(struct rsp *rsp,
-  uint32_t iw, uint32_t rs, uint32_t unused(rt)) {
-  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-
-  unsigned request_size = (iw >> 26 & 0x3);
-  uint32_t dqm = rsp_load_sex_mask[iw >> 28 & 0x1][request_size];
-  unsigned dest = GET_RT(iw);
-
-  exdf_latch->request.addr = rs + (int16_t) iw;
-  exdf_latch->request.dqm = dqm;
-  exdf_latch->request.type = RSP_MEM_REQUEST_READ;
-  exdf_latch->request.size = request_size + 1;
-
-  exdf_latch->result.dest = dest;
 }
 
 //
@@ -581,28 +587,6 @@ void RSP_SRLV(struct rsp *rsp,
 
   exdf_latch->result.result = rt >> sa;
   exdf_latch->result.dest = dest;
-}
-
-//
-// SB
-// SH
-// SW
-//
-// TODO/FIXME: Check for unaligned addresses.
-//
-void RSP_STORE(struct rsp *rsp,
-  uint32_t iw, uint32_t rs, uint32_t rt) {
-  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-
-  uint32_t address = rs + (int16_t) iw;
-  unsigned request_size = (iw >> 26 & 0x3) + 1;
-  unsigned lshiftamt = (4 - request_size) << 3;
-
-  exdf_latch->request.addr = address;
-  exdf_latch->request.data = rt << lshiftamt;
-  exdf_latch->request.dqm = ~0U << lshiftamt;
-  exdf_latch->request.type = RSP_MEM_REQUEST_WRITE;
-  exdf_latch->request.size = request_size;
 }
 
 // Function lookup table.
