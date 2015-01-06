@@ -19,6 +19,7 @@
 
 #include "bus/controller.h"
 #include "ai/controller.h"
+#include "dd/controller.h"
 #include "pi/controller.h"
 #include "ri/controller.h"
 #include "si/controller.h"
@@ -38,10 +39,12 @@ cen64_hot static int device_spin(struct cen64_device *device);
 
 // Creates and initializes a device.
 struct cen64_device *device_create(struct cen64_device *device,
-  uint8_t *ram, const struct rom_file *pifrom, const struct rom_file *cart) {
+  uint8_t *ram, const struct rom_file *ddipl, const struct rom_file *pifrom,
+  const struct rom_file *cart) {
 
   // Initialize the bus.
   device->bus.ai = &device->ai;
+  device->bus.dd = &device->dd;
   device->bus.pi = &device->pi;
   device->bus.ri = &device->ri;
   device->bus.si = &device->si;
@@ -63,6 +66,12 @@ struct cen64_device *device_create(struct cen64_device *device,
     return NULL;
   }
 
+  // Initialize the DD.
+  if (dd_init(&device->dd, &device->bus, ddipl->ptr)) {
+    debug("create_device: Failed to initialize the AI.\n");
+    return NULL;
+  }
+
   // Initialize the PI.
   if (pi_init(&device->pi, &device->bus, cart->ptr, cart->size)) {
     debug("create_device: Failed to initialize the PI.\n");
@@ -76,7 +85,8 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the SI.
-  if (si_init(&device->si, &device->bus, pifrom->ptr, cart->ptr)) {
+  if (si_init(&device->si, &device->bus, pifrom->ptr,
+    cart->ptr, ddipl->ptr != NULL)) {
     debug("create_device: Failed to initialize the SI.\n");
     return NULL;
   }

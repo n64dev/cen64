@@ -33,7 +33,7 @@ static int pif_perform_command(struct si_controller *si, unsigned channel,
 
 // Initializes the SI.
 int si_init(struct si_controller *si, struct bus_controller *bus,
-  const uint8_t *pif_rom, const uint8_t *cart_rom) {
+  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present) {
   uint32_t cic_seed;
 
   si->bus = bus;
@@ -48,6 +48,14 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
   si->ram[0x25] = cic_seed >> 16;
   si->ram[0x26] = cic_seed >>  8;
   si->ram[0x27] = cic_seed >>  0;
+
+  // 64DD present? Use that.
+  if (dd_present) {
+    si->ram[0x24] = 0x00;
+    si->ram[0x25] = 0x0A;
+    si->ram[0x26] = 0xDD;
+    si->ram[0x27] = 0x3F;
+  }
 
   // Specify 8MiB RDRAM for 6102/6105 carts.
   if (si->ram[0x26] == 0x3F && si->ram[0x27] == 0x3F)

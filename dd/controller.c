@@ -22,8 +22,10 @@ const char *dd_register_mnemonics[NUM_DD_REGISTERS] = {
 #endif
 
 // Initializes the DD.
-int dd_init(struct dd_controller *dd, struct bus_controller *bus) {
+int dd_init(struct dd_controller *dd, struct bus_controller *bus,
+  const uint8_t *rom) {
   dd->bus = bus;
+  dd->rom = rom;
 
   return 0;
 }
@@ -50,6 +52,29 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   dd->regs[reg] &= ~dqm;
   dd->regs[reg] |= word;
 
+  return 0;
+}
+
+// Reads a word from the DD IPL ROM.
+int read_dd_ipl_rom(void *opaque, uint32_t address, uint32_t *word) {
+  uint32_t offset = address - DD_IPL_ROM_ADDRESS;
+  struct dd_controller *dd = (struct dd_controller*) opaque;
+
+  if (!dd->rom)
+    memset(word, 0, sizeof(word));
+
+  else {
+    memcpy(word, dd->rom + offset, sizeof(*word));
+    *word = byteswap_32(*word);
+  }
+
+  //debug_mmio_read(dd, "DD_IPL_ROM", *word);
+  return 0;
+}
+
+// Writes a word to the DD IPL ROM.
+int write_dd_ipl_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  assert(0 && "Attempt to write to DD IPL ROM.");
   return 0;
 }
 
@@ -89,7 +114,7 @@ int write_dd_ds_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t d
   return 0;
 }
 
-// Reads a word from the DD DS buffer.
+// Reads a word from the DD MS RAM.
 int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
   unsigned offset = address - DD_MS_RAM_ADDRESS;
@@ -98,7 +123,7 @@ int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word) {
   return 0;
 }
 
-// Writes a word to the DD DS BUFFER.
+// Writes a word to the DD MS RAM.
 int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
   unsigned offset = address - DD_MS_RAM_ADDRESS;

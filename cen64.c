@@ -15,13 +15,14 @@
 #include "os/rom_file.h"
 #include <stdlib.h>
 
-static int load_roms(const char *pifrom_path, const char *cart_path,
+static int load_roms(const char *ddipl_path, const char *pifrom_path,
+  const char *cart_path, struct rom_file *ddipl,
   struct rom_file *pifrom, struct rom_file *cart);
 
 // Called when another simulation instance is desired.
 int cen64_cmdline_main(int argc, const char *argv[]) {
 	struct cen64_options options = default_cen64_options;
-  struct rom_file pifrom, cart;
+  struct rom_file ddipl, pifrom, cart;
   int status;
 
   if (argc < 3) {
@@ -36,10 +37,14 @@ int cen64_cmdline_main(int argc, const char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (load_roms(options.pifrom_path, options.cart_path, &pifrom, &cart))
+  if (load_roms(options.ddipl_path, options.pifrom_path,
+    options.cart_path, &ddipl, &pifrom, &cart))
     return EXIT_FAILURE;
 
-  status = os_main(&options, &pifrom, &cart);
+  status = os_main(&options, &ddipl, &pifrom, &cart);
+
+  if (options.ddipl_path)
+    close_rom_file(&ddipl);
 
   close_rom_file(&cart);
   close_rom_file(&pifrom);
@@ -47,16 +52,31 @@ int cen64_cmdline_main(int argc, const char *argv[]) {
 }
 
 // Load any ROM images required for simulation.
-int load_roms(const char *pifrom_path, const char *cart_path,
+int load_roms(const char *ddipl_path, const char *pifrom_path,
+  const char *cart_path, struct rom_file *ddipl,
   struct rom_file *pifrom, struct rom_file *cart) {
+  memset(ddipl, 0, sizeof(*ddipl));
+
+  if (ddipl_path && open_rom_file(ddipl_path, ddipl)) {
+    printf("Failed to load DD IPL ROM: %s.\n", ddipl_path);
+
+    return 1;
+  }
+
   if (open_rom_file(pifrom_path, pifrom)) {
     printf("Failed to load PIF ROM: %s.\n", pifrom_path);
+
+    if (ddipl_path)
+      close_rom_file(ddipl);
 
     return 1;
   }
 
   if (open_rom_file(cart_path, cart)) {
     printf("Failed to load cart: %s.\n", cart_path);
+
+    if (ddipl_path)
+      close_rom_file(ddipl);
 
     close_rom_file(pifrom);
     return 2;
