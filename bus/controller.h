@@ -15,6 +15,7 @@
 #include <setjmp.h>
 
 struct ai_controller;
+struct dd_controller;
 struct pi_controller;
 struct ri_controller;
 struct si_controller;
@@ -26,6 +27,7 @@ struct vr4300;
 
 struct bus_controller {
   struct ai_controller *ai;
+  struct dd_controller *dd;
   struct pi_controller *pi;
   struct ri_controller *ri;
   struct si_controller *si;

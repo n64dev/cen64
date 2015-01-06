@@ -229,6 +229,7 @@ include_directories(${PROJECT_SOURCE_DIR}/arch/${CEN64_ARCH_DIR})
 file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
 file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)
 file(GLOB COMMON_SOURCES ${PROJECT_SOURCE_DIR}/common/*.c)
+file(GLOB DD_SOURCES ${PROJECT_SOURCE_DIR}/dd/*.c)
 file(GLOB OS_COMMON_SOURCES ${PROJECT_SOURCE_DIR}/os/*.c)
 file(GLOB PI_SOURCES ${PROJECT_SOURCE_DIR}/pi/*.c)
 file(GLOB RI_SOURCES ${PROJECT_SOURCE_DIR}/ri/*.c)
@@ -284,6 +285,7 @@ add_library(cen64os STATIC "${PROJECT_SOURCE_DIR}/cen64.c"
 
 add_library(cen64ai STATIC ${AI_SOURCES})
 add_library(cen64bus STATIC ${BUS_SOURCES})
+add_library(cen64dd STATIC ${DD_SOURCES})
 add_library(cen64pi STATIC ${PI_SOURCES})
 add_library(cen64rdp STATIC ${RDP_SOURCES})
 add_library(cen64ri STATIC ${RI_SOURCES})
@@ -299,10 +301,10 @@ add_executable(cen64 ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_fast.c)
 add_executable(cen64dev ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_dev.c)
 
 target_link_libraries(cen64
-	cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
+	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
 	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 target_link_libraries(cen64dev
-	cen64ai cen64bus cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
+	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
 	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
