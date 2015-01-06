@@ -13,15 +13,15 @@
 #include "os/gl_window.h"
 #include "rom_file.h"
 
-cen64_hot int os_main(struct cen64_options *options,
+cen64_cold int os_main(struct cen64_options *options,
   struct rom_file *pifrom, struct rom_file *cart);
 
-cen64_hot bool os_exit_requested(struct gl_window *gl_window);
-cen64_hot void os_render_frame(struct gl_window *gl_window, const void *data,
+cen64_cold bool os_exit_requested(struct gl_window *gl_window);
+cen64_cold void os_render_frame(struct gl_window *gl_window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type);
 
-cen64_hot void os_acquire_input(struct gl_window *gl_window);
-cen64_hot void os_release_input(struct gl_window *gl_window);
+cen64_cold void os_acquire_input(struct gl_window *gl_window);
+cen64_cold void os_release_input(struct gl_window *gl_window);
 
 #endif
 

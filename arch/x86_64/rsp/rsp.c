@@ -16,7 +16,7 @@
 //
 // Masks for AND/OR/XOR and NAND/NOR/NXOR.
 //
-cen64_align(const uint16_t rsp_vlogic_mask[2][8], CACHE_LINE_SIZE) = {
+cen64_align(const uint16_t rsp_vlogic_mask[2][8], 32) = {
   { 0,  0,  0,  0,  0,  0,  0,  0},
   {~0, ~0, ~0, ~0, ~0, ~0, ~0, ~0}
 };

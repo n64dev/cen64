@@ -38,8 +38,8 @@ struct winapi_window {
   bool frame_pending;
 };
 
-bool winapi_window_exit_requested(struct winapi_window *window);
-void winapi_window_render_frame(struct winapi_window *window, const void *data,
+cen64_cold bool winapi_window_exit_requested(struct winapi_window *window);
+cen64_cold void winapi_window_render_frame(struct winapi_window *window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type);
 
 #endif

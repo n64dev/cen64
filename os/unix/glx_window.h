@@ -49,8 +49,8 @@ struct glx_window {
   pthread_t thread;
 };
 
-bool glx_window_exit_requested(struct glx_window *window);
-void glx_window_render_frame(struct glx_window *window, const void *data,
+cen64_cold bool glx_window_exit_requested(struct glx_window *window);
+cen64_cold void glx_window_render_frame(struct glx_window *window, const void *data,
   unsigned xres, unsigned yres, unsigned xskip, unsigned type);
 
 #endif

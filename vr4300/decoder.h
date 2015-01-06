@@ -42,7 +42,7 @@ struct vr4300_opcode {
   uint32_t flags;
 };
 
-const struct vr4300_opcode* vr4300_decode_instruction(uint32_t);
+cen64_hot const struct vr4300_opcode* vr4300_decode_instruction(uint32_t);
 
 #endif
 

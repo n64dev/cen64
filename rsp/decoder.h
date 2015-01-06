@@ -39,7 +39,7 @@ struct rsp_opcode {
   uint32_t flags;
 };
 
-const struct rsp_opcode* rsp_decode_instruction(uint32_t);
+cen64_hot const struct rsp_opcode* rsp_decode_instruction(uint32_t);
 
 #endif
 

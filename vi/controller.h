@@ -58,10 +58,10 @@ void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
 
 cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus);
 
-void vi_cycle(struct vi_controller *vi);
+cen64_hot void vi_cycle(struct vi_controller *vi);
 
-int read_vi_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+cen64_cold int read_vi_regs(void *opaque, uint32_t address, uint32_t *word);
+cen64_cold int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

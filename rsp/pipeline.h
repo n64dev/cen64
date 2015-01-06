@@ -82,7 +82,7 @@ struct rsp_pipeline {
   struct rsp_ifrd_latch ifrd_latch;
 };
 
-void rsp_pipeline_init(struct rsp_pipeline *pipeline);
+cen64_cold void rsp_pipeline_init(struct rsp_pipeline *pipeline);
 
 #endif
 
