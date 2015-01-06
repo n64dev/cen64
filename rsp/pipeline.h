@@ -19,8 +19,7 @@ struct rsp;
 
 enum rsp_mem_request_type {
   RSP_MEM_REQUEST_NONE,
-  RSP_MEM_REQUEST_READ,
-  RSP_MEM_REQUEST_WRITE,
+  RSP_MEM_REQUEST_INT_MEM,
   RSP_MEM_REQUEST_VECTOR,
   RSP_MEM_REQUEST_FOURTH,
   RSP_MEM_REQUEST_HALF,
@@ -34,10 +33,12 @@ struct rsp_mem_request {
   union aligned_rsp_1vect_t vdqm;
   uint32_t addr;
   uint32_t data;
-  uint32_t dqm;
+  uint32_t rdqm;
+  uint32_t wdqm;
+  unsigned rshift;
 
   enum rsp_mem_request_type type;
-  unsigned size, element;
+  unsigned element;
 
   void (*vldst_func)(struct rsp *rsp, uint32_t addr, unsigned element,
     uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);

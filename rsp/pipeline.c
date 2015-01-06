@@ -184,29 +184,19 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   // Scalar unit DMEM access.
   else {
-    // TODO: Detect/handle wraparound?
-    uint32_t dqm = request->dqm;
+    uint32_t rdqm = request->rdqm;
+    uint32_t wdqm = request->wdqm;
+    uint32_t data = request->data;
+    unsigned rshift = request->rshift;
     uint32_t word;
 
-    // DMEM scalar reads.
-    if (request->type == RSP_MEM_REQUEST_READ) {
-      unsigned rshiftamt = (4 - request->size) << 3;
+    memcpy(&word, rsp->mem + addr, sizeof(word));
 
-      memcpy(&word, rsp->mem + addr, sizeof(word));
+    word = byteswap_32(word);
+    dfwb_latch->result.result = rdqm & (((int32_t) word) >> rshift);
+    word = byteswap_32((word & ~wdqm) | (data & wdqm));
 
-      word = byteswap_32(word);
-      word = (int32_t) word >> rshiftamt;
-      dfwb_latch->result.result = dqm & word;
-    }
-
-    // DMEM scalar writes.
-    else {
-      uint32_t data = request->data;
-
-      memcpy(&word, rsp->mem + addr, sizeof(word));
-      word = byteswap_32((byteswap_32(word) & ~dqm) | (data & dqm));
-      memcpy(rsp->mem + addr, &word, sizeof(word));
-    }
+    memcpy(rsp->mem + addr, &word, sizeof(word));
   }
 }
 
