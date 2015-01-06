@@ -104,9 +104,10 @@ const struct vr4300_icache_line* vr4300_icache_probe(
   uint32_t ptag = get_tag(line);
 
   // Virtually index, and physically tagged.
-  return (ptag == (paddr >> 5) && is_valid(line))
-    ? line
-    : NULL;
+  if (ptag == (paddr >> 5) && is_valid(line))
+    return line;
+
+  return NULL;
 }
 
 // Sets the physical tag associated with the line.

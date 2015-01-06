@@ -126,9 +126,10 @@ struct vr4300_dcache_line* vr4300_dcache_probe(
   uint32_t ptag = get_tag(line);
 
   // Virtually index, and physically tagged.
-  return (ptag == (paddr & ~0xF) && is_valid(line))
-    ? line
-    : NULL;
+  if (ptag == (paddr & ~0xF) && is_valid(line))
+    return line;
+
+  return NULL;
 }
 
 // Marks the line as dirty.
