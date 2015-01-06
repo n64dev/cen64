@@ -164,7 +164,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
   addr = request->addr & 0xFFF;
 
   // Vector unit DMEM access.
-  if (exdf_latch->result.dest >= NUM_RSP_REGISTERS) {
+  if (request->type != RSP_MEM_REQUEST_INT_MEM) {
     uint16_t *regp = rsp->cp2.regs[
       exdf_latch->result.dest - NUM_RSP_REGISTERS].e;
 

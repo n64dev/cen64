@@ -13,6 +13,7 @@
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "bus/memorymap.h"
+#include "dd/controller.h"
 #include "pi/controller.h"
 #include "ri/controller.h"
 #include "si/controller.h"
@@ -24,7 +25,7 @@
 #include "vr4300/cpu.h"
 #include "vr4300/interface.h"
 
-#define NUM_MAPPINGS 14
+#define NUM_MAPPINGS 15
 
 struct bus_controller_mapping {
   memory_rd_function read;
@@ -39,6 +40,7 @@ int bus_init(struct bus_controller *bus) {
 
   static const struct bus_controller_mapping mappings[NUM_MAPPINGS] = {
     {read_ai_regs, write_ai_regs, AI_REGS_BASE_ADDRESS, AI_REGS_ADDRESS_LEN},
+    {read_dd_regs, write_dd_regs, DD_REGS_BASE_ADDRESS, DD_REGS_ADDRESS_LEN},
     {read_dp_regs, write_dp_regs, DP_REGS_BASE_ADDRESS, DP_REGS_ADDRESS_LEN},
     {read_mi_regs, write_mi_regs, MI_REGS_BASE_ADDRESS, MI_REGS_ADDRESS_LEN},
     {read_pi_regs, write_pi_regs, PI_REGS_BASE_ADDRESS, PI_REGS_ADDRESS_LEN},
@@ -57,6 +59,7 @@ int bus_init(struct bus_controller *bus) {
 
   void *instances[NUM_MAPPINGS] = {
     bus->ai,
+    bus->dd,
     bus->rdp,
     bus->vr4300,
     bus->pi,

@@ -71,5 +71,9 @@
 #define VI_REGS_BASE_ADDRESS      0x04400000
 #define VI_REGS_ADDRESS_LEN       0x00000038
 
+// DD interface registers.
+#define DD_REGS_BASE_ADDRESS      0x05000500
+#define DD_REGS_ADDRESS_LEN       0x0000004C
+
 #endif
 
