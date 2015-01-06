@@ -173,9 +173,10 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   }
 
   // Check to see if we should hold off execution due to a LDI.
-  if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ && (
+  // MIPS compilers generally optimize this out, so flag as unlikely.
+  if (unlikely(exdc_latch->request.type == VR4300_BUS_REQUEST_READ && (
     ((exdc_latch->dest == rs) && (flags & OPCODE_INFO_NEEDRS)) ||
-    ((exdc_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT)))) {
+    ((exdc_latch->dest == rt) && (flags & OPCODE_INFO_NEEDRT))))) {
     VR4300_LDI(vr4300);
     return 1;
   }
