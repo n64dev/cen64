@@ -55,8 +55,8 @@ static inline int rsp_rd_stage(struct rsp *rsp) {
     unsigned rs = GET_RS(ifrd_latch->iw);
     unsigned rt = GET_RT(ifrd_latch->iw);
 
-    if ((((opcode->flags & OPCODE_INFO_NEEDRS) && dest == rs)) ||
-      ((opcode->flags & OPCODE_INFO_NEEDRT) && dest == rt)) {
+    if (unlikely((((opcode->flags & OPCODE_INFO_NEEDRS) && dest == rs)) ||
+      ((opcode->flags & OPCODE_INFO_NEEDRT) && dest == rt))) {
       rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
       rdex_latch->iw = 0x00000000U;
 
