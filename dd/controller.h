@@ -29,12 +29,22 @@ struct dd_controller {
   struct bus_controller *bus;
 
   uint32_t regs[NUM_DD_REGISTERS];
+  uint8_t c2s_buffer[DD_C2S_BUFFER_LEN];
+  uint8_t ds_buffer[DD_DS_BUFFER_LEN];
+  uint8_t ms_ram[DD_MS_RAM_LEN];
 };
 
 cen64_cold int dd_init(struct dd_controller *dd, struct bus_controller *bus);
 
 int read_dd_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
+int read_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t *word);
+int write_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int read_dd_ds_buffer(void *opaque, uint32_t address, uint32_t *word);
+int write_dd_ds_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word);
+int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

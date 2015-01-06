@@ -30,7 +30,7 @@ int dd_init(struct dd_controller *dd, struct bus_controller *bus) {
 
 // Reads a word from the DD MMIO register space.
 int read_dd_regs(void *opaque, uint32_t address, uint32_t *word) {
-  struct dd_controller *dd = (struct pi_controller *) opaque;
+  struct dd_controller *dd = (struct dd_controller *) opaque;
   unsigned offset = address - DD_REGS_BASE_ADDRESS;
   enum dd_register reg = (offset >> 2);
 
@@ -50,6 +50,60 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   dd->regs[reg] &= ~dqm;
   dd->regs[reg] |= word;
 
+  return 0;
+}
+
+// Reads a word from the DD C2S buffer.
+int read_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t *word) {
+  struct dd_controller *dd = (struct dd_controller *) opaque;
+  unsigned offset = address - DD_C2S_BUFFER_ADDRESS;
+
+  debug_mmio_read(dd, "DD_C2S_BUFFER", *word);
+  return 0;
+}
+
+// Writes a word to the DD C2S BUFFER.
+int write_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  struct dd_controller *dd = (struct dd_controller *) opaque;
+  unsigned offset = address - DD_C2S_BUFFER_ADDRESS;
+
+  debug_mmio_write(dd, "DD_C2S_BUFFER", word, dqm);
+  return 0;
+}
+
+// Reads a word from the DD DS buffer.
+int read_dd_ds_buffer(void *opaque, uint32_t address, uint32_t *word) {
+  struct dd_controller *dd = (struct dd_controller *) opaque;
+  unsigned offset = address - DD_DS_BUFFER_ADDRESS;
+
+  debug_mmio_read(dd, "DD_DS_BUFFER", *word);
+  return 0;
+}
+
+// Writes a word to the DD DS BUFFER.
+int write_dd_ds_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  struct dd_controller *dd = (struct dd_controller *) opaque;
+  unsigned offset = address - DD_DS_BUFFER_ADDRESS;
+
+  debug_mmio_write(dd, "DD_DS_BUFFER", word, dqm);
+  return 0;
+}
+
+// Reads a word from the DD DS buffer.
+int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word) {
+  struct dd_controller *dd = (struct dd_controller *) opaque;
+  unsigned offset = address - DD_MS_RAM_ADDRESS;
+
+  debug_mmio_read(dd, "DD_MS_RAM", *word);
+  return 0;
+}
+
+// Writes a word to the DD DS BUFFER.
+int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  struct dd_controller *dd = (struct dd_controller *) opaque;
+  unsigned offset = address - DD_MS_RAM_ADDRESS;
+
+  debug_mmio_write(dd, "DD_MS_RAM", word, dqm);
   return 0;
 }
 
