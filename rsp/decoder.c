@@ -35,7 +35,7 @@
 //
 // ============================================================================
 cen64_align(static const struct rsp_opcode
-  rsp_spec_opcode_table[64], CACHE_LINE_SIZE) = {
+  rsp_opcode_table[], CACHE_LINE_SIZE) = {
   {SLL},     {INVALID}, {SRL},     {SRA},
   {SLLV},    {INVALID}, {SRLV},    {SRAV},
   {JR},      {JALR},    {INVALID}, {INVALID},
@@ -51,8 +51,7 @@ cen64_align(static const struct rsp_opcode
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
-};
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 
 // ============================================================================
 //  Escaped opcode table: RegImm.
@@ -68,8 +67,6 @@ cen64_align(static const struct rsp_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct rsp_opcode
-  rsp_regimm_opcode_table[32], CACHE_LINE_SIZE) = {
   {BLTZ},    {BGEZ},    {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
@@ -77,8 +74,7 @@ cen64_align(static const struct rsp_opcode
   {BLTZAL},  {BGEZAL},  {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
-};
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 
 // ============================================================================
 //  Escaped opcode table: COP0.
@@ -93,8 +89,6 @@ cen64_align(static const struct rsp_opcode
 //   11 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 // ============================================================================
-cen64_align(static const struct rsp_opcode
-  rsp_cop0_opcode_table[32], CACHE_LINE_SIZE) = {
   {MFC0},    {INVALID}, {INVALID}, {INVALID},
   {MTC0},    {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
@@ -102,8 +96,7 @@ cen64_align(static const struct rsp_opcode
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
-};
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 
 // ============================================================================
 //  Escaped opcode table: COP2/1.
@@ -119,13 +112,10 @@ cen64_align(static const struct rsp_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct rsp_opcode
-  rsp_cop2_opcode_table_1[16], CACHE_LINE_SIZE) = {
   {MFC2},    {INVALID}, {CFC2},    {INVALID},
   {MTC2},    {INVALID}, {CTC2},    {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-};
 
 // ============================================================================
 //  Escaped opcode table: COP2/2.
@@ -145,8 +135,6 @@ cen64_align(static const struct rsp_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct rsp_opcode
-  rsp_cop2_opcode_table_2[64], CACHE_LINE_SIZE) = {
   {VMULF},    {VMULU},    {VRNDP},    {VMULQ},
   {VMUDL},    {VMUDM},    {VMUDN},    {VMUDH},
   {VMACF},    {VMACU},    {VRNDN},    {VMACQ},
@@ -163,7 +151,6 @@ cen64_align(static const struct rsp_opcode
   {VRSQ},     {VRSQL},    {VRSQH},    {VNOP},
   {VINVALID}, {VINVALID}, {VINVALID}, {VINVALID},
   {VINVALID}, {VINVALID}, {VINVALID}, {VNULL},
-};
 
 // ============================================================================
 //  Escaped opcode table: LWC2.
@@ -179,8 +166,6 @@ cen64_align(static const struct rsp_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct rsp_opcode
-  rsp_lwc_opcode_table[32], CACHE_LINE_SIZE) = {
   {LBV},     {LSV},     {LLV},     {LDV},
   {LQV},     {LRV},     {LPV},     {LUV},
   {LHV},     {LFV},     {INVALID}, {LTV},
@@ -188,8 +173,7 @@ cen64_align(static const struct rsp_opcode
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
-};
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 
 // ============================================================================
 //  Escaped opcode table: SWC2.
@@ -205,8 +189,6 @@ cen64_align(static const struct rsp_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct rsp_opcode
-  rsp_swc_opcode_table[32], CACHE_LINE_SIZE) = {
   {SBV},     {SSV},     {SLV},     {SDV},
   {SQV},     {SRV},     {SPV},     {SUV},
   {SHV},     {SFV},     {SWV},     {STV},
@@ -214,18 +196,17 @@ cen64_align(static const struct rsp_opcode
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
-};
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 
 // ============================================================================
 //  First-order opcode table.
 //
-//  0b000000   => Lookup in rsp_spec_opcode_table.
-//  0b000001   => Lookup in rsp_regimm_opcode_table.
-//  0b010000   => Lookup in rsp_cop0_opcode_table.
+//  0b000000   => Lookup in 0.
+//  0b000001   => Lookup in 64.
+//  0b010000   => Lookup in 96.
 //  0b010001   => Lookup in rsp_cop2_opcode_table.
-//  0b110010   => Lookup in rsp_lwc_opcode_table.
-//  0b111010   => Lookup in rsp_swc_opcode_table.
+//  0b110010   => Lookup in 208.
+//  0b111010   => Lookup in 240.
 //
 //      31---------26---------------------------------------------------0
 //      |  OPCODE/6 |                                                   |
@@ -241,8 +222,6 @@ cen64_align(static const struct rsp_opcode
 //  111 |  ---  |  ---  | *SWC2 |  ---  |  ---  |  ---  |  ---  |  ---  |
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 // ============================================================================
-cen64_align(static const struct rsp_opcode
-  rsp_opcode_table[64], CACHE_LINE_SIZE) = {
   {INVALID}, {INVALID}, {J},       {JAL},
   {BEQ},     {BNE},     {BLEZ},    {BGTZ},
   {ADDIU},   {ADDIU},   {SLTI},    {SLTIU},
@@ -262,91 +241,93 @@ cen64_align(static const struct rsp_opcode
 };
 
 struct rsp_opcode_escape {
-  const struct rsp_opcode *table;
-  unsigned shift, mask;
+  uint16_t offset;
+  uint8_t shift, mask;
 };
 
 // Escaped table listings. Most of these will never
 // see a processor cache line, so not much waste here.
 cen64_align(static const struct rsp_opcode_escape
   rsp_escape_table[128], CACHE_LINE_SIZE) = {
- {rsp_spec_opcode_table,    0, 0x3F}, {rsp_spec_opcode_table,    0, 0x3F},
- {rsp_regimm_opcode_table, 16, 0x1F}, {rsp_regimm_opcode_table, 16, 0x1F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {0,    0, 0x3F}, {0,    0, 0x3F},
+ {64,  16, 0x1F}, {64,  16, 0x1F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
 
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
 
- {rsp_cop0_opcode_table,   21, 0x1F}, {rsp_cop0_opcode_table,   21, 0x1F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_cop2_opcode_table_1, 21, 0x1F}, {rsp_cop2_opcode_table_2,  0, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {96,  21, 0x1F}, {96,  21, 0x1F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {128, 21, 0x1F}, {144,  0, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
 
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
 
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
 
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
  
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_lwc_opcode_table,    11, 0x1F}, {rsp_lwc_opcode_table,    11, 0x1F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {208, 11, 0x1F}, {208, 11, 0x1F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
 
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_swc_opcode_table,    11, 0x1F}, {rsp_swc_opcode_table,    11, 0x1F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
- {rsp_opcode_table,        26, 0x3F}, {rsp_opcode_table,        26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {240, 11, 0x1F}, {240, 11, 0x1F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
+ {272, 26, 0x3F}, {272, 26, 0x3F},
 };
 
 // Decodes an instruction word.
 const struct rsp_opcode* rsp_decode_instruction(uint32_t iw) {
   const struct rsp_opcode_escape *escape = rsp_escape_table + (iw >> 25);
   unsigned index = iw >> escape->shift & escape->mask;
-  return escape->table + index;
+
+  const struct rsp_opcode* group = rsp_opcode_table + escape->offset;
+  return group + index;
 }
 

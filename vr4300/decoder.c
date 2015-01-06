@@ -35,7 +35,7 @@
 //
 // ============================================================================
 cen64_align(static const struct vr4300_opcode
-  vr4300_spec_opcode_table[64], CACHE_LINE_SIZE) = {
+  vr4300_opcode_table[], CACHE_LINE_SIZE) = {
   {SLL},     {INVALID}, {SRL},     {SRA},
   {SLLV},    {INVALID}, {SRLV},    {SRAV},
   {JR},      {JALR},    {INVALID}, {INVALID},
@@ -51,8 +51,7 @@ cen64_align(static const struct vr4300_opcode
   {TGE},     {TGEU},    {TLT},     {TLTU},
   {TEQ},     {INVALID}, {TNE},     {INVALID},
   {DSLL},    {INVALID}, {DSRL},    {DSRA},
-  {DSLL32},  {INVALID}, {DSRL32},  {DSRA32}
-};
+  {DSLL32},  {INVALID}, {DSRL32},  {DSRA32},
 
 // ============================================================================
 //  Escaped opcode table: RegImm.
@@ -68,8 +67,6 @@ cen64_align(static const struct vr4300_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct vr4300_opcode
-  vr4300_regimm_opcode_table[32], CACHE_LINE_SIZE) = {
   {BLTZ},    {BGEZ},    {BLTZL},   {BGEZL},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {TGEI},    {TGEIU},   {TLTI},    {TLTIU},
@@ -77,8 +74,7 @@ cen64_align(static const struct vr4300_opcode
   {BLTZAL},  {BGEZAL},  {BLTZALL}, {BGEZALL},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
-};
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 
 // ============================================================================
 //  Escaped opcode table: COP0/1.
@@ -93,13 +89,10 @@ cen64_align(static const struct vr4300_opcode
 //   11 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 // ============================================================================
-cen64_align(static const struct vr4300_opcode
-  vr4300_cop0_opcode_table_1[16], CACHE_LINE_SIZE) = {
   {MFC0},    {DMFC0},   {CFC0},    {INVALID},
   {MTC0},    {DMTC0},   {CTC0},    {INVALID},
   {BC0},     {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-};
 
 // ============================================================================
 //  Escaped opcode table: COP0/2.
@@ -118,8 +111,6 @@ cen64_align(static const struct vr4300_opcode
 //  111 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 // ========================================================================= */
-cen64_align(static const struct vr4300_opcode
-  vr4300_cop0_opcode_table_2[64], CACHE_LINE_SIZE) = {
   {INVALID}, {TLBR},    {TLBWI},   {INVALID},
   {INVALID}, {INVALID}, {TLBWR},   {INVALID},
   {TLBP},    {INVALID}, {INVALID}, {INVALID},
@@ -136,7 +127,6 @@ cen64_align(static const struct vr4300_opcode
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-};
 
 // ============================================================================
 //  Escaped opcode table: COP1/1.
@@ -151,13 +141,10 @@ cen64_align(static const struct vr4300_opcode
 //   11 |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |  ---  |
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 // ============================================================================
-cen64_align(static const struct vr4300_opcode
-  vr4300_cop1_opcode_table_1[16], CACHE_LINE_SIZE) = {
   {MFC1},    {DMFC1},   {CFC1},    {INVALID},
   {MTC1},    {DMTC1},   {CTC1},    {INVALID},
   {BC1},     {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-};
 
 // ============================================================================
 //  Escaped opcode table: COP1/2.
@@ -176,8 +163,6 @@ cen64_align(static const struct vr4300_opcode
 //  111 | C.SF  |C.NGLE | C.SEQ | C.NGL | C.LT  | C.NGE | C.LE  | C.NGT |
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 // ========================================================================= */
-cen64_align(static const struct vr4300_opcode
-  vr4300_cop1_opcode_table_2[64], CACHE_LINE_SIZE) = {
   {CP1_ADD},     {CP1_SUB},     {CP1_MUL},     {CP1_DIV},
   {CP1_SQRT},    {CP1_ABS},     {CP1_MOV},     {CP1_NEG},
   {CP1_ROUND_L}, {CP1_TRUNC_L}, {CP1_CEIL_L},  {CP1_FLOOR_L},
@@ -193,8 +178,7 @@ cen64_align(static const struct vr4300_opcode
   {CP1_C_F},     {CP1_C_UN},    {CP1_C_EQ},    {CP1_C_UEQ},
   {CP1_C_OLT},   {CP1_C_ULT},   {CP1_C_OLE},   {CP1_C_ULE},
   {CP1_C_SF},    {CP1_C_NGLE},  {CP1_C_SEQ},   {CP1_C_NGL},
-  {CP1_C_LT},    {CP1_C_NGE},   {CP1_C_LE},    {CP1_C_NGT}
-};
+  {CP1_C_LT},    {CP1_C_NGE},   {CP1_C_LE},    {CP1_C_NGT},
 
 // ============================================================================
 //  Escaped opcode table: COP2.
@@ -210,8 +194,6 @@ cen64_align(static const struct vr4300_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct vr4300_opcode
-  vr4300_cop2_opcode_table[32], CACHE_LINE_SIZE) = {
   {MFC2},    {DMFC2},   {CFC2},    {INVALID},
   {MTC2},    {DMTC2},   {CTC2},    {INVALID},
   {BC2},     {INVALID}, {INVALID}, {INVALID},
@@ -219,17 +201,16 @@ cen64_align(static const struct vr4300_opcode
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
   {INVALID}, {INVALID}, {INVALID}, {INVALID},
-  {INVALID}, {INVALID}, {INVALID}, {INVALID}
-};
+  {INVALID}, {INVALID}, {INVALID}, {INVALID},
 
 // ============================================================================
 //  First-order opcode table.
 //
-//  0b000000   => Lookup in vr4300_spec_opcode_table.
-//  0b000001   => Lookup in vr4300_regimm_opcode_table.
+//  0b000000   => Lookup in 0.
+//  0b000001   => Lookup in 64.
 //  0b010000   => Lookup in vr4300_cop0_opcode_table.
 //  0b010001   => Lookup in vr4300_cop1_opcode_table.
-//  0b010010   => Lookup in vr4300_cop2_opcode_table.
+//  0b010010   => Lookup in 256.
 //
 //      31---------26---------------------------------------------------0
 //      |  OPCODE/6 |                                                   |
@@ -246,8 +227,6 @@ cen64_align(static const struct vr4300_opcode
 //      |-------|-------|-------|-------|-------|-------|-------|-------|
 //
 // ============================================================================
-cen64_align(static const struct vr4300_opcode
-  vr4300_opcode_table[64], CACHE_LINE_SIZE) = {
   {INVALID}, {INVALID}, {J},       {JAL},
   {BEQ},     {BNE},     {BLEZ},    {BGTZ},
   {ADDI},    {ADDIU},   {SLTI},    {SLTIU},
@@ -267,91 +246,93 @@ cen64_align(static const struct vr4300_opcode
 };
 
 struct vr4300_opcode_escape {
-  const struct vr4300_opcode *table;
-  unsigned shift, mask;
+  uint16_t offset;
+  uint8_t shift, mask;
 };
 
 // Escaped table listings. Most of these will never
 // see a processor cache line, so not much waste here.
 cen64_align(static const struct vr4300_opcode_escape
   vr4300_escape_table[128], CACHE_LINE_SIZE) = {
- {vr4300_spec_opcode_table,    0, 0x3F}, {vr4300_spec_opcode_table,    0, 0x3F},
- {vr4300_regimm_opcode_table, 16, 0x1F}, {vr4300_regimm_opcode_table, 16, 0x1F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {0,    0, 0x3F}, {0,    0, 0x3F},
+ {64,  16, 0x1F}, {64,  16, 0x1F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
 
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
 
- {vr4300_cop0_opcode_table_1, 21, 0x0F}, {vr4300_cop0_opcode_table_2,  0, 0x3F},
- {vr4300_cop1_opcode_table_1, 21, 0x0F}, {vr4300_cop1_opcode_table_2,  0, 0x3F},
- {vr4300_cop2_opcode_table,   21, 0x1F}, {vr4300_cop2_opcode_table,   21, 0x1F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {96,  21, 0x0F}, {112,  0, 0x3F},
+ {176, 21, 0x0F}, {192,  0, 0x3F},
+ {256, 21, 0x1F}, {256, 21, 0x1F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
 
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
 
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
 
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
   
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
 
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
- {vr4300_opcode_table,        26, 0x3F}, {vr4300_opcode_table,        26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
+ {288, 26, 0x3F}, {288, 26, 0x3F},
 };
 
 // Decodes an instruction word.
 const struct vr4300_opcode* vr4300_decode_instruction(uint32_t iw) {
   const struct vr4300_opcode_escape *escape = vr4300_escape_table + (iw >> 25);
   unsigned index = iw >> escape->shift & escape->mask;
-  return escape->table + index;
+
+  const struct vr4300_opcode *group = vr4300_opcode_table + escape->offset;
+  return group + index;
 }
 
