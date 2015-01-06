@@ -354,20 +354,6 @@ void RSP_JALR_JR(struct rsp *rsp,
 }
 
 //
-// LUI
-//
-void RSP_LUI(struct rsp *rsp,
-  uint32_t iw, uint32_t unused(rs), uint32_t unused(rt)) {
-  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-
-  int32_t imm = iw << 16;
-  unsigned dest = GET_RT(iw);
-
-  exdf_latch->result.result = imm;
-  exdf_latch->result.dest = dest;
-}
-
-//
 // LBV
 // LDV
 // LLV
