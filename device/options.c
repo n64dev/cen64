@@ -12,6 +12,7 @@
 #include "options.h"
 
 const struct cen64_options default_cen64_options = {
+  NULL, // ddipl_path
   NULL, // pifrom_path
   NULL, // cart_path
 #ifdef _WIN32
@@ -33,8 +34,16 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 
     else
 #endif
+    if (!strcmp(argv[i], "-ddipl")) {
+      if ((i + 1) >= (argc - 2)) {
+        printf("-ddipl requires a path to the ROM file.\n\n");
+        return 1;
+      }
 
-    if (!strcmp(argv[i], "-nointerface"))
+      options->ddipl_path = argv[++i];
+    }
+
+    else if (!strcmp(argv[i], "-nointerface"))
       options->no_interface = true;
 
 #ifdef CEN64_DEVFEATURES
@@ -53,12 +62,13 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 
 // Prints the command-line usage string.
 void print_command_line_usage(const char *invokation_string) {
-  printf("%s [Options] <PIFROM Path> <ROM Path>\n\n"
+  printf("%s [Options] <PIF IPL ROM Path> <ROM Path>\n\n"
 
     "Options:\n"
 #ifdef _WIN32
       "  -console                   : Creates/shows the system console.\n"
 #endif
+      "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"
       "  -nointerface               : Run simulator without a user interface.\n"
 #ifdef CEN64_DEVFEATURES
       "  -printsimstats             : Print simulation statistics at exit.\n"

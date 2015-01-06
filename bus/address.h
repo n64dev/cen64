@@ -16,15 +16,19 @@
 #define AI_REGS_ADDRESS_LEN       0x00000018
 
 // DD C2 sector buffer.
-#define DD_C2S_BUFFER_ADDRESS     0x50000000
+#define DD_C2S_BUFFER_ADDRESS     0x05000000
 #define DD_C2S_BUFFER_LEN         0x00000400
 
 // DD data sector buffer.
-#define DD_DS_BUFFER_ADDRESS      0x50000400
+#define DD_DS_BUFFER_ADDRESS      0x05000400
 #define DD_DS_BUFFER_LEN          0x00000100
 
+// DD IPL ROM.
+#define DD_IPL_ROM_ADDRESS        0x06000000
+#define DD_IPL_ROM_LEN            0x00400000
+
 // DD microsequencer RAM.
-#define DD_MS_RAM_ADDRESS         0x50000580
+#define DD_MS_RAM_ADDRESS         0x05000580
 #define DD_MS_RAM_LEN             0x00000040
 
 // DD interface registers.

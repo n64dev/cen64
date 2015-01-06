@@ -9,7 +9,7 @@
 //
 
 #ifndef DD_REGISTER_LIST
-#define DD_REGISTER_LIST
+#define DD_REGISTER_LIST \
   X(DD_ASIC_DATA) \
   X(DD_ASIC_MISC_REG) \
   X(DD_ASIC_CMD) \

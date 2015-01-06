@@ -11,6 +11,7 @@
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
+#include "dd/controller.h"
 #include "pi/controller.h"
 #include "ri/controller.h"
 #include "vr4300/interface.h"
@@ -70,7 +71,14 @@ static int pi_dma_write(struct pi_controller *pi) {
   if (length & 7)
     length = (length + 7) & ~7;
 
-  if (source & 0x08000000) {
+  if (pi->bus->dd->rom && source & 0x03000000) {
+    source &= 0x003FFFFF;
+
+    memcpy(pi->bus->ri->ram + dest, pi->bus->dd->rom + source, length);
+  }
+
+  else if (source & 0x08000000) {
+
   }
 
   else if (!(source & 0x06000000)) {
@@ -79,7 +87,7 @@ static int pi_dma_write(struct pi_controller *pi) {
       //assert(0);
     }
 
-     memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
+    memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
   }
 
   pi->regs[PI_DRAM_ADDR_REG] += length;
