@@ -226,7 +226,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
   }
 
   // Check if we should raise an interrupt (and effectively kill this insn).
-  if (unlikely(cause & status & 0xFF00) && (status & 0x1) && !(status & 0x6)) {
+  if (unlikely(cause & status & 0xFF00 && (((status ^ 6) & 0x7) == 0x7))) {
     VR4300_INTR(vr4300);
     return 1;
   }
