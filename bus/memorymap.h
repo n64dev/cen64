@@ -42,7 +42,7 @@ struct memory_map_node {
 };
 
 struct memory_map {
-  struct memory_map_node mappings[17];
+  struct memory_map_node mappings[20];
 
   struct memory_map_node *nil;
   struct memory_map_node *root;
