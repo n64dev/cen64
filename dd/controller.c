@@ -157,7 +157,7 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   // This is done by the IPL and a lot of games. The only word
   // ever know to be written to this register is 0xAAAA0000.
   else if (reg == DD_ASIC_HARD_RESET) {
-    assert(*word == 0xAAAA0000 && "dd: Hard reset without magic word?");
+    assert(word == 0xAAAA0000 && "dd: Hard reset without magic word?");
 
     dd->regs[DD_ASIC_CMD_STATUS] = DD_STATUS_RST_STATE;
   }
