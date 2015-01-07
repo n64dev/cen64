@@ -208,7 +208,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
 
   // element => 0w ... 7w
   if (element >= 8) {
-    memcpy(&word_lo, src + (element - 8), sizeof(word_lo));
+    memcpy(&word_lo, srcp + (element - 8), sizeof(word_lo));
     dword = word_lo | ((uint32_t) word_lo << 16);
 
     return _mm_shuffle_epi32(_mm_loadl_epi64((__m128i *) &dword),
@@ -219,8 +219,8 @@ __m128i rsp_vect_load_and_shuffle_operand(
   else if (element >= 4) {
     __m128i v;
 
-    memcpy(&word_hi, src + element - 0, sizeof(word_hi));
-    memcpy(&word_lo, src + element - 4, sizeof(word_lo));
+    memcpy(&word_hi, srcp + element - 0, sizeof(word_hi));
+    memcpy(&word_lo, srcp + element - 4, sizeof(word_lo));
     dword = word_lo | ((uint32_t) word_hi << 16);
 
     v = _mm_loadl_epi64((__m128i *) &dword);
@@ -233,10 +233,10 @@ __m128i rsp_vect_load_and_shuffle_operand(
     __m128i vlo, vhi;
     int i;
 
-    dword = src[element - 2];
+    dword = srcp[element - 2];
 
     for (i = -1; i < 6; i += 2)
-      dword = (dword << 16) | src[element + i];
+      dword = (dword << 16) | srcp[element + i];
 
     vlo = _mm_loadl_epi64((__m128i *) &dword);
     vhi = _mm_slli_si128(vlo, 8);
@@ -245,7 +245,7 @@ __m128i rsp_vect_load_and_shuffle_operand(
     return _mm_or_si128(vhi, vlo);
   }
 
-  return rsp_vect_load_unshuffled_operand((__m128i *) src);
+  return rsp_vect_load_unshuffled_operand((__m128i *) srcp);
 }
 #endif
 
