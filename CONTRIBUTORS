@@ -11,6 +11,10 @@ Iconoclast:        Although we hardly ever see eye-to-eye with regards to
                    ification of the RSP algorithms would have been even more
                    testing than it already was.
 
+OzOnE/LuigiBlood   For your fantastic documentation and efforts on reversing
+                   the 64DD. Without your efforts, there's no way that CEN64
+                   would have 64DD support.
+
 AIO:               Thank you for your RSP/SSE optimizations. It's always nice
                    to see someone else's approaches to vectorizing some of the
                    RSP instructions!
