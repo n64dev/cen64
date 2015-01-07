@@ -14,6 +14,12 @@
 // this device!
 //
 
+//
+// TODO: Currently, the DD IPL spams the controller with DD_CMD_NOOP.
+// This is normal. Once you signify that a disk is present (using the
+// DD_STATUS_DISK_PRES), the DD IPL attempts to start performing seeks.
+//
+
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
@@ -36,14 +42,14 @@ const char *dd_register_mnemonics[NUM_DD_REGISTERS] = {
 #define DD_CMD_SLEEP          0x00040000U
 #define DD_CMD_START          0x00050001U
 #define DD_CMD_SET_STANDBY    0x00060000U
-#define DD_CMD_SET_SLEEP      0x00040000U
+#define DD_CMD_SET_SLEEP      0x00070000U
 #define DD_CMD_CLR_DSK_CHNG   0x00080000U
 #define DD_CMD_CLR_RESET      0x00090000U
 #define DD_CMD_READ_VERSION   0x000A0000U
 #define DD_CMD_SET_DISK_TYPE  0x000B0001U
 #define DD_CMD_REQUEST_STATUS 0x000C0000U
 #define DD_CMD_STANDBY        0x000D0000U
-#define DD_CMD_IDX_LOCK_RETRY 0x000D0000U // ???
+#define DD_CMD_IDX_LOCK_RETRY 0x000E0000U // ???
 #define DD_CMD_SET_YEAR_MONTH 0x000F0000U
 #define DD_CMD_SET_DAY_HOUR   0x00100000U
 #define DD_CMD_SET_MIN_SEC    0x00110000U
@@ -118,46 +124,42 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
     // Get time [minute/second]:
     if (word == DD_CMD_GET_MIN_SEC) {
-      dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_MECHA_INT;
-      signal_dd_interrupt(dd->bus->vr4300);
+      // dd->regs[DD_ASIC_DATA] = ...
     }
 
     else if (word == DD_CMD_GET_DAY_HOUR) {
-      dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_MECHA_INT;
-      signal_dd_interrupt(dd->bus->vr4300);
+      // dd->regs[DD_ASIC_DATA] = ...
     }
 
     else if (word == DD_CMD_GET_YEAR_MONTH) {
-      dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_MECHA_INT;
-      signal_dd_interrupt(dd->bus->vr4300);
+      // dd->regs[DD_ASIC_DATA] = ...
     }
+
+    else if (word == DD_CMD_CLR_RESET)
+      dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_RST_STATE;
+
+    // Always signal an interrupt in response.
+    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_MECHA_INT;
+    signal_dd_interrupt(dd->bus->vr4300);
   }
 
   // Buffer manager control request: handle it.
   else if (reg == DD_ASIC_BM_STATUS_CTL) {
-    if (word == DD_BM_CTL_RESET) {
+    if (word == DD_BM_CTL_RESET)
       dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_CTL_INTMASK;
-      clear_dd_interrupt(dd->bus->vr4300);
-    }
 
-    else if (word == DD_BM_CTL_MECHA_RST) {
+    else if (word == DD_BM_CTL_MECHA_RST)
       dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_MECHA_INT;
-      clear_dd_interrupt(dd->bus->vr4300);
-    }
 
-    else if (word == 0) {
-      clear_dd_interrupt(dd->bus->vr4300);
-    }
+    clear_dd_interrupt(dd->bus->vr4300);
   }
 
   // This is done by the IPL and a lot of games. The only word
   // ever know to be written to this register is 0xAAAA0000.
-  // Reverse engineering shows the drive always sets the C1
-  // double correction flag in response.
   else if (reg == DD_ASIC_HARD_RESET) {
     assert(*word == 0xAAAA0000 && "dd: Hard reset without magic word?");
 
-    dd->regs[DD_ASIC_BM_STATUS_CTL] = DD_BM_STATUS_C1DBL;
+    dd->regs[DD_ASIC_CMD_STATUS] = DD_STATUS_RST_STATE;
   }
 
   else {
