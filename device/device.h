@@ -47,8 +47,8 @@ struct cen64_device {
 
 cen64_cold void device_destroy(struct cen64_device *device);
 cen64_cold struct cen64_device *device_create(struct cen64_device *device,
-  uint8_t *ram, const struct rom_file *ddipl, const struct rom_file *pifrom,
-  const struct rom_file *cart);
+  uint8_t *ram, const struct rom_file *ddipl, const struct rom_file *ddrom,
+  const struct rom_file *pifrom, const struct rom_file *cart);
 
 cen64_cold void device_exit(struct bus_controller *bus);
 cen64_cold void device_run(struct cen64_device *device);

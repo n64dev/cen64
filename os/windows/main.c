@@ -19,9 +19,9 @@
 #include <windows.h>
 
 static int cen64_win32_main(int argc, const char *argv[]);
-static int load_roms(const char *ddipl_path, const char *pifrom_path,
-  const char *cart_path, struct rom_file *ddipl,
-  struct rom_file *pifrom, struct rom_file *cart);
+static int load_roms(const char *ddipl_path, const char *ddrom_path,
+  const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
+  struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart);
 
 static void hide_console(void);
 static void show_console(void);
@@ -68,7 +68,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 // Called when another simulation instance is desired.
 int cen64_win32_main(int argc, const char *argv[]) {
   struct cen64_options options = default_cen64_options;
-  struct rom_file ddipl, pifrom, cart;
+  struct rom_file ddipl, ddrom, pifrom, cart;
   int status;
 
   if (argc < 3) {
@@ -89,16 +89,21 @@ int cen64_win32_main(int argc, const char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (load_roms(options.ddipl_path, options.pifrom_path,
-    options.cart_path, &ddipl, &pifrom, &cart))
+  if (load_roms(options.ddipl_path, options.ddrom_path, options.pifrom_path,
+    options.cart_path, &ddipl, &ddrom, &pifrom, &cart))
     return EXIT_FAILURE;
 
-  status = os_main(&options, &ddipl, &pifrom, &cart);
+  status = os_main(&options, &ddipl, &ddrom, &pifrom, &cart);
 
   if (options.ddipl_path)
     close_rom_file(&ddipl);
 
-  close_rom_file(&cart);
+  if (options.ddrom_path)
+    close_rom_file(&ddrom);
+
+  if (options.cart_path)
+    close_rom_file(&cart);
+
   close_rom_file(&pifrom);
   return status;
 }
@@ -112,9 +117,9 @@ void hide_console(void) {
 }
 
 // Load any ROM images required for simulation.
-int load_roms(const char *ddipl_path, const char *pifrom_path,
-  const char *cart_path, struct rom_file *ddipl,
-  struct rom_file *pifrom, struct rom_file *cart) {
+int load_roms(const char *ddipl_path, const char *ddrom_path,
+  const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
+  struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart) {
   memset(ddipl, 0, sizeof(*ddipl));
 
   if (ddipl_path && open_rom_file(ddipl_path, ddipl)) {
@@ -124,6 +129,16 @@ int load_roms(const char *ddipl_path, const char *pifrom_path,
     return 1;
   }
 
+  if (ddrom_path && open_rom_file(ddrom_path, ddrom)) {
+    MessageBox(NULL, "Failed to load DD ROM.", "CEN64",
+      MB_OK | MB_ICONEXCLAMATION);
+
+    if (ddipl_path)
+      close_rom_file(ddipl);
+
+    return 2;
+  }
+
   if (open_rom_file(pifrom_path, pifrom)) {
     MessageBox(NULL, "Failed to load PIF ROM.", "CEN64",
       MB_OK | MB_ICONEXCLAMATION);
@@ -131,7 +146,10 @@ int load_roms(const char *ddipl_path, const char *pifrom_path,
     if (ddipl_path)
       close_rom_file(ddipl);
 
-    return 2;
+    if (ddrom_path)
+      close_rom_file(ddrom);
+
+    return 3;
   }
 
   if (open_rom_file(cart_path, cart)) {
@@ -141,8 +159,11 @@ int load_roms(const char *ddipl_path, const char *pifrom_path,
     if (ddipl_path)
       close_rom_file(ddipl);
 
+    if (ddrom_path)
+      close_rom_file(ddrom);
+
     close_rom_file(pifrom);
-    return 3;
+    return 4;
   }
 
   return 0;
@@ -166,7 +187,7 @@ void os_release_input(struct gl_window *gl_window) {
 
 // Allocates memory for a new device, runs it.
 int os_main(struct cen64_options *options, struct rom_file *ddipl,
-  struct rom_file *pifrom, struct rom_file *cart) {
+  struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart) {
   struct gl_window_hints hints;
   struct winapi_window window;
   int status;
@@ -182,7 +203,7 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
   memset(&device, 0, sizeof(device));
 
   if (device_create(&device, malloc(DEVICE_RAMSIZE),
-    ddipl, pifrom, cart) == NULL) {
+    ddipl, ddrom, pifrom, cart) == NULL) {
     printf("Failed to create a device.\n");
 
     //deallocate_ram(&hunk);

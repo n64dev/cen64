@@ -93,9 +93,11 @@ const char *dd_register_mnemonics[NUM_DD_REGISTERS] = {
 
 // Initializes the DD.
 int dd_init(struct dd_controller *dd, struct bus_controller *bus,
-  const uint8_t *rom) {
+  const uint8_t *ddipl, const uint8_t *ddrom, size_t ddrom_size) {
   dd->bus = bus;
-  dd->rom = rom;
+  dd->ipl_rom = ddipl;
+  dd->rom = ddrom;
+  dd->rom_size = ddrom_size;
 
   return 0;
 }
@@ -175,11 +177,11 @@ int read_dd_ipl_rom(void *opaque, uint32_t address, uint32_t *word) {
   uint32_t offset = address - DD_IPL_ROM_ADDRESS;
   struct dd_controller *dd = (struct dd_controller*) opaque;
 
-  if (!dd->rom)
+  if (!dd->ipl_rom)
     memset(word, 0, sizeof(*word));
 
   else {
-    memcpy(word, dd->rom + offset, sizeof(*word));
+    memcpy(word, dd->ipl_rom + offset, sizeof(*word));
     *word = byteswap_32(*word);
   }
 

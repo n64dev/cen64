@@ -71,10 +71,10 @@ static int pi_dma_write(struct pi_controller *pi) {
   if (length & 7)
     length = (length + 7) & ~7;
 
-  if (pi->bus->dd->rom && source & 0x03000000) {
+  if (pi->bus->dd->ipl_rom && source & 0x03000000) {
     source &= 0x003FFFFF;
 
-    memcpy(pi->bus->ri->ram + dest, pi->bus->dd->rom + source, length);
+    memcpy(pi->bus->ri->ram + dest, pi->bus->dd->ipl_rom + source, length);
   }
 
   else if (source & 0x08000000) {
