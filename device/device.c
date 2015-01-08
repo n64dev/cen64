@@ -36,9 +36,9 @@ cen64_hot static int device_spin(struct cen64_device *device);
 #endif
 
 // Creates and initializes a device.
-struct cen64_device *device_create(struct cen64_device *device,
-  uint8_t *ram, const struct rom_file *ddipl, const struct rom_file *pifrom,
-  const struct rom_file *cart) {
+struct cen64_device *device_create(struct cen64_device *device, uint8_t *ram,
+  const struct rom_file *ddipl, const struct rom_file *ddrom,
+  const struct rom_file *pifrom, const struct rom_file *cart) {
 
   // Initialize the bus.
   device->bus.ai = &device->ai;
@@ -65,8 +65,9 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the DD.
-  if (dd_init(&device->dd, &device->bus, ddipl->ptr)) {
-    debug("create_device: Failed to initialize the AI.\n");
+  if (dd_init(&device->dd, &device->bus,
+    ddipl->ptr, ddrom->ptr, ddrom->size)) {
+    debug("create_device: Failed to initialize the DD.\n");
     return NULL;
   }
 

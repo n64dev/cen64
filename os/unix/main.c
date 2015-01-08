@@ -102,7 +102,7 @@ bool os_exit_requested(struct gl_window *gl_window) {
 
 // Allocates memory for a new device, runs it.
 int os_main(struct cen64_options *options, struct rom_file *ddipl,
-  struct rom_file *pifrom, struct rom_file *cart) {
+  struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart) {
   struct gl_window_hints hints;
   struct glx_window window;
   pthread_t device_thread;
@@ -121,7 +121,7 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
   // about uninitialized memory being read, etc.
   memset(&device, 0, sizeof(device));
 
-  if (device_create(&device, ram, ddipl, pifrom, cart) == NULL) {
+  if (device_create(&device, ram, ddipl, ddrom, pifrom, cart) == NULL) {
     printf("Failed to create a device.\n");
 
     deallocate_ram(&hunk);

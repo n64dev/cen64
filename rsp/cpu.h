@@ -53,7 +53,7 @@ struct rsp {
   struct rsp_pipeline pipeline;
   struct rsp_cp2 cp2;
 
-  uint32_t regs[NUM_RSP_REGISTERS * 2];
+  uint32_t regs[NUM_RSP_REGISTERS];
   uint8_t mem[0x2000];
 
   struct bus_controller *bus;

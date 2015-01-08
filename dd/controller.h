@@ -28,7 +28,9 @@ extern const char *dd_register_mnemonics[NUM_DD_REGISTERS];
 
 struct dd_controller {
   struct bus_controller *bus;
+  const uint8_t *ipl_rom;
   const uint8_t *rom;
+  size_t rom_size;
 
   uint32_t regs[NUM_DD_REGISTERS];
   uint8_t c2s_buffer[DD_C2S_BUFFER_LEN];
@@ -37,7 +39,7 @@ struct dd_controller {
 };
 
 cen64_cold int dd_init(struct dd_controller *dd, struct bus_controller *bus,
-  const uint8_t *ddipl);
+  const uint8_t *ddipl, const uint8_t *ddrom, size_t ddrom_size);
 
 int read_dd_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
