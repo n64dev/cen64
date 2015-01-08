@@ -152,7 +152,7 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
     return 3;
   }
 
-  if (open_rom_file(cart_path, cart)) {
+  if (cart_path && open_rom_file(cart_path, cart)) {
     MessageBox(NULL, "Failed to load cart.", "CEN64",
       MB_OK | MB_ICONEXCLAMATION);
 
