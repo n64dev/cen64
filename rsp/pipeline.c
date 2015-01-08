@@ -105,15 +105,12 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
     rsp_opcode_mnemonics[rdex_latch->opcode.id]);
 #endif
 
-  exdf_latch->result.dest = RSP_REGISTER_R0;
-  exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
   return rsp_function_table[rdex_latch->opcode.id](
     rsp, iw, rs_reg, rt_reg);
 }
 
 // Execution stage (vector).
 static inline void rsp_v_ex_stage(struct rsp *rsp) {
-  struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
   rsp_vect_t vd_reg, vs_reg, vt_shuf_reg, zero;
@@ -140,8 +137,6 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
     rsp_vector_opcode_mnemonics[rdex_latch->opcode.id]);
 #endif
 
-  exdf_latch->result.dest = RSP_REGISTER_R0;
-  exdf_latch->request.type = RSP_MEM_REQUEST_NONE;
   vd_reg = rsp_vector_function_table[rdex_latch->opcode.id](
     rsp, iw, vt_shuf_reg, vs_reg, zero);
 
@@ -165,17 +160,15 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   // Vector unit DMEM access.
   if (request->type != RSP_MEM_REQUEST_INT_MEM) {
-    uint16_t *regp = rsp->cp2.regs[
-      exdf_latch->result.dest - NUM_RSP_REGISTERS].e;
-
+    uint16_t *regp = rsp->cp2.regs[exdf_latch->result.dest].e;
     unsigned element = request->element;
     rsp_vect_t reg, dqm;
 
     dqm = rsp_vect_load_unshuffled_operand(exdf_latch->request.vdqm.e);
     reg = rsp_vect_load_unshuffled_operand(regp);
 
-    // Make sure the scalar unit doesn't
-    // write past the edge of the RF.
+    // Make sure the vector data doesn't get
+    // written into the scalar part of the RF.
     dfwb_latch->result.dest = 0;
     exdf_latch->result.dest = 0;
 
@@ -214,6 +207,9 @@ void rsp_cycle(struct rsp *rsp) {
 
   rsp_wb_stage(rsp);
   rsp_df_stage(rsp);
+
+  rsp->pipeline.exdf_latch.result.dest = RSP_REGISTER_R0;
+  rsp->pipeline.exdf_latch.request.type = RSP_MEM_REQUEST_NONE;
 
   rsp_v_ex_stage(rsp);
   rsp_ex_stage(rsp);

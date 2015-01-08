@@ -380,7 +380,7 @@ void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
     ? rsp_vstore_group1
     : rsp_vload_group1;
 
-  exdf_latch->result.dest = dest + NUM_RSP_REGISTERS;
+  exdf_latch->result.dest = dest;
 }
 
 //
@@ -412,7 +412,7 @@ void RSP_LFHPUV_SFHPUV(struct rsp *rsp,
     ? rsp_vstore_group2
     : rsp_vload_group2;
 
-  exdf_latch->result.dest = dest + NUM_RSP_REGISTERS;
+  exdf_latch->result.dest = dest;
 }
 
 //
@@ -441,7 +441,7 @@ void RSP_LQRV_SQRV(struct rsp *rsp,
     ? rsp_vstore_group4
     : rsp_vload_group4;
 
-  exdf_latch->result.dest = dest + NUM_RSP_REGISTERS;
+  exdf_latch->result.dest = dest;
 }
 
 //
