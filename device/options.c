@@ -28,7 +28,7 @@ const struct cen64_options default_cen64_options = {
 int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
   int i;
 
-  for (i = 0; i < argc - 2; i++) {
+  for (i = 0; i < argc - 1; i++) {
 #ifdef _WIN32
     if (!strcmp(argv[i], "-console"))
       options->console = true;
@@ -36,7 +36,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     else
 #endif
     if (!strcmp(argv[i], "-ddipl")) {
-      if ((i + 1) >= (argc - 2)) {
+      if ((i + 1) >= (argc - 1)) {
         printf("-ddipl requires a path to the ROM file.\n\n");
         return 1;
       }
@@ -45,7 +45,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     }
 
     else if (!strcmp(argv[i], "-ddrom")) {
-      if ((i + 1) >= (argc - 2)) {
+      if ((i + 1) >= (argc - 1)) {
         printf("-ddrom requires a path to the ROM file.\n\n");
         return 1;
       }
@@ -61,8 +61,9 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       options->print_sim_stats = true;
 #endif
 
+    // TODO: Handle this better.
     else
-      return 1;
+      break;
   }
 
   if (!options->ddipl_path && options->ddrom_path) {
@@ -71,14 +72,20 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     return 1;
   }
 
-  options->pifrom_path = argv[argc - 2];
-  options->cart_path = argv[argc - 1];
+  options->pifrom_path = argv[i];
+
+  if ((i + 1) < argc)
+    options->cart_path = argv[i + 1];
+
+  if (!options->ddipl_path && !options->ddrom_path && !options->cart_path)
+    return 1;
+
   return 0;
 }
 
 // Prints the command-line usage string.
 void print_command_line_usage(const char *invokation_string) {
-  printf("%s [Options] <PIF IPL ROM Path> <ROM Path>\n\n"
+  printf("%s [Options] <PIF IPL ROM Path> [Cart ROM Path]\n\n"
 
     "Options:\n"
 #ifdef _WIN32
