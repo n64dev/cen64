@@ -14,6 +14,7 @@
 
 struct cen64_options {
   const char *ddipl_path;
+  const char *ddrom_path;
   const char *pifrom_path;
   const char *cart_path;
 
