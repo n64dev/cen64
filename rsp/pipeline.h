@@ -29,19 +29,32 @@ enum rsp_mem_request_type {
   RSP_MEM_REQUEST_UPACK
 };
 
-struct rsp_mem_request {
-  union aligned_rsp_1vect_t vdqm;
-  uint32_t addr;
+struct rsp_int_mem_packet {
   uint32_t data;
   uint32_t rdqm;
   uint32_t wdqm;
-  unsigned rshift;
 
-  enum rsp_mem_request_type type;
-  unsigned element;
+  unsigned rshift;
+};
+
+struct rsp_vect_mem_packet {
+  union aligned_rsp_1vect_t vdqm;
 
   void (*vldst_func)(struct rsp *rsp, uint32_t addr, unsigned element,
     uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
+
+  unsigned element;
+};
+
+union rsp_mem_packet {
+  struct rsp_int_mem_packet p_int;
+  struct rsp_vect_mem_packet p_vect;
+};
+
+struct rsp_mem_request {
+  uint32_t addr;
+  enum rsp_mem_request_type type;
+  union rsp_mem_packet packet;
 };
 
 struct rsp_latch {
