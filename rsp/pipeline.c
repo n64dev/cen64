@@ -57,11 +57,13 @@ static inline int rsp_rd_stage(struct rsp *rsp) {
     unsigned rs = GET_RS(iw);
     unsigned rt = GET_RT(iw);
 
-    if (unlikely((dest == rs && (opcode->flags & OPCODE_INFO_NEEDRS)) ||
-      (dest == rt && (opcode->flags & OPCODE_INFO_NEEDRT)))) {
-      const struct rsp_opcode rsp_kill_op = {RSP_OPCODE_SLL, 0x0};
+    if (unlikely(dest && (
+      (dest == rs && (opcode->flags & OPCODE_INFO_NEEDRS)) ||
+      (dest == rt && (opcode->flags & OPCODE_INFO_NEEDRT))
+    ))) {
+      static const struct rsp_opcode rsp_rf_kill_op = {RSP_OPCODE_SLL, 0x0};
 
-      rdex_latch->opcode = rsp_kill_op;
+      rdex_latch->opcode = rsp_rf_kill_op;
       rdex_latch->iw = 0x00000000U;
 
       return 1;
@@ -161,7 +163,7 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   // Vector unit DMEM access.
   if (request->type != RSP_MEM_REQUEST_INT_MEM) {
-    uint16_t *regp = rsp->cp2.regs[exdf_latch->result.dest].e;
+    uint16_t *regp = rsp->cp2.regs[request->packet.p_vect.dest].e;
     unsigned element = request->packet.p_vect.element;
     rsp_vect_t reg, dqm;
 
@@ -216,7 +218,7 @@ void rsp_cycle(struct rsp *rsp) {
   rsp_v_ex_stage(rsp);
   rsp_ex_stage(rsp);
 
-  if (!rsp_rd_stage(rsp))
+  if (likely(!rsp_rd_stage(rsp)))
     rsp_if_stage(rsp);
 }
 
