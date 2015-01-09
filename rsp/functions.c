@@ -290,11 +290,11 @@ cen64_hot void RSP_INT_MEM(struct rsp *rsp,
   uint32_t wdqm = ~0U << lshiftamt;
 
   exdf_latch->request.addr = address;
-  exdf_latch->request.data = rt << lshiftamt;
-  exdf_latch->request.rdqm = rdqm;
+  exdf_latch->request.packet.p_int.data = rt << lshiftamt;
+  exdf_latch->request.packet.p_int.rdqm = rdqm;
   exdf_latch->request.type = RSP_MEM_REQUEST_INT_MEM;
-  exdf_latch->request.rshift = lshiftamt;
-  exdf_latch->request.wdqm = sel_mask & wdqm;
+  exdf_latch->request.packet.p_int.rshift = lshiftamt;
+  exdf_latch->request.packet.p_int.wdqm = sel_mask & wdqm;
 
   exdf_latch->result.dest = ~sel_mask & GET_RT(iw);
 }
@@ -372,11 +372,11 @@ void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
   exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << shift_and_idx);
 
   __m128i vdqm = _mm_loadl_epi64((__m128i *) (rsp_bdls_lut[shift_and_idx]));
-  _mm_store_si128((__m128i *) exdf_latch->request.vdqm.e, vdqm);
+  _mm_store_si128((__m128i *) exdf_latch->request.packet.p_vect.vdqm.e, vdqm);
 
-  exdf_latch->request.element = GET_EL(iw);
+  exdf_latch->request.packet.p_vect.element = GET_EL(iw);
   exdf_latch->request.type = RSP_MEM_REQUEST_VECTOR;
-  exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
+  exdf_latch->request.packet.p_vect.vldst_func = (iw >> 29 & 0x1)
     ? rsp_vstore_group1
     : rsp_vload_group1;
 
@@ -408,7 +408,7 @@ void RSP_LFHPUV_SFHPUV(struct rsp *rsp,
 //    sizeof(exdf_latch->request.vdqm.e));
 
   exdf_latch->request.type = fhpu_type_lut[(iw >> 11 & 0x1F) - 6];
-  exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
+  exdf_latch->request.packet.p_vect.vldst_func = (iw >> 29 & 0x1)
     ? rsp_vstore_group2
     : rsp_vload_group2;
 
@@ -428,16 +428,16 @@ void RSP_LQRV_SQRV(struct rsp *rsp,
 
   exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << 4);
 
-  memcpy(exdf_latch->request.vdqm.e,
+  memcpy(exdf_latch->request.packet.p_vect.vdqm.e,
     rsp_qr_lut[exdf_latch->request.addr & 0xF],
-    sizeof(exdf_latch->request.vdqm.e));
+    sizeof(exdf_latch->request.packet.p_vect.vdqm.e));
 
-  exdf_latch->request.element = GET_EL(iw);
+  exdf_latch->request.packet.p_vect.element = GET_EL(iw);
   exdf_latch->request.type = (iw >> 11 & 0x1)
     ? RSP_MEM_REQUEST_REST
     : RSP_MEM_REQUEST_QUAD;
 
-  exdf_latch->request.vldst_func = (iw >> 29 & 0x1)
+  exdf_latch->request.packet.p_vect.vldst_func = (iw >> 29 & 0x1)
     ? rsp_vstore_group4
     : rsp_vload_group4;
 
