@@ -13,6 +13,7 @@
 #include "rsp/cp2.h"
 #include "rsp/cpu.h"
 #include "rsp/decoder.h"
+#include "rsp/opcodes.h"
 #include "rsp/pipeline.h"
 #include "rsp/rsp.h"
 
@@ -42,30 +43,30 @@ static inline int rsp_rd_stage(struct rsp *rsp) {
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
 
-  const struct rsp_opcode *opcode;
+  uint32_t previous_insn_flags = rdex_latch->opcode.flags;
   uint32_t iw = ifrd_latch->iw;
 
   rdex_latch->common = ifrd_latch->common;
+  rdex_latch->opcode = *rsp_decode_instruction(iw);
+  rdex_latch->iw = iw;
 
   // Check for load-use stalls.
-  opcode = rsp_decode_instruction(iw);
+  if (previous_insn_flags & OPCODE_INFO_LOAD) {
+    const struct rsp_opcode *opcode = &rdex_latch->opcode;
+    unsigned dest = rsp->pipeline.exdf_latch.result.dest;
+    unsigned rs = GET_RS(iw);
+    unsigned rt = GET_RT(iw);
 
-  if (rdex_latch->opcode.flags & OPCODE_INFO_LOAD) {
-    unsigned dest = GET_RT(rdex_latch->iw);
-    unsigned rs = GET_RS(ifrd_latch->iw);
-    unsigned rt = GET_RT(ifrd_latch->iw);
+    if (unlikely((dest == rs && (opcode->flags & OPCODE_INFO_NEEDRS)) ||
+      (dest == rt && (opcode->flags & OPCODE_INFO_NEEDRT)))) {
+      const struct rsp_opcode rsp_kill_op = {RSP_OPCODE_SLL, 0x0};
 
-    if (unlikely((((opcode->flags & OPCODE_INFO_NEEDRS) && dest == rs)) ||
-      ((opcode->flags & OPCODE_INFO_NEEDRT) && dest == rt))) {
-      rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
+      rdex_latch->opcode = rsp_kill_op;
       rdex_latch->iw = 0x00000000U;
 
       return 1;
     }
   }
-
-  rdex_latch->opcode = *opcode;
-  rdex_latch->iw = ifrd_latch->iw;
 
   return 0;
 }
