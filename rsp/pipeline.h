@@ -44,6 +44,7 @@ struct rsp_vect_mem_packet {
     uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 
   unsigned element;
+  unsigned dest;
 };
 
 union rsp_mem_packet {
