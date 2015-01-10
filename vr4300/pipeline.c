@@ -57,7 +57,7 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   if ((pc - segment->start) >= segment->length) {
     uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-    if (unlikely((segment = get_segment(pc, cp0_status)) == NULL)) {
+    if ((segment = get_segment(pc, cp0_status)) == NULL) {
       VR4300_IADE(vr4300);
       return 1;
     }
@@ -106,8 +106,9 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
   }
 
   // If not cached or we miss in the IC, it's an ICB.
-  if (!cached || (line = vr4300_icache_probe(
-    &vr4300->icache, icrf_latch->common.pc, paddr)) == NULL) {
+  line = vr4300_icache_probe(&vr4300->icache, vaddr, paddr);
+
+  if (!(line && cached)) {
     rfex_latch->paddr = paddr;
     rfex_latch->cached = cached;
 
@@ -242,7 +243,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     if ((vaddr - segment->start) >= segment->length) {
       uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-      if (unlikely((segment = get_segment(vaddr, cp0_status)) == NULL)) {
+      if ((segment = get_segment(vaddr, cp0_status)) == NULL) {
         VR4300_DADE(vr4300);
         return 1;
       }
@@ -294,8 +295,9 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // If not cached or we miss in the DC, it's an DCB.
     if (likely(exdc_latch->request.type != VR4300_BUS_REQUEST_CACHE)) {
-      if (!cached || (line = vr4300_dcache_probe
-        (&vr4300->dcache, vaddr, paddr)) == NULL) {
+      line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr);
+
+      if (!(line && cached)) {
         request->paddr = paddr;
         exdc_latch->cached = cached;
 
