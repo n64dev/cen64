@@ -948,23 +948,24 @@ int VR4300_JALR_JR(struct vr4300 *vr4300,
 
 //
 // LD
+// SD
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-int VR4300_LD(struct vr4300 *vr4300,
+int VR4300_LD_SD(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  unsigned dest = GET_RT(iw);
+  uint64_t sel_mask = (int64_t) ((int32_t) iw << 2) >> 32;
 
   exdc_latch->request.vaddr = rs + (int16_t) iw;
-  exdc_latch->request.data = ~0ULL;
-  exdc_latch->request.wdqm = 0ULL;
+  exdc_latch->request.data = ~sel_mask | (sel_mask & rt);
+  exdc_latch->request.wdqm = sel_mask;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.access_type = VR4300_ACCESS_DWORD;
-  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
+  exdc_latch->request.type = 1 - sel_mask;
   exdc_latch->request.size = 8;
 
-  exdc_latch->dest = dest;
+  exdc_latch->dest = ~sel_mask & GET_RT(iw);
   exdc_latch->result = 0;
   return 0;
 }
@@ -976,26 +977,32 @@ int VR4300_LD(struct vr4300 *vr4300,
 // LHU
 // LW
 // LWU
+// SB
+// SH
+// SW
 //
 // TODO/FIXME: Check for unaligned addresses.
 //
-int VR4300_LOAD(struct vr4300 *vr4300,
-  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
+cen64_hot int VR4300_LOAD_STORE(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  uint64_t sel_mask = (int64_t) ((int32_t) iw << 2) >> 32;
 
+  uint64_t address = rs + (int16_t) iw;
   unsigned request_size = (iw >> 26 & 0x3);
-  uint64_t dqm = vr4300_load_sex_mask[iw >> 28 & 0x1][request_size];
-  unsigned dest = GET_RT(iw);
+  uint64_t dqm = vr4300_load_sex_mask[iw >> 28 & 0x1][request_size] & ~sel_mask;
+  unsigned lshiftamt = (3 - request_size) << 3;
+  unsigned rshiftamt = (address & 0x3) << 3;
 
-  exdc_latch->request.vaddr = rs + (int16_t) iw;
-  exdc_latch->request.data = dqm;
-  exdc_latch->request.wdqm = 0ULL;
+  exdc_latch->request.vaddr = address & ~(sel_mask & 0x3);
+  exdc_latch->request.data = dqm | (sel_mask & ((rt << lshiftamt) >> rshiftamt));
+  exdc_latch->request.wdqm = ((uint32_t) sel_mask << lshiftamt) >> rshiftamt;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.access_type = VR4300_ACCESS_WORD;
-  exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
+  exdc_latch->request.type = 1 - sel_mask;
   exdc_latch->request.size = request_size + 1;
 
-  exdc_latch->dest = dest;
+  exdc_latch->dest = ~sel_mask & GET_RT(iw);
   exdc_latch->result = 0;
   return 0;
 }
@@ -1149,24 +1156,6 @@ int VR4300_NOR(struct vr4300 *vr4300,
   exdc_latch->result = ~(rs | rt);
   exdc_latch->dest = dest;
   return vr4300_do_mci(vr4300, 57);
-}
-
-//
-// SD
-//
-// TODO/FIXME: Check for unaligned addresses.
-//
-int VR4300_SD(struct vr4300 *vr4300,
-  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  exdc_latch->request.vaddr = rs + (int16_t) iw;
-  exdc_latch->request.data = rt;
-  exdc_latch->request.wdqm = ~0ULL;
-  exdc_latch->request.size = 8;
-  exdc_latch->request.access_type = VR4300_ACCESS_DWORD;
-  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
-  return 0;
 }
 
 //
@@ -1333,31 +1322,6 @@ int VR4300_SDL_SDR(struct vr4300 *vr4300,
   exdc_latch->request.access_type = VR4300_ACCESS_DWORD;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 8;
-  return 0;
-}
-
-//
-// SB
-// SH
-// SW
-//
-// TODO/FIXME: Check for unaligned addresses.
-//
-int VR4300_STORE(struct vr4300 *vr4300,
-  uint32_t iw, uint64_t rs, uint64_t rt) {
-  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-
-  uint64_t address = rs + (int16_t) iw;
-  unsigned request_size = (iw >> 26 & 0x3) + 1;
-  unsigned lshiftamt = (4 - request_size) << 3;
-  unsigned rshiftamt = (address & 0x3) << 3;
-
-  exdc_latch->request.vaddr = address & ~0x3ULL;
-  exdc_latch->request.data = (rt << lshiftamt) >> rshiftamt;
-  exdc_latch->request.wdqm = (~0U << lshiftamt) >> rshiftamt;
-  exdc_latch->request.access_type = VR4300_ACCESS_WORD;
-  exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
-  exdc_latch->request.size = request_size;
   return 0;
 }
 
