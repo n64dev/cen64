@@ -295,6 +295,12 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // If not cached or we miss in the DC, it's an DCB.
     if (likely(exdc_latch->request.type != VR4300_BUS_REQUEST_CACHE)) {
+      uint64_t dword, rtemp, wtemp, wdqm;
+
+      unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3) & request->access_type;
+      unsigned rshiftamt = (8 - request->size) << 3;
+      unsigned lshiftamt = (paddr & 0x7) << 3;
+
       line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr);
 
       if (!(line && cached)) {
@@ -305,34 +311,27 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         return 1;
       }
 
-      // Data cache reads.
-      if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-        unsigned rshiftamt = (8 - request->size) << 3;
-        unsigned lshiftamt = (paddr & 0x7) << 3;
-        uint64_t data;
+      paddr &= 0x8;
+      wdqm = request->wdqm << shiftamt;
 
-        memcpy(&data, line->data + (paddr & 0x8), sizeof(data));
-        data = (int64_t) (data << lshiftamt) >> rshiftamt;
+      // Pull out the cache line data, mux stuff around
+      // to produce the output/update the cache line.
+      memcpy(&dword, line->data + paddr, sizeof(dword));
 
-        dcwb_latch->result |= (data & request->dqm) << request->postshift;
-      }
+      wtemp = (request->data << shiftamt) & wdqm;
+      rtemp = ((int64_t) (dword << lshiftamt)
+        >> rshiftamt) & request->data;
 
-      // Data cache writes.
-      else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-        unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3);
-        uint64_t data, dword, dqm;
+      dword = (dword & ~wdqm) | wtemp;
+      dcwb_latch->result |= rtemp << request->postshift;
+      memcpy(line->data + paddr, &dword, sizeof(dword));
 
-        shiftamt &= request->access_type;
-        data = request->data << shiftamt;
-        dqm = request->dqm << shiftamt;
-        paddr &= 0x8;
-
-        memcpy(&dword, line->data + paddr, sizeof(dword));
-        dword = (dword & ~dqm) | (data & dqm);
-        memcpy(line->data + paddr, &dword, sizeof(dword));
-
-        vr4300_dcache_set_dirty(line);
-      }
+      // We need to mark the line dirty if it's write.
+      // Fortunately, metadata & 0x2 == dirty, and
+      // metadata 0x1 == valid. Our requests values are
+      // read (0x1) and write (0x2), so we can just do
+      // a simple OR here without impacting anything.
+      line->metadata |= exdc_latch->request.type;
     }
 
     // Not a load/store, so execute cache operation.

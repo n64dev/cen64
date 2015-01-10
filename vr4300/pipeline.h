@@ -22,8 +22,8 @@ typedef void (*vr4300_cacheop_func_t)(
 
 enum vr4300_bus_request_type {
   VR4300_BUS_REQUEST_NONE,
-  VR4300_BUS_REQUEST_WRITE,
   VR4300_BUS_REQUEST_READ,
+  VR4300_BUS_REQUEST_WRITE,
   VR4300_BUS_REQUEST_CACHE = 4,
 };
 
@@ -35,7 +35,7 @@ enum vr4300_access_type {
 struct vr4300_bus_request {
   uint64_t vaddr;
   uint64_t data;
-  uint64_t dqm;
+  uint64_t wdqm;
 
   vr4300_cacheop_func_t cacheop;
   uint32_t paddr;
