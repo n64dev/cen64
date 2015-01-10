@@ -69,6 +69,7 @@ struct rsp_result {
 
 struct rsp_ifrd_latch {
   struct rsp_latch common;
+  struct rsp_opcode opcode;
   uint32_t pc, iw;
 };
 
