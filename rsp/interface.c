@@ -42,8 +42,13 @@ void rsp_dma_read(struct rsp *rsp) {
       uint32_t word;
 
       bus_read_word(rsp->bus, source_addr, &word);
-      word = byteswap_32(word);
 
+      // Update opcode cache.
+      if (dest_addr & 0x1000)
+        rsp->opcode_cache[(dest_addr - 0x1000) >> 2] =
+          *rsp_decode_instruction(word);
+
+      word = byteswap_32(word);
       memcpy(rsp->mem + dest_addr, &word, sizeof(word));
       j += 4;
     } while (j < length);
@@ -138,6 +143,11 @@ int write_sp_mem(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   orig_word = byteswap_32(orig_word) & ~dqm;
   word = byteswap_32(orig_word | word);
   memcpy(rsp->mem + offset, &word, sizeof(word));
+
+  // Update opcode cache.
+  if (offset & 0x1000)
+    rsp->opcode_cache[(offset - 0x1000) >> 2] = *rsp_decode_instruction(word);
+
   return 0;
 }
 

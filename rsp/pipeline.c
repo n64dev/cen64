@@ -29,12 +29,13 @@ static inline void rsp_if_stage(struct rsp *rsp) {
   uint32_t iw;
 
   assert(!(pc & 0x1000) || "RSP $PC points past IMEM.");
+  ifrd_latch->pc = (pc + 4) & 0xFFC;
 
   memcpy(&iw, rsp->mem + 0x1000 + pc, sizeof(iw));
   iw = byteswap_32(iw);
 
   ifrd_latch->common.pc = pc;
-  ifrd_latch->pc = (pc + 4) & 0xFFC;
+  ifrd_latch->opcode = rsp->opcode_cache[pc >> 2];
   ifrd_latch->iw = iw;
 }
 
@@ -47,7 +48,7 @@ static inline int rsp_rd_stage(struct rsp *rsp) {
   uint32_t iw = ifrd_latch->iw;
 
   rdex_latch->common = ifrd_latch->common;
-  rdex_latch->opcode = *rsp_decode_instruction(iw);
+  rdex_latch->opcode = ifrd_latch->opcode;
   rdex_latch->iw = iw;
 
   // Check for load-use stalls.

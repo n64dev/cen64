@@ -56,6 +56,10 @@ struct rsp {
   uint32_t regs[NUM_RSP_REGISTERS];
   uint8_t mem[0x2000];
 
+  // Instead of redecoding the instructions (there's only 256 words)
+  // every cycle, we maintain a 256-word decoded instruction cache.
+  struct rsp_opcode opcode_cache[0x1000 / 4];
+
   struct bus_controller *bus;
 
   // TODO: Only for IA32/x86_64 SSE2; sloppy?
