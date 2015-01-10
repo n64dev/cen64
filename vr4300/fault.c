@@ -259,14 +259,15 @@ void VR4300_DCB(struct vr4300 *vr4300) {
         sdata = sdata << lshiftamt;
       }
 
-      dcwb_latch->result |= (uint64_t) (sdata >> rshiftamt) <<
-        request->postshift;
+      // TODO: rdqm?!
+      dcwb_latch->result |= (sdata >> rshiftamt &
+        request->data) << request->postshift;
     }
 
     // Service a write.
     else {
       uint64_t data = request->data;
-      uint64_t dqm = request->dqm;
+      uint64_t dqm = request->wdqm;
 
       paddr &= ~mask;
 
