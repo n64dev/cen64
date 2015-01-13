@@ -72,7 +72,6 @@
 #define CEN64_KEY_RALT XK_Alt_R
 #define CEN64_KEY_RBRACKET XK_bracketright
 #define CEN64_KEY_RCTRL XK_Control_R
-#define CEN64_KEY_PERIOD XK_period
 #define CEN64_KEY_RETURN XK_Return
 #define CEN64_KEY_RSHIFT XK_Shift_R
 #define CEN64_KEY_RSUPER XK_Super_R
