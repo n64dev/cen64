@@ -955,7 +955,7 @@ int VR4300_JALR_JR(struct vr4300 *vr4300,
 int VR4300_LD_SD(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t sel_mask = (int64_t) ((int32_t) iw << 2) >> 32;
+  uint64_t sel_mask = (int64_t) (int32_t) (iw << 2) >> 32;
 
   exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ~sel_mask | (sel_mask & rt);
@@ -986,7 +986,7 @@ int VR4300_LD_SD(struct vr4300 *vr4300,
 cen64_hot int VR4300_LOAD_STORE(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t sel_mask = (int64_t) ((int32_t) iw << 2) >> 32;
+  uint64_t sel_mask = (int64_t) (int32_t) (iw << 2) >> 32;
 
   uint64_t address = rs + (int16_t) iw;
   unsigned request_size = (iw >> 26 & 0x3);
