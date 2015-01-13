@@ -256,13 +256,11 @@ if (DEFINED UNIX)
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
   set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
   set(EXTRA_OS_EXE "")
-endif (DEFINED UNIX)
-
-if (DEFINED WIN32)
+elseif (DEFINED WIN32)
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
   set(EXTRA_OS_LIBS ws2_32 winmm opengl32)
   set(EXTRA_OS_EXE WIN32)
-endif (DEFINED WIN32)
+endif (DEFINED UNIX)
 
 # Configure the common header.
 configure_file(
