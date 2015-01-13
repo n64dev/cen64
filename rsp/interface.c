@@ -141,12 +141,14 @@ int write_sp_mem(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
   memcpy(&orig_word, rsp->mem + offset, sizeof(orig_word));
   orig_word = byteswap_32(orig_word) & ~dqm;
-  word = byteswap_32(orig_word | word);
-  memcpy(rsp->mem + offset, &word, sizeof(word));
+  word = orig_word | word;
 
   // Update opcode cache.
   if (offset & 0x1000)
     rsp->opcode_cache[(offset - 0x1000) >> 2] = *rsp_decode_instruction(word);
+
+  word = byteswap_32(word);
+  memcpy(rsp->mem + offset, &word, sizeof(word));
 
   return 0;
 }
