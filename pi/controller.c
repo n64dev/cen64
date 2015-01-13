@@ -71,13 +71,16 @@ static int pi_dma_write(struct pi_controller *pi) {
   if (length & 7)
     length = (length + 7) & ~7;
 
-  if (pi->bus->dd->ipl_rom && source & 0x03000000) {
+  if (pi->bus->dd->ipl_rom && (source & 0x06000000) == 0x06000000) {
     source &= 0x003FFFFF;
+
+    if (source + length > 0x003FFFFF)
+      length = 0x003FFFFF - source;
 
     memcpy(pi->bus->ri->ram + dest, pi->bus->dd->ipl_rom + source, length);
   }
 
-  else if (source & 0x08000000) {
+  else if ((source & 0x08000000) == 0x08000000) {
 
   }
 
@@ -87,7 +90,9 @@ static int pi_dma_write(struct pi_controller *pi) {
       //assert(0);
     }
 
-    memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
+    // TODO: Very hacky.
+    if (source < pi->rom_size)
+      memcpy(pi->bus->ri->ram + dest, pi->rom + source, length);
   }
 
   pi->regs[PI_DRAM_ADDR_REG] += length;
