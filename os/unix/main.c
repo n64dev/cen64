@@ -48,9 +48,19 @@ int zero_page_fd;
 
 // Allocates a large hunk of zeroed RAM.
 uint8_t *allocate_ram(struct ram_hunk *ram, size_t size) {
+#ifdef __APPLE__
+  // Use MAP_ANON on OSX because it really does not enjoy trying to mmap
+  // from devices.
   if ((ram->ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
-    MAP_PRIVATE, zero_page_fd, 0)) == MAP_FAILED)
+    MAP_PRIVATE | MAP_ANON, -1, 0)) == MAP_FAILED) {
     return NULL;
+  }
+#else
+  if ((ram->ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
+    MAP_PRIVATE, zero_page_fd, 0)) == MAP_FAILED) {
+    return NULL;
+  }
+#endif //__APPLE__
 
 #ifndef __linux__
   memset(ram->ptr, 0, size);
@@ -59,7 +69,7 @@ uint8_t *allocate_ram(struct ram_hunk *ram, size_t size) {
   return ram->ptr;
 }
 
-// Allocates a large hunk of RAM.
+// Deallocates a large hunk of RAM.
 void deallocate_ram(struct ram_hunk *ram) {
   munmap(ram->ptr, ram->size);
 }
