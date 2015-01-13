@@ -12,7 +12,7 @@
 #include "device/options.h"
 #include "os/gl_window.h"
 #include "os/main.h"
-#include "os/unix/glx_window.h"
+#include "os/unix/x11/glx_window.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <stddef.h>
@@ -164,7 +164,7 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
 
   else
     printf("Unable to spawn a thread for the device.\n");
-  
+
   if (!options->no_interface)
     destroy_gl_window(&device.vi.gl_window);
 

@@ -1,5 +1,5 @@
 //
-// os/unix/glx_window.c
+// os/unix/x11/glx_window.c
 //
 // Convenience functions for managing rendering windows.
 //
@@ -13,7 +13,7 @@
 #include "os/gl_window.h"
 #include "os/input.h"
 #include "os/timer.h"
-#include "os/unix/glx_window.h"
+#include "os/unix/x11/glx_window.h"
 #include "vi/controller.h"
 
 #include <errno.h>
@@ -130,7 +130,7 @@ int create_gl_window(struct bus_controller *bus,
     attribute_list, &glx_window->visual_info)) {
     debug("create_gl_window: Failed to match window hints.\n");
     goto create_out_destroy;
-  } 
+  }
 
   if (create_glx_context(glx_window, &glx_window->context)) {
     debug("create_gl_window: Failed to acquire a GL context.\n");

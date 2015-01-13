@@ -1,5 +1,5 @@
 //
-// os/unix/glx_window.h
+// os/unix/x11/glx_window.h
 //
 // Convenience functions for managing rendering windows.
 //
@@ -7,8 +7,8 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#ifndef __unix_glx_window_h__
-#define __unix_glx_window_h__
+#ifndef __unix_x11_glx_window_h__
+#define __unix_x11_glx_window_h__
 #include <pthread.h>
 
 #include <GL/glx.h>

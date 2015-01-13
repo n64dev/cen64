@@ -246,16 +246,21 @@ file(GLOB ARCH_TLB_SOURCES arch/${CEN64_ARCH_DIR}/tlb/*.c)
 # Glob all the files together.
 #
 if (DEFINED UNIX)
-  find_package(X11 REQUIRED)
-
   if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE")
   endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
-  include_directories(${X11_xf86vmode_INCLUDE_PATH})
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
-  set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
-  set(EXTRA_OS_EXE "")
+
+  if (NOT DISABLE_X11)
+    find_package(X11 REQUIRED)
+    include_directories(${X11_xf86vmode_INCLUDE_PATH})
+    set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
+    set(EXTRA_OS_EXE "")
+
+    file(GLOB X11_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/x11/*.c)
+    list(APPEND OS_SOURCES ${X11_SOURCES})
+  endif (NOT DISABLE_X11)
 elseif (DEFINED WIN32)
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
   set(EXTRA_OS_LIBS ws2_32 winmm opengl32)
