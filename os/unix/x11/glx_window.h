@@ -17,8 +17,6 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/xf86vmode.h>
 
-#define MAX_FRAME_DATA_SIZE (640 * 480 * 4)
-
 struct glx_window {
   Display *display;
   XVisualInfo *visual_info;
