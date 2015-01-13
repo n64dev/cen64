@@ -1,5 +1,5 @@
 //
-// os/unix/keycodes.h
+// os/unix/x11/keycodes.h
 //
 // Definitions for keycodes.
 //
@@ -7,8 +7,8 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#ifndef __unix_keycodes_h__
-#define __unix_keycodes_h__
+#ifndef __unix_x11_keycodes_h__
+#define __unix_x11_keycodes_h__
 #include <X11/keysym.h>
 
 // Letter keys.

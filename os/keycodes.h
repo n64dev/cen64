@@ -14,7 +14,7 @@
 #include "os/windows/keycodes.h"
 
 #else
-#include "os/unix/keycodes.h"
+#include "os/unix/x11/keycodes.h"
 #endif
 
 #endif
