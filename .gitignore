@@ -7,3 +7,6 @@
 # Swap files.
 *.swp
 
+# Qt files.
+/debugger/*.pro.user*
+
