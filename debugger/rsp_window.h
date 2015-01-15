@@ -1,0 +1,34 @@
+//
+// rsp_window.h: RSP view window.
+//
+// CEN64D: Cycle-Accurate Nintendo 64 Debugger
+// Copyright (C) 2014, Tyler J. Stachecki.
+//
+// This file is subject to the terms and conditions defined in
+// 'LICENSE', which is part of this source code package.
+//
+
+#ifndef RSP_WINDOW_H
+#define RSP_WINDOW_H
+
+#include <QGridLayout>
+#include "disassembly_view.h"
+#include "memory_view.h"
+#include "register_view.h"
+#include "toggle_window.h"
+
+class RSPWindow : public ToggleWindow {
+  Q_OBJECT
+  QGridLayout layout;
+
+  DisassemblyView disassemblyView;
+  MemoryView memoryView;
+  RegisterView registerView;
+
+public:
+  explicit RSPWindow(QAction *toggleAction, bool initiallyVisible);
+  ~RSPWindow();
+};
+
+#endif
+
