@@ -12,13 +12,29 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = cen64d
-TEMPLATE = app
+TARGET    = cen64d
+TEMPLATE  = app
 
-SOURCES  += main.cpp\
-            mainwindow.cpp
+SOURCES  += disassembly_view.cpp \
+            main.cpp\
+            main_window.cpp \
+            memory_view.cpp \
+            memory_window.cpp \
+            rdp_window.cpp \
+            register_view.cpp \
+            rsp_window.cpp \
+            toggle_window.cpp \
+            vr4300_window.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += disassembly_view.h \
+            main_window.h \
+            memory_view.h \
+            memory_window.h \
+            rdp_window.h \
+            register_view.h \
+            rsp_window.h \
+            toggle_window.h \
+            vr4300_window.h
 
-FORMS    += mainwindow.ui
+FORMS    += main_window.ui
 

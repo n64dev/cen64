@@ -8,5 +8,12 @@
 *.swp
 
 # Qt files.
+/debugger/cen64d
+/debugger/*.o
+
+/debugger/moc*_*.cpp
 /debugger/*.pro.user*
+/debugger/Makefile
+
+/debugger/ui_main_window.h
 

@@ -1,5 +1,5 @@
 //
-// main.cpp: CEN64D entry point.
+// rdp_window.cpp: RDP view window.
 //
 // CEN64D: Cycle-Accurate Nintendo 64 Debugger
 // Copyright (C) 2014, Tyler J. Stachecki.
@@ -8,14 +8,12 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#include "main_window.h"
-#include <QApplication>
+#include "rdp_window.h"
 
-int main(int argc, char *argv[]) {
-  QApplication a(argc, argv);
-  MainWindow w;
-  w.show();
+RDPWindow::RDPWindow(QAction *toggleAction, bool initiallyVisible)
+  : ToggleWindow(tr("CEN64D: RDP"), toggleAction, initiallyVisible) {
+}
 
-  return a.exec();
+RDPWindow::~RDPWindow() {
 }
 
