@@ -11,10 +11,19 @@
 #ifndef MEMORY_WINDOW_H
 #define MEMORY_WINDOW_H
 
+#include "memory_view.h"
 #include "toggle_window.h"
+#include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
 
 class MemoryWindow : public ToggleWindow {
   Q_OBJECT
+  QGridLayout layout;
+
+  MemoryView memoryView;
+  QLabel addressLabel;
+  QLineEdit addressLine;
 
 public:
   explicit MemoryWindow(QAction *toggleAction, bool initiallyVisible);

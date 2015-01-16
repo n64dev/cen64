@@ -11,7 +11,16 @@
 #include "memory_window.h"
 
 MemoryWindow::MemoryWindow(QAction *toggleAction, bool initiallyVisible)
-  : ToggleWindow(tr("CEN64D: Memory"), toggleAction, initiallyVisible) {
+  : ToggleWindow(tr("CEN64D: Memory"), toggleAction, initiallyVisible),
+    memoryView(8) {
+
+  addressLabel.setText("Address: ");
+
+  layout.addWidget(&memoryView, 0, 1, 1, 2);
+  layout.addWidget(&addressLabel, 1, 1);
+  layout.addWidget(&addressLine, 1, 2);
+
+  setLayout(&layout);
 }
 
 MemoryWindow::~MemoryWindow() {

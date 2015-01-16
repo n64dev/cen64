@@ -12,6 +12,8 @@
 #define VR4300_WINDOW_H
 
 #include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
 #include "disassembly_view.h"
 #include "memory_view.h"
 #include "register_view.h"
@@ -20,10 +22,17 @@
 class VR4300Window : public ToggleWindow {
   Q_OBJECT
   QGridLayout layout;
+  QGridLayout addressLayout;
 
   DisassemblyView disassemblyView;
   MemoryView memoryView;
   RegisterView registerView;
+
+  QWidget addressWidget;
+  QLabel vaddressLabel;
+  QLabel paddressLabel;
+  QLineEdit vaddressLine;
+  QLineEdit paddressLine;
 
 public:
   explicit VR4300Window(QAction *toggleAction, bool initiallyVisible);
