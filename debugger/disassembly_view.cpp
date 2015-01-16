@@ -10,19 +10,36 @@
 
 #include "disassembly_view.h"
 #include <QBrush>
+#include <QFont>
+#include <QFontMetrics>
 #include <QPainter>
 #include <QSize>
 
 DisassemblyView::DisassemblyView() {
+  QFont monospacedFont("Courier New");
+  monospacedFont.setFixedPitch(true);
+  monospacedFont.setPointSize(10);
+  setFont(monospacedFont);
+
+  QFontMetrics metrics(monospacedFont);
+  fontWidth = metrics.width('0');
+  fontHeight = metrics.height();
 }
 
 DisassemblyView::~DisassemblyView() {
 }
 
 void DisassemblyView::paintEvent(QPaintEvent* event) {
-  QPainter painter(viewport());
   QSize area = viewport()->size();
 
-  painter.fillRect(0, 0, area.width(), area.height(), QBrush(Qt::blue));
+  // TODO: Fonts don't seem to render exactly
+  // where we want them, so add a fudge factor.
+  float fudge = 2.0 / 3.0;
+  unsigned start = fontHeight * fudge;
+
+  QPainter painter(viewport());
+
+  painter.fillRect(0, 0, area.width(), area.height(), QBrush(Qt::white));
+  painter.drawText(1, start, "This is the disassembly view.");
 }
 

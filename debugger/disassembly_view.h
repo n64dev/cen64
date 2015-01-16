@@ -15,6 +15,8 @@
 class DisassemblyView : public QAbstractScrollArea {
   Q_OBJECT
 
+  unsigned fontWidth, fontHeight;
+
 public:
   explicit DisassemblyView();
   virtual ~DisassemblyView();

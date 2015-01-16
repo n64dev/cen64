@@ -11,15 +11,28 @@
 #ifndef REGISTER_VIEW_H
 #define REGISTER_VIEW_H
 #include <QAbstractScrollArea>
+#include <QPaintEvent>
+#include <QResizeEvent>
 
 class RegisterView : public QAbstractScrollArea {
   Q_OBJECT
 
+  const char **registers;
+  unsigned numRegisters;
+
+  unsigned fontWidth, fontHeight;
+  unsigned longestMnemonic, octets;
+  char formatstr[16];
+
 public:
-  explicit RegisterView();
+  explicit RegisterView(const char **regs, unsigned num_regs, unsigned octets);
   virtual ~RegisterView();
 
+  unsigned getMaximumHeight() const;
+  unsigned getMaximumWidth() const;
+
   void paintEvent(QPaintEvent* event);
+  void resizeEvent(QResizeEvent *event);
 };
 
 #endif

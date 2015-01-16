@@ -12,6 +12,8 @@
 #define RSP_WINDOW_H
 
 #include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
 #include "disassembly_view.h"
 #include "memory_view.h"
 #include "register_view.h"
@@ -20,10 +22,15 @@
 class RSPWindow : public ToggleWindow {
   Q_OBJECT
   QGridLayout layout;
+  QGridLayout addressLayout;
 
   DisassemblyView disassemblyView;
   MemoryView memoryView;
   RegisterView registerView;
+
+  QWidget addressWidget;
+  QLabel addressLabel;
+  QLineEdit addressLine;
 
 public:
   explicit RSPWindow(QAction *toggleAction, bool initiallyVisible);

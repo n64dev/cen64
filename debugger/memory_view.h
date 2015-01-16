@@ -15,8 +15,13 @@
 class MemoryView : public QAbstractScrollArea {
   Q_OBJECT
 
+  unsigned fontWidth, fontHeight;
+  unsigned addressOctets;
+
+  char formatstr[16];
+
 public:
-  explicit MemoryView();
+  explicit MemoryView(unsigned addressOctets);
   virtual ~MemoryView();
 
   void paintEvent(QPaintEvent* event);
