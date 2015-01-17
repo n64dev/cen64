@@ -85,7 +85,7 @@ void RegisterView::paintEvent(QPaintEvent* event) {
     painter.fillRect(0, 0, area.width(), fontHeight - vsMH, shaded);
 
   for (i = (vsDH & 0x1 ? fontHeight : 0) + fontHeight - vsMH;
-    i < area.height(); i = i + (fontHeight * 2)) {
+    i < area.height(); i+= fontHeight * 2) {
     painter.fillRect(0, i, area.width(), fontHeight, shaded);
   }
 

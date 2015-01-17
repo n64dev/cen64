@@ -26,6 +26,8 @@ MemoryView::MemoryView(unsigned addressOctets) : addressOctets(addressOctets) {
   fontWidth = metrics.width('0');
   fontHeight = metrics.height();
 
+  byteStart = 1 + (3 + addressOctets) * fontWidth;
+
   // Create the format string.
   sprintf(formatstr, " 0x%%.%ullX", addressOctets);
 }
@@ -43,26 +45,9 @@ void MemoryView::paintEvent(QPaintEvent* event) {
   float fudge = 2.0 / 3.0;
   unsigned start = fontHeight * fudge;
 
-  int byteStart = 1 + (3 + addressOctets) * fontWidth;
-  int bytesPerRow = 1;
-
-  // Determine how many bytes we can cram in the row without having
-  // to resort to horizontal sliders. Make sure that we keep the byte
-  // count to a power of two for simplicity's sake.
-  for (i = 2; ; i *= 2) {
-    unsigned check = byteStart + i * 3 * fontWidth + (i + 1) * fontWidth;
-
-    if (check > area.width())
-      break;
-
-    bytesPerRow = i;
-  }
-
   QPainter painter(viewport());
   QBrush clear = QBrush(Qt::white);
   QBrush shaded = QBrush(QColor(0xE8, 0xE8, 0xE8));
-
-  painter.fillRect(0, 0, area.width(), area.height(), QBrush(Qt::white));
 
   // Shade ever other line.
   painter.fillRect(0, 0, area.width(), area.height(), clear);
@@ -72,7 +57,9 @@ void MemoryView::paintEvent(QPaintEvent* event) {
 
   // Draw any values in the range.
   for (i = 0; i < area.height(); i += fontHeight) {
-    sprintf(buf, formatstr, (unsigned long long) 0 + (i * bytesPerRow));
+    sprintf(buf, formatstr, (unsigned long long) 0 +
+      (i / fontHeight * bytesPerRow));
+
     painter.drawText(1, start + i, buf);
 
     for (j = 0; j < bytesPerRow; j++) {
@@ -81,8 +68,26 @@ void MemoryView::paintEvent(QPaintEvent* event) {
 
       buf[1] = '\0';
       buf[0] = isprint(j) ? j : '.';
-      painter.drawText(byteStart + bytesPerRow * 3 * fontWidth + (j + 1) * fontWidth, start + i, buf);
+      painter.drawText(byteStart + bytesPerRow * 3 * fontWidth +
+        (j + 1) * fontWidth, start + i, buf);
     }
+  }
+}
+
+void MemoryView::resizeEvent(QResizeEvent *event) {
+  QSize area = viewport()->size();
+  int i;
+
+  // Determine how many bytes we can cram in the row without having
+  // to resort to horizontal sliders. Make sure that we keep the byte
+  // count to a power of two for simplicity's sake.
+  for (bytesPerRow = 1, i = 2; ; i *= 2) {
+    int check = byteStart + i * 3 * fontWidth + (i + 1) * fontWidth;
+
+    if (check > area.width())
+      break;
+
+    bytesPerRow = i;
   }
 }
 
