@@ -37,6 +37,10 @@ int cen64_cmdline_main(int argc, const char *argv[]) {
     return EXIT_FAILURE;
   }
 
+  memset(&ddipl, 0, sizeof(ddipl));
+  memset(&ddrom, 0, sizeof(ddrom));
+  memset(&cart,  0, sizeof(cart));
+
   if (load_roms(options.ddipl_path, options.ddrom_path, options.pifrom_path,
     options.cart_path, &ddipl, &ddrom, &pifrom, &cart))
     return EXIT_FAILURE;
