@@ -66,11 +66,15 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       break;
   }
 
+  // Took this out to permit emulation
+  // of the 64DD development package.
+#if 0
   if (!options->ddipl_path && options->ddrom_path) {
     printf("-ddrom requires a -ddipl argument.\n\n");
 
     return 1;
   }
+#endif
 
   options->pifrom_path = argv[i];
 
