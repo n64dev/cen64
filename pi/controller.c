@@ -84,7 +84,7 @@ static int pi_dma_write(struct pi_controller *pi) {
 
   }
 
-  else {
+  else if (pi->rom) {
     if (source + length > pi->rom_size) {
       length = pi->rom_size - source;
       //assert(0);
