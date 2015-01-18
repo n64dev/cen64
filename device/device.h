@@ -43,6 +43,7 @@ struct cen64_device {
 
   struct rdp rdp;
   struct rsp rsp;
+  int debug_sfd;
 };
 
 cen64_cold void device_destroy(struct cen64_device *device);

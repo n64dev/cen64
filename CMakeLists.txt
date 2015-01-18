@@ -303,7 +303,7 @@ add_library(cen64vi STATIC ${VI_SOURCES})
 add_library(cen64vr4300 STATIC ${VR4300_SOURCES})
 
 # Create the executable.
-add_executable(cen64 ${EXTRA_OS_EXE} "${PROJECT_SOURCE_DIR}/device/device.c")
+add_executable(cen64 ${EXTRA_OS_EXE} "${PROJECT_SOURCE_DIR}/device/device.c" "${PROJECT_SOURCE_DIR}/device/netapi.c")
 
 target_link_libraries(cen64
 	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
