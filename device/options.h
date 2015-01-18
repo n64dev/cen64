@@ -17,13 +17,14 @@ struct cen64_options {
   const char *ddrom_path;
   const char *pifrom_path;
   const char *cart_path;
+  const char *debugger_addr;
 
 #ifdef _WIN32
   bool console;
 #endif
 
+  bool enable_debugger;
   bool no_interface;
-  bool print_sim_stats;
 };
 
 extern const struct cen64_options default_cen64_options;
