@@ -11,13 +11,14 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
-#include <QAction>
-#include <QMainWindow>
-#include <QMenuBar>
+#include "network_handle.h"
 #include "memory_window.h"
 #include "rdp_window.h"
 #include "rsp_window.h"
 #include "vr4300_window.h"
+#include <QAction>
+#include <QMainWindow>
+#include <QMenuBar>
 
 namespace Ui {
   class MainWindow;
@@ -26,6 +27,8 @@ namespace Ui {
 class MainWindow : public QMainWindow {
   Q_OBJECT
   Ui::MainWindow *ui;
+
+  NetworkHandle *networkHandle;
   MemoryWindow *memoryWindow;
   RDPWindow *rdpWindow;
   RSPWindow *rspWindow;

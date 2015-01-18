@@ -31,6 +31,8 @@ MainWindow::MainWindow(QWidget *parent) :
   rspWindow->setAttribute(Qt::WA_QuitOnClose, false);
   vr4300Window->setAttribute(Qt::WA_QuitOnClose, false);
 
+  statusBar()->showMessage(tr("Connecting to host...."));
+  networkHandle = new NetworkHandle(this);
   statusBar()->showMessage(tr("Debugger ready."));
 }
 

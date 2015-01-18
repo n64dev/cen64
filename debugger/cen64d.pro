@@ -8,7 +8,7 @@
 # 'LICENSE', which is part of this source code package.
 #
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -20,6 +20,7 @@ SOURCES  += disassembly_view.cpp \
             main_window.cpp \
             memory_view.cpp \
             memory_window.cpp \
+            network_handle.cpp \
             rdp_window.cpp \
             register_view.cpp \
             rsp_window.cpp \
@@ -30,6 +31,7 @@ HEADERS  += disassembly_view.h \
             main_window.h \
             memory_view.h \
             memory_window.h \
+            network_handle.h \
             rdp_window.h \
             register_view.h \
             rsp_window.h \
