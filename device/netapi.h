@@ -12,8 +12,26 @@
 #define __device_netapi_h__
 #include "common.h"
 
+struct device;
+
+enum netapi_debug_request_type {
+  NETAPI_DEBUG_ERROR,
+  NETAPI_DEBUG_GET_VERSION,
+};
+
+struct netapi_debug_request {
+  uint32_t magic;
+  uint32_t seq_id;
+  uint32_t length;
+
+  enum netapi_debug_request_type type;
+  uint8_t data[];
+};
+
 cen64_cold void netapi_close_connection(int csfd);
 cen64_cold int netapi_open_connection(void);
+
+cen64_cold int netapi_debug_wait(int sfd, struct device *device);
 
 #endif
 

@@ -28,6 +28,7 @@
 #include "vr4300/cpu.h"
 #include "vr4300/cp1.h"
 
+cen64_cold static int device_debug_spin(struct cen64_device *device);
 cen64_hot static int device_spin(struct cen64_device *device);
 
 // Creates and initializes a device.
@@ -133,7 +134,11 @@ void device_run(struct cen64_device *device) {
   rsp_late_init(&device->rsp);
 
   // Spin the device until we return (from setjmp).
-  device_spin(device);
+  if (unlikely(device->debug_sfd > 0))
+    device_debug_spin(device);
+
+  else
+    device_spin(device);
 
   // TODO: Restore host registers that were pinned.
   fpu_set_state(saved_fpu_state);
@@ -155,6 +160,35 @@ int device_spin(struct cen64_device *device) {
     }
 
     vr4300_cycle(&device->vr4300);
+  }
+
+  return 0;
+}
+
+// Continually cycles the device until setjmp returns.
+int device_debug_spin(struct cen64_device *device) {
+  struct vr4300_stats vr4300_stats;
+
+  // Prepare stats, set a breakpoint @ VR4300 IPL vector.
+  memset(&vr4300_stats, 0, sizeof(vr4300_stats));
+
+  if (setjmp(device->bus.unwind_data))
+    return 1;
+
+  while (1) {
+    unsigned i;
+
+    for (i = 0; i < 2; i++) {
+      vr4300_cycle(&device->vr4300);
+      rsp_cycle(&device->rsp);
+      vi_cycle(&device->vi);
+
+      vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+
+    }
+
+    vr4300_cycle(&device->vr4300);
+    vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
   }
 
   return 0;

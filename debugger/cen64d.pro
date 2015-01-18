@@ -22,6 +22,7 @@ SOURCES  += disassembly_view.cpp \
             memory_window.cpp \
             network_handle.cpp \
             rdp_window.cpp \
+            register_model.cpp \
             register_view.cpp \
             rsp_window.cpp \
             toggle_window.cpp \
@@ -33,6 +34,7 @@ HEADERS  += disassembly_view.h \
             memory_window.h \
             network_handle.h \
             rdp_window.h \
+            register_model.cpp \
             register_view.h \
             rsp_window.h \
             toggle_window.h \

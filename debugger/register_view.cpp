@@ -21,8 +21,8 @@
 #include <cstring>
 
 RegisterView::RegisterView(const char **registers,
-  unsigned numRegisters, unsigned octets) : registers(registers),
-  numRegisters(numRegisters), octets(octets) {
+  unsigned numRegisters, unsigned octets) : model(numRegisters),
+  registers(registers), numRegisters(numRegisters), octets(octets) {
   unsigned i;
 
   QFont monospacedFont("Courier New");
@@ -55,6 +55,10 @@ unsigned RegisterView::getMaximumHeight() const {
 
 unsigned RegisterView::getMaximumWidth() const {
   return 1 + (3 + octets + longestMnemonic) * fontWidth;
+}
+
+RegisterModel& RegisterView::getModel() {
+  return model;
 }
 
 void RegisterView::paintEvent(QPaintEvent* event) {
@@ -101,12 +105,12 @@ void RegisterView::paintEvent(QPaintEvent* event) {
     unsigned j;
 
     // Write the mnemonic, pad with spaces to align.
-    strcpy(buf, registers[rs++]);
+    strcpy(buf, registers[rs]);
     for (j = len; j < longestMnemonic; j++)
       buf[j] = ' ';
 
     // Write the values, draw the string.
-    sprintf(buf + longestMnemonic, formatstr, (unsigned long long) rs);
+    sprintf(buf + longestMnemonic, formatstr, model.getIndex(rs++));
     painter.drawText(1 - hsMW, start + i, buf + hsDW);
   }
 }

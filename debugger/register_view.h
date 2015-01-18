@@ -10,6 +10,7 @@
 
 #ifndef REGISTER_VIEW_H
 #define REGISTER_VIEW_H
+#include "register_model.h"
 #include <QAbstractScrollArea>
 #include <QPaintEvent>
 #include <QResizeEvent>
@@ -17,6 +18,7 @@
 class RegisterView : public QAbstractScrollArea {
   Q_OBJECT
 
+  RegisterModel model;
   const char **registers;
   unsigned numRegisters;
 
@@ -31,6 +33,7 @@ public:
   unsigned getMaximumHeight() const;
   unsigned getMaximumWidth() const;
 
+  RegisterModel& getModel();
   void paintEvent(QPaintEvent* event);
   void resizeEvent(QResizeEvent *event);
 };

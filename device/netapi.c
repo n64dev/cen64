@@ -9,6 +9,7 @@
 //
 
 #include "common.h"
+#include "device/device.h"
 #include "device/netapi.h"
 
 #ifdef __WIN32__
@@ -27,11 +28,17 @@
 #define close(x) closesocket(x)
 #endif
 
+#define NETAPI_DEBUG_MAGIC 0x40544A53U // "@TJS"
+#define NETAPI_DEBUG_VERSION 0U
+
 // Static functions.
 static int bind_server_socket(int family, int type, const char *service);
 
 static struct addrinfo *getaddrinfo_helper(int family,
   int type, const char *host, const char *service);
+
+static int netapi_debug_handle_request(int sfd, struct device *device,
+  const struct netapi_debug_request *req, const uint8_t *req_data);
 
 // Creates a socket of (family, type) and binds it portno.
 int bind_server_socket(int family, int type, const char *service) {
@@ -137,5 +144,65 @@ int netapi_open_connection(void) {
   // TODO: Might not want to toss this out yet.
   close(sfd);
   return csfd;
+}
+
+// Handles an incoming request from the client.
+int netapi_debug_handle_request(int sfd, struct device *device,
+  const struct netapi_debug_request *req, const uint8_t *req_data) {
+  struct netapi_debug_request resp;
+  uint8_t buf[576];
+
+  uint8_t *data = buf + sizeof(&resp);
+  uint32_t length, i;
+
+  switch(ntohl(req->type)) {
+    case NETAPI_DEBUG_GET_VERSION:
+      resp.type = req->type;
+      length = sizeof(resp) + sizeof(i);
+
+      i = htonl(NETAPI_DEBUG_VERSION);
+      memcpy(data, &i, sizeof(i));
+      break;
+
+    default:
+      resp.type = htonl(NETAPI_DEBUG_ERROR);
+      length = sizeof(resp);
+      break;
+  }
+
+  // Send the response.
+  resp.magic = htonl(NETAPI_DEBUG_MAGIC);
+  resp.length = htonl(length);
+
+  memcpy(buf, &resp, sizeof(resp));
+  send(sfd, buf, length, 0);
+  return 0;
+}
+
+// Waits for an incoming request, attempts to handle it.
+int netapi_debug_wait(int sfd, struct device *device) {
+  struct netapi_debug_request req;
+  uint8_t buf[576];
+
+  // Pull and process the header.
+  recv(sfd, &req, sizeof(req), 0);
+
+  if (ntohl(req.magic) != NETAPI_DEBUG_MAGIC ||
+    ntohl(req.length) > sizeof(buf)) {
+    debug("net/debug: Got a bad request packet.\n");
+
+    req.magic = htonl(NETAPI_DEBUG_MAGIC);
+    req.length = htonl(sizeof(req));
+    req.type = htonl(NETAPI_DEBUG_ERROR);
+
+    send(sfd, &req, sizeof(req), 0);
+    return -1;
+  }
+
+  // Pull the body of the request, if any.
+  if (ntohl(req.length) > 0)
+    recv(sfd, buf, ntohl(req.length) - sizeof(req), 0);
+
+  return netapi_debug_handle_request(sfd, device, &req, buf);
 }
 
