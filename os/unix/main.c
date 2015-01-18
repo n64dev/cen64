@@ -9,6 +9,7 @@
 
 #include "cen64.h"
 #include "device/device.h"
+#include "device/netapi.h"
 #include "device/options.h"
 #include "os/gl_window.h"
 #include "os/main.h"
@@ -156,6 +157,20 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
       printf("Failed to register SIGINT handler.\n");
   }
 
+  // Pull up the debug API if it was requested.
+  device.debug_sfd = -1;
+
+  if (options->enable_debugger) {
+    if ((device.debug_sfd = netapi_open_connection()) < 0) {
+      printf("Failed to bind/listen for a connection.\n");
+
+      destroy_gl_window(&device.vi.gl_window);
+      device_destroy(&device);
+      deallocate_ram(&hunk);
+      return 1;
+    }
+  }
+
   // Start the device thread, hand over control to the UI thread on success.
   if ((pthread_create(&device_thread, NULL, run_device_thread, &device)) == 0) {
     gl_window_thread(&device.vi.gl_window, &device.bus);
@@ -164,6 +179,9 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
 
   else
     printf("Unable to spawn a thread for the device.\n");
+
+  if (device.debug_sfd >= 0)
+    netapi_close_connection(device.debug_sfd);
 
   if (!options->no_interface)
     destroy_gl_window(&device.vi.gl_window);
