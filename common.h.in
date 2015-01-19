@@ -124,6 +124,16 @@ typedef char bool;
 #define WORD_ADDR_XOR 4
 #endif
 
+#ifndef _MSC_VER
+#ifdef BIG_ENDIAN_HOST
+#define htonll(x) (x)
+#define ntohll(x) (x)
+#else
+#define htonll(x) __builtin_bswap64(x)
+#define ntohll(x) __builtin_bswap64(x)
+#endif
+#endif
+
 static inline uint32_t byteswap_32(uint32_t word) {
 #ifdef BIG_ENDIAN_HOST
   return word;

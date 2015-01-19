@@ -10,7 +10,7 @@
 
 #ifndef REGISTER_MODEL_H
 #define REGISTER_MODEL_H
-#include <QtCore>
+#include <QtGlobal>
 
 class RegisterModel {
   quint64 *data;
@@ -20,7 +20,7 @@ public:
   virtual ~RegisterModel();
 
   quint64 getIndex(unsigned i);
-  void setIndex(unsigned i, quint64_t);
+  void setIndex(unsigned i, quint64);
 };
 
 #endif
