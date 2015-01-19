@@ -11,6 +11,8 @@
 #include "common.h"
 #include "device/device.h"
 #include "device/netapi.h"
+#include "vr4300/cpu.h"
+#include "vr4300/pipeline.h"
 
 #ifdef __WIN32__
 #include <ws2tcpip.h>
@@ -37,7 +39,7 @@ static int bind_server_socket(int family, int type, const char *service);
 static struct addrinfo *getaddrinfo_helper(int family,
   int type, const char *host, const char *service);
 
-static int netapi_debug_handle_request(int sfd, struct device *device,
+static int netapi_debug_handle_request(int sfd, struct cen64_device *device,
   const struct netapi_debug_request *req, const uint8_t *req_data);
 
 // Creates a socket of (family, type) and binds it portno.
@@ -147,23 +149,43 @@ int netapi_open_connection(void) {
 }
 
 // Handles an incoming request from the client.
-int netapi_debug_handle_request(int sfd, struct device *device,
+int netapi_debug_handle_request(int sfd, struct cen64_device *device,
   const struct netapi_debug_request *req, const uint8_t *req_data) {
-  struct netapi_debug_request resp;
   uint8_t buf[576];
+  size_t length;
+  unsigned i;
 
-  uint8_t *data = buf + sizeof(&resp);
-  uint32_t length, i;
+  struct netapi_debug_request resp;
+  uint8_t *data = buf + sizeof(resp);
+  uint32_t u32;
+  uint64_t u64;
 
   switch(ntohl(req->type)) {
-    case NETAPI_DEBUG_GET_VERSION:
-      resp.type = req->type;
-      length = sizeof(resp) + sizeof(i);
 
-      i = htonl(NETAPI_DEBUG_VERSION);
-      memcpy(data, &i, sizeof(i));
+    // Get protocol version.
+    case NETAPI_DEBUG_GET_PROTOCOL_VERSION:
+      resp.type = req->type;
+      length = sizeof(resp) + sizeof(u32);
+
+      u32 = htonl(NETAPI_DEBUG_VERSION);
+      memcpy(data, &u32, sizeof(u32));
       break;
 
+    // Get VR4300 general purpose registers and $PC.
+    case NETAPI_DEBUG_GET_VR4300_REGS:
+      resp.type = req->type;
+      length = sizeof(uint64_t) * 33;
+
+      for (i = 0; i < 32; i++) {
+        u64 = htonll(device->vr4300.regs[i]);
+        memcpy(data + i * sizeof(u64), &u64, sizeof(u64));
+      }
+
+      u64 = htonll(device->vr4300.pipeline.dcwb_latch.common.pc);
+      memcpy(data + 32 * sizeof(u64), &u64, sizeof(u64));
+      break;
+
+    // Unsupported command.
     default:
       resp.type = htonl(NETAPI_DEBUG_ERROR);
       length = sizeof(resp);
@@ -180,7 +202,7 @@ int netapi_debug_handle_request(int sfd, struct device *device,
 }
 
 // Waits for an incoming request, attempts to handle it.
-int netapi_debug_wait(int sfd, struct device *device) {
+int netapi_debug_wait(int sfd, struct cen64_device *device) {
   struct netapi_debug_request req;
   uint8_t buf[576];
 
@@ -200,7 +222,7 @@ int netapi_debug_wait(int sfd, struct device *device) {
   }
 
   // Pull the body of the request, if any.
-  if (ntohl(req.length) > 0)
+  if (ntohl(req.length) > sizeof(req))
     recv(sfd, buf, ntohl(req.length) - sizeof(req), 0);
 
   return netapi_debug_handle_request(sfd, device, &req, buf);

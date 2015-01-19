@@ -16,8 +16,11 @@ class NetworkHandle {
   QTcpSocket socket;
 
 public:
-  explicit NetworkHandle(QObject *parent);
+  explicit NetworkHandle(QWidget *parent);
   ~NetworkHandle();
+
+  int getProtocolVersion();
+  int getRemoteProtocolVersion();
 };
 
 #endif

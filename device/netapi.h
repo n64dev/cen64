@@ -16,7 +16,8 @@ struct device;
 
 enum netapi_debug_request_type {
   NETAPI_DEBUG_ERROR,
-  NETAPI_DEBUG_GET_VERSION,
+  NETAPI_DEBUG_GET_PROTOCOL_VERSION,
+  NETAPI_DEBUG_GET_VR4300_REGS,
 };
 
 struct netapi_debug_request {
@@ -31,7 +32,7 @@ struct netapi_debug_request {
 cen64_cold void netapi_close_connection(int csfd);
 cen64_cold int netapi_open_connection(void);
 
-cen64_cold int netapi_debug_wait(int sfd, struct device *device);
+cen64_cold int netapi_debug_wait(int sfd, struct cen64_device *device);
 
 #endif
 

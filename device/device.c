@@ -12,7 +12,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include "common.h"
-#include "device.h"
+#include "device/device.h"
+#include "device/netapi.h"
 #include "fpu/fpu.h"
 #include "os/gl_window.h"
 #include "os/rom_file.h"
@@ -174,6 +175,7 @@ int device_debug_spin(struct cen64_device *device) {
 
   // Prepare stats, set a breakpoint @ VR4300 IPL vector.
   memset(&vr4300_stats, 0, sizeof(vr4300_stats));
+  netapi_debug_wait(device->debug_sfd, device);
 
   if (setjmp(device->bus.unwind_data))
     return 1;
