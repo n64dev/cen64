@@ -100,6 +100,13 @@ typedef char bool;
 #define cen64_hot
 #endif
 
+// Define cen64_flatten.
+#ifdef __GNUC__
+#define cen64_flatten __attribute__((flatten))
+#else
+#define cen64_flatten
+#endif
+
 // Define likely()/unlikely().
 #ifdef __GNUC__
 #define likely(expr) __builtin_expect(!!(expr), !0)
