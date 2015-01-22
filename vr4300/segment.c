@@ -20,7 +20,7 @@
 //       63 sign-extended is used an address."
 //
 
-static const struct segment USEGs[] = {
+cen64_align(static const struct segment USEGs[], CACHE_LINE_SIZE) = {
   /* useg, suseg, kuseg. */ {
   0x0000000000000000ULL, /* start */
   0x0000000080000000ULL, /* length */
@@ -51,7 +51,7 @@ static const struct segment XSSEG = {
   true,                  /* cached */
 };
 
-static const struct segment KSEGs[] = {
+cen64_align(static const struct segment KSEGs[], CACHE_LINE_SIZE) = {
   /* (c)kseg0. */ {
   0xFFFFFFFF80000000ULL, /* start */
   0x0000000020000000ULL, /* length */

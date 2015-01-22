@@ -32,7 +32,7 @@ static void vr4300_cycle_busywait(struct vr4300 *vr4300);
 //#define PRINT_EXEC
 
 // Instruction cache stage.
-static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
+static void vr4300_ic_stage(struct vr4300 *vr4300) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
 
@@ -57,15 +57,13 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   if ((pc - segment->start) >= segment->length) {
     uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-    if ((segment = get_segment(pc, cp0_status)) == NULL) {
+    if (unlikely((segment = get_segment(pc, cp0_status)) == NULL))
       VR4300_IADE(vr4300);
-      return 1;
-    }
 
+    // Next stage gets killed either way, so we can safely
+    // latch a faulty segment and not worry about it.
     icrf_latch->segment = segment;
   }
-
-  return 0;
 }
 
 // Register fetch and decode stage.
@@ -243,7 +241,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     if ((vaddr - segment->start) >= segment->length) {
       uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-      if ((segment = get_segment(vaddr, cp0_status)) == NULL) {
+      if (unlikely((segment = get_segment(vaddr, cp0_status)) == NULL)) {
         VR4300_DADE(vr4300);
         return 1;
       }
@@ -440,10 +438,11 @@ void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
 void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
   vr4300->pipeline.icrf_latch.common.fault = VR4300_FAULT_NONE;
 
-  if (vr4300_ic_stage(vr4300))
-    return;
-
   vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
+
+  // If IADE is raised, it'll reset the PIPELINE_CYCLE_TYPE
+  // so we can aggressively force it back to zero first.
+  vr4300_ic_stage(vr4300);
 }
 
 // Special-cased busy wait handler.
@@ -484,33 +483,30 @@ void vr4300_cycle(struct vr4300 *vr4300) {
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
 
   // We're stalling for something...
-  if (pipeline->cycles_to_stall > 0) {
+  if (pipeline->cycles_to_stall > 0)
     pipeline->cycles_to_stall--;
-    return;
-  }
 
   // Ordinarily, we would need to check every pipeline stage to see if it is
   // aborted, and conditionally not execute it. Since faults are rare, we'll
   // only bother checking for aborted stages when we know they can be present.
-  if (pipeline->fault_present + vr4300->regs[PIPELINE_CYCLE_TYPE]) {
+  else if (pipeline->fault_present + vr4300->regs[PIPELINE_CYCLE_TYPE])
     pipeline_function_lut[vr4300->regs[PIPELINE_CYCLE_TYPE]](vr4300);
-    return;
+
+  else {
+    if (vr4300_wb_stage(vr4300))
+      return;
+
+    if (vr4300_dc_stage(vr4300))
+      return;
+
+    if (vr4300_ex_stage(vr4300))
+      return;
+
+    if (vr4300_rf_stage(vr4300))
+      return;
+
+    vr4300_ic_stage(vr4300);
   }
-
-  if (vr4300_wb_stage(vr4300))
-    return;
-
-  if (vr4300_dc_stage(vr4300))
-    return;
-
-  if (vr4300_ex_stage(vr4300))
-    return;
-
-  if (vr4300_rf_stage(vr4300))
-    return;
-
-  if (vr4300_ic_stage(vr4300))
-    return;
 }
 
 // Collects additional information about the pipeline each cycle.
