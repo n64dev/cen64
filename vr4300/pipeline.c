@@ -32,7 +32,7 @@ static void vr4300_cycle_busywait(struct vr4300 *vr4300);
 //#define PRINT_EXEC
 
 // Instruction cache stage.
-static void vr4300_ic_stage(struct vr4300 *vr4300) {
+cen64_flatten static void vr4300_ic_stage(struct vr4300 *vr4300) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
 

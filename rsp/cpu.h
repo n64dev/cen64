@@ -71,7 +71,7 @@ cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus);
 cen64_cold void rsp_late_init(struct rsp *rsp);
 cen64_cold void rsp_destroy(struct rsp *rsp);
 
-cen64_hot void rsp_cycle(struct rsp *rsp);
+cen64_flatten cen64_hot void rsp_cycle(struct rsp *rsp);
 
 #endif
 

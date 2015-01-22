@@ -75,7 +75,7 @@ static inline int rsp_rd_stage(struct rsp *rsp) {
 }
 
 // Execution stage.
-static inline void rsp_ex_stage(struct rsp *rsp) {
+cen64_flatten static inline void rsp_ex_stage(struct rsp *rsp) {
   struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
@@ -114,7 +114,7 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
 }
 
 // Execution stage (vector).
-static inline void rsp_v_ex_stage(struct rsp *rsp) {
+cen64_flatten static inline void rsp_v_ex_stage(struct rsp *rsp) {
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
   rsp_vect_t vd_reg, vs_reg, vt_shuf_reg, zero;
@@ -148,7 +148,7 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
 }
 
 // Data cache fetch stage.
-static inline void rsp_df_stage(struct rsp *rsp) {
+cen64_flatten static inline void rsp_df_stage(struct rsp *rsp) {
   struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   const struct rsp_mem_request *request = &exdf_latch->request;
