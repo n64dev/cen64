@@ -23,7 +23,7 @@ struct segment {
 };
 
 const struct segment* get_default_segment(void);
-const struct segment* get_segment(uint64_t address, uint32_t cp0_status);
+cen64_cold const struct segment* get_segment(uint64_t address, uint32_t cp0_status);
 
 #endif
 
