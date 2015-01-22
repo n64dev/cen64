@@ -78,7 +78,6 @@ MarathonMan
 #include "ri/controller.h"
 #include "tctables.h"
 #include "vr4300/interface.h"
-#include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -182,38 +181,6 @@ static struct cen64_device *cen64;
 #define GET_LOW_RGBA16_TMEM(x)	(replicated_rgba[((x) >> 1) & 0x1f])
 #define GET_MED_RGBA16_TMEM(x)	(replicated_rgba[((x) >> 6) & 0x1f])
 #define GET_HI_RGBA16_TMEM(x)	(replicated_rgba[(x) >> 11])
-
-static void fatalerror(const char * err, ...)
-{
-	char VsprintfBuffer[200];
-	va_list arg;
-	va_start(arg, err);
-	vsprintf(VsprintfBuffer, err, arg);
-#ifdef WIN32
-	MessageBoxA(0,VsprintfBuffer,"RDP: fatal error",MB_OK);
-#endif
-#ifndef WIN32
-	printf(VsprintfBuffer);
-#endif
-	va_end(arg);
-	exit(0);
-}
-
-static void popmessage(const char* err, ...)
-{
-	char VsprintfBuffer[200];
-	va_list arg;
-	va_start(arg, err);
-	vsprintf(VsprintfBuffer, err, arg);
-#ifdef WIN32
-	MessageBoxA(0,VsprintfBuffer,"RDP: warning",MB_OK);
-#endif
-#ifndef WIN32
-	printf(VsprintfBuffer);
-#endif
-	va_end(arg);
-}
-
 
 #define LOG_RDP_EXECUTION 0
 #define	DETAILED_LOGGING 0
@@ -555,24 +522,24 @@ static void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum);
 static void fetch_texel_entlut(COLOR *color, int s, int t, uint32_t tilenum);
 static void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLOR *color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
-void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
-void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut);
-void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
-void sort_tmem_idx(uint32_t *idx, uint32_t idxa, uint32_t idxb, uint32_t idxc, uint32_t idxd, uint32_t bankno);
-void sort_tmem_shorts_lowhalf(uint32_t* bindshort, uint32_t short0, uint32_t short1, uint32_t short2, uint32_t short3, uint32_t bankno);
-void compute_color_index(uint32_t* cidx, uint32_t readshort, uint32_t nybbleoffset, uint32_t tilenum);
-void read_tmem_copy(int s, int s1, int s2, int s3, int t, uint32_t tilenum, uint32_t* sortshort, int* hibits, int* lowbits);
-void replicate_for_copy(uint32_t* outbyte, uint32_t inshort, uint32_t nybbleoffset, uint32_t tilenum, uint32_t tformat, uint32_t tsize);
-void fetch_qword_copy(uint32_t* hidword, uint32_t* lowdword, int32_t ssss, int32_t ssst, uint32_t tilenum);
-void render_spans_1cycle_complete(int start, int end, int tilenum, int flip);
-void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip);
-void render_spans_1cycle_notex(int start, int end, int tilenum, int flip);
-void render_spans_2cycle_complete(int start, int end, int tilenum, int flip);
-void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip);
-void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip);
-void render_spans_2cycle_notex(int start, int end, int tilenum, int flip);
-void render_spans_fill(int start, int end, int flip);
-void render_spans_copy(int start, int end, int tilenum, int flip);
+static void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
+static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut);
+static void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
+static void sort_tmem_idx(uint32_t *idx, uint32_t idxa, uint32_t idxb, uint32_t idxc, uint32_t idxd, uint32_t bankno);
+static void sort_tmem_shorts_lowhalf(uint32_t* bindshort, uint32_t short0, uint32_t short1, uint32_t short2, uint32_t short3, uint32_t bankno);
+static void compute_color_index(uint32_t* cidx, uint32_t readshort, uint32_t nybbleoffset, uint32_t tilenum);
+static void read_tmem_copy(int s, int s1, int s2, int s3, int t, uint32_t tilenum, uint32_t* sortshort, int* hibits, int* lowbits);
+static void replicate_for_copy(uint32_t* outbyte, uint32_t inshort, uint32_t nybbleoffset, uint32_t tilenum, uint32_t tformat, uint32_t tsize);
+static void fetch_qword_copy(uint32_t* hidword, uint32_t* lowdword, int32_t ssss, int32_t ssst, uint32_t tilenum);
+static void render_spans_1cycle_complete(int start, int end, int tilenum, int flip);
+static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip);
+static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip);
+static void render_spans_2cycle_complete(int start, int end, int tilenum, int flip);
+static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip);
+static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip);
+static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip);
+static void render_spans_fill(int start, int end, int flip);
+static void render_spans_copy(int start, int end, int tilenum, int flip);
 static inline void combiner_1cycle(int adseed, uint32_t* curpixel_cvg);
 static inline void combiner_2cycle(int adseed, uint32_t* curpixel_cvg);
 static inline int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit);
@@ -585,7 +552,7 @@ static inline void tcclamp_cycle(int32_t* S, int32_t* T, int32_t* SFRAC, int32_t
 static inline void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t maxs, int32_t maxt, int32_t num);
 static inline void tcshift_cycle(int32_t* S, int32_t* T, int32_t* maxs, int32_t* maxt, uint32_t num);
 static inline void tcshift_copy(int32_t* S, int32_t* T, uint32_t num);
-static void precalculate_everything(void);
+cen64_cold static void precalculate_everything(void);
 static inline int alpha_compare(int32_t comb_alpha);
 static inline int32_t color_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d);
 static inline int32_t alpha_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d);
@@ -615,8 +582,8 @@ static void fbread2_32(uint32_t num, uint32_t* curpixel_memcvg);
 static inline uint32_t z_decompress(uint32_t rawz);
 static inline uint32_t dz_decompress(uint32_t compresseddz);
 static inline uint32_t dz_compress(uint32_t value);
-static void z_build_com_table(void);
-static void precalc_cvmask_derivatives(void);
+cen64_cold static void z_build_com_table(void);
+cen64_cold static void precalc_cvmask_derivatives(void);
 static inline uint16_t decompress_cvmask_frombyte(uint8_t byte);
 static inline void lookup_cvmask_derivatives(uint32_t mask, uint8_t* offx, uint8_t* offy, uint32_t* curpixel_cvg, uint32_t* curpixel_cvbit);
 static inline void z_store(uint32_t zcurpixel, uint32_t z, int dzpixenc);
@@ -659,8 +626,8 @@ static inline void vi_vl_lerp(CCVG* up, CCVG down, uint32_t frac);
 static inline void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, int a, int* z, uint32_t curpixel_cvg);
 static inline void vi_fetch_filter16(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres);
 static inline void vi_fetch_filter32(CCVG* res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres);
-uint32_t vi_integer_sqrt(uint32_t a);
-void deduce_derivatives(void);
+cen64_cold static uint32_t vi_integer_sqrt(uint32_t a);
+cen64_cold static void deduce_derivatives(void);
 static inline int32_t irand();
 
 static int32_t k0 = 0, k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0;
@@ -2247,7 +2214,7 @@ static void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum)
 		}
 		break;
 	default:
-		fatalerror("fetch_texel: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		debug("fetch_texel: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 }
@@ -2333,7 +2300,7 @@ static void fetch_texel_entlut(COLOR *color, int s, int t, uint32_t tilenum)
 		}
 		break;
 	default:
-		fatalerror("fetch_texel_entlut: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		debug("fetch_texel_entlut: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 
@@ -3225,7 +3192,7 @@ static void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLO
 		}
 		break;
 	default:
-		fatalerror("fetch_texel_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		debug("fetch_texel_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 }
@@ -3430,7 +3397,7 @@ static void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color
 		}
 		break;
 	default:
-		fatalerror("fetch_texel_entlut_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
+		debug("fetch_texel_entlut_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
 
@@ -5284,7 +5251,7 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 
 void render_spans_fill(int start, int end, int flip)
 {
-	if (fb_size == PIXEL_SIZE_4BIT)
+	if (unlikely(fb_size == PIXEL_SIZE_4BIT))
 	{
 		rdp_pipeline_crashed = 1;
 		return;
@@ -5314,10 +5281,10 @@ void render_spans_fill(int start, int end, int flip)
 
 		if (span[i].validline)
 		{
-			if (fastkillbits && length >= 0)
+			if (unlikely(fastkillbits && length >= 0))
 			{
 				if (!onetimewarnings.fillmbitcrashes)
-					popmessage("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x. RDP crashed",
+					debug("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x. RDP crashed",
 					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en);
 				onetimewarnings.fillmbitcrashes = 1;
 				rdp_pipeline_crashed = 1;
@@ -5335,10 +5302,10 @@ void render_spans_fill(int start, int end, int flip)
 				curpixel += xinc;
 			}
 
-			if (slowkillbits && length >= 0)
+			if (unlikely(slowkillbits && length >= 0))
 			{
 				if (!onetimewarnings.fillmbitcrashes)
-					popmessage("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x z_source_sel %x. RDP crashed",
+					debug("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x z_source_sel %x. RDP crashed",
 					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en, other_modes.z_source_sel);
 				onetimewarnings.fillmbitcrashes = 1;
 				rdp_pipeline_crashed = 1;
@@ -5352,7 +5319,7 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 {
 	int i, j, k;
 
-	if (fb_size == PIXEL_SIZE_32BIT)
+	if (unlikely(fb_size == PIXEL_SIZE_32BIT))
 	{
 		rdp_pipeline_crashed = 1;
 		return;
@@ -5530,7 +5497,7 @@ void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut
 	int tmem_formatting = 0;
 	uint32_t bit3fl = 0, hibit = 0;
 
-	if (end > start && ltlut)
+	if (unlikely(end > start && ltlut))
 	{
 		rdp_pipeline_crashed = 1;
 		return;
@@ -5770,7 +5737,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
 	int32_t xl = 0, xm = 0, xh = 0;
 	int32_t dxldy = 0, dxhdy = 0, dxmdy = 0;
 
-	if (other_modes.f.stalederivs)
+	if (unlikely(other_modes.f.stalederivs))
 	{
 		deduce_derivatives();
 		other_modes.f.stalederivs = 0;
@@ -6213,7 +6180,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
 		case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
 		case CYCLE_TYPE_COPY: render_spans_copy(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
 		case CYCLE_TYPE_FILL: render_spans_fill(yhlimit >> 2, yllimit >> 2, flip); break;
-		default: fatalerror("cycle_type %d", other_modes.cycle_type); break;
+		default: debug("cycle_type %d", other_modes.cycle_type); break;
 	}
 	
 	
@@ -7528,7 +7495,7 @@ void rdp_process_list(void)
 
 	
 	if ((rdp_cmd_ptr + length) & ~0xffff)
-		fatalerror("rdp_process_list: rdp_cmd_ptr overflow: length 0x%x ptr_onstart 0x%x", length, ptr_onstart);
+		debug("rdp_process_list: rdp_cmd_ptr overflow: length 0x%x ptr_onstart 0x%x", length, ptr_onstart);
 
 	
 	dp_current_al >>= 2;
@@ -8241,7 +8208,7 @@ static void z_build_com_table(void)
 		altmem = ((z << 2) & 0x1ffc) | 0xe000;
 		break;
 	default:
-		fatalerror("z_build_com_table failed");
+		debug("z_build_com_table failed");
 		break;
 	}
 
@@ -8499,7 +8466,7 @@ static inline int32_t normalize_dzpix(int32_t sum)
       if (sum & count)
         return(count << 1);
     }
-	fatalerror("normalize_dzpix: invalid codepath taken");
+	debug("normalize_dzpix: invalid codepath taken");
 	return 0;
 }
 
