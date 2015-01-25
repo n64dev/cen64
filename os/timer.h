@@ -12,6 +12,12 @@
 #define NS_PER_SEC 1000000000ULL
 #include "common.h"
 
+#if defined(CLOCK_MONOTONIC_PRECISE)
+#define GETTIME_SOURCE CLOCK_MONOTONIC_PRECISE
+#else
+#define GETTIME_SOURCE CLOCK_MONOTONIC_RAW
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 typedef DWORD cen64_time;
