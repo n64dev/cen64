@@ -106,13 +106,30 @@ int create_gl_window(struct bus_controller *bus,
   // well as a few additional ones. Expand it at your convenience.
   int attribute_list[64];
 
+  // Apple provides pthread_cond_timedwait_relative_np.
+  // On non-Apple systems, we need to specify which timer
+  // pthread_cond_timedwait should use.
+  pthread_condattr_t *attr_ptr = NULL;
+
+#ifndef __APPLE__
+  pthread_condattr_t attr;
+
+  pthread_condattr_init(&attr);
+  pthread_condattr_setclock(&attr, GETTIME_SOURCE);
+  attr_ptr = &attr;
+#endif
+
   debug("create_gl_window: Creating window...\n");
   glx_window = (struct glx_window *) (gl_window->window);
   memset(glx_window, 0, sizeof(*glx_window));
 
   pthread_mutex_init(&glx_window->event_lock, NULL);
   pthread_mutex_init(&glx_window->render_lock, NULL);
-  pthread_cond_init(&glx_window->render_cv, NULL);
+  pthread_cond_init(&glx_window->render_cv, attr_ptr);
+
+#ifndef __APPLE__
+  pthread_condattr_destroy(attr_ptr);
+#endif
 
   // Open a connection and get the default screen number.
   if ((glx_window->display = XOpenDisplay(NULL)) == NULL) {
@@ -492,8 +509,8 @@ void glx_window_render_frame(struct glx_window *window, const void *data,
 // Main window threads. Handles and pumps events.
 int glx_window_thread(struct gl_window *gl_window,
   struct glx_window *glx_window, struct bus_controller *bus) {
+  struct timespec refresh_timeout;
   cen64_time last_report_time;
-  cen64_time refresh_timeout;
   unsigned frame_count = 0;
 
   pthread_mutex_lock(&glx_window->render_lock);
@@ -523,26 +540,29 @@ int glx_window_thread(struct gl_window *gl_window,
     if (glx_window_poll_events(bus, glx_window))
       break;
 
+#ifndef __APPLE__
     get_time(&refresh_timeout);
-#ifdef __APPLE__
-    refresh_timeout.tv_usec += 1000LL;
-
-    if (refresh_timeout.tv_usec >= 1000000LL) {
-      refresh_timeout.tv_usec -= 1000000LL;
-#else
     refresh_timeout.tv_nsec += 1000000LL;
 
     if (refresh_timeout.tv_nsec >= 1000000000LL) {
       refresh_timeout.tv_nsec -= 1000000000LL;
-#endif
       refresh_timeout.tv_sec += 1;
     }
+#else
+    refresh_timeout.tv_sec = 0;
+    refresh_timeout.tv_nsec = 1000000LL;
+#endif
 
     // Check if we were signaled. If not, just sit around for now.
     pthread_mutex_lock(&glx_window->render_lock);
 
-    if (glx_window->frame_pending || pthread_cond_wait(
-      &glx_window->render_cv, &glx_window->render_lock) != ETIMEDOUT) {
+    if (glx_window->frame_pending ||
+#ifndef __APPLE__
+      !pthread_cond_timedwait(
+#else
+      !pthread_cond_timedwait_relative_np(
+#endif
+      &glx_window->render_cv, &glx_window->render_lock, &refresh_timeout)) {
       glx_window->frame_pending = false;
       frame_count++;
 

@@ -27,12 +27,8 @@ unsigned long long compute_time_difference(
 void get_time(cen64_time *t) {
 #if defined(__APPLE__)
   gettimeofday(t, NULL);
-#elif defined( __linux__)
-  clock_gettime(CLOCK_MONOTONIC_RAW, t);
-#elif defined(_POSIX_MONOTONIC_CLOCK)
-  clock_gettime(CLOCK_MONOTONIC, t);
 #else
-  clock_gettime(CLOCK_REALTIME, t);
+  clock_gettime(GETTIME_SOURCE, t);
 #endif
 }
 
