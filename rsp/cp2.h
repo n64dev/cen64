@@ -13,6 +13,12 @@
 #include "common.h"
 #include "rsp/rsp.h"
 
+enum rsp_flags_t {
+  RSP_VCO = 0,
+  RSP_VCC = 1,
+  RSP_VCE = 2
+};
+
 enum rsp_acc_t {
   RSP_ACC_LO = 16,
   RSP_ACC_MD = 8,
@@ -36,11 +42,7 @@ union aligned_rsp_1vect_t {
 
 struct rsp_cp2 {
   union aligned_rsp_1vect_t regs[32];
-
-  union aligned_rsp_2vect_t vcc;
-  union aligned_rsp_2vect_t vco;
-  union aligned_rsp_1vect_t vce;
-
+  union aligned_rsp_2vect_t flags[3];
   union aligned_rsp_3vect_t acc;
 
   int16_t div_out;

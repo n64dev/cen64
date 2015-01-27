@@ -19,20 +19,15 @@ void RSP_CFC2(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   struct rsp_cp2 *cp2 = &rsp->cp2;
-  unsigned rd, dest;
-  uint32_t data;
+  unsigned rd, dest, src;
 
   dest = GET_RT(iw);
   rd = GET_RD(iw);
 
-  switch (rd & 0x3) {
-    case 0: data = rsp_get_vco(cp2->vco.e); break;
-    case 1: data = rsp_get_vcc(cp2->vcc.e); break;
-    case 2: data = rsp_get_vce(cp2->vce.e); break;
-    case 3: data = rsp_get_vce(cp2->vce.e); break;
-  }
+  if ((src = rd & 0x3) == 0x3)
+    src = 2;
 
-  exdf_latch->result.result = data;
+  exdf_latch->result.result = rsp_get_flags(cp2->flags[src].e);
   exdf_latch->result.dest = dest;
 }
 
