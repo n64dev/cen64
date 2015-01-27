@@ -18,7 +18,7 @@ static inline void fpu_sqrt_64(const uint64_t *fs, uint64_t *fd) {
 
   fs_reg = _mm_set_sd(fs_double);
   fd_reg = _mm_sqrt_sd(fs_reg, fs_reg);
-  _mm_store_sd(&fd_double, fd_reg);
+  fd_double = _mm_cvtsd_f64(fd_reg);
 
   // Prevent aliasing.
   memcpy(fd, &fd_double, sizeof(fd_double));
