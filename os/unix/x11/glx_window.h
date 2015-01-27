@@ -9,9 +9,10 @@
 
 #ifndef __unix_x11_glx_window_h__
 #define __unix_x11_glx_window_h__
-#include <pthread.h>
-
+#include "common.h"
 #include "os/gl_window.h"
+
+#include <pthread.h>
 #include <GL/glx.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -30,11 +31,18 @@ struct glx_window {
 
   GLXContext context;
 
+  // Constant state used by threads.
+  int select_pipefds[2];
+
+  uint8_t fixed_pad[CACHE_LINE_SIZE];
+
   // Locks and whatnot for events.
   pthread_mutex_t event_lock;
 
   char went_fullscreen;
   bool exit_requested;
+
+  uint8_t event_pad[CACHE_LINE_SIZE];
 
   // Locks and whatnot for rendering.
   pthread_mutex_t render_lock;
@@ -44,8 +52,7 @@ struct glx_window {
   uint8_t frame_data[MAX_FRAME_DATA_SIZE];
   bool frame_pending;
 
-  // Event/rendering thread.
-  pthread_t thread;
+  uint8_t render_pad[CACHE_LINE_SIZE];
 };
 
 cen64_cold bool glx_window_exit_requested(struct glx_window *window);

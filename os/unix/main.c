@@ -197,7 +197,6 @@ void os_render_frame(struct gl_window *gl_window, const void *data,
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
 
   glx_window_render_frame(glx_window, data, xres, yres, xskip, type);
-  pthread_cond_signal(&glx_window->render_cv);
 }
 
 // Runs the device, always returns NULL.
