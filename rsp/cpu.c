@@ -46,9 +46,9 @@ void rsp_late_init(struct rsp *rsp) {
   write_acc_md(rsp->cp2.acc.e, rsp_vzero());
   write_acc_hi(rsp->cp2.acc.e, rsp_vzero());
 
-  write_vcc_lo(rsp->cp2.vcc.e, rsp_vzero());
-  write_vcc_hi(rsp->cp2.vcc.e, rsp_vzero());
-  write_vco_lo(rsp->cp2.vco.e, rsp_vzero());
-  write_vco_hi(rsp->cp2.vco.e, rsp_vzero());
-  write_vce   (rsp->cp2.vce.e, rsp_vzero());
+  write_vcc_lo(rsp->cp2.flags[RSP_VCC].e, rsp_vzero());
+  write_vcc_hi(rsp->cp2.flags[RSP_VCC].e, rsp_vzero());
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, rsp_vzero());
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, rsp_vzero());
+  write_vce   (rsp->cp2.flags[RSP_VCE].e, rsp_vzero());
 }
