@@ -153,7 +153,7 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
     unsigned fr;
 
     // Dealing with FPU state, is CP1 usable?
-    if (!(status & 0x20000000U)) {
+    if (unlikely(!(status & 0x20000000U))) {
       VR4300_CPU(vr4300);
       return 1;
     }
