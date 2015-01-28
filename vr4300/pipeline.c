@@ -125,17 +125,6 @@ static int vr4300_ex_stage(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-  // Used to select either rs/fs, rt/ft.
-  cen64_align(static const unsigned rs_select_lut[4], 16) = {
-    0, VR4300_REGISTER_CP1_0, // Source indexes
-    21, 11                    // Shift amounts
-  };
-
-  cen64_align(static const unsigned rt_select_lut[4], 16) = {
-    0, 0,                     // Padding (unused)
-    VR4300_REGISTER_CP1_0, 0, // Source indexes
-  };
-
   unsigned rs, rt, rslutidx, rtlutidx;
   uint64_t rs_reg, rt_reg, temp;
   uint32_t flags, iw;
@@ -148,6 +137,7 @@ static int vr4300_ex_stage(struct vr4300 *vr4300) {
   rt = GET_RT(iw);
 
   if (flags & OPCODE_INFO_FPU) {
+    cen64_align(const unsigned fpu_select_lut[2], 8) = {21, 11};
     unsigned fr;
 
     // Dealing with FPU state, is CP1 usable?
@@ -158,15 +148,15 @@ static int vr4300_ex_stage(struct vr4300 *vr4300) {
 
     // Check if one of the sources is an FPU register. Furthermore,
     // if Status.FR bit is clear, we depend on even registers only.
-    fr = (status >> 26 & 0x1) ^ 1;
-    rslutidx = flags & 0x1;
+    fr = (status >> 26 & 0x1) ^ 0x1;
     rtlutidx = flags & 0x2;
+    rslutidx = flags & 0x1;
 
-    rs = (iw >> rs_select_lut[2 + rslutidx] & 0x1F) + rs_select_lut[rslutidx];
-    rt = (iw >> 16 & 0x1F) + rt_select_lut[rtlutidx];
+    rs = (iw >> fpu_select_lut[rslutidx] & 0x1F) | (rslutidx << 6);
+    rt |= (rtlutidx << 5);
 
+    rs &= ~((rslutidx) & fr);
     rt &= ~((rtlutidx >> 1) & fr);
-    rs &= ~(rslutidx & fr);
   }
 
   // Check to see if we should hold off execution due to a LDI.
