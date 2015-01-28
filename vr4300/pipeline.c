@@ -252,9 +252,9 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
 
       tlb_inv = !(vr4300->cp0.state[index][select] & 2);
 
-      // TODO: How do cache operations impact this?
       tlb_mod = !(vr4300->cp0.state[index][select] & 4) &&
-        request->type == VR4300_BUS_REQUEST_WRITE;
+        (request->type == VR4300_BUS_REQUEST_WRITE ||
+         request->type == VR4300_BUS_REQUEST_CACHE_WRITE);
 
       if (unlikely(tlb_miss | tlb_inv | tlb_mod)) {
         VR4300_DTLB(vr4300, tlb_miss, tlb_inv, tlb_mod);
@@ -278,7 +278,7 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     // If not cached or we miss in the DC, it's an DCB.
-    if (likely(exdc_latch->request.type != VR4300_BUS_REQUEST_CACHE)) {
+    if (likely(exdc_latch->request.type < VR4300_BUS_REQUEST_CACHE)) {
       uint64_t dword, rtemp, wtemp, wdqm;
 
       unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3) & request->access_type;
@@ -320,7 +320,7 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
 
     // Not a load/store, so execute cache operation.
     else
-      request->cacheop(vr4300, vaddr, paddr);
+      return request->cacheop(vr4300, vaddr, paddr);
   }
 
   return 0;
