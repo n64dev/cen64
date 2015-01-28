@@ -37,7 +37,7 @@ const struct vr4300_icache_line* get_line_const(
 
 // Returns the physical tag associated with the line.
 uint32_t get_tag(const struct vr4300_icache_line *line) {
-  return line->metadata >> 12;
+  return line->metadata & ~0xFFFU;
 }
 
 // Invalidates the line, but leaves the physical tag untouched.
@@ -57,7 +57,7 @@ void set_taglo(struct vr4300_icache_line *line, uint32_t taglo) {
 
 // Sets the line's physical tag and validates the line.
 static void validate_line(struct vr4300_icache_line *line, uint32_t tag) {
-  line->metadata = (tag << 12) | 0x1;
+  line->metadata = tag | 0x1;
 }
 
 // Fills an instruction cache line with data.
@@ -66,7 +66,7 @@ void vr4300_icache_fill(struct vr4300_icache *icache,
   struct vr4300_icache_line *line = get_line(icache, vaddr);
 
   memcpy(line->data, data, sizeof(line->data));
-  validate_line(line, paddr >> 5);
+  validate_line(line, paddr & ~0xFFFU);
 }
 
 // Returns the tag of the line associated with vaddr.
@@ -74,7 +74,7 @@ uint32_t vr4300_icache_get_tag(const struct vr4300_icache *icache,
   uint64_t vaddr) {
   const struct vr4300_icache_line *line = get_line_const(icache, vaddr);
 
-  return get_tag(line);
+  return get_tag(line) | (vaddr & 0xFE0);
 }
 
 // Initializes the instruction cache.
@@ -94,7 +94,7 @@ void vr4300_icache_invalidate_hit(struct vr4300_icache *icache,
   struct vr4300_icache_line *line = get_line(icache, vaddr);
   uint32_t ptag = get_tag(line);
 
-  if (ptag == (paddr >> 5) && is_valid(line))
+  if (ptag == (paddr & ~0xFFFU) && is_valid(line))
     invalidate_line(line);
 }
 
@@ -105,7 +105,7 @@ const struct vr4300_icache_line* vr4300_icache_probe(
   uint32_t ptag = get_tag(line);
 
   // Virtually index, and physically tagged.
-  if (ptag == (paddr >> 5) && is_valid(line))
+  if (ptag == (paddr & ~0xFFFU) && is_valid(line))
     return line;
 
   return NULL;

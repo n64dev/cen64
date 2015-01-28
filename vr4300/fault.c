@@ -17,11 +17,6 @@
 #include "vr4300/icache.h"
 #include "vr4300/pipeline.h"
 
-// Currently used a fixed value....
-#define DCACHE_ACCESS_DELAY (48 - 2)
-#define ICACHE_ACCESS_DELAY (52 - 2)
-#define MEMORY_WORD_DELAY 40
-
 const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS] = {
 #define X(fault) #fault,
 #include "vr4300/fault.md"
@@ -288,7 +283,7 @@ void VR4300_DCB(struct vr4300 *vr4300) {
     &vr4300->dcache, vaddr)) != NULL) {
     uint32_t bus_address;
 
-    bus_address = vr4300_dcache_get_tag(line);
+    bus_address = vr4300_dcache_get_tag(line, vaddr);
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
