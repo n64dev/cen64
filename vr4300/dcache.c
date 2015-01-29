@@ -15,9 +15,10 @@ static inline struct vr4300_dcache_line* get_line(
   struct vr4300_dcache *dcache, uint64_t vaddr);
 
 static inline uint32_t get_tag(const struct vr4300_dcache_line *line);
+static inline bool is_valid(const struct vr4300_dcache_line *line);
+
 static void invalidate_line(struct vr4300_dcache_line *line);
 static bool is_dirty(const struct vr4300_dcache_line *line);
-static bool is_valid(const struct vr4300_dcache_line *line);
 static void set_dirty(struct vr4300_dcache_line *line);
 static void set_tag(struct vr4300_dcache_line *line, uint32_t tag);
 static void set_taglo(struct vr4300_dcache_line *line, uint32_t taglo);
