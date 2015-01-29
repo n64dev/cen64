@@ -27,8 +27,8 @@ struct rsp;
 typedef __m128i rsp_vect_t;
 
 // Gives the architecture backend a chance to initialize the RSP.
-void arch_rsp_destroy(struct rsp *rsp);
-int arch_rsp_init(struct rsp *rsp);
+cen64_cold void arch_rsp_destroy(struct rsp *rsp);
+cen64_cold int arch_rsp_init(struct rsp *rsp);
 
 // Masks for AND/OR/XOR and NAND/NOR/NXOR.
 extern const uint16_t rsp_vlogic_mask[2][8];

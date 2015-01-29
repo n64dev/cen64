@@ -11,10 +11,16 @@
 #ifndef __arch_tlb_h__
 #define __arch_tlb_h__
 #include "common.h"
+#include <emmintrin.h>
+
+union aligned_tlb_data {
+  __m128i __align[8];
+  uint32_t data[32];
+};
 
 struct cen64_tlb {
-  uint32_t page_mask[32];
-  uint32_t vpn2[32];
+  union aligned_tlb_data page_mask;
+  union aligned_tlb_data vpn2;
   uint8_t global[32];
   uint8_t asid[32];
 };
