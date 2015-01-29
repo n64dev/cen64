@@ -90,19 +90,14 @@ extern const char *mi_register_mnemonics[NUM_MI_REGISTERS];
 #endif
 
 struct vr4300 {
-  struct vr4300_pipeline pipeline;
-
-  // Align the TLB to a 16-byte boundary for vectorization.
-  // TODO: Handle the fact that MSVC doesn't like 0-sized arrays.
-  //uint8_t padding_for_tlb[(16 - (sizeof(struct vr4300_pipeline) % 16)) % 16];
-  uint8_t padding_for_tlb[16 - (sizeof(struct vr4300_pipeline) % 16)];
-  struct vr4300_cp0 cp0;
-
   struct bus_controller *bus;
-  unsigned signals;
+  struct vr4300_pipeline pipeline;
 
   uint64_t regs[NUM_VR4300_REGISTERS];
   uint32_t mi_regs[NUM_MI_REGISTERS];
+
+  unsigned signals;
+  struct vr4300_cp0 cp0;
 
   struct vr4300_dcache dcache;
   struct vr4300_icache icache;
@@ -120,7 +115,7 @@ cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);
 cen64_cold void vr4300_print_summary(struct vr4300_stats *stats);
 
 cen64_flatten cen64_hot void vr4300_cycle(struct vr4300 *vr4300);
-cen64_hot void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats);
+cen64_cold void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats);
 
 #endif
 

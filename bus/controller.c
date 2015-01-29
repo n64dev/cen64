@@ -95,9 +95,11 @@ int bus_init(struct bus_controller *bus) {
 }
 
 // Issues a read request to the bus.
-int bus_read_word(struct bus_controller *bus,
-  uint32_t address, uint32_t *word) {
+int bus_read_word(void *component, uint32_t address, uint32_t *word) {
   const struct memory_mapping *node;
+  struct bus_controller *bus;
+
+  memcpy(&bus, component, sizeof(bus));
 
   if (address < RDRAM_BASE_ADDRESS_LEN)
     return read_rdram(bus->ri, address, word);
@@ -113,9 +115,12 @@ int bus_read_word(struct bus_controller *bus,
 }
 
 // Issues a write request to the bus.
-int bus_write_word(struct bus_controller *bus,
+int bus_write_word(void *component,
   uint32_t address, uint32_t word, uint32_t dqm) {
   const struct memory_mapping *node;
+  struct bus_controller *bus;
+
+  memcpy(&bus, component, sizeof(bus));
 
   if (address < RDRAM_BASE_ADDRESS_LEN)
     return write_rdram(bus->ri, address, word & dqm, dqm);
