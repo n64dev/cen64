@@ -199,10 +199,6 @@ static inline __m128i sse2_pshufb(__m128i v, const uint16_t *keys) {
   uint8_t temp[16];
   unsigned j;
 
-  __m128i l = _mm_slli_epi16(v, 8);
-  __m128i r = _mm_srli_epi16(v, 8);
-          v = _mm_or_si128(l, r);
-
   _mm_storeu_si128((__m128i *) temp, v);
 
   for (j = 0; j < 8; j++) {
@@ -210,8 +206,8 @@ static inline __m128i sse2_pshufb(__m128i v, const uint16_t *keys) {
     uint8_t key_hi = key >> 8;
     uint8_t key_lo = key >> 0;
 
-    dest[(j << 1) + 0] = key_hi == 0x80 ? 0x00 : temp[key_hi];
-    dest[(j << 1) + 1] = key_lo == 0x80 ? 0x00 : temp[key_lo];
+    dest[(j << 1) + 1] = key_hi == 0x80 ? 0x00 : temp[key_hi];
+    dest[(j << 1) + 0] = key_lo == 0x80 ? 0x00 : temp[key_lo];
   }
 
   return _mm_loadu_si128((__m128i *) dest);
