@@ -23,6 +23,9 @@ struct vr4300_icache {
 
 cen64_cold void vr4300_icache_init(struct vr4300_icache *icache);
 
+cen64_hot const struct vr4300_icache_line* vr4300_icache_probe(
+  const struct vr4300_icache *icache, uint64_t vaddr, uint32_t paddr);
+
 void vr4300_icache_fill(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t paddr, const void *data);
 uint32_t vr4300_icache_get_tag(const struct vr4300_icache *icache,
@@ -30,8 +33,6 @@ uint32_t vr4300_icache_get_tag(const struct vr4300_icache *icache,
 void vr4300_icache_invalidate(struct vr4300_icache *icache, uint64_t vaddr);
 void vr4300_icache_invalidate_hit(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t paddr);
-const struct vr4300_icache_line* vr4300_icache_probe(
-  const struct vr4300_icache *icache, uint64_t vaddr, uint32_t paddr);
 void vr4300_icache_set_taglo(struct vr4300_icache *icache,
   uint64_t vaddr, uint32_t tag);
 

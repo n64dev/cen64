@@ -228,7 +228,6 @@ void VR4300_DCB(struct vr4300 *vr4300) {
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
-  const struct segment *segment = exdc_latch->segment;
 
   uint64_t vaddr = request->vaddr;
   uint32_t paddr = request->paddr;

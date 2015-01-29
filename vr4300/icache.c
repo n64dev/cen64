@@ -17,8 +17,9 @@ static inline const struct vr4300_icache_line* get_line_const(
   const struct vr4300_icache *icache, uint64_t vaddr);
 
 static inline uint32_t get_tag(const struct vr4300_icache_line *line);
+static inline bool is_valid(const struct vr4300_icache_line *line);
+
 static void invalidate_line(struct vr4300_icache_line *line);
-static bool is_valid(const struct vr4300_icache_line *line);
 static void set_taglo(struct vr4300_icache_line *line, uint32_t taglo);
 static void validate_line(struct vr4300_icache_line *line, uint32_t tag);
 

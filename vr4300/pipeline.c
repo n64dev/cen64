@@ -67,7 +67,7 @@ cen64_flatten static void vr4300_ic_stage(struct vr4300 *vr4300) {
 }
 
 // Register fetch and decode stage.
-static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
+static int vr4300_rf_stage(struct vr4300 *vr4300) {
   const struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 
@@ -97,9 +97,7 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
       return 1;
     }
 
-    if ((vr4300->cp0.state[index][select] & 0x38) == 0x10)
-      cached = false;
-
+    cached = (vr4300->cp0.state[index][select] & 0x38) != 0x10;
     paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
   }
 
@@ -121,7 +119,7 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
 }
 
 // Execution stage.
-static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
+static int vr4300_ex_stage(struct vr4300 *vr4300) {
   const struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
@@ -204,7 +202,7 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
 }
 
 // Data cache fetch stage.
-static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
+static int vr4300_dc_stage(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
@@ -273,9 +271,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         return 1;
       }
 
-      if ((vr4300->cp0.state[index][select] & 0x38) == 0x10)
-        cached = false;
-
+      cached = ((vr4300->cp0.state[index][select] & 0x38) != 0x10);
       paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
     }
 
@@ -341,7 +337,7 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 }
 
 // Writeback stage.
-static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
+static int vr4300_wb_stage(struct vr4300 *vr4300) {
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
   vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
