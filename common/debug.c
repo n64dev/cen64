@@ -8,6 +8,7 @@
 //
 
 #include "common/debug.h"
+#include "context.h"
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -16,13 +17,17 @@
 
 // Writes a formatted string to standard output.
 int debug(const char *fmt, ...) {
+  struct cen64_context c;
   va_list ap;
   int ret;
+
+  cen64_context_save(&c);
 
   va_start(ap, fmt);
   ret = vfprintf(stdout, fmt, ap);
   va_end(ap);
 
+  cen64_context_restore(&c);
   return ret;
 }
 

@@ -53,16 +53,17 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
       set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=avx --defsym __AVX__=1")
     endif ()
 
-#    if (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
-#      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm8 -ffixed-xmm9 -ffixed-xmm10")
-#      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm11 -ffixed-xmm12 -ffixed-xmm13 -ffixed-xmm14 -ffixed-xmm15")
-#    endif (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
+    if (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm8 -ffixed-xmm9 -ffixed-xmm10")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffixed-xmm11 -ffixed-xmm12 -ffixed-xmm13 -ffixed-xmm14 -ffixed-xmm15")
+    endif (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maccumulate-outgoing-args")
 
     set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
 
+    set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
 #    file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/gcc/*.s)
   endif (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
 
@@ -277,7 +278,7 @@ configure_file(
 )
 
 # Create static libraries.
-add_library(cen64arch STATIC ${ASM_SOURCES}
+add_library(cen64arch STATIC
   ${ARCH_FPU_SOURCES}
   ${ARCH_RSP_SOURCES}
   ${ARCH_TLB_SOURCES}
@@ -286,6 +287,7 @@ add_library(cen64arch STATIC ${ASM_SOURCES}
 add_library(cen64os STATIC
   "${PROJECT_SOURCE_DIR}/cen64.c"
   "${PROJECT_SOURCE_DIR}/device/options.c"
+  ${ASM_SOURCES}
   ${COMMON_SOURCES}
   ${OS_COMMON_SOURCES}
   ${OS_SOURCES}
