@@ -32,7 +32,7 @@ static void vr4300_cycle_busywait(struct vr4300 *vr4300);
 //#define PRINT_EXEC
 
 // Instruction cache stage.
-static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
+cen64_flatten static void vr4300_ic_stage(struct vr4300 *vr4300) {
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
 
@@ -57,19 +57,17 @@ static inline int vr4300_ic_stage(struct vr4300 *vr4300) {
   if ((pc - segment->start) >= segment->length) {
     uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
-    if (unlikely((segment = get_segment(pc, cp0_status)) == NULL)) {
+    if (unlikely((segment = get_segment(pc, cp0_status)) == NULL))
       VR4300_IADE(vr4300);
-      return 1;
-    }
 
+    // Next stage gets killed either way, so we can safely
+    // latch a faulty segment and not worry about it.
     icrf_latch->segment = segment;
   }
-
-  return 0;
 }
 
 // Register fetch and decode stage.
-static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
+static int vr4300_rf_stage(struct vr4300 *vr4300) {
   const struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 
@@ -99,15 +97,14 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
       return 1;
     }
 
-    if ((vr4300->cp0.state[index][select] & 0x38) == 0x10)
-      cached = false;
-
+    cached = (vr4300->cp0.state[index][select] & 0x38) != 0x10;
     paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
   }
 
   // If not cached or we miss in the IC, it's an ICB.
-  if (!cached || (line = vr4300_icache_probe(
-    &vr4300->icache, icrf_latch->common.pc, paddr)) == NULL) {
+  line = vr4300_icache_probe(&vr4300->icache, vaddr, paddr);
+
+  if (!(line && cached)) {
     rfex_latch->paddr = paddr;
     rfex_latch->cached = cached;
 
@@ -122,22 +119,11 @@ static inline int vr4300_rf_stage(struct vr4300 *vr4300) {
 }
 
 // Execution stage.
-static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
+static int vr4300_ex_stage(struct vr4300 *vr4300) {
   const struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
-  // Used to select either rs/fs, rt/ft.
-  cen64_align(static const unsigned rs_select_lut[4], 16) = {
-    0, VR4300_REGISTER_CP1_0, // Source indexes
-    21, 11                    // Shift amounts
-  };
-
-  cen64_align(static const unsigned rt_select_lut[4], 16) = {
-    0, 0,                     // Padding (unused)
-    VR4300_REGISTER_CP1_0, 0, // Source indexes
-  };
 
   unsigned rs, rt, rslutidx, rtlutidx;
   uint64_t rs_reg, rt_reg, temp;
@@ -151,25 +137,26 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
   rt = GET_RT(iw);
 
   if (flags & OPCODE_INFO_FPU) {
+    cen64_align(const unsigned fpu_select_lut[2], 8) = {21, 11};
     unsigned fr;
 
     // Dealing with FPU state, is CP1 usable?
-    if (!(status & 0x20000000U)) {
+    if (unlikely(!(status & 0x20000000U))) {
       VR4300_CPU(vr4300);
       return 1;
     }
 
     // Check if one of the sources is an FPU register. Furthermore,
     // if Status.FR bit is clear, we depend on even registers only.
-    fr = (status >> 26 & 0x1) ^ 1;
-    rslutidx = flags & 0x1;
+    fr = (status >> 26 & 0x1) ^ 0x1;
     rtlutidx = flags & 0x2;
+    rslutidx = flags & 0x1;
 
-    rs = (iw >> rs_select_lut[2 + rslutidx] & 0x1F) + rs_select_lut[rslutidx];
-    rt = (iw >> 16 & 0x1F) + rt_select_lut[rtlutidx];
+    rs = (iw >> fpu_select_lut[rslutidx] & 0x1F) | (rslutidx << 6);
+    rt |= (rtlutidx << 5);
 
+    rs &= ~((rslutidx) & fr);
     rt &= ~((rtlutidx >> 1) & fr);
-    rs &= ~(rslutidx & fr);
   }
 
   // Check to see if we should hold off execution due to a LDI.
@@ -205,7 +192,7 @@ static inline int vr4300_ex_stage(struct vr4300 *vr4300) {
 }
 
 // Data cache fetch stage.
-static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
+static int vr4300_dc_stage(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
@@ -265,18 +252,16 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
 
       tlb_inv = !(vr4300->cp0.state[index][select] & 2);
 
-      // TODO: How do cache operations impact this?
       tlb_mod = !(vr4300->cp0.state[index][select] & 4) &&
-        request->type == VR4300_BUS_REQUEST_WRITE;
+        (request->type == VR4300_BUS_REQUEST_WRITE ||
+         request->type == VR4300_BUS_REQUEST_CACHE_WRITE);
 
       if (unlikely(tlb_miss | tlb_inv | tlb_mod)) {
         VR4300_DTLB(vr4300, tlb_miss, tlb_inv, tlb_mod);
         return 1;
       }
 
-      if ((vr4300->cp0.state[index][select] & 0x38) == 0x10)
-        cached = false;
-
+      cached = ((vr4300->cp0.state[index][select] & 0x38) != 0x10);
       paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
     }
 
@@ -293,9 +278,16 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     // If not cached or we miss in the DC, it's an DCB.
-    if (likely(exdc_latch->request.type != VR4300_BUS_REQUEST_CACHE)) {
-      if (!cached || (line = vr4300_dcache_probe
-        (&vr4300->dcache, vaddr, paddr)) == NULL) {
+    if (likely(exdc_latch->request.type < VR4300_BUS_REQUEST_CACHE)) {
+      uint64_t dword, rtemp, wtemp, wdqm;
+
+      unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3) & request->access_type;
+      unsigned rshiftamt = (8 - request->size) << 3;
+      unsigned lshiftamt = (paddr & 0x7) << 3;
+
+      line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr);
+
+      if (!(line && cached)) {
         request->paddr = paddr;
         exdc_latch->cached = cached;
 
@@ -303,46 +295,39 @@ static inline int vr4300_dc_stage(struct vr4300 *vr4300) {
         return 1;
       }
 
-      // Data cache reads.
-      if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
-        unsigned rshiftamt = (8 - request->size) << 3;
-        unsigned lshiftamt = (paddr & 0x7) << 3;
-        uint64_t data;
+      paddr &= 0x8;
+      wdqm = request->wdqm << shiftamt;
 
-        memcpy(&data, line->data + (paddr & 0x8), sizeof(data));
-        data = (int64_t) (data << lshiftamt) >> rshiftamt;
+      // Pull out the cache line data, mux stuff around
+      // to produce the output/update the cache line.
+      memcpy(&dword, line->data + paddr, sizeof(dword));
 
-        dcwb_latch->result |= (data & request->dqm) << request->postshift;
-      }
+      wtemp = (request->data << shiftamt) & wdqm;
+      rtemp = ((int64_t) (dword << lshiftamt)
+        >> rshiftamt) & request->data;
 
-      // Data cache writes.
-      else if (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) {
-        unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3);
-        uint64_t data, dword, dqm;
+      dword = (dword & ~wdqm) | wtemp;
+      dcwb_latch->result |= rtemp << request->postshift;
+      memcpy(line->data + paddr, &dword, sizeof(dword));
 
-        shiftamt &= request->access_type;
-        data = request->data << shiftamt;
-        dqm = request->dqm << shiftamt;
-        paddr &= 0x8;
-
-        memcpy(&dword, line->data + paddr, sizeof(dword));
-        dword = (dword & ~dqm) | (data & dqm);
-        memcpy(line->data + paddr, &dword, sizeof(dword));
-
-        vr4300_dcache_set_dirty(line);
-      }
+      // We need to mark the line dirty if it's write.
+      // Fortunately, metadata & 0x2 == dirty, and
+      // metadata 0x1 == valid. Our requests values are
+      // read (0x1) and write (0x2), so we can just do
+      // a simple OR here without impacting anything.
+      line->metadata |= exdc_latch->request.type;
     }
 
     // Not a load/store, so execute cache operation.
     else
-      request->cacheop(vr4300, vaddr, paddr);
+      return request->cacheop(vr4300, vaddr, paddr);
   }
 
   return 0;
 }
 
 // Writeback stage.
-static inline int vr4300_wb_stage(struct vr4300 *vr4300) {
+static int vr4300_wb_stage(struct vr4300 *vr4300) {
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
   vr4300->regs[dcwb_latch->dest] = dcwb_latch->result;
@@ -439,10 +424,11 @@ void vr4300_cycle_slow_rf(struct vr4300 *vr4300) {
 void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
   vr4300->pipeline.icrf_latch.common.fault = VR4300_FAULT_NONE;
 
-  if (vr4300_ic_stage(vr4300))
-    return;
-
   vr4300->regs[PIPELINE_CYCLE_TYPE] = 0;
+
+  // If IADE is raised, it'll reset the PIPELINE_CYCLE_TYPE
+  // so we can aggressively force it back to zero first.
+  vr4300_ic_stage(vr4300);
 }
 
 // Special-cased busy wait handler.
@@ -483,33 +469,30 @@ void vr4300_cycle(struct vr4300 *vr4300) {
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
 
   // We're stalling for something...
-  if (pipeline->cycles_to_stall > 0) {
+  if (pipeline->cycles_to_stall > 0)
     pipeline->cycles_to_stall--;
-    return;
-  }
 
   // Ordinarily, we would need to check every pipeline stage to see if it is
   // aborted, and conditionally not execute it. Since faults are rare, we'll
   // only bother checking for aborted stages when we know they can be present.
-  if (pipeline->fault_present + vr4300->regs[PIPELINE_CYCLE_TYPE]) {
+  else if (pipeline->fault_present + vr4300->regs[PIPELINE_CYCLE_TYPE])
     pipeline_function_lut[vr4300->regs[PIPELINE_CYCLE_TYPE]](vr4300);
-    return;
+
+  else {
+    if (vr4300_wb_stage(vr4300))
+      return;
+
+    if (vr4300_dc_stage(vr4300))
+      return;
+
+    if (vr4300_ex_stage(vr4300))
+      return;
+
+    if (vr4300_rf_stage(vr4300))
+      return;
+
+    vr4300_ic_stage(vr4300);
   }
-
-  if (vr4300_wb_stage(vr4300))
-    return;
-
-  if (vr4300_dc_stage(vr4300))
-    return;
-
-  if (vr4300_ex_stage(vr4300))
-    return;
-
-  if (vr4300_rf_stage(vr4300))
-    return;
-
-  if (vr4300_ic_stage(vr4300))
-    return;
 }
 
 // Collects additional information about the pipeline each cycle.

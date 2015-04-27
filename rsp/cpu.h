@@ -50,13 +50,16 @@ extern const char *sp_register_mnemonics[NUM_SP_REGISTERS];
 #endif
 
 struct rsp {
+  struct bus_controller *bus;
   struct rsp_pipeline pipeline;
   struct rsp_cp2 cp2;
 
   uint32_t regs[NUM_RSP_REGISTERS];
   uint8_t mem[0x2000];
 
-  struct bus_controller *bus;
+  // Instead of redecoding the instructions (there's only 256 words)
+  // every cycle, we maintain a 256-word decoded instruction cache.
+  struct rsp_opcode opcode_cache[0x1000 / 4];
 
   // TODO: Only for IA32/x86_64 SSE2; sloppy?
   struct dynarec_slab vload_dynarec;
@@ -67,7 +70,7 @@ cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus);
 cen64_cold void rsp_late_init(struct rsp *rsp);
 cen64_cold void rsp_destroy(struct rsp *rsp);
 
-cen64_hot void rsp_cycle(struct rsp *rsp);
+cen64_flatten cen64_hot void rsp_cycle(struct rsp *rsp);
 
 #endif
 

@@ -21,7 +21,7 @@ static inline void fpu_add_32(
   fs_reg = _mm_set_ss(fs_float);
   ft_reg = _mm_set_ss(ft_float);
   fd_reg = _mm_add_ss(fs_reg, ft_reg);
-  _mm_store_ss(&fd_float, fd_reg);
+  fd_float = _mm_cvtss_f32(fd_reg);
 
   // Prevent aliasing.
   memcpy(fd, &fd_float, sizeof(fd_float));

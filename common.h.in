@@ -100,6 +100,13 @@ typedef char bool;
 #define cen64_hot
 #endif
 
+// Define cen64_flatten.
+#ifdef __GNUC__
+#define cen64_flatten __attribute__((flatten))
+#else
+#define cen64_flatten
+#endif
+
 // Define likely()/unlikely().
 #ifdef __GNUC__
 #define likely(expr) __builtin_expect(!!(expr), !0)
@@ -124,6 +131,19 @@ typedef char bool;
 #define WORD_ADDR_XOR 4
 #endif
 
+#ifndef _MSC_VER
+#ifdef BIG_ENDIAN_HOST
+#define htonll(x) (x)
+#define ntohll(x) (x)
+#else
+#define htonll(x) __builtin_bswap64(x)
+#define ntohll(x) __builtin_bswap64(x)
+#endif
+#endif
+
+#ifdef __GNUC__
+__attribute__((pure))
+#endif
 static inline uint32_t byteswap_32(uint32_t word) {
 #ifdef BIG_ENDIAN_HOST
   return word;
@@ -143,10 +163,10 @@ static inline uint32_t byteswap_32(uint32_t word) {
 // Return from simulation function.
 struct bus_controller;
 
-void cen64_return(struct bus_controller *bus)
 #ifdef __GNUC__
  __attribute__ ((noreturn))
 #endif
+void cen64_return(struct bus_controller *bus)
 ;
 
 #cmakedefine DEBUG_MMIO_REGISTER_ACCESS

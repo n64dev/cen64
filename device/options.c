@@ -16,11 +16,12 @@ const struct cen64_options default_cen64_options = {
   NULL, // ddrom_path
   NULL, // pifrom_path
   NULL, // cart_path
+  NULL, // debugger_addr
 #ifdef _WIN32
   false, // console
 #endif
+  false, // enable_debugger
   false, // no_interface
-  false, // print_sim_stats
 };
 
 // Parses the passed command line arguments.
@@ -35,7 +36,19 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 
     else
 #endif
-    if (!strcmp(argv[i], "-ddipl")) {
+
+    if (!strcmp(argv[i], "-debug")) {
+      options->enable_debugger = true;
+
+      // Check for optional host:port pair.
+      if ((i + 1) >= (argc - 1) && argv[i + 1][0] != '-')
+        options->debugger_addr = argv[++i];
+
+      else
+        options->debugger_addr = "localhost:64646";
+    }
+
+    else if (!strcmp(argv[i], "-ddipl")) {
       if ((i + 1) >= (argc - 1)) {
         printf("-ddipl requires a path to the ROM file.\n\n");
         return 1;
@@ -56,21 +69,20 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     else if (!strcmp(argv[i], "-nointerface"))
       options->no_interface = true;
 
-#ifdef CEN64_DEVFEATURES
-    else if (!strcmp(argv[i], "-printsimstats"))
-      options->print_sim_stats = true;
-#endif
-
     // TODO: Handle this better.
     else
       break;
   }
 
+  // Took this out to permit emulation
+  // of the 64DD development package.
+#if 0
   if (!options->ddipl_path && options->ddrom_path) {
     printf("-ddrom requires a -ddipl argument.\n\n");
 
     return 1;
   }
+#endif
 
   options->pifrom_path = argv[i];
 
@@ -91,12 +103,11 @@ void print_command_line_usage(const char *invokation_string) {
 #ifdef _WIN32
       "  -console                   : Creates/shows the system console.\n"
 #endif
+      "  -debug [addr][:port]       : Starts the debugger on interface:port.\n"
+      "                               By default, CEN64 uses localhost:64646.\n"
       "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"
       "  -ddrom <path>              : Path to the 64DD disk ROM (requires -ddipl).\n"
       "  -nointerface               : Run simulator without a user interface.\n"
-#ifdef CEN64_DEVFEATURES
-      "  -printsimstats             : Print simulation statistics at exit.\n"
-#endif
 
     ,invokation_string
   );

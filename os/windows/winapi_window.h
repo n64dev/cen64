@@ -11,10 +11,9 @@
 #define __windows_winapi_window_h__
 
 #include "common.h"
+#include "os/gl_window.h"
 #include <windows.h>
 #include <GL/gl.h>
-
-#define MAX_FRAME_DATA_SIZE (640 * 480 * 4)
 
 struct winapi_window {
   HINSTANCE h_instance;

@@ -13,6 +13,7 @@
 #include "rsp/cp2.h"
 #include "rsp/cpu.h"
 #include "rsp/decoder.h"
+#include "rsp/opcodes.h"
 #include "rsp/pipeline.h"
 #include "rsp/rsp.h"
 
@@ -28,12 +29,13 @@ static inline void rsp_if_stage(struct rsp *rsp) {
   uint32_t iw;
 
   assert(!(pc & 0x1000) || "RSP $PC points past IMEM.");
+  ifrd_latch->pc = (pc + 4) & 0xFFC;
 
   memcpy(&iw, rsp->mem + 0x1000 + pc, sizeof(iw));
   iw = byteswap_32(iw);
 
   ifrd_latch->common.pc = pc;
-  ifrd_latch->pc = (pc + 4) & 0xFFC;
+  ifrd_latch->opcode = rsp->opcode_cache[pc >> 2];
   ifrd_latch->iw = iw;
 }
 
@@ -42,36 +44,38 @@ static inline int rsp_rd_stage(struct rsp *rsp) {
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   struct rsp_ifrd_latch *ifrd_latch = &rsp->pipeline.ifrd_latch;
 
-  const struct rsp_opcode *opcode;
+  uint32_t previous_insn_flags = rdex_latch->opcode.flags;
   uint32_t iw = ifrd_latch->iw;
 
   rdex_latch->common = ifrd_latch->common;
+  rdex_latch->opcode = ifrd_latch->opcode;
+  rdex_latch->iw = iw;
 
   // Check for load-use stalls.
-  opcode = rsp_decode_instruction(iw);
+  if (previous_insn_flags & OPCODE_INFO_LOAD) {
+    const struct rsp_opcode *opcode = &rdex_latch->opcode;
+    unsigned dest = rsp->pipeline.exdf_latch.result.dest;
+    unsigned rs = GET_RS(iw);
+    unsigned rt = GET_RT(iw);
 
-  if (rdex_latch->opcode.flags & OPCODE_INFO_LOAD) {
-    unsigned dest = GET_RT(rdex_latch->iw);
-    unsigned rs = GET_RS(ifrd_latch->iw);
-    unsigned rt = GET_RT(ifrd_latch->iw);
+    if (unlikely(dest && (
+      (dest == rs && (opcode->flags & OPCODE_INFO_NEEDRS)) ||
+      (dest == rt && (opcode->flags & OPCODE_INFO_NEEDRT))
+    ))) {
+      static const struct rsp_opcode rsp_rf_kill_op = {RSP_OPCODE_SLL, 0x0};
 
-    if (unlikely((((opcode->flags & OPCODE_INFO_NEEDRS) && dest == rs)) ||
-      ((opcode->flags & OPCODE_INFO_NEEDRT) && dest == rt))) {
-      rdex_latch->opcode = *rsp_decode_instruction(0x00000000U);
+      rdex_latch->opcode = rsp_rf_kill_op;
       rdex_latch->iw = 0x00000000U;
 
       return 1;
     }
   }
 
-  rdex_latch->opcode = *opcode;
-  rdex_latch->iw = ifrd_latch->iw;
-
   return 0;
 }
 
 // Execution stage.
-static inline void rsp_ex_stage(struct rsp *rsp) {
+cen64_flatten static inline void rsp_ex_stage(struct rsp *rsp) {
   struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
@@ -110,7 +114,7 @@ static inline void rsp_ex_stage(struct rsp *rsp) {
 }
 
 // Execution stage (vector).
-static inline void rsp_v_ex_stage(struct rsp *rsp) {
+cen64_flatten static inline void rsp_v_ex_stage(struct rsp *rsp) {
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
 
   rsp_vect_t vd_reg, vs_reg, vt_shuf_reg, zero;
@@ -144,7 +148,7 @@ static inline void rsp_v_ex_stage(struct rsp *rsp) {
 }
 
 // Data cache fetch stage.
-static inline void rsp_df_stage(struct rsp *rsp) {
+cen64_flatten static inline void rsp_df_stage(struct rsp *rsp) {
   struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   const struct rsp_mem_request *request = &exdf_latch->request;
@@ -160,27 +164,28 @@ static inline void rsp_df_stage(struct rsp *rsp) {
 
   // Vector unit DMEM access.
   if (request->type != RSP_MEM_REQUEST_INT_MEM) {
-    uint16_t *regp = rsp->cp2.regs[exdf_latch->result.dest].e;
-    unsigned element = request->element;
+    uint16_t *regp = rsp->cp2.regs[request->packet.p_vect.dest].e;
+    unsigned element = request->packet.p_vect.element;
     rsp_vect_t reg, dqm;
 
-    dqm = rsp_vect_load_unshuffled_operand(exdf_latch->request.vdqm.e);
     reg = rsp_vect_load_unshuffled_operand(regp);
+    dqm = rsp_vect_load_unshuffled_operand(exdf_latch->
+      request.packet.p_vect.vdqm.e);
 
     // Make sure the vector data doesn't get
     // written into the scalar part of the RF.
     dfwb_latch->result.dest = 0;
-    exdf_latch->result.dest = 0;
 
-    exdf_latch->request.vldst_func(rsp, addr, element, regp, reg, dqm);
+    exdf_latch->request.packet.p_vect.vldst_func(
+      rsp, addr, element, regp, reg, dqm);
   }
 
   // Scalar unit DMEM access.
   else {
-    uint32_t rdqm = request->rdqm;
-    uint32_t wdqm = request->wdqm;
-    uint32_t data = request->data;
-    unsigned rshift = request->rshift;
+    uint32_t rdqm = request->packet.p_int.rdqm;
+    uint32_t wdqm = request->packet.p_int.wdqm;
+    uint32_t data = request->packet.p_int.data;
+    unsigned rshift = request->packet.p_int.rshift;
     uint32_t word;
 
     memcpy(&word, rsp->mem + addr, sizeof(word));
@@ -214,7 +219,7 @@ void rsp_cycle(struct rsp *rsp) {
   rsp_v_ex_stage(rsp);
   rsp_ex_stage(rsp);
 
-  if (!rsp_rd_stage(rsp))
+  if (likely(!rsp_rd_stage(rsp)))
     rsp_if_stage(rsp);
 }
 

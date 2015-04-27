@@ -1,5 +1,5 @@
 //
-// os/unix/glx_window.c
+// os/unix/x11/glx_window.c
 //
 // Convenience functions for managing rendering windows.
 //
@@ -13,7 +13,7 @@
 #include "os/gl_window.h"
 #include "os/input.h"
 #include "os/timer.h"
-#include "os/unix/glx_window.h"
+#include "os/unix/x11/glx_window.h"
 #include "vi/controller.h"
 
 #include <errno.h>
@@ -21,6 +21,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/select.h>
+#include <unistd.h>
 
 #include <GL/glx.h>
 #include <X11/Xatom.h>
@@ -110,6 +112,11 @@ int create_gl_window(struct bus_controller *bus,
   glx_window = (struct glx_window *) (gl_window->window);
   memset(glx_window, 0, sizeof(*glx_window));
 
+  if (pipe(glx_window->select_pipefds) < 0) {
+    debug("create_gl_window: Could not open pipe for thread comm.\n");
+    return 1;
+  }
+
   pthread_mutex_init(&glx_window->event_lock, NULL);
   pthread_mutex_init(&glx_window->render_lock, NULL);
   pthread_cond_init(&glx_window->render_cv, NULL);
@@ -117,7 +124,7 @@ int create_gl_window(struct bus_controller *bus,
   // Open a connection and get the default screen number.
   if ((glx_window->display = XOpenDisplay(NULL)) == NULL) {
     debug("create_gl_window: Could not open connection to server.\n");
-    return 1;
+    goto create_out_destroy;
   }
 
   glx_window->screen = DefaultScreen(glx_window->display);
@@ -130,7 +137,7 @@ int create_gl_window(struct bus_controller *bus,
     attribute_list, &glx_window->visual_info)) {
     debug("create_gl_window: Failed to match window hints.\n");
     goto create_out_destroy;
-  } 
+  }
 
   if (create_glx_context(glx_window, &glx_window->context)) {
     debug("create_gl_window: Failed to acquire a GL context.\n");
@@ -203,18 +210,10 @@ create_out_destroy:
 // Destroys an existing rendering window.
 int destroy_gl_window(struct gl_window *gl_window) {
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
-
-  // Wait for the window to tear down, first.
-  pthread_join(glx_window->thread, NULL);
-
-  pthread_mutex_lock(&glx_window->event_lock);
-  pthread_mutex_lock(&glx_window->render_lock);
   destroy_glx_window(glx_window);
 
   pthread_cond_destroy(&glx_window->render_cv);
-  pthread_mutex_unlock(&glx_window->render_lock);
   pthread_mutex_destroy(&glx_window->render_lock);
-  pthread_mutex_unlock(&glx_window->event_lock);
   pthread_mutex_destroy(&glx_window->event_lock);
 
   return 0;
@@ -257,6 +256,8 @@ int destroy_glx_window(struct glx_window *glx_window) {
     glx_window->display = NULL;
   }
 
+  close(glx_window->select_pipefds[0]);
+  close(glx_window->select_pipefds[1]);
   return 0;
 }
 
@@ -400,11 +401,10 @@ bool glx_window_poll_events(struct bus_controller *bus,
   bool released, exit_requested;
   XEvent event;
 
-  exit_requested = false;
-
   if (!XPending(glx_window->display))
     return false;
 
+  exit_requested = false;
   pthread_mutex_lock(&glx_window->event_lock);
 
   do {
@@ -475,9 +475,12 @@ void glx_window_render_frame(struct glx_window *window, const void *data,
 
   copy_size *= xres * yres;
 
-  // Grab the locks and dump the data.
-  // TODO: Check to make sure !frame_pending.
+  // Grab the locks and pass the next frame to the UI.
+  // Wait for the UI if it didn't push out the last frame.
   pthread_mutex_lock(&window->render_lock);
+
+  while (unlikely(window->frame_pending))
+    pthread_cond_wait(&window->render_cv, &window->render_lock);
 
   memcpy(window->frame_data, data, copy_size);
   window->frame_xres = xres;
@@ -487,16 +490,17 @@ void glx_window_render_frame(struct glx_window *window, const void *data,
   window->frame_pending = true;
 
   pthread_mutex_unlock(&window->render_lock);
+
+  // Write a dummy value to trigger the select() call.
+  write(window->select_pipefds[1], window, 1);
 }
 
 // Main window threads. Handles and pumps events.
 int glx_window_thread(struct gl_window *gl_window,
   struct glx_window *glx_window, struct bus_controller *bus) {
+  int frame_count, max_fds, x11_fd, pipe_fd;
   cen64_time last_report_time;
-  cen64_time refresh_timeout;
-  unsigned frame_count = 0;
-
-  pthread_mutex_lock(&glx_window->render_lock);
+  fd_set fdset;
 
   // Activate the rendering context from THIS thread.
   // Any kind of GL call has to be done from here, or else.
@@ -508,50 +512,55 @@ int glx_window_thread(struct gl_window *gl_window,
   }
 
   gl_window_init(gl_window);
-  pthread_mutex_unlock(&glx_window->render_lock);
 
+  // Setup the fd_set and max_fds for the select() call.
+  x11_fd = ConnectionNumber(glx_window->display);
+  pipe_fd = glx_window->select_pipefds[0];
+
+  max_fds = x11_fd > pipe_fd ? x11_fd: pipe_fd;
+  max_fds++;
+
+  FD_ZERO(&fdset);
+  FD_SET(pipe_fd, &fdset);
+  FD_SET(x11_fd, &fdset);
+
+  // Prime the timer we use to report the VI/s.
+  // Then stick ourselves into the UI main loop.
   get_time(&last_report_time);
 
-  // Poll for input periodically (~1000x a second) while checking
-  // to see if the simulator pushed out any frames in that time.
-  while (1) {
-    if (unlikely(frame_count == 60)) {
-      glx_window_update_window_title(glx_window, &last_report_time);
-      frame_count = 0;
+  for (frame_count = 0; ;) {
+    fd_set ready_to_read = fdset;
+
+    // Wait for the next "draw frame" and/or X11 event.
+    if (select(max_fds, &ready_to_read, NULL, NULL, NULL) > 0) {
+      if (FD_ISSET(x11_fd, &ready_to_read)) {
+        if (unlikely(glx_window_poll_events(bus, glx_window)))
+          break;
+      }
+
+      if (FD_ISSET(pipe_fd, &ready_to_read)) {
+        char dummy;
+
+        // Deal with any of the synchronized state first.
+        pthread_mutex_lock(&glx_window->render_lock);
+        glx_window->frame_pending = false;
+
+        gl_window_render_frame(gl_window, glx_window->frame_data,
+          glx_window->frame_xres, glx_window->frame_yres,
+          glx_window->frame_xskip, glx_window->frame_type);
+
+        pthread_mutex_unlock(&glx_window->render_lock);
+        pthread_cond_signal(&glx_window->render_cv);
+
+        // Clear the notification, possible update VI/s indicator.
+        read(pipe_fd, &dummy, sizeof(dummy));
+
+        if (unlikely(++frame_count == 60)) {
+          glx_window_update_window_title(glx_window, &last_report_time);
+          frame_count = 0;
+        }
+      }
     }
-
-    if (glx_window_poll_events(bus, glx_window))
-      break;
-
-    get_time(&refresh_timeout);
-#ifdef __APPLE__
-    refresh_timeout.tv_usec += 1000LL;
-
-    if (refresh_timeout.tv_usec >= 1000000LL) {
-      refresh_timeout.tv_usec -= 1000000LL;
-#else
-    refresh_timeout.tv_nsec += 1000000LL;
-
-    if (refresh_timeout.tv_nsec >= 1000000000LL) {
-      refresh_timeout.tv_nsec -= 1000000000LL;
-#endif
-      refresh_timeout.tv_sec += 1;
-    }
-
-    // Check if we were signaled. If not, just sit around for now.
-    pthread_mutex_lock(&glx_window->render_lock);
-
-    if (glx_window->frame_pending || pthread_cond_wait(
-      &glx_window->render_cv, &glx_window->render_lock) != ETIMEDOUT) {
-      glx_window->frame_pending = false;
-      frame_count++;
-
-      gl_window_render_frame(gl_window, glx_window->frame_data,
-        glx_window->frame_xres, glx_window->frame_yres,
-        glx_window->frame_xskip, glx_window->frame_type);
-    }
-
-    pthread_mutex_unlock(&glx_window->render_lock);
   }
 
   return 0;
@@ -572,6 +581,8 @@ void glx_window_update_window_title(
     " - %.1f VI/s", (60 / ((double) ns / NS_PER_SEC)));
 
   XStoreName(glx_window->display, glx_window->window, window_title);
+  XFlush(glx_window->display);
+
   *last_report_time = current_time;
 }
 

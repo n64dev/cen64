@@ -27,8 +27,8 @@ struct rsp;
 typedef __m128i rsp_vect_t;
 
 // Gives the architecture backend a chance to initialize the RSP.
-void arch_rsp_destroy(struct rsp *rsp);
-int arch_rsp_init(struct rsp *rsp);
+cen64_cold void arch_rsp_destroy(struct rsp *rsp);
+cen64_cold int arch_rsp_init(struct rsp *rsp);
 
 // Masks for AND/OR/XOR and NAND/NOR/NXOR.
 extern const uint16_t rsp_vlogic_mask[2][8];
@@ -144,7 +144,7 @@ static inline __m128i read_vco_hi(const uint16_t *vco) {
   return rsp_vect_load_unshuffled_operand(vco);
 }
 static inline __m128i read_vce(const uint16_t *vce) {
-  return rsp_vect_load_unshuffled_operand(vce);
+  return rsp_vect_load_unshuffled_operand(vce + 8);
 }
 static inline void write_acc_lo(uint16_t *acc, __m128i acc_lo) {
   rsp_vect_write_operand(acc + 16, acc_lo);
@@ -168,50 +168,23 @@ static inline void write_vco_hi(uint16_t *vco, __m128i vco_hi) {
   rsp_vect_write_operand(vco, vco_hi);
 }
 static inline void write_vce(uint16_t *vce, __m128i vce_r) {
-  rsp_vect_write_operand(vce, vce_r);
+  rsp_vect_write_operand(vce + 8, vce_r);
 }
 #endif
 
-// Returns scalar bitmasks for VCO, VCC, and VCE.
-static inline int16_t rsp_get_vcc(const uint16_t *vcc) {
+// Returns scalar bitmasks for VCO/VCC/VCE.
+static inline int16_t rsp_get_flags(const uint16_t *flags) {
   return (int16_t) _mm_movemask_epi8(
-    _mm_packs_epi16(read_vcc_lo(vcc), read_vcc_hi(vcc))
+    _mm_packs_epi16(
+      _mm_load_si128((__m128i *) (flags + 8)),
+      _mm_load_si128((__m128i *) (flags + 0))
+    )
   );
 }
 
-static inline int16_t rsp_get_vco(const uint16_t *vco) {
-  return (int16_t) _mm_movemask_epi8(
-    _mm_packs_epi16(read_vco_lo(vco), read_vco_hi(vco))
-  );
-}
-
-// TODO: Sign-extended, or no?
-static inline uint8_t rsp_get_vce(const uint16_t *vce) {
-  return (uint16_t) _mm_movemask_epi8(
-    _mm_packs_epi16(read_vce(vce), _mm_setzero_si128())
-  );
-}
-
-// Zeroes out a register.
+// Zeroes out a vector register.
 static inline __m128i rsp_vzero(void) {
   return _mm_setzero_si128();
-}
-
-// Sets all bits in a vector.
-static inline __m128i rsp_vset(void) {
-  __m128i junk;
-
-  // GCC will try to `pxor xmm,xmm` as a peephole optimization to the
-  // processor if we try to init junk using _mm_setzero_si128, don't
-  // explicitly provide a value, initialize it to itself, or whatever
-  // else. Skip the pxor instruction by just telling GCC to give us
-  // back whatever's in the register.
-#ifdef __GNUC__
-  __asm__ __volatile__("" : "=x" (junk));
-#else
-  junk = _mm_setzero_si128();
-#endif
-  return _mm_cmpeq_epi32(junk, junk);
 }
 
 // Load and store functions.

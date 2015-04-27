@@ -17,7 +17,7 @@ void tlb_init(struct cen64_tlb *tlb) {
   unsigned i;
 
   for (i = 0; i < 32; i++)
-    tlb->vpn2[i] = ~0;
+    tlb->vpn2.data[i] = ~0;
 }
 
 // Probes the TLB for matching entry. Returns the index or -1.
@@ -40,10 +40,10 @@ unsigned tlb_probe(const struct cen64_tlb *tlb,
     __m128i check_a, check_g, asid_check;
     __m128i check;
 
-    __m128i page_mask_l = _mm_load_si128((__m128i*) (tlb->page_mask + i + 0));
-    __m128i page_mask_h = _mm_load_si128((__m128i*) (tlb->page_mask + i + 4));
-    __m128i vpn_l = _mm_load_si128((__m128i*) (tlb->vpn2 + i + 0));
-    __m128i vpn_h = _mm_load_si128((__m128i*) (tlb->vpn2 + i + 4));
+    __m128i page_mask_l = _mm_load_si128((__m128i*) (tlb->page_mask.data + i + 0));
+    __m128i page_mask_h = _mm_load_si128((__m128i*) (tlb->page_mask.data + i + 4));
+    __m128i vpn_l = _mm_load_si128((__m128i*) (tlb->vpn2.data + i + 0));
+    __m128i vpn_h = _mm_load_si128((__m128i*) (tlb->vpn2.data + i + 4));
 
     // Check for matching VPNs.
     check_l = _mm_and_si128(vpn, page_mask_l);
@@ -74,8 +74,8 @@ unsigned tlb_probe(const struct cen64_tlb *tlb,
 // Reads data from the specified TLB index.
 int tlb_read(const struct cen64_tlb *tlb, unsigned index, uint64_t *entry_hi) {
   *entry_hi =
-    ((tlb->vpn2[index] & 0x18000000LLU) << 35) |
-    ((tlb->vpn2[index] & 0x7FFFFFFLLU) << 13) |
+    ((tlb->vpn2.data[index] & 0x18000000LLU) << 35) |
+    ((tlb->vpn2.data[index] & 0x7FFFFFFLLU) << 13) |
     ((tlb->global[index] & 1) << 12) |
     (tlb->asid[index]);
 
@@ -85,9 +85,9 @@ int tlb_read(const struct cen64_tlb *tlb, unsigned index, uint64_t *entry_hi) {
 // Writes an entry to the TLB.
 int tlb_write(struct cen64_tlb *tlb, unsigned index, uint64_t entry_hi,
   uint64_t entry_lo_0, uint64_t entry_lo_1, uint32_t page_mask) {
-  tlb->page_mask[index] = ~(page_mask >> 13);
+  tlb->page_mask.data[index] = ~(page_mask >> 13);
 
-  tlb->vpn2[index] =
+  tlb->vpn2.data[index] =
     (entry_hi >> 35 & 0x18000000U) |
     (entry_hi >> 13 & 0x7FFFFFF);
 

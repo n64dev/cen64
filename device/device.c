@@ -12,7 +12,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include "common.h"
-#include "device.h"
+#include "device/device.h"
+#include "device/netapi.h"
 #include "fpu/fpu.h"
 #include "os/gl_window.h"
 #include "os/rom_file.h"
@@ -28,12 +29,8 @@
 #include "vr4300/cpu.h"
 #include "vr4300/cp1.h"
 
-#ifdef CEN64_DEVFEATURES
-cen64_hot static int device_spin(struct cen64_device *device,
-  fpu_state_t *saved_fpu_state, struct vr4300_stats *vr4300_stats);
-#else
-cen64_hot static int device_spin(struct cen64_device *device);
-#endif
+cen64_cold static int device_debug_spin(struct cen64_device *device);
+cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 
 // Creates and initializes a device.
 struct cen64_device *device_create(struct cen64_device *device, uint8_t *ram,
@@ -130,11 +127,7 @@ void device_exit(struct bus_controller *bus) {
 
 // Create a device and proceed to the main loop.
 void device_run(struct cen64_device *device) {
-  struct vr4300_stats vr4300_stats;
   fpu_state_t saved_fpu_state;
-
-  // Memory is already allocated; just spawn the device.
-  memset(&vr4300_stats, 0, sizeof(vr4300_stats));
 
   // TODO: Preserve host registers pinned to the device.
   saved_fpu_state = fpu_get_state();
@@ -142,48 +135,15 @@ void device_run(struct cen64_device *device) {
   rsp_late_init(&device->rsp);
 
   // Spin the device until we return (from setjmp).
-#ifdef CEN64_DEVFEATURES
-  device_spin(device, &saved_fpu_state, &vr4300_stats);
-#else
-  device_spin(device);
-#endif
+  if (unlikely(device->debug_sfd > 0))
+    device_debug_spin(device);
 
-  // Finalize simulation, release memory, etc.
-#ifdef CEN64_DEVFEATURES
-  //if (options->print_sim_stats)
-  //  vr4300_print_summary(&vr4300_stats);
-#endif
+  else
+    device_spin(device);
+
+  // TODO: Restore host registers that were pinned.
+  fpu_set_state(saved_fpu_state);
 }
-
-// Continually cycles the device until setjmp returns.
-#ifdef CEN64_DEVFEATURES
-int device_spin(struct cen64_device *device,
-  fpu_state_t *saved_fpu_state, struct vr4300_stats *vr4300_stats) {
-  if (setjmp(device->bus.unwind_data))
-    return 1;
-
-  while (1) {
-    unsigned i;
-
-    for (i = 0; i < 2; i++) {
-      vi_cycle(&device->vi);
-
-      rsp_cycle(&device->rsp);
-      vr4300_cycle(&device->vr4300);
-
-      // Perform additional simulation tasks NOW.
-      // Make sure to preserve the FPU state.
-      vr4300_cycle_extra(&device->vr4300, vr4300_stats);
-    }
-
-    vr4300_cycle(&device->vr4300);
-
-    // Perform additional simulation tasks NOW.
-    // Make sure to preserve the FPU state.
-    vr4300_cycle_extra(&device->vr4300, vr4300_stats);
-  }
-}
-#else
 
 // Continually cycles the device until setjmp returns.
 int device_spin(struct cen64_device *device) {
@@ -205,5 +165,34 @@ int device_spin(struct cen64_device *device) {
 
   return 0;
 }
-#endif
+
+// Continually cycles the device until setjmp returns.
+int device_debug_spin(struct cen64_device *device) {
+  struct vr4300_stats vr4300_stats;
+
+  // Prepare stats, set a breakpoint @ VR4300 IPL vector.
+  memset(&vr4300_stats, 0, sizeof(vr4300_stats));
+  netapi_debug_wait(device->debug_sfd, device);
+
+  if (setjmp(device->bus.unwind_data))
+    return 1;
+
+  while (1) {
+    unsigned i;
+
+    for (i = 0; i < 2; i++) {
+      vr4300_cycle(&device->vr4300);
+      rsp_cycle(&device->rsp);
+      vi_cycle(&device->vi);
+
+      vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+
+    }
+
+    vr4300_cycle(&device->vr4300);
+    vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+  }
+
+  return 0;
+}
 

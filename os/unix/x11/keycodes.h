@@ -1,5 +1,5 @@
 //
-// os/unix/keycodes.h
+// os/unix/x11/keycodes.h
 //
 // Definitions for keycodes.
 //
@@ -7,8 +7,8 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#ifndef __unix_keycodes_h__
-#define __unix_keycodes_h__
+#ifndef __unix_x11_keycodes_h__
+#define __unix_x11_keycodes_h__
 #include <X11/keysym.h>
 
 // Letter keys.
@@ -72,7 +72,6 @@
 #define CEN64_KEY_RALT XK_Alt_R
 #define CEN64_KEY_RBRACKET XK_bracketright
 #define CEN64_KEY_RCTRL XK_Control_R
-#define CEN64_KEY_PERIOD XK_period
 #define CEN64_KEY_RETURN XK_Return
 #define CEN64_KEY_RSHIFT XK_Shift_R
 #define CEN64_KEY_RSUPER XK_Super_R

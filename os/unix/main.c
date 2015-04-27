@@ -9,10 +9,11 @@
 
 #include "cen64.h"
 #include "device/device.h"
+#include "device/netapi.h"
 #include "device/options.h"
 #include "os/gl_window.h"
 #include "os/main.h"
-#include "os/unix/glx_window.h"
+#include "os/unix/x11/glx_window.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <stddef.h>
@@ -48,9 +49,19 @@ int zero_page_fd;
 
 // Allocates a large hunk of zeroed RAM.
 uint8_t *allocate_ram(struct ram_hunk *ram, size_t size) {
+#ifdef __APPLE__
+  // Use MAP_ANON on OSX because it really does not enjoy trying to mmap
+  // from devices.
   if ((ram->ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
-    MAP_PRIVATE, zero_page_fd, 0)) == MAP_FAILED)
+    MAP_PRIVATE | MAP_ANON, -1, 0)) == MAP_FAILED) {
     return NULL;
+  }
+#else
+  if ((ram->ptr = mmap(NULL, size, PROT_READ | PROT_WRITE,
+    MAP_PRIVATE, zero_page_fd, 0)) == MAP_FAILED) {
+    return NULL;
+  }
+#endif //__APPLE__
 
 #ifndef __linux__
   memset(ram->ptr, 0, size);
@@ -59,7 +70,7 @@ uint8_t *allocate_ram(struct ram_hunk *ram, size_t size) {
   return ram->ptr;
 }
 
-// Allocates a large hunk of RAM.
+// Deallocates a large hunk of RAM.
 void deallocate_ram(struct ram_hunk *ram) {
   munmap(ram->ptr, ram->size);
 }
@@ -146,6 +157,20 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
       printf("Failed to register SIGINT handler.\n");
   }
 
+  // Pull up the debug API if it was requested.
+  device.debug_sfd = -1;
+
+  if (options->enable_debugger) {
+    if ((device.debug_sfd = netapi_open_connection()) < 0) {
+      printf("Failed to bind/listen for a connection.\n");
+
+      destroy_gl_window(&device.vi.gl_window);
+      device_destroy(&device);
+      deallocate_ram(&hunk);
+      return 1;
+    }
+  }
+
   // Start the device thread, hand over control to the UI thread on success.
   if ((pthread_create(&device_thread, NULL, run_device_thread, &device)) == 0) {
     gl_window_thread(&device.vi.gl_window, &device.bus);
@@ -154,7 +179,10 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
 
   else
     printf("Unable to spawn a thread for the device.\n");
-  
+
+  if (device.debug_sfd >= 0)
+    netapi_close_connection(device.debug_sfd);
+
   if (!options->no_interface)
     destroy_gl_window(&device.vi.gl_window);
 
@@ -169,7 +197,6 @@ void os_render_frame(struct gl_window *gl_window, const void *data,
   struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
 
   glx_window_render_frame(glx_window, data, xres, yres, xskip, type);
-  pthread_cond_signal(&glx_window->render_cv);
 }
 
 // Runs the device, always returns NULL.

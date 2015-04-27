@@ -15,9 +15,10 @@ static inline struct vr4300_dcache_line* get_line(
   struct vr4300_dcache *dcache, uint64_t vaddr);
 
 static inline uint32_t get_tag(const struct vr4300_dcache_line *line);
+static inline bool is_valid(const struct vr4300_dcache_line *line);
+
 static void invalidate_line(struct vr4300_dcache_line *line);
 static bool is_dirty(const struct vr4300_dcache_line *line);
-static bool is_valid(const struct vr4300_dcache_line *line);
 static void set_dirty(struct vr4300_dcache_line *line);
 static void set_tag(struct vr4300_dcache_line *line, uint32_t tag);
 static void set_taglo(struct vr4300_dcache_line *line, uint32_t taglo);
@@ -31,7 +32,7 @@ struct vr4300_dcache_line* get_line(
 
 // Returns the physical tag associated with the line.
 uint32_t get_tag(const struct vr4300_dcache_line *line) {
-  return line->metadata & ~0xF;
+  return line->metadata & ~0xFFFU;
 }
 
 // Invalidates the line, but leaves the physical tag untouched.
@@ -61,7 +62,7 @@ void set_tag(struct vr4300_dcache_line *line, uint32_t tag) {
 
 // Sets the tag of the specified line and valid bit.
 void set_taglo(struct vr4300_dcache_line *line, uint32_t taglo) {
-  line->metadata = (taglo << 4 & 0xFFFFF000) | (taglo >> 7 & 0x1);
+  line->metadata = (taglo << 4 & 0xFFFFF000U) | (taglo >> 7 & 0x1) | (taglo >> 5 & 0x2);
 }
 
 // Sets the line's physical tag and validates the line.
@@ -74,7 +75,7 @@ void vr4300_dcache_create_dirty_exclusive(
   struct vr4300_dcache *dcache, uint64_t vaddr, uint32_t paddr) {
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
-  set_tag(line, paddr & ~0xF);
+  set_tag(line, paddr & ~0xFFFU);
   set_dirty(line);
 }
 
@@ -84,19 +85,19 @@ void vr4300_dcache_fill(struct vr4300_dcache *dcache,
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
   memcpy(line->data, data, sizeof(line->data));
-  validate_line(line, paddr & ~0xF);
+  validate_line(line, paddr & ~0xFFFU);
 }
 
 // Returns the tag of the line associated with vaddr.
-uint32_t vr4300_dcache_get_tag(const struct vr4300_dcache_line *line) {
-  return get_tag(line);
+uint32_t vr4300_dcache_get_tag(const struct vr4300_dcache_line *line, uint64_t vaddr) {
+  return get_tag(line) | (vaddr & 0xFF0U);
 }
 
 // Gets the physical tag associated with the line.
 uint32_t vr4300_dcache_get_taglo(struct vr4300_dcache *dcache, uint64_t vaddr) {
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
-  uint32_t taglo = is_valid(line) ? 0xC0 : 0x00;
+  uint32_t taglo = ((line->metadata & 0x1) << 1) | ((line->metadata & 0x2) >> 1);
   return taglo | (line->metadata >> 4 & 0x0FFFFF00U);
 }
 
@@ -115,7 +116,7 @@ void vr4300_dcache_invalidate_hit(struct vr4300_dcache *dcache,
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
   uint32_t ptag = get_tag(line);
 
-  if (ptag == (paddr & ~0xF) && is_valid(line))
+  if (ptag == (paddr & ~0xFFFU) && is_valid(line))
     invalidate_line(line);
 }
 
@@ -126,7 +127,7 @@ struct vr4300_dcache_line* vr4300_dcache_probe(
   uint32_t ptag = get_tag(line);
 
   // Virtually index, and physically tagged.
-  if (ptag == (paddr & ~0xF) && is_valid(line))
+  if (ptag == (paddr & ~0xFFFU) && is_valid(line))
     return line;
 
   return NULL;

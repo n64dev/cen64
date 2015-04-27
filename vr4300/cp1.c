@@ -973,7 +973,8 @@ int VR4300_LDC1(struct vr4300 *vr4300,
   unsigned dest = GET_FT(iw);
 
   exdc_latch->request.vaddr = rs + (int16_t) iw;
-  exdc_latch->request.dqm = ~0ULL;
+  exdc_latch->request.data = ~0ULL;
+  exdc_latch->request.wdqm = 0ULL;
   exdc_latch->request.postshift = 0;
   exdc_latch->request.access_type = VR4300_ACCESS_DWORD;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
@@ -1009,7 +1010,8 @@ int VR4300_LWC1(struct vr4300 *vr4300,
   }
 
   exdc_latch->request.vaddr = address;
-  exdc_latch->request.dqm = ~0U;
+  exdc_latch->request.data = ~0U;
+  exdc_latch->request.wdqm = 0ULL;
   exdc_latch->request.postshift = postshift;
   exdc_latch->request.access_type = VR4300_ACCESS_WORD;
   exdc_latch->request.type = VR4300_BUS_REQUEST_READ;
@@ -1276,7 +1278,7 @@ int VR4300_SDC1(struct vr4300 *vr4300,
 
   exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
-  exdc_latch->request.dqm = ~0ULL;
+  exdc_latch->request.wdqm = ~0ULL;
   exdc_latch->request.access_type = VR4300_ACCESS_DWORD;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 8;
@@ -1370,7 +1372,7 @@ int VR4300_SWC1(struct vr4300 *vr4300,
 
   exdc_latch->request.vaddr = rs + (int16_t) iw;
   exdc_latch->request.data = ft;
-  exdc_latch->request.dqm = ~0U;
+  exdc_latch->request.wdqm = ~0U;
   exdc_latch->request.access_type = VR4300_ACCESS_WORD;
   exdc_latch->request.type = VR4300_BUS_REQUEST_WRITE;
   exdc_latch->request.size = 4;

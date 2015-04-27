@@ -10,6 +10,7 @@
 #include "cen64.h"
 #include "device/device.h"
 #include "device/options.h"
+#include "device/netapi.h"
 #include "os/gl_window.h"
 #include "os/main.h"
 #include "os/windows/winapi_window.h"
@@ -89,6 +90,10 @@ int cen64_win32_main(int argc, const char *argv[]) {
     return EXIT_FAILURE;
   }
 
+  memset(&ddipl, 0, sizeof(ddipl));
+  memset(&ddrom, 0, sizeof(ddrom));
+  memset(&cart,  0, sizeof(cart));
+
   if (load_roms(options.ddipl_path, options.ddrom_path, options.pifrom_path,
     options.cart_path, &ddipl, &ddrom, &pifrom, &cart))
     return EXIT_FAILURE;
@@ -152,7 +157,7 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
     return 3;
   }
 
-  if (open_rom_file(cart_path, cart)) {
+  if (cart_path && open_rom_file(cart_path, cart)) {
     MessageBox(NULL, "Failed to load cart.", "CEN64",
       MB_OK | MB_ICONEXCLAMATION);
 
@@ -190,7 +195,7 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
   struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart) {
   struct gl_window_hints hints;
   struct winapi_window window;
-  int status;
+  int status = 0;
 
   // Event/rendering thread.
   HANDLE t_hnd;
@@ -230,6 +235,19 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
         MB_OK | MB_ICONEXCLAMATION);
   }
 
+  // Pull up the debug API if it was requested.
+  device.debug_sfd = -1;
+
+  if (options->enable_debugger) {
+    if ((device.debug_sfd = netapi_open_connection()) < 0) {
+      printf("Failed to bind/listen for a connection.\n");
+
+      destroy_gl_window(&device.vi.gl_window);
+      device_destroy(&device);
+      return 1;
+    }
+  }
+
   // Start the device thread, hand over control to the UI thread on success.
   if (options->console)
     show_console();
@@ -248,10 +266,13 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
   if (options->console)
     hide_console();
 
+  if (device.debug_sfd >= 0)
+    netapi_close_connection(device.debug_sfd);
+
   if (!options->no_interface)
     destroy_gl_window(&device.vi.gl_window);
 
-    return status;
+  return status;
 }
 
 bool os_exit_requested(struct gl_window *gl_window) {

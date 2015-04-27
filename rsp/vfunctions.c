@@ -39,12 +39,12 @@ rsp_vect_t RSP_VADD(struct rsp *rsp, uint32_t iw,
   uint16_t *acc = rsp->cp2.acc.e;
   rsp_vect_t carry, acc_lo;
 
-  carry = read_vco_lo(rsp->cp2.vco.e);
+  carry = read_vco_lo(rsp->cp2.flags[RSP_VCO].e);
 
   rsp_vect_t result = rsp_vadd(vs, vt_shuffle, carry, &acc_lo);
 
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, zero);
   write_acc_lo(acc, acc_lo);
   return result;
 }
@@ -59,8 +59,8 @@ rsp_vect_t RSP_VADDC(struct rsp *rsp, uint32_t iw,
 
   rsp_vect_t result = rsp_vaddc(vs, vt_shuffle, zero, &sn);
 
-  write_vco_hi(rsp->cp2.vco.e, zero); // TODO: Confirm.
-  write_vco_lo(rsp->cp2.vco.e, sn);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, zero); // TODO: Confirm.
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, sn);
   write_acc_lo(acc, result);
   return result;
 }
@@ -89,11 +89,11 @@ rsp_vect_t RSP_VCH(struct rsp *rsp, uint32_t iw,
 
   rsp_vect_t result = rsp_vch(vs, vt_shuffle, zero, &ge, &le, &eq, &sign, &vce);
 
-  write_vcc_hi(rsp->cp2.vcc.e, ge);
-  write_vcc_lo(rsp->cp2.vcc.e, le);
-  write_vco_hi(rsp->cp2.vco.e, eq);
-  write_vco_lo(rsp->cp2.vco.e, sign);
-  write_vce   (rsp->cp2.vce.e, vce);
+  write_vcc_hi(rsp->cp2.flags[RSP_VCC].e, ge);
+  write_vcc_lo(rsp->cp2.flags[RSP_VCC].e, le);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, eq);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, sign);
+  write_vce   (rsp->cp2.flags[RSP_VCE].e, vce);
   write_acc_lo(acc, result);
   return result;
 }
@@ -106,19 +106,19 @@ rsp_vect_t RSP_VCL(struct rsp *rsp, uint32_t iw,
   uint16_t *acc = rsp->cp2.acc.e;
   rsp_vect_t ge, le, eq, sign, vce;
 
-  ge = read_vcc_hi(rsp->cp2.vcc.e);
-  le = read_vcc_lo(rsp->cp2.vcc.e);
-  eq = read_vco_hi(rsp->cp2.vco.e);
-  sign = read_vco_lo(rsp->cp2.vco.e);
-  vce = read_vce(rsp->cp2.vce.e);
+  ge = read_vcc_hi(rsp->cp2.flags[RSP_VCC].e);
+  le = read_vcc_lo(rsp->cp2.flags[RSP_VCC].e);
+  eq = read_vco_hi(rsp->cp2.flags[RSP_VCO].e);
+  sign = read_vco_lo(rsp->cp2.flags[RSP_VCO].e);
+  vce = read_vce(rsp->cp2.flags[RSP_VCE].e);
 
   rsp_vect_t result = rsp_vcl(vs, vt_shuffle, zero, &ge, &le, eq, sign, vce);
 
-  write_vcc_hi(rsp->cp2.vcc.e, ge);
-  write_vcc_lo(rsp->cp2.vcc.e, le);
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
-  write_vce   (rsp->cp2.vce.e, zero);
+  write_vcc_hi(rsp->cp2.flags[RSP_VCC].e, ge);
+  write_vcc_lo(rsp->cp2.flags[RSP_VCC].e, le);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vce   (rsp->cp2.flags[RSP_VCE].e, zero);
   write_acc_lo(acc, result);
   return result;
 }
@@ -133,11 +133,11 @@ rsp_vect_t RSP_VCR(struct rsp *rsp, uint32_t iw,
 
   rsp_vect_t result = rsp_vcr(vs, vt_shuffle, zero, &ge, &le);
 
-  write_vcc_hi(rsp->cp2.vcc.e, ge);
-  write_vcc_lo(rsp->cp2.vcc.e, le);
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
-  write_vce   (rsp->cp2.vce.e, zero);
+  write_vcc_hi(rsp->cp2.flags[RSP_VCC].e, ge);
+  write_vcc_lo(rsp->cp2.flags[RSP_VCC].e, le);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vce   (rsp->cp2.flags[RSP_VCE].e, zero);
   write_acc_lo(acc, result);
   return result;
 }
@@ -153,16 +153,16 @@ rsp_vect_t RSP_VEQ_VGE_VLT_VNE(struct rsp *rsp, uint32_t iw,
   uint16_t *acc = rsp->cp2.acc.e;
   rsp_vect_t le, eq, sign;
 
-  eq = read_vco_hi(rsp->cp2.vco.e);
-  sign = read_vco_lo(rsp->cp2.vco.e);
+  eq = read_vco_hi(rsp->cp2.flags[RSP_VCO].e);
+  sign = read_vco_lo(rsp->cp2.flags[RSP_VCO].e);
 
   rsp_vect_t result = rsp_veq_vge_vlt_vne(iw, vs, vt_shuffle,
     zero, &le, eq, sign);
 
-  write_vcc_hi(rsp->cp2.vcc.e, zero);
-  write_vcc_lo(rsp->cp2.vcc.e, le);
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
+  write_vcc_hi(rsp->cp2.flags[RSP_VCC].e, zero);
+  write_vcc_lo(rsp->cp2.flags[RSP_VCC].e, le);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, zero);
   write_acc_lo(acc, result);
   return result;
 }
@@ -312,12 +312,12 @@ rsp_vect_t RSP_VMRG(struct rsp *rsp, uint32_t iw,
   uint16_t *acc = rsp->cp2.acc.e;
   rsp_vect_t le;
 
-  le = read_vcc_lo(rsp->cp2.vcc.e);
+  le = read_vcc_lo(rsp->cp2.flags[RSP_VCC].e);
 
   rsp_vect_t result = rsp_vmrg(vs, vt_shuffle, le);
 
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, zero);
   write_acc_lo(acc, result);
   return result;
 }
@@ -434,12 +434,12 @@ rsp_vect_t RSP_VSUB(struct rsp *rsp, uint32_t iw,
   uint16_t *acc = rsp->cp2.acc.e;
   rsp_vect_t carry, acc_lo;
 
-  carry = read_vco_lo(rsp->cp2.vco.e);
+  carry = read_vco_lo(rsp->cp2.flags[RSP_VCO].e);
 
   rsp_vect_t result = rsp_vsub(vs, vt_shuffle, carry, &acc_lo);
 
-  write_vco_hi(rsp->cp2.vco.e, zero);
-  write_vco_lo(rsp->cp2.vco.e, zero);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, zero);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, zero);
   write_acc_lo(acc, acc_lo);
   return result;
 }
@@ -454,8 +454,8 @@ rsp_vect_t RSP_VSUBC(struct rsp *rsp, uint32_t iw,
 
   rsp_vect_t result = rsp_vsubc(vs, vt_shuffle, zero, &eq, &sn);
 
-  write_vco_hi(rsp->cp2.vco.e, eq);
-  write_vco_lo(rsp->cp2.vco.e, sn);
+  write_vco_hi(rsp->cp2.flags[RSP_VCO].e, eq);
+  write_vco_lo(rsp->cp2.flags[RSP_VCO].e, sn);
   write_acc_lo(acc, result);
   return result;
 }

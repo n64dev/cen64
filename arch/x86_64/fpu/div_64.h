@@ -21,7 +21,7 @@ static inline void fpu_div_64(
   fs_reg = _mm_set_sd(fs_double);
   ft_reg = _mm_set_sd(ft_double);
   fd_reg = _mm_div_sd(fs_reg, ft_reg);
-  _mm_store_sd(&fd_double, fd_reg);
+  fd_double = _mm_cvtsd_f64(fd_reg);
 
   // Prevent aliasing.
   memcpy(fd, &fd_double, sizeof(fd_double));

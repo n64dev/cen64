@@ -39,15 +39,7 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
   si->bus = bus;
   si->rom = pif_rom;
 
-  // 64DD present? Use that.
-  if (dd_present) {
-    si->ram[0x24] = 0x00;
-    si->ram[0x25] = 0x0A;
-    si->ram[0x26] = 0xDD;
-    si->ram[0x27] = 0x3F;
-  }
-
-  else if (cart_rom) {
+  if (cart_rom) {
     if (get_cic_seed(cart_rom, &cic_seed)) {
       printf("Unknown CIC type; is this a byte-swapped ROM?\n");
       return 1;
@@ -59,12 +51,19 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
     si->ram[0x27] = cic_seed >>  0;
   }
 
+  else if (dd_present) {
+    si->ram[0x24] = 0x00;
+    si->ram[0x25] = 0x0A;
+    si->ram[0x26] = 0xDD;
+    si->ram[0x27] = 0x3F;
+  }
+
   // Specify 8MiB RDRAM for 6102/6105 carts.
   if (si->ram[0x26] == 0x3F && si->ram[0x27] == 0x3F)
-    bus_write_word(si->bus, 0x318, 0x800000, ~0U);
+    bus_write_word(si, 0x318, 0x800000, ~0U);
 
   else if (si->ram[0x26] == 0x91 && si->ram[0x27] == 0x3F)
-    bus_write_word(si->bus, 0x3F0, 0x800000, ~0U);
+    bus_write_word(si, 0x3F0, 0x800000, ~0U);
 
   return 0;
 }

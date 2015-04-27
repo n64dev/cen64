@@ -9,13 +9,20 @@
 cmake_minimum_required(VERSION 2.8)
 project(cen64)
 
-find_package(OpenGL REQUIRED)
+if(APPLE)
+  set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
+  find_package(OpenGLXQuartz REQUIRED)
+  # Needed for signal.h on OS X.
+  add_definitions(-D_DARWIN_C_SOURCE)
+else(APPLE)
+  find_package(OpenGL REQUIRED)
+endif(APPLE)
+
 find_package(Threads REQUIRED)
 
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
-  set(CEN64_DEV_FLAG "-DCEN64_DEVFEATURES")
 
   # Include architecture-specify machinery.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
@@ -108,7 +115,6 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 # If using Clang, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
-  set(CEN64_DEV_FLAG "-DCEN64_DEVFEATURES")
 
   # Include architecture-specify machinery.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
@@ -159,7 +165,6 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES Clang)
 # If using ICC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES Intel)
   set(CMAKE_C_FLAGS "-Wall -Wno-unused-parameter -std=c99")
-  set(CEN64_DEV_FLAG "-DCEN64_DEVFEATURES")
 
   set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
   set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX Native)
@@ -191,8 +196,6 @@ endif (${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
 # If using MSVC, configure it accordingly.
 if (MSVC)
-  set(CEN64_DEV_FLAG "/DCEN64_DEVFEATURES")
-
   set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
   set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX)
 
@@ -246,23 +249,26 @@ file(GLOB ARCH_TLB_SOURCES arch/${CEN64_ARCH_DIR}/tlb/*.c)
 # Glob all the files together.
 #
 if (DEFINED UNIX)
-  find_package(X11 REQUIRED)
-
   if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE")
   endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
 
-  include_directories(${X11_xf86vmode_INCLUDE_PATH})
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
-  set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
-  set(EXTRA_OS_EXE "")
-endif (DEFINED UNIX)
 
-if (DEFINED WIN32)
+  if (NOT DISABLE_X11)
+    find_package(X11 REQUIRED)
+    include_directories(${X11_xf86vmode_INCLUDE_PATH})
+    set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
+    set(EXTRA_OS_EXE "")
+
+    file(GLOB X11_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/x11/*.c)
+    list(APPEND OS_SOURCES ${X11_SOURCES})
+  endif (NOT DISABLE_X11)
+elseif (DEFINED WIN32)
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
   set(EXTRA_OS_LIBS ws2_32 winmm opengl32)
   set(EXTRA_OS_EXE WIN32)
-endif (DEFINED WIN32)
+endif (DEFINED UNIX)
 
 # Configure the common header.
 configure_file(
@@ -277,7 +283,9 @@ add_library(cen64arch STATIC ${ASM_SOURCES}
   ${ARCH_TLB_SOURCES}
 )
 
-add_library(cen64os STATIC "${PROJECT_SOURCE_DIR}/cen64.c"
+add_library(cen64os STATIC
+  "${PROJECT_SOURCE_DIR}/cen64.c"
+  "${PROJECT_SOURCE_DIR}/device/options.c"
   ${COMMON_SOURCES}
   ${OS_COMMON_SOURCES}
   ${OS_SOURCES}
@@ -294,17 +302,10 @@ add_library(cen64rsp STATIC ${RSP_SOURCES})
 add_library(cen64vi STATIC ${VI_SOURCES})
 add_library(cen64vr4300 STATIC ${VR4300_SOURCES})
 
-# Create the executables.
-set_source_files_properties(${PROJECT_BINARY_DIR}/device.c PROPERTIES COMPILE_FLAGS ${CEN64_DEV_FLAG})
-
-add_executable(cen64 ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_fast.c)
-add_executable(cen64dev ${EXTRA_OS_EXE} ${PROJECT_SOURCE_DIR}/device/device_dev.c)
+# Create the executable.
+add_executable(cen64 ${EXTRA_OS_EXE} "${PROJECT_SOURCE_DIR}/device/device.c" "${PROJECT_SOURCE_DIR}/device/netapi.c")
 
 target_link_libraries(cen64
-	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
-	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
-
-target_link_libraries(cen64dev
 	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
 	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
