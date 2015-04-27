@@ -15,7 +15,7 @@ const cen64_gl_hints cen64_default_gl_hints = {
   CEN64_GL_CONTEXT_TYPE_RGBA,
   CEN64_GL_DRAWABLE_TYPE_WINDOW,
 
-  -1, // double_buffered
+  1, // double_buffered
   -1, // stereoscopic
 
   -1, // rgb_color_depth

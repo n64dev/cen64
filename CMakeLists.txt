@@ -49,7 +49,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4")
       set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=sse4.1 --defsym __SSE4_1__=1 --defsym __SSSE3__=1 --defsym __SSE3__=1")
     elseif (${CEN64_ARCH_SUPPORT} MATCHES "AVX")
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -march=native")
       set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=avx --defsym __AVX__=1")
     endif ()
 
@@ -229,6 +229,7 @@ option(VR4300_BUSY_WAIT_DETECTION "Detect and special case VR4300 busy wait loop
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/arch/${CEN64_ARCH_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/os/common)
 
 file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
 file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)
@@ -256,17 +257,33 @@ if (DEFINED UNIX)
 
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
 
-  if (NOT DISABLE_X11)
+  #if (NOT DISABLE_X11)
     find_package(X11 REQUIRED)
     include_directories(${X11_xf86vmode_INCLUDE_PATH})
+    include_directories(${PROJECT_SOURCE_DIR}/os/x11)
     set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
     set(EXTRA_OS_EXE "")
 
     file(GLOB X11_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/x11/*.c)
+    list(APPEND X11_SOURCES
+      ${PROJECT_SOURCE_DIR}/os/common/gl_hints.c
+      ${PROJECT_SOURCE_DIR}/os/x11/gl_config.c
+      ${PROJECT_SOURCE_DIR}/os/x11/gl_window.c
+      ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
+    )
+
     list(APPEND OS_SOURCES ${X11_SOURCES})
-  endif (NOT DISABLE_X11)
+  #endif (NOT DISABLE_X11)
 elseif (DEFINED WIN32)
+  include_directories(${PROJECT_SOURCE_DIR}/os/winapi)
+
   file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
+    list(APPEND OS_SOURCES
+      ${PROJECT_SOURCE_DIR}/os/common/gl_hints.c
+      ${PROJECT_SOURCE_DIR}/os/winapi/gl_config.c
+      ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c
+      ${PROJECT_SOURCE_DIR}/os/winapi/alloc.c
+    )
   set(EXTRA_OS_LIBS ws2_32 winmm opengl32)
   set(EXTRA_OS_EXE WIN32)
 endif (DEFINED UNIX)
@@ -308,6 +325,6 @@ add_library(cen64vr4300 STATIC ${VR4300_SOURCES})
 add_executable(cen64 ${EXTRA_OS_EXE} "${PROJECT_SOURCE_DIR}/device/device.c" "${PROJECT_SOURCE_DIR}/device/netapi.c")
 
 target_link_libraries(cen64
-	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64os cen64vi
+	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64vi cen64os
 	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 

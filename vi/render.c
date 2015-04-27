@@ -13,7 +13,7 @@
 #include "os/main.h"
 
 // Initializes OpenGL to an default state.
-void gl_window_init(struct gl_window *window) {
+void gl_window_init(struct vi_controller *vi) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glDisable(GL_BLEND);
@@ -29,22 +29,22 @@ void gl_window_init(struct gl_window *window) {
   // Initialize vertex arrays for drawing.
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  glTexCoordPointer(2, GL_FLOAT, 0, window->viuv);
-  glVertexPointer(2, GL_FLOAT, 0, window->quad);
+  glTexCoordPointer(2, GL_FLOAT, 0, vi->viuv);
+  glVertexPointer(2, GL_FLOAT, 0, vi->quad);
 
-  window->quad[0] = window->quad[5] =
-  window->quad[6] = window->quad[7] = -1;
-  window->quad[1] = window->quad[2] =
-  window->quad[3] = window->quad[4] = 1;
-  window->viuv[2] = window->viuv[4] =
-  window->viuv[5] = window->viuv[7] = 1;
+  vi->quad[0] = vi->quad[5] =
+  vi->quad[6] = vi->quad[7] = -1;
+  vi->quad[1] = vi->quad[2] =
+  vi->quad[3] = vi->quad[4] = 1;
+  vi->viuv[2] = vi->viuv[4] =
+  vi->viuv[5] = vi->viuv[7] = 1;
 
   // Tell OpenGL that the byte order is swapped.
   glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE);
 }
 
 // Renders a frame.
-void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
+void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
   unsigned hres, unsigned vres, unsigned hskip, unsigned type) {
   float aspect;
 
@@ -68,14 +68,14 @@ void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
   }
 
   aspect = (float) hres / (hres + hskip);
-  gl_window->viuv[2] = gl_window->viuv[4] = aspect;
+  vi->viuv[2] = vi->viuv[4] = aspect;
 
   glDrawArrays(GL_QUADS, 0, 4);
-  gl_swap_buffers(gl_window);
+  cen64_gl_window_swap_buffers(vi->window);
 }
 
 // Called when the window was resized.
-void gl_window_resize_cb(int width, int height) {
+void cen64_gl_window_resize_cb(int width, int height) {
   float aspect = 4.0 / 3.0;
 
   if (height <= 0)

@@ -33,7 +33,7 @@ cen64_cold static int device_debug_spin(struct cen64_device *device);
 cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 
 // Creates and initializes a device.
-struct cen64_device *device_create(struct cen64_device *device, uint8_t *ram,
+struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct rom_file *ddrom,
   const struct rom_file *pifrom, const struct rom_file *cart) {
 
@@ -75,7 +75,7 @@ struct cen64_device *device_create(struct cen64_device *device, uint8_t *ram,
   }
 
   // Initialize the RI.
-  if (ri_init(&device->ri, &device->bus, ram)) {
+  if (ri_init(&device->ri, &device->bus)) {
     debug("create_device: Failed to initialize the RI.\n");
     return NULL;
   }

@@ -38,7 +38,7 @@ static void winapi_window_update_window_title(
 static const LPCSTR CLASSNAME = "CEN64";
 
 // Callback function to handle message sent to the window.
-LRESULT CALLBACK WndProc(HWND hWnd,
+LRESULT CALLBACK WndProcA(HWND hWnd,
   UINT message, WPARAM wParam, LPARAM lParam) {
   switch(message) {
     case WM_DESTROY:
@@ -106,7 +106,7 @@ int create_gl_window(struct bus_controller *bus,
 
   winapi_window->h_instance = GetModuleHandle(NULL);
   wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-  wc.lpfnWndProc = (WNDPROC) WndProc;
+  wc.lpfnWndProc = (WNDPROC) WndProcA;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = winapi_window->h_instance;

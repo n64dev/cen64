@@ -30,10 +30,8 @@ const char *ri_register_mnemonics[NUM_RI_REGISTERS] = {
 #endif
 
 // Initializes the RI.
-int ri_init(struct ri_controller *ri,
-  struct bus_controller *bus, uint8_t *ram) {
+int ri_init(struct ri_controller *ri, struct bus_controller *bus) {
   ri->bus = bus;
-  ri->ram = ram;
 
   // MESS uses these, so we will too?
   ri->regs[RI_MODE_REG] = 0xE;

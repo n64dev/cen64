@@ -11,6 +11,7 @@
 #include "device/device.h"
 #include "device/options.h"
 #include "device/netapi.h"
+#include "os/common/alloc.h"
 #include "os/gl_window.h"
 #include "os/main.h"
 #include "os/windows/winapi_window.h"
@@ -28,8 +29,6 @@ static void hide_console(void);
 static void show_console(void);
 
 cen64_cold static DWORD run_device_thread(void *opaque);
-
-HANDLE dynarec_heap;
 
 // Only used when passed -nointerface.
 bool device_exit_requested;
@@ -51,6 +50,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     return status;
   }
 
+#if 0
   if ((dynarec_heap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0)) == NULL) {
     MessageBox(NULL, "Failed to create the dynarec heap.", "CEN64",
       MB_OK | MB_ICONEXCLAMATION);
@@ -58,9 +58,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
     WSACleanup();
     return EXIT_FAILURE;
   }
+#endif
 
   status = cen64_win32_main(__argc, __argv);
-  HeapDestroy(dynarec_heap);
+  //HeapDestroy(dynarec_heap);
   WSACleanup();
 
   return status;
@@ -71,6 +72,14 @@ int cen64_win32_main(int argc, const char *argv[]) {
   struct cen64_options options = default_cen64_options;
   struct rom_file ddipl, ddrom, pifrom, cart;
   int status;
+
+  cen64_gl_window w;
+  cen64_gl_screen s;
+  cen64_gl_display d;
+  cen64_gl_hints h;
+  cen64_gl_config *c;
+  cen64_gl_context x;
+  int m;
 
   if (argc < 3) {
     show_console();
@@ -207,7 +216,11 @@ int os_main(struct cen64_options *options, struct rom_file *ddipl,
   // about uninitialized memory being read, etc.
   memset(&device, 0, sizeof(device));
 
-  if (device_create(&device, malloc(DEVICE_RAMSIZE),
+  struct cen64_mem m;
+
+  cen64_alloc(&m, DEVICE_RAMSIZE, false);
+
+  if (device_create(&device, m.ptr, //malloc(DEVICE_RAMSIZE),
     ddipl, ddrom, pifrom, cart) == NULL) {
     printf("Failed to create a device.\n");
 
