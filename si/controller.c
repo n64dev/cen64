@@ -1,5 +1,5 @@
 //
-// si/controller.c: Peripheral interface controller.
+// si/controller.c: Serial interface controller.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
