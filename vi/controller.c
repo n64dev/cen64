@@ -17,6 +17,12 @@
 #include "vi/controller.h"
 #include "vr4300/interface.h"
 
+#include "gl_common.h"
+#include "gl_context.h"
+#include "gl_display.h"
+#include "gl_screen.h"
+#include "gl_window.h"
+
 #define VI_COUNTER_START (62500000.0 / 60.0) + 1;
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
@@ -85,6 +91,9 @@ void vi_cycle(struct vi_controller *vi) {
     type = 0;
 
   // Interact with the user interface?
+  cen64_gl_window_pump_events(vi);
+  gl_window_render_frame(vi, buffer, hres, vres, hskip, type);
+#if 0
   if (likely(vi->gl_window.window)) {
     if (os_exit_requested(&vi->gl_window))
       device_exit(vi->bus);
@@ -94,6 +103,7 @@ void vi_cycle(struct vi_controller *vi) {
 
   else if (device_exit_requested)
     device_exit(vi->bus);
+#endif
 
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
@@ -101,12 +111,51 @@ void vi_cycle(struct vi_controller *vi) {
 }
 
 // Initializes the VI.
-int vi_init(struct vi_controller *vi,
-  struct bus_controller *bus) {
+int vi_init(struct vi_controller *vi, struct bus_controller *bus) {
   vi->counter = VI_COUNTER_START;
   vi->bus = bus;
 
-  return 0;
+  // Create a window for rendering. If we're successful,
+  // we'll work our way into the nested statements and
+  // return success.
+  if ((vi->display = cen64_gl_display_create(
+    NULL)) != CEN64_GL_DISPLAY_BAD) {
+
+    if ((vi->screen = cen64_gl_screen_create(
+      vi->display, -1)) != CEN64_GL_SCREEN_BAD) {
+      struct cen64_gl_hints hints = cen64_default_gl_hints;
+      struct cen64_gl_config *config;
+      int num_matching;
+
+      if ((config = cen64_gl_config_create(vi->display, vi->screen,
+        &hints, &num_matching)) != CEN64_GL_CONFIG_BAD) {
+
+        if ((vi->window = cen64_gl_window_create(vi->display, vi->screen,
+          config, "CEN64")) != CEN64_GL_WINDOW_BAD) {
+          cen64_gl_config_destroy(config);
+
+          if ((vi->context = cen64_gl_context_create(
+            vi->window)) != CEN64_GL_CONTEXT_BAD) {
+            cen64_gl_window_unhide(vi->window);
+
+            gl_window_init(vi);
+            return 0;
+          }
+        }
+
+  // Something failed, and it's hard to perform RAII in C.
+  // So now we release resources and return an error.
+        cen64_gl_window_destroy(vi->window);
+        cen64_gl_config_destroy(config);
+      }
+
+      cen64_gl_screen_destroy(vi->screen);
+    }
+
+    cen64_gl_display_destroy(vi->display);
+  }
+
+  return -1;
 }
 
 // Writes a word to the VI MMIO register space.

@@ -11,7 +11,7 @@
 #ifndef __device_h__
 #define __device_h__
 #include "common.h"
-#include "options.h"
+#include "device/options.h"
 #include "os/rom_file.h"
 
 #include "ai/controller.h"
@@ -24,8 +24,6 @@
 #include "rsp/cpu.h"
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
-
-#define DEVICE_RAMSIZE 0x800000U
 
 // Only used when passed -nointerface.
 extern bool device_exit_requested;
@@ -48,7 +46,7 @@ struct cen64_device {
 
 cen64_cold void device_destroy(struct cen64_device *device);
 cen64_cold struct cen64_device *device_create(struct cen64_device *device,
-  uint8_t *ram, const struct rom_file *ddipl, const struct rom_file *ddrom,
+  const struct rom_file *ddipl, const struct rom_file *ddrom,
   const struct rom_file *pifrom, const struct rom_file *cart);
 
 cen64_cold void device_exit(struct bus_controller *bus);

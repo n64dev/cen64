@@ -23,9 +23,6 @@ struct bus_controller;
 
 struct gl_window {
   void *window;
-
-  float viuv[8];
-  float quad[8];
 };
 
 struct gl_window_hints {

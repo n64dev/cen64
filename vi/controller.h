@@ -11,7 +11,11 @@
 #ifndef __vi_controller_h__
 #define __vi_controller_h__
 #include "common.h"
-#include "os/gl_window.h"
+#include "gl_common.h"
+#include "gl_context.h"
+#include "gl_display.h"
+#include "gl_screen.h"
+#include "gl_window.h"
 
 struct bus_controller *bus;
 
@@ -43,17 +47,24 @@ struct render_area {
 };
 
 struct vi_controller {
-  struct gl_window gl_window;
-
   struct bus_controller *bus;
   uint32_t regs[NUM_VI_REGISTERS];
 
   uint32_t counter;
+
+  // Client rendering structures.
+  cen64_gl_display display;
+  cen64_gl_screen screen;
+  cen64_gl_window window;
+  cen64_gl_context context;
+
   struct render_area render_area;
+  float viuv[8];
+  float quad[8];
 };
 
-cen64_cold void gl_window_init(struct gl_window *window);
-void gl_window_render_frame(struct gl_window *gl_window, const uint8_t *buffer,
+cen64_cold void gl_window_init(struct vi_controller *vi);
+void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
   unsigned hres, unsigned vres, unsigned hskip, unsigned type);
 
 cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus);
@@ -62,6 +73,9 @@ cen64_flatten cen64_hot void vi_cycle(struct vi_controller *vi);
 
 cen64_cold int read_vi_regs(void *opaque, uint32_t address, uint32_t *word);
 cen64_cold int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
+// Render callbacks.
+void cen64_gl_window_resize_cb(int width, int height);
 
 #endif
 
