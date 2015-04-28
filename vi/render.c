@@ -75,7 +75,7 @@ void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
 }
 
 // Called when the window was resized.
-void cen64_gl_window_resize_cb(int width, int height) {
+void gl_window_resize_cb(int width, int height) {
   float aspect = 4.0 / 3.0;
 
   if (height <= 0)
