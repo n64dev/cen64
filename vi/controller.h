@@ -8,8 +8,8 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#ifndef __vi_controller_h__
-#define __vi_controller_h__
+#ifndef CEN64_VI_CONTROLLER_H
+#define CEN64_VI_CONTROLLER_H
 #include "common.h"
 #include "gl_common.h"
 #include "gl_context.h"
@@ -63,19 +63,12 @@ struct vi_controller {
   float quad[8];
 };
 
-cen64_cold void gl_window_init(struct vi_controller *vi);
-void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
-  unsigned hres, unsigned vres, unsigned hskip, unsigned type);
-
 cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus);
 
 cen64_flatten cen64_hot void vi_cycle(struct vi_controller *vi);
 
 cen64_cold int read_vi_regs(void *opaque, uint32_t address, uint32_t *word);
 cen64_cold int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-
-// Render callbacks.
-void cen64_gl_window_resize_cb(int width, int height);
 
 #endif
 
