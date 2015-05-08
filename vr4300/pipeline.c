@@ -137,7 +137,7 @@ static int vr4300_ex_stage(struct vr4300 *vr4300) {
   rt = GET_RT(iw);
 
   if (flags & OPCODE_INFO_FPU) {
-    cen64_align(const unsigned fpu_select_lut[2], 8) = {21, 11};
+    cen64_align(static const unsigned fpu_select_lut[2], 8) = {21, 11};
     unsigned fr;
 
     // Dealing with FPU state, is CP1 usable?
@@ -280,10 +280,8 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
     // If not cached or we miss in the DC, it's an DCB.
     if (likely(exdc_latch->request.type < VR4300_BUS_REQUEST_CACHE)) {
       uint64_t dword, rtemp, wtemp, wdqm;
-
-      unsigned shiftamt = ((paddr ^ WORD_ADDR_XOR) << 3) & request->access_type;
-      unsigned rshiftamt = (8 - request->size) << 3;
-      unsigned lshiftamt = (paddr & 0x7) << 3;
+      unsigned shiftamt, rshiftamt, lshiftamt;
+      uint32_t s_paddr;
 
       line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr);
 
@@ -295,13 +293,18 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
         return 1;
       }
 
+      s_paddr = paddr << 3;
       paddr &= 0x8;
-      wdqm = request->wdqm << shiftamt;
 
       // Pull out the cache line data, mux stuff around
       // to produce the output/update the cache line.
       memcpy(&dword, line->data + paddr, sizeof(dword));
 
+      shiftamt = (s_paddr ^ (WORD_ADDR_XOR << 3)) & request->access_type;
+      rshiftamt = (8 - request->size) << 3;
+      lshiftamt = (s_paddr & (0x7 << 3));
+
+      wdqm = request->wdqm << shiftamt;
       wtemp = (request->data << shiftamt) & wdqm;
       rtemp = ((int64_t) (dword << lshiftamt)
         >> rshiftamt) & request->data;

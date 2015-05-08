@@ -77,7 +77,7 @@ cen64_align(static const uint32_t rsp_load_sex_mask[2][4], 32) = {
 
 // Function to sign-extend 6-bit values.
 static inline unsigned sign_extend_6(int i) {
-  return i | -(i & 0x40);
+  return (i << (32 - 7)) >> (32 - 7);
 }
 
 //
@@ -369,7 +369,7 @@ void RSP_LBDLSV_SBDLSV(struct rsp *rsp,
   unsigned shift_and_idx = iw >> 11 & 0x3;
   unsigned dest = GET_VT(iw);
 
-  exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << shift_and_idx);
+  exdf_latch->request.addr = rs + (sign_extend_6(iw) << shift_and_idx);
 
   __m128i vdqm = _mm_loadl_epi64((__m128i *) (rsp_bdls_lut[shift_and_idx]));
   _mm_store_si128((__m128i *) exdf_latch->request.packet.p_vect.vdqm.e, vdqm);
@@ -401,7 +401,7 @@ void RSP_LFHPUV_SFHPUV(struct rsp *rsp,
     RSP_MEM_REQUEST_FOURTH
   };
 
-  exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << 3);
+  exdf_latch->request.addr = rs + (sign_extend_6(iw) << 3);
 
 //  memcpy(&exdf_latch->request.vdqm.e,
 //    rsp_fhpu_lut[exdf_latch->request.addr & 0xF],
@@ -426,7 +426,7 @@ void RSP_LQRV_SQRV(struct rsp *rsp,
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
   unsigned dest = GET_VT(iw);
 
-  exdf_latch->request.addr = rs + (sign_extend_6(iw & 0x7F) << 4);
+  exdf_latch->request.addr = rs + (sign_extend_6(iw) << 4);
 
   memcpy(exdf_latch->request.packet.p_vect.vdqm.e,
     rsp_qr_lut[exdf_latch->request.addr & 0xF],
