@@ -30,9 +30,7 @@ typedef GLXFBConfig cen64_gl_config;
 cen64_gl_config *cen64_gl_config_create(cen64_gl_display display,
   cen64_gl_screen screen, const cen64_gl_hints *hints, int *matching);
 
-//
 // Releases resources allocated by cen64_gl_config_create.
-//
 static inline void cen64_gl_config_destroy(cen64_gl_config *config) {
   XFree(config);
 }
@@ -45,9 +43,7 @@ static inline void cen64_gl_config_destroy(cen64_gl_config *config) {
 int cen64_gl_config_fetch_attribute(cen64_gl_display display,
   cen64_gl_config *config, int what);
 
-//
 // Wrappers for querying for features/types.
-//
 static inline enum cen64_gl_context_type cen64_gl_config_get_context_type(
   cen64_gl_display display, cen64_gl_config *config) {
   return cen64_gl_config_fetch_attribute(display, config, GLX_RENDER_TYPE);
@@ -89,9 +85,7 @@ static inline int cen64_gl_config_is_stereoscopic(
     GLX_STEREO) == True;
 }
 
-//
 // Wrappers for querying for color depths.
-//
 static inline int cen64_gl_config_get_color_depth(
   cen64_gl_display display, cen64_gl_config *config) {
   return cen64_gl_config_fetch_attribute(display, config, GLX_BUFFER_SIZE);
@@ -117,9 +111,7 @@ static inline int cen64_gl_config_get_alpha_color_depth(
   return cen64_gl_config_fetch_attribute(display, config, GLX_ALPHA_SIZE);
 }
 
-//
 // Wrappers for querying for buffer sizes, counts.
-//
 static inline int cen64_gl_config_get_depth_buffer_count(
   cen64_gl_display display, cen64_gl_config *config) {
   return cen64_gl_config_fetch_attribute(display, config, GLX_DEPTH_SIZE);
@@ -135,9 +127,7 @@ static inline int cen64_gl_config_get_stencil_buffer_size(
   return cen64_gl_config_fetch_attribute(display, config, GLX_STENCIL_SIZE);
 }
 
-//
 // Wrappers for querying for accumulation buffer bits.
-//
 static inline int cen64_gl_config_get_red_accum_buffer_bits(
   cen64_gl_display display, cen64_gl_config *config) {
   return cen64_gl_config_fetch_attribute(display, config, GLX_ACCUM_RED_SIZE);

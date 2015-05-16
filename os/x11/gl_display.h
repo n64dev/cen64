@@ -26,16 +26,12 @@ static inline cen64_gl_display cen64_gl_display_create(const char *source) {
   return XOpenDisplay(source);
 }
 
-//
 // Releases resources allocated by cen64_gl_display_create.
-//
 static inline void cen64_gl_display_destroy(cen64_gl_display display) {
   XCloseDisplay(display);
 }
 
-//
 // Returns the number of screens present on a given cen64_gl_display.
-//
 static inline int cen64_gl_display_get_num_screens(cen64_gl_display display) {
   return XScreenCount(display);
 }

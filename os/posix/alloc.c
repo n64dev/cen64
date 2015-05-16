@@ -1,5 +1,5 @@
 //
-// os/posix/alloc.h: Low-level POSIX-based allocators.
+// os/posix/alloc.c: Low-level POSIX-based allocators.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Simulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
