@@ -14,13 +14,16 @@
 #include "device/device.h"
 #include "device/options.h"
 #include "os/common/alloc.h"
-#include "os/main.h"
 #include "os/rom_file.h"
+#include "thread.h"
 #include <stdlib.h>
 
 cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
   const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
   struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart);
+
+cen64_cold static int run_device(struct cen64_device *device);
+cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
 
 // Called when another simulation instance is desired.
 int cen64_main(int argc, const char *argv[]) {
@@ -74,7 +77,7 @@ int cen64_main(int argc, const char *argv[]) {
     }
 
     else {
-      status = os_main(device, &options);
+      status = run_device(device);
       device_destroy(device);
     }
 
@@ -143,5 +146,27 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
   }
 
   return 0;
+}
+
+// Spins the device until an exit request is received.
+int run_device(struct cen64_device *device) {
+  cen64_thread thread;
+
+  if (cen64_thread_create(&thread, run_device_thread, device)) {
+    printf("Failed to create the main emulation thread.\n");
+    device_destroy(device);
+    return 1;
+  }
+
+  cen64_gl_window_thread(device);
+  cen64_thread_join(&thread);
+  return 0;
+}
+
+CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque) {
+  struct cen64_device *device = (struct cen64_device *) opaque;
+
+  device_run(device);
+  return CEN64_THREAD_RETURN_VAL;
 }
 
