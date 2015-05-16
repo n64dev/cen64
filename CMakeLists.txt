@@ -261,6 +261,7 @@ if (DEFINED UNIX)
     find_package(X11 REQUIRED)
     include_directories(${X11_xf86vmode_INCLUDE_PATH})
     include_directories(${PROJECT_SOURCE_DIR}/os/x11)
+    include_directories(${PROJECT_SOURCE_DIR}/os/posix)
     set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
     set(EXTRA_OS_EXE "")
 
@@ -270,6 +271,7 @@ if (DEFINED UNIX)
       ${PROJECT_SOURCE_DIR}/os/x11/gl_config.c
       ${PROJECT_SOURCE_DIR}/os/x11/gl_window.c
       ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
+      ${PROJECT_SOURCE_DIR}/os/posix/timer.c
       ${PROJECT_SOURCE_DIR}/os/posix/rom_file.c
     )
 

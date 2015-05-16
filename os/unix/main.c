@@ -14,7 +14,6 @@
 #include "os/common/alloc.h"
 #include "os/gl_window.h"
 #include "os/main.h"
-#include "os/unix/x11/glx_window.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <stddef.h>
@@ -36,34 +35,10 @@ int main(int argc, const char *argv[]) {
   return cen64_main(argc, argv);
 }
 
-// Grabs the input lock.
-void os_acquire_input(struct gl_window *gl_window) {
-  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
-
-  pthread_mutex_lock(&glx_window->event_lock);
-}
-
-// Releases the input lock.
-void os_release_input(struct gl_window *gl_window) {
-  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
-
-  pthread_mutex_unlock(&glx_window->event_lock);
-}
-
-// Informs the simulation thread if an exit was requested.
-#if 0
-bool os_exit_requested(struct gl_window *gl_window) {
-  struct glx_window *glx_window = (struct glx_window *) (gl_window->window);
-
-  return glx_window_exit_requested(glx_window);
-}
-#endif
-
 // Allocates memory for a new device, runs it.
 int os_main(struct cen64_device *device, struct cen64_options *options) {
   struct gl_window_hints hints;
-  struct glx_window window;
-  pthread_t device_thread;
+  cen64_thread thread;
 
 #if 0
   // Spawn the user interface (or signal handler).
@@ -96,7 +71,15 @@ int os_main(struct cen64_device *device, struct cen64_options *options) {
     }
   }
 
-  device_run(device);
+  if (cen64_thread_create(&thread, run_device_thread, device)) {
+    printf("Failed to create the main emulation thread.\n");
+    device_destroy(device);
+    return 1;
+  }
+
+  cen64_gl_window_thread(device);
+  cen64_thread_join(&thread);
+//  device_run(device);
 #if 0
   // Start the device thread, hand over control to the UI thread on success.
   if ((pthread_create(&device_thread, NULL, run_device_thread, device)) == 0) {

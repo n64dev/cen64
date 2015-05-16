@@ -11,10 +11,11 @@
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
-#include "os/main.h"
+#include "gl_window.h"
 #include "ri/controller.h"
 #include "si/cic.h"
 #include "si/controller.h"
+#include "thread.h"
 #include "vi/controller.h"
 #include "vr4300/interface.h"
 #include <assert.h>
@@ -73,6 +74,7 @@ int pif_perform_command(struct si_controller *si,
   unsigned channel, uint8_t *send_buf, uint8_t send_bytes,
   uint8_t *recv_buf, uint8_t recv_bytes) {
   uint8_t command = send_buf[0];
+  struct bus_controller *bus;
 
   switch(command) {
     // Read status/reset.
@@ -107,9 +109,11 @@ int pif_perform_command(struct si_controller *si,
     case 0x01:
       switch(channel) {
         case 0:
-          //os_acquire_input(&si->bus->vi->gl_window);
+          memcpy(&bus, si, sizeof(bus));
+
+          cen64_mutex_lock(&bus->vi->window->event_mutex);
           memcpy(recv_buf, si->input, sizeof(si->input));
-          //os_release_input(&si->bus->vi->gl_window);
+          cen64_mutex_unlock(&bus->vi->window->event_mutex);
           break;
 
         default:
