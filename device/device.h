@@ -12,7 +12,7 @@
 #define __device_h__
 #include "common.h"
 #include "device/options.h"
-#include "os/rom_file.h"
+#include "os/common/rom_file.h"
 
 #include "ai/controller.h"
 #include "bus/controller.h"

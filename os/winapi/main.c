@@ -1,27 +1,16 @@
 //
-// os/windows/main.c
+// os/posix/main.c: Entry point for WinAPI backend.
 //
-// Entry point for CEN64.
+// CEN64: Cycle-Accurate Nintendo 64 Simulator.
+// Copyright (C) 2014, Tyler J. Stachecki.
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
 //
 
 #include "cen64.h"
-#include "device/device.h"
-#include "device/options.h"
-#include "device/netapi.h"
-#include "os/common/alloc.h"
-#include "os/gl_window.h"
-#include "os/main.h"
-#include "os/windows/winapi_window.h"
-#include <signal.h>
-#include <stdlib.h>
-#include <tchar.h>
+#include <winsock2.h>
 #include <windows.h>
-
-static void hide_console(void);
-static void show_console(void);
 
 // Windows application entry point.
 int WINAPI WinMain(HINSTANCE hInstance,
