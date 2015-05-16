@@ -98,7 +98,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 // Prints the command-line usage string.
 void print_command_line_usage(const char *invokation_string) {
 #ifdef _WIN32
-  show_console();
+//  show_console();
 #endif
 
   printf("%s [Options] <PIF IPL ROM Path> [Cart ROM Path]\n\n"
@@ -117,7 +117,7 @@ void print_command_line_usage(const char *invokation_string) {
   );
 
 #ifdef _WIN32
-  hide_console();
+//  hide_console();
 #endif
 }
 

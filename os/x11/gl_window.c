@@ -22,6 +22,7 @@
 #include <X11/Xlib.h>
 
 static int cen64_gl_window_create_objects(cen64_gl_window window);
+static bool cen64_gl_window_pump_events(struct vi_controller *vi);
 
 // Creates an (initially hidden) cen64_gl_window.
 cen64_gl_window cen64_gl_window_create(
@@ -156,7 +157,7 @@ int cen64_gl_window_thread(struct cen64_device *device) {
   struct vi_controller *vi = &device->vi;
   cen64_time last_update_time;
   cen64_gl_window window;
-  int frame_count;
+  unsigned frame_count;
 
   int max_fds, x11_fd;
   fd_set fdset;

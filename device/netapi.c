@@ -9,21 +9,22 @@
 //
 
 #include "common.h"
-#include "device/device.h"
-#include "device/netapi.h"
-#include "vr4300/cpu.h"
-#include "vr4300/pipeline.h"
 
 #ifdef __WIN32__
-#include <ws2tcpip.h>
 #include <winsock2.h>
 #include <windows.h>
+#include <ws2tcpip.h>
 #else
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
+
+#include "device/device.h"
+#include "device/netapi.h"
+#include "vr4300/cpu.h"
+#include "vr4300/pipeline.h"
 
 // TODO: Really sloppy.
 #ifdef __WIN32__

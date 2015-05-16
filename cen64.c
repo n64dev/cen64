@@ -26,7 +26,7 @@ cen64_cold static int run_device(struct cen64_device *device);
 cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
 
 // Called when another simulation instance is desired.
-int cen64_main(int argc, const char *argv[]) {
+int cen64_main(int argc, const char **argv) {
 	struct cen64_options options = default_cen64_options;
   struct rom_file ddipl, ddrom, pifrom, cart;
   struct cen64_mem cen64_device_mem;
