@@ -33,7 +33,7 @@ static inline void cen64_gl_display_destroy(cen64_gl_display display) {
 //
 // Returns the number of screens present on a given cen64_gl_display.
 //
-static int cen64_gl_display_get_num_screens(cen64_gl_display display) {
+static inline int cen64_gl_display_get_num_screens(cen64_gl_display display) {
   return 1; // TODO
 }
 

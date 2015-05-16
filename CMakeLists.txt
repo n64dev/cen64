@@ -286,6 +286,7 @@ elseif (DEFINED WIN32)
       ${PROJECT_SOURCE_DIR}/os/winapi/gl_config.c
       ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c
       ${PROJECT_SOURCE_DIR}/os/winapi/alloc.c
+      ${PROJECT_SOURCE_DIR}/os/winapi/timer.c
     )
   set(EXTRA_OS_LIBS ws2_32 winmm opengl32)
   set(EXTRA_OS_EXE WIN32)
