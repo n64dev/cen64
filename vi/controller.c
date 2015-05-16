@@ -15,6 +15,7 @@
 #include "os/main.h"
 #include "ri/controller.h"
 #include "vi/controller.h"
+#include "vi/render.h"
 #include "vi/window.h"
 #include "vr4300/interface.h"
 
@@ -53,19 +54,16 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
 
 // Advances the controller by one clock cycle.
 void vi_cycle(struct vi_controller *vi) {
-  struct render_area *ra = &vi->render_area;
-  int hskip, vres, hres;
-  float hcoeff, vcoeff;
-  unsigned type;
+  cen64_gl_window window;
 
-  const uint8_t *buffer;
-  uint32_t offset;
+  struct render_area *ra = &vi->render_area;
+  struct bus_controller *bus;
+  float hcoeff, vcoeff;
 
   if (likely(vi->counter-- != 0))
     return;
 
-  offset = vi->regs[VI_ORIGIN_REG] & 0xFFFFFF;
-  buffer = vi->bus->ri->ram + offset;
+  window = vi->window;
 
   // Calculate the bounding positions.
   ra->x.start = vi->regs[VI_H_START_REG] >> 16 & 0x3FF;
@@ -76,29 +74,36 @@ void vi_cycle(struct vi_controller *vi) {
   hcoeff = (float) (vi->regs[VI_X_SCALE_REG] & 0xFFF) / (1 << 10);
   vcoeff = (float) (vi->regs[VI_Y_SCALE_REG] & 0xFFF) / (1 << 10);
 
-  // Calculate the height and width of the frame.
-  vres = ra->height =((ra->y.end - ra->y.start) >> 1) * vcoeff;
-  hres = ra->width = ((ra->x.end - ra->x.start)) * hcoeff;
-  hskip = ra->hskip = vi->regs[VI_WIDTH_REG] - ra->width;
-  type = vi->regs[VI_STATUS_REG] & 0x3;
-
-  if (hres <= 0 || vres <= 0)
-    type = 0;
-
   // Interact with the user interface?
-  cen64_gl_window_pump_events(vi);
-  gl_window_render_frame(vi, buffer, hres, vres, hskip, type);
-#if 0
-  if (likely(vi->gl_window.window)) {
-    if (os_exit_requested(&vi->gl_window))
+  if (likely(window)) {
+    cen64_mutex_lock(&window->event_mutex);
+
+    if (unlikely(window->exit_requested)) {
+      cen64_mutex_unlock(&window->event_mutex);
       device_exit(vi->bus);
+    }
 
-    os_render_frame(&vi->gl_window, buffer, hres, vres, hskip, type);
+    cen64_mutex_unlock(&window->event_mutex);
+    cen64_mutex_lock(&window->render_mutex);
+
+    // Calculate the height and width of the frame.
+    window->frame_vres = ra->height =((ra->y.end - ra->y.start) >> 1) * vcoeff;
+    window->frame_hres = ra->width = ((ra->x.end - ra->x.start)) * hcoeff;
+    window->frame_hskip = ra->hskip = vi->regs[VI_WIDTH_REG] - ra->width;
+    window->frame_type = vi->regs[VI_STATUS_REG] & 0x3;
+
+    if (window->frame_hres <= 0 || window->frame_vres <= 0)
+      window->frame_type = 0;
+
+    // Copy the frame data into a temporary buffer.
+    memcpy(&bus, vi, sizeof(bus));
+    memcpy(vi->window->frame_buffer,
+      bus->ri->ram + (vi->regs[VI_ORIGIN_REG] & 0xFFFFFF),
+      sizeof(vi->window->frame_buffer));
+
+    cen64_mutex_unlock(&vi->window->render_mutex);
+    cen64_gl_window_push_frame(window);
   }
-
-  else if (device_exit_requested)
-    device_exit(vi->bus);
-#endif
 
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
