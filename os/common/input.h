@@ -1,14 +1,15 @@
 //
-// os/input.h
+// os/common/input.h: Input device handling functions.
 //
-// Input device handling functions.
+// CEN64: Cycle-Accurate Nintendo 64 Simulator.
+// Copyright (C) 2014, Tyler J. Stachecki.
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
 //
 
-#ifndef __os_input_h__
-#define __os_input_h__
+#ifndef CEN64_OS_COMMON_INPUT
+#define CEN64_OS_COMMON_INPUT
 #include "common.h"
 
 struct bus_controller;

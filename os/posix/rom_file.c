@@ -7,7 +7,7 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#include "os/rom_file.h"
+#include "rom_file.h"
 #include <fcntl.h>
 #include <stddef.h>
 #include <sys/mman.h>

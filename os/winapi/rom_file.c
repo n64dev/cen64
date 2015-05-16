@@ -1,5 +1,5 @@
 //
-// os/windows/rom_file.c
+// os/winapi/rom_file.c
 //
 // Functions for mapping ROM images into the address space.
 //
@@ -7,7 +7,7 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#include "os/rom_file.h"
+#include "rom_file.h"
 #include <stddef.h>
 #include <windows.h>
 

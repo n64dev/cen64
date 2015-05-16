@@ -49,7 +49,7 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4")
       set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=sse4.1 --defsym __SSE4_1__=1 --defsym __SSSE3__=1 --defsym __SSE3__=1")
     elseif (${CEN64_ARCH_SUPPORT} MATCHES "AVX")
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -march=native")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx")
       set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=avx --defsym __AVX__=1")
     endif ()
 
@@ -231,21 +231,145 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/arch/${CEN64_ARCH_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/os/common)
 
-file(GLOB AI_SOURCES ${PROJECT_SOURCE_DIR}/ai/*.c)
-file(GLOB BUS_SOURCES ${PROJECT_SOURCE_DIR}/bus/*.c)
-file(GLOB COMMON_SOURCES ${PROJECT_SOURCE_DIR}/common/*.c)
-file(GLOB DD_SOURCES ${PROJECT_SOURCE_DIR}/dd/*.c)
-file(GLOB OS_COMMON_SOURCES ${PROJECT_SOURCE_DIR}/os/*.c)
-file(GLOB PI_SOURCES ${PROJECT_SOURCE_DIR}/pi/*.c)
-file(GLOB RI_SOURCES ${PROJECT_SOURCE_DIR}/ri/*.c)
-file(GLOB SI_SOURCES ${PROJECT_SOURCE_DIR}/si/*.c)
-file(GLOB RDP_SOURCES ${PROJECT_SOURCE_DIR}/rdp/*.c)
-file(GLOB RSP_SOURCES ${PROJECT_SOURCE_DIR}/rsp/*.c)
-file(GLOB VI_SOURCES ${PROJECT_SOURCE_DIR}/vi/*.c)
-file(GLOB VR4300_SOURCES ${PROJECT_SOURCE_DIR}/vr4300/*.c)
-file(GLOB ARCH_FPU_SOURCES arch/${CEN64_ARCH_DIR}/fpu/*.c)
-file(GLOB ARCH_RSP_SOURCES arch/${CEN64_ARCH_DIR}/rsp/*.c)
-file(GLOB ARCH_TLB_SOURCES arch/${CEN64_ARCH_DIR}/tlb/*.c)
+#
+# Create lists of files.
+#
+set(AI_SOURCES
+  ${PROJECT_SOURCE_DIR}/ai/controller.c
+)
+
+set(ARCH_X86_64_SOURCES
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/tlb/tlb.c
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vrcpsq.c
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vmov.c
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vdivh.c
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/rsp.c
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vrsq.c
+)
+
+set(BUS_SOURCES
+  ${PROJECT_SOURCE_DIR}/bus/controller.c
+  ${PROJECT_SOURCE_DIR}/bus/memorymap.c
+)
+
+set(COMMON_SOURCES
+  ${PROJECT_SOURCE_DIR}/common/debug.c
+  ${PROJECT_SOURCE_DIR}/common/one_hot.c
+  ${PROJECT_SOURCE_DIR}/common/reciprocal.c
+)
+
+set(DD_SOURCES
+  ${PROJECT_SOURCE_DIR}/dd/controller.c
+)
+
+set(DEVICE_SOURCES
+  ${PROJECT_SOURCE_DIR}/cen64.c
+  ${PROJECT_SOURCE_DIR}/device/device.c
+  ${PROJECT_SOURCE_DIR}/device/netapi.c
+  ${PROJECT_SOURCE_DIR}/device/options.c
+)
+
+set(OS_SOURCES
+  ${PROJECT_SOURCE_DIR}/os/common/gl_hints.c
+  ${PROJECT_SOURCE_DIR}/os/common/input.c
+)
+
+set(OS_POSIX_SOURCES
+  ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
+  ${PROJECT_SOURCE_DIR}/os/posix/main.c
+  ${PROJECT_SOURCE_DIR}/os/posix/rom_file.c
+  ${PROJECT_SOURCE_DIR}/os/posix/timer.c
+)
+
+set(OS_WINAPI_SOURCES
+  ${PROJECT_SOURCE_DIR}/os/winapi/alloc.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/gl_config.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/main.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/rom_file.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/timer.c
+)
+
+set(OS_X11_SOURCES
+  ${PROJECT_SOURCE_DIR}/os/x11/gl_config.c
+  ${PROJECT_SOURCE_DIR}/os/x11/gl_window.c
+)
+
+set(PI_SOURCES
+  ${PROJECT_SOURCE_DIR}/pi/controller.c
+)
+
+set(RDP_SOURCES
+  ${PROJECT_SOURCE_DIR}/rdp/cpu.c
+  ${PROJECT_SOURCE_DIR}/rdp/interface.c
+)
+
+set(RI_SOURCES
+  ${PROJECT_SOURCE_DIR}/ri/controller.c
+)
+
+set(RSP_SOURCES
+  ${PROJECT_SOURCE_DIR}/rsp/cp0.c
+  ${PROJECT_SOURCE_DIR}/rsp/cp2.c
+  ${PROJECT_SOURCE_DIR}/rsp/cpu.c
+  ${PROJECT_SOURCE_DIR}/rsp/decoder.c
+  ${PROJECT_SOURCE_DIR}/rsp/functions.c
+  ${PROJECT_SOURCE_DIR}/rsp/interface.c
+  ${PROJECT_SOURCE_DIR}/rsp/opcodes.c
+  ${PROJECT_SOURCE_DIR}/rsp/pipeline.c
+  ${PROJECT_SOURCE_DIR}/rsp/vfunctions.c
+)
+
+set(SI_SOURCES
+  ${PROJECT_SOURCE_DIR}/si/cic.c
+  ${PROJECT_SOURCE_DIR}/si/controller.c
+)
+
+set(VI_SOURCES
+  ${PROJECT_SOURCE_DIR}/vi/controller.c
+  ${PROJECT_SOURCE_DIR}/vi/render.c
+  ${PROJECT_SOURCE_DIR}/vi/window.c
+)
+
+set(VR4300_SOURCES
+  ${PROJECT_SOURCE_DIR}/vr4300/cp0.c
+  ${PROJECT_SOURCE_DIR}/vr4300/cp1.c
+  ${PROJECT_SOURCE_DIR}/vr4300/cpu.c
+  ${PROJECT_SOURCE_DIR}/vr4300/dcache.c
+  ${PROJECT_SOURCE_DIR}/vr4300/decoder.c
+  ${PROJECT_SOURCE_DIR}/vr4300/fault.c
+  ${PROJECT_SOURCE_DIR}/vr4300/functions.c
+  ${PROJECT_SOURCE_DIR}/vr4300/icache.c
+  ${PROJECT_SOURCE_DIR}/vr4300/interface.c
+  ${PROJECT_SOURCE_DIR}/vr4300/opcodes.c
+  ${PROJECT_SOURCE_DIR}/vr4300/pipeline.c
+  ${PROJECT_SOURCE_DIR}/vr4300/segment.c
+)
+
+#
+# Build OS_SOURCES list.
+#
+if (DEFINED WIN32)
+  include_directories(${PROJECT_SOURCE_DIR}/os/winapi)
+  set(EXTRA_OS_EXE WIN32)
+  set(EXTRA_OS_LIBS mingw32 opengl32 winmm ws2_32)
+
+  list(APPEND OS_SOURCES
+    ${OS_COMMON_SOURCES}
+    ${OS_WINAPI_SOURCES}
+  )
+else ()
+  include_directories(${PROJECT_SOURCE_DIR}/os/posix)
+  include_directories(${PROJECT_SOURCE_DIR}/os/x11)
+  include_directories(${X11_xf86vmode_INCLUDE_PATH})
+
+  list(APPEND OS_SOURCES
+    ${OS_COMMON_SOURCES}
+    ${OS_POSIX_SOURCES}
+    ${OS_X11_SOURCES}
+  )
+endif (DEFINED WIN32)
 
 #
 # Glob all the files together.
@@ -254,81 +378,41 @@ if (DEFINED UNIX)
   if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE")
   endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
-
-  file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/*.c)
-
-  #if (NOT DISABLE_X11)
-    find_package(X11 REQUIRED)
-    include_directories(${X11_xf86vmode_INCLUDE_PATH})
-    include_directories(${PROJECT_SOURCE_DIR}/os/x11)
-    include_directories(${PROJECT_SOURCE_DIR}/os/posix)
-    set(EXTRA_OS_LIBS ${X11_X11_LIB} ${X11_Xxf86vm_LIB})
-    set(EXTRA_OS_EXE "")
-
-    file(GLOB X11_SOURCES ${PROJECT_SOURCE_DIR}/os/unix/x11/*.c)
-    list(APPEND X11_SOURCES
-      ${PROJECT_SOURCE_DIR}/os/common/gl_hints.c
-      ${PROJECT_SOURCE_DIR}/os/x11/gl_config.c
-      ${PROJECT_SOURCE_DIR}/os/x11/gl_window.c
-      ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
-      ${PROJECT_SOURCE_DIR}/os/posix/timer.c
-      ${PROJECT_SOURCE_DIR}/os/posix/rom_file.c
-    )
-
-    list(APPEND OS_SOURCES ${X11_SOURCES})
-  #endif (NOT DISABLE_X11)
-elseif (DEFINED WIN32)
-  include_directories(${PROJECT_SOURCE_DIR}/os/winapi)
-
-  file(GLOB OS_SOURCES ${PROJECT_SOURCE_DIR}/os/windows/*.c)
-    list(APPEND OS_SOURCES
-      ${PROJECT_SOURCE_DIR}/os/common/gl_hints.c
-      ${PROJECT_SOURCE_DIR}/os/winapi/gl_config.c
-      ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c
-      ${PROJECT_SOURCE_DIR}/os/winapi/alloc.c
-      ${PROJECT_SOURCE_DIR}/os/winapi/timer.c
-    )
-  set(EXTRA_OS_LIBS ws2_32 winmm opengl32)
-  set(EXTRA_OS_EXE WIN32)
 endif (DEFINED UNIX)
 
+#
 # Configure the common header.
+#
 configure_file(
   "${PROJECT_SOURCE_DIR}/common.h.in"
   "${PROJECT_BINARY_DIR}/common.h"
 )
 
-# Create static libraries.
-add_library(cen64arch STATIC
-  ${ARCH_FPU_SOURCES}
-  ${ARCH_RSP_SOURCES}
-  ${ARCH_TLB_SOURCES}
-)
-
-add_library(cen64os STATIC
-  "${PROJECT_SOURCE_DIR}/cen64.c"
-  "${PROJECT_SOURCE_DIR}/device/options.c"
-  ${ASM_SOURCES}
-  ${COMMON_SOURCES}
-  ${OS_COMMON_SOURCES}
-  ${OS_SOURCES}
-)
-
-add_library(cen64ai STATIC ${AI_SOURCES})
-add_library(cen64bus STATIC ${BUS_SOURCES})
-add_library(cen64dd STATIC ${DD_SOURCES})
-add_library(cen64pi STATIC ${PI_SOURCES})
-add_library(cen64rdp STATIC ${RDP_SOURCES})
-add_library(cen64ri STATIC ${RI_SOURCES})
-add_library(cen64si STATIC ${SI_SOURCES})
-add_library(cen64rsp STATIC ${RSP_SOURCES})
-add_library(cen64vi STATIC ${VI_SOURCES})
-add_library(cen64vr4300 STATIC ${VR4300_SOURCES})
-
+#
 # Create the executable.
-add_executable(cen64 ${EXTRA_OS_EXE} "${PROJECT_SOURCE_DIR}/device/device.c" "${PROJECT_SOURCE_DIR}/device/netapi.c")
+#
+add_executable(cen64
+  ${EXTRA_OS_EXE}
+  ${AI_SOURCES}
+  ${ARCH_X86_64_SOURCES}
+  ${BUS_SOURCES}
+  ${COMMON_SOURCES}
+  ${DD_SOURCES}
+  ${DEVICE_SOURCES}
+  ${OS_SOURCES}
+  ${PI_SOURCES}
+  ${RDP_SOURCES}
+  ${RI_SOURCES}
+  ${RSP_SOURCES}
+  ${SI_SOURCES}
+  ${VI_SOURCES}
+  ${VR4300_SOURCES}
+)
 
 target_link_libraries(cen64
-	cen64ai cen64bus cen64dd cen64pi cen64rdp cen64ri cen64rsp cen64si cen64vr4300 cen64arch cen64vi cen64os
-	${EXTRA_OS_LIBS} ${OPENGL_gl_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+	${EXTRA_OS_LIBS}
+  ${OPENGL_gl_LIBRARY}
+  ${X11_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+)
 

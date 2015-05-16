@@ -8,15 +8,12 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#include <setjmp.h>
-#include <stddef.h>
-#include <stdlib.h>
 #include "common.h"
 #include "device/device.h"
 #include "device/netapi.h"
 #include "fpu/fpu.h"
-#include "os/gl_window.h"
-#include "os/rom_file.h"
+#include "gl_window.h"
+#include "os/common/rom_file.h"
 
 #include "bus/controller.h"
 #include "ai/controller.h"
@@ -28,6 +25,7 @@
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 #include "vr4300/cp1.h"
+#include <setjmp.h>
 
 cen64_cold static int device_debug_spin(struct cen64_device *device);
 cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);

@@ -14,7 +14,7 @@
 #include "device/device.h"
 #include "device/options.h"
 #include "os/common/alloc.h"
-#include "os/rom_file.h"
+#include "os/common/rom_file.h"
 #include "thread.h"
 #include <stdlib.h>
 
