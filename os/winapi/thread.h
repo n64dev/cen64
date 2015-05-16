@@ -20,7 +20,7 @@
 typedef HANDLE cen64_thread;
 typedef DWORD (*cen64_thread_func)(LPVOID arg);
 
-typedef CRITICAL_SECTION cen64_mutex;
+typedef HANDLE cen64_mutex;
 
 //
 // Threads.
@@ -52,26 +52,28 @@ static inline int cen64_thread_join(cen64_thread *t) {
 
 // Allocates resources for/initializes a mutex.
 static inline int cen64_mutex_create(cen64_mutex *m) {
-  InitializeCriticalSection(m);
+  if (unlikely((*m = CreateMutex(NULL, FALSE, NULL)) == NULL))
+    return 1;
+
   return 0;
 }
 
 // Releases resources acquired by cen64_mutex_create.
 static inline int cen64_mutex_destroy(cen64_mutex *m) {
-  DeleteCriticalSection(m);
-  return 0;
+  return !CloseHandle(*m);
 }
 
 // Locks the mutex passed as an argument.
 static inline int cen64_mutex_lock(cen64_mutex *m) {
-  EnterCriticalSection(m);
-  return 0;
+  if (likely(WaitForSingleObject(*m, INFINITE) == WAIT_OBJECT_0))
+    return 0;
+
+  return 1;
 }
 
 // Unlocks the mutex passed as an argument.
 static inline int cen64_mutex_unlock(cen64_mutex *m) {
-  LeaveCriticalSection(m);
-  return 0;
+  return !ReleaseMutex(*m);
 }
 
 #endif
