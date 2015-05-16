@@ -15,6 +15,7 @@
 #include "gl_display.h"
 #include "gl_screen.h"
 #include "gl_window.h"
+#include "input.h"
 #include "timer.h"
 #include "vi/controller.h"
 #include "vi/render.h"
@@ -129,6 +130,7 @@ bool cen64_gl_window_pump_events(struct vi_controller *vi) {
   } while (XPending(vi->display));
 
   cen64_mutex_unlock(&vi->window->event_mutex);
+
   return exit_requested;
 }
 
@@ -183,10 +185,10 @@ int cen64_gl_window_thread(struct cen64_device *device) {
     if (select(max_fds, &ready_to_read, NULL, NULL, NULL) > 0) {
 
       // Did we get a X11 event?
-      if (FD_ISSET(x11_fd, &ready_to_read)) {
+      //if (FD_ISSET(x11_fd, &ready_to_read)) {
         if (unlikely(cen64_gl_window_pump_events(vi)))
           break;
-      }
+      //}
 
       // Did we get a UI event?
       if (FD_ISSET(vi->window->pipefds[0], &ready_to_read)) {
