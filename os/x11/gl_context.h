@@ -19,9 +19,7 @@
 #define CEN64_GL_CONTEXT_BAD (NULL)
 typedef GLXContext cen64_gl_context;
 
-//
 // Creates a cen64_gl_context and binds it to the cen64_gl_window.
-//
 static inline cen64_gl_context cen64_gl_context_create(cen64_gl_window window) {
   cen64_gl_context c;
 
@@ -37,9 +35,7 @@ static inline cen64_gl_context cen64_gl_context_create(cen64_gl_window window) {
   return c;
 }
 
-//
 // Unbinds the cen64_gl_context from the window and releases the context.
-//
 static inline void cen64_gl_context_destroy(
   cen64_gl_context context, cen64_gl_window window) {
   glXMakeCurrent(window->display, None, NULL);

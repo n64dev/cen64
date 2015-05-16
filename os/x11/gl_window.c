@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <X11/Xlib.h>
 
+// Handles events that come from X11.
 bool cen64_gl_window_pump_events(struct vi_controller *vi) {
   bool released, exit_requested;
   XEvent event;

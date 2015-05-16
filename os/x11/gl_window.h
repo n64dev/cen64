@@ -33,9 +33,7 @@ typedef struct cen64_gl_window *cen64_gl_window;
 
 struct vi_controller;
 
-//
 // Creates a (hidden) cen64_gl_window.
-//
 static inline cen64_gl_window cen64_gl_window_create(
   cen64_gl_display display, cen64_gl_screen screen,
   const cen64_gl_config *config, const char *title) {
@@ -77,9 +75,7 @@ static inline cen64_gl_window cen64_gl_window_create(
   return window;
 }
 
-//
 // Releases resources allocated by cen64_gl_window_create.
-//
 static inline void cen64_gl_window_destroy(cen64_gl_window window) {
   XDestroyWindow(window->display, window->window);
   XFreeColormap(window->display, window->attr.colormap);
@@ -91,16 +87,12 @@ static inline void cen64_gl_window_destroy(cen64_gl_window window) {
 // Handles events that come from X11.
 bool cen64_gl_window_pump_events(struct vi_controller *vi);
 
-//
 // Swaps the front and back buffers of the cen65_gl_window.
-//
 static inline void cen64_gl_window_swap_buffers(cen64_gl_window window) {
   glXSwapBuffers(window->display, window->window);
 }
 
-//
 // Unhides the cen64_gl_window.
-//
 static inline void cen64_gl_window_unhide(cen64_gl_window window) {
   XMapRaised(window->display, window->window);
   XFlush(window->display);

@@ -33,9 +33,7 @@ static inline cen64_gl_screen cen64_gl_screen_create(
   return XDefaultScreen(display);
 }
 
-//
 // Releases resources allocated by cen64_screen_create.
-//
 static inline void cen64_gl_screen_destroy(cen64_gl_screen screen) {}
 
 #endif

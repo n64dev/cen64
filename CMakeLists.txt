@@ -270,6 +270,7 @@ if (DEFINED UNIX)
       ${PROJECT_SOURCE_DIR}/os/x11/gl_config.c
       ${PROJECT_SOURCE_DIR}/os/x11/gl_window.c
       ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
+      ${PROJECT_SOURCE_DIR}/os/posix/rom_file.c
     )
 
     list(APPEND OS_SOURCES ${X11_SOURCES})
