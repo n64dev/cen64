@@ -123,7 +123,7 @@ static int vr4300_ex_stage(struct vr4300 *vr4300) {
   const struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
   const struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
 
   unsigned rs, rt, rslutidx, rtlutidx;
   uint64_t rs_reg, rt_reg, temp;
@@ -141,14 +141,14 @@ static int vr4300_ex_stage(struct vr4300 *vr4300) {
     unsigned fr;
 
     // Dealing with FPU state, is CP1 usable?
-    if (unlikely(!(status & 0x20000000U))) {
+    if (unlikely(!(cp0_status & 0x20000000U))) {
       VR4300_CPU(vr4300);
       return 1;
     }
 
     // Check if one of the sources is an FPU register. Furthermore,
     // if Status.FR bit is clear, we depend on even registers only.
-    fr = (status >> 26 & 0x1) ^ 0x1;
+    fr = (cp0_status >> 26 & 0x1) ^ 0x1;
     rtlutidx = flags & 0x2;
     rslutidx = flags & 0x1;
 
@@ -196,8 +196,8 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
 
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+  uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint32_t cp0_cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
   const struct segment *segment = exdc_latch->segment;
   bool cached;
 
@@ -214,7 +214,8 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
   }
 
   // Check if we should raise an interrupt (and effectively kill this insn).
-  if (unlikely(cause & status & 0xFF00 && (((status ^ 6) & 0x7) == 0x7))) {
+  if (unlikely(cp0_cause & cp0_status & 0xFF00 &&
+    (((cp0_status ^ 6) & 0x7) == 0x7))) {
     VR4300_INTR(vr4300);
     return 1;
   }
@@ -227,8 +228,6 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
     uint32_t paddr;
 
     if ((vaddr - segment->start) >= segment->length) {
-      uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-
       if (unlikely((segment = get_segment(vaddr, cp0_status)) == NULL)) {
         VR4300_DADE(vr4300);
         return 1;
@@ -436,11 +435,12 @@ void vr4300_cycle_slow_ic(struct vr4300 *vr4300) {
 
 // Special-cased busy wait handler.
 void vr4300_cycle_busywait(struct vr4300 *vr4300) {
-  uint32_t status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
-  uint32_t cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
+  uint32_t cp0_status = vr4300->regs[VR4300_CP0_REGISTER_STATUS];
+  uint32_t cp0_cause = vr4300->regs[VR4300_CP0_REGISTER_CAUSE];
 
   // Check if the busy wait period is over (due to an interrupt condition).
-  if (unlikely(cause & status & 0xFF00) && (status & 0x1) && !(status & 0x6)) {
+  if (unlikely(cp0_cause & cp0_status & 0xFF00)
+    && (cp0_status & 0x1) && !(cp0_status & 0x6)) {
     //debug("Busy wait done @ %llu cycles\n", vr4300->cycles);
 
     VR4300_INTR(vr4300);
