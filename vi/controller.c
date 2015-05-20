@@ -55,6 +55,7 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
 // Advances the controller by one clock cycle.
 void vi_cycle(struct vi_controller *vi) {
   cen64_gl_window window;
+  size_t copy_size;
 
   struct render_area *ra = &vi->render_area;
   struct bus_controller *bus;
@@ -96,10 +97,15 @@ void vi_cycle(struct vi_controller *vi) {
       window->frame_type = 0;
 
     // Copy the frame data into a temporary buffer.
+    copy_size = sizeof(bus->ri->ram) - (vi->regs[VI_ORIGIN_REG] & 0xFFFFFF);
+
+    if (copy_size > sizeof(vi->window->frame_buffer))
+      copy_size = sizeof(vi->window->frame_buffer);
+
     memcpy(&bus, vi, sizeof(bus));
     memcpy(vi->window->frame_buffer,
       bus->ri->ram + (vi->regs[VI_ORIGIN_REG] & 0xFFFFFF),
-      sizeof(vi->window->frame_buffer));
+      copy_size);
 
     cen64_mutex_unlock(&vi->window->render_mutex);
     cen64_gl_window_push_frame(window);
