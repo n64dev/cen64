@@ -252,8 +252,7 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
       tlb_inv = !(vr4300->cp0.state[index][select] & 2);
 
       tlb_mod = !(vr4300->cp0.state[index][select] & 4) &&
-        (request->type == VR4300_BUS_REQUEST_WRITE ||
-         request->type == VR4300_BUS_REQUEST_CACHE_WRITE);
+        request->type == VR4300_BUS_REQUEST_WRITE;
 
       if (unlikely(tlb_miss | tlb_inv | tlb_mod)) {
         VR4300_DTLB(vr4300, tlb_miss, tlb_inv, tlb_mod);
