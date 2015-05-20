@@ -27,7 +27,7 @@ struct cen64_tlb {
 
 cen64_cold void tlb_init(struct cen64_tlb *tlb);
 
-unsigned tlb_probe(const struct cen64_tlb *tlb, uint64_t vpn2,
+cen64_hot unsigned tlb_probe(const struct cen64_tlb *tlb, uint64_t vpn2,
   uint8_t vasid, unsigned *index);
 
 int tlb_read(const struct cen64_tlb *tlb, unsigned index, uint64_t *entry_hi);
