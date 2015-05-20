@@ -9,6 +9,7 @@
 //
 
 #include "common.h"
+#include "context.h"
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "device/device.h"
@@ -54,6 +55,7 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
 
 // Advances the controller by one clock cycle.
 void vi_cycle(struct vi_controller *vi) {
+  struct cen64_context c;
   cen64_gl_window window;
   size_t copy_size;
 
@@ -64,6 +66,7 @@ void vi_cycle(struct vi_controller *vi) {
   if (likely(vi->counter-- != 0))
     return;
 
+  cen64_context_save(&c);
   window = vi->window;
 
   // Calculate the bounding positions.
@@ -114,6 +117,8 @@ void vi_cycle(struct vi_controller *vi) {
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
   vi->counter = VI_COUNTER_START;
+
+  cen64_context_restore(&c);
 }
 
 // Initializes the VI.
