@@ -319,7 +319,7 @@ void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss, unsigned inv, unsigned mo
 
   // TLB miss/invalid exceptions are either TLBL or TLBS.
   if (miss | inv)
-    type = (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) ? 0x2: 0x3;
+    type = (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) ? 0x3: 0x2;
 
   // OTOH, TLB modification exceptions are TLBM.
   else
