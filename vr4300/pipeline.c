@@ -255,8 +255,12 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
         request->type == VR4300_BUS_REQUEST_WRITE;
 
       if (unlikely(tlb_miss | tlb_inv | tlb_mod)) {
-        VR4300_DTLB(vr4300, tlb_miss, tlb_inv, tlb_mod);
-        return 1;
+
+        // TODO: Ignore CACHE references if they miss in the TLB?
+        if (exdc_latch->request.type < VR4300_BUS_REQUEST_CACHE) {
+          VR4300_DTLB(vr4300, tlb_miss, tlb_inv, tlb_mod);
+          return 1;
+        }
       }
 
       cached = ((vr4300->cp0.state[index][select] & 0x38) != 0x10);
