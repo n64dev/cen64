@@ -23,7 +23,7 @@
 #define CRC_NUS_6103 0x0B050EE0U
 #define CRC_NUS_6105 0x98BC2C86U
 #define CRC_NUS_6106 0xACC8580AU
-#define CRC_NUS_8303 0xC86DECA1U
+#define CRC_NUS_8303 0x0E018159U
 
 cen64_cold static uint32_t si_crc32(const uint8_t *data, size_t size);
 
