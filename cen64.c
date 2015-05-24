@@ -16,6 +16,8 @@
 #include "os/common/alloc.h"
 #include "os/common/rom_file.h"
 #include "thread.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <stdlib.h>
 
 cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
@@ -32,6 +34,10 @@ int cen64_main(int argc, const char **argv) {
   struct cen64_mem cen64_device_mem;
   struct cen64_device *device;
   int status;
+
+  // Clear OpenAL error if it exists...
+  // This is really just here for safety.
+  alGetError();
 
   if (cen64_alloc_init()) {
     printf("Failed to initialize the low-level allocators.\n");
