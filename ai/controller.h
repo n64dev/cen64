@@ -11,6 +11,7 @@
 #ifndef __ai_controller_h__
 #define __ai_controller_h__
 #include "common.h"
+#include "ai/context.h"
 
 struct bus_controller *bus;
 
@@ -25,12 +26,25 @@ enum ai_register {
 extern const char *ap_register_mnemonics[NUM_AI_REGISTERS];
 #endif
 
+struct ai_fifo_entry {
+  uint32_t address;
+  uint32_t length;
+};
+
 struct ai_controller {
   struct bus_controller *bus;
   uint32_t regs[NUM_AI_REGISTERS];
+
+  struct cen64_ai_context ctx;
+  uint64_t counter;
+
+  unsigned fifo_count, fifo_wi, fifo_ri;
+  struct ai_fifo_entry fifo[2];
 };
 
 cen64_cold int ai_init(struct ai_controller *ai, struct bus_controller *bus);
+
+cen64_flatten cen64_hot void ai_cycle(struct ai_controller *ai);
 
 int read_ai_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_ai_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);

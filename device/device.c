@@ -157,6 +157,7 @@ int device_spin(struct cen64_device *device) {
     for (i = 0; i < 2; i++) {
       vr4300_cycle(&device->vr4300);
       rsp_cycle(&device->rsp);
+      ai_cycle(&device->ai);
       vi_cycle(&device->vi);
 
     }
@@ -184,6 +185,7 @@ int device_debug_spin(struct cen64_device *device) {
     for (i = 0; i < 2; i++) {
       vr4300_cycle(&device->vr4300);
       rsp_cycle(&device->rsp);
+      ai_cycle(&device->ai);
       vi_cycle(&device->vi);
 
       vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
