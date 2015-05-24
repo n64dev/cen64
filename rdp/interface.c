@@ -64,8 +64,8 @@ int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
       if (word & DP_CLEAR_FREEZE)
         rdp->regs[DPC_STATUS_REG] &= ~DP_FREEZE;
-      else if (word & DP_SET_FREEZE)
-        rdp->regs[DPC_STATUS_REG] |= DP_FREEZE;
+//      else if (word & DP_SET_FREEZE)
+//        rdp->regs[DPC_STATUS_REG] |= DP_FREEZE;
 
       if (word & DP_CLEAR_FLUSH)
         rdp->regs[DPC_STATUS_REG] &= ~DP_FLUSH;
