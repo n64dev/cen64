@@ -26,10 +26,10 @@ cen64_context_restore:
   .seh_endprologue
 
   # VR4300: FPU control word
-  ldmxcsr 0x80(%rdi)
+  ldmxcsr 0x80(%rcx)
 
   # RSP: acc_lo, acc_md, acc_hi
-  movdqa 0x00(%rdi), %xmm5
+  movdqa 0x00(%rcx), %xmm5
 
   retq
   .seh_endproc
@@ -80,10 +80,10 @@ cen64_context_save:
   .seh_endprologue
 
   # VR4300: FPU control word
-  stmxcsr 0x80(%rdi)
+  stmxcsr 0x80(%rcx)
 
   # RSP: acc_lo, acc_md, acc_hi
-  movdqa %xmm5, 0x00(%rdi)
+  movdqa %xmm5, 0x00(%rcx)
 
   retq
   .seh_endproc
