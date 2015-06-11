@@ -37,10 +37,6 @@ cen64_gl_window cen64_gl_window_create(
   // Get the visual info for the framebuffer configuration.
   if ((window->visual_info = glXGetVisualFromFBConfig(
     display, *config)) == NULL) {
-    close(window->pipefds[0]);
-    close(window->pipefds[1]);
-
-    cen64_mutex_destroy(&window->event_mutex);
     free(window);
 
     return CEN64_GL_WINDOW_BAD;
