@@ -36,6 +36,6 @@ int cen64_alloc_init(void) {
 
 // Releases resources acquired by cen64_alloc.
 void cen64_free(struct cen64_mem *m) {
-  VirtualFree(m->ptr, m->size, MEM_RELEASE);
+  VirtualFree(m->ptr, 0, MEM_RELEASE);
 }
 
