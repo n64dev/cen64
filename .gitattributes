@@ -1,0 +1,19 @@
+# Set the default behavior for files
+* text=lf
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout
+*.md text
+*.txt text
+*.c text
+*.h text
+*.s text
+*.cmake text
+*.pro text
+*.ui text
+*.asm text
+*.in text
+
+# Denote all files that are truly binary and should not be modified
+*.pdf binary
+*.png binary

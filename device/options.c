@@ -1,8 +1,8 @@
 //
 // options.c: CEN64 simulation options.
 //
-// CEN64: Cycle-Accurate Nintendo 64 Simulator.
-// Copyright (C) 2014, Tyler J. Stachecki.
+// CEN64: Cycle-Accurate Nintendo 64 Emulator.
+// Copyright (C) 2015, Tyler J. Stachecki.
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
@@ -111,7 +111,7 @@ void print_command_line_usage(const char *invokation_string) {
       "                               By default, CEN64 uses localhost:64646.\n"
       "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"
       "  -ddrom <path>              : Path to the 64DD disk ROM (requires -ddipl).\n"
-      "  -nointerface               : Run simulator without a user interface.\n"
+      "  -nointerface               : Run simulator without a user interface.\n" // Change this to emulator?
 
     ,invokation_string
   );
