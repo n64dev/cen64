@@ -1,7 +1,7 @@
 //
 // ai/registers.md: AI register enumerations.
 //
-// CEN64: Cycle-Accurate Nintendo 64 Simulator.
+// CEN64: Cycle-Accurate Nintendo 64 Emulator.
 // Copyright (C) 2014, Tyler J. Stachecki.
 //
 // This file is subject to the terms and conditions defined in
