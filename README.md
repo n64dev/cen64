@@ -5,7 +5,7 @@
 # About
 
 Yes, _another_ Nintendo 64 emulator. This one, however, aims for _perfect_
-emulation by simulating the hardware inside of the Nintendo 64 itself, down
+emulation by emulating the hardware inside of the Nintendo 64 itself, down
 to the register-transfer level (RTL). At the same time, I've tried to keep
 things as optimized as possible in hopes that CEN64 will someday run ROMs at
 full speed, even on modest systems.
