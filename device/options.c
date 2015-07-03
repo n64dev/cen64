@@ -111,7 +111,7 @@ void print_command_line_usage(const char *invokation_string) {
       "                               By default, CEN64 uses localhost:64646.\n"
       "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"
       "  -ddrom <path>              : Path to the 64DD disk ROM (requires -ddipl).\n"
-      "  -nointerface               : Run simulator without a user interface.\n" // Change this to emulator?
+      "  -nointerface               : Run emulator without a user interface.\n"
 
     ,invokation_string
   );
