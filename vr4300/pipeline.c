@@ -279,7 +279,7 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
       }
     }
 
-    // If not cached or we miss in the DC, it's an DCB.
+    // If not cached or we miss in the DC, it's an DCM.
     if (likely(exdc_latch->request.type < VR4300_BUS_REQUEST_CACHE)) {
       uint64_t dword, rtemp, wtemp, wdqm;
       unsigned shiftamt, rshiftamt, lshiftamt;
@@ -287,10 +287,33 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
 
       line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr);
 
-      if (!(line && cached)) {
+      if (cached) {
+        bool last_cache_was_store = dcwb_latch->last_op_was_cache_store;
+        dcwb_latch->last_op_was_cache_store = (exdc_latch->request.type ==
+          VR4300_BUS_REQUEST_WRITE);
+
+        if (!line) {
+          request->paddr = paddr;
+          exdc_latch->cached = cached;
+
+          // Miss: stall for one cycle, then move to the DCM phase.
+          vr4300->pipeline.cycles_to_stall = 0;
+          vr4300->regs[PIPELINE_CYCLE_TYPE] = 6;
+          return 1;
+        }
+
+        // Cached store-to-cached operation will result in a DCB.
+        if (last_cache_was_store) {
+          VR4300_DCB(vr4300);
+          return 1;
+        }
+      }
+
+      else {
+        dcwb_latch->last_op_was_cache_store = false;
+
         request->paddr = paddr;
         exdc_latch->cached = cached;
-
         VR4300_DCM(vr4300);
         return 1;
       }
@@ -460,7 +483,7 @@ cen64_align(static const pipeline_function
   vr4300_cycle_slow_ic,
 
   vr4300_cycle_busywait,
-  VR4300_DCB,
+  VR4300_DCM,
 };
 
 // Advances the processor pipeline by one pclock.
