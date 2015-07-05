@@ -80,6 +80,7 @@ struct vr4300_dcwb_latch {
   struct vr4300_latch common;
   int64_t result;
   uint32_t dest;
+  bool last_op_was_cache_store;
 };
 
 struct vr4300_pipeline {

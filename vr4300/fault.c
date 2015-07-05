@@ -220,6 +220,12 @@ void VR4300_DADE(struct vr4300 *vr4300) {
 
 // DCB: Data cache busy interlock.
 void VR4300_DCB(struct vr4300 *vr4300) {
+  vr4300->pipeline.dcwb_latch.last_op_was_cache_store = false;
+  vr4300_common_interlocks(vr4300, 0, 1);
+}
+
+// DCM: Data cache busy interlock.
+void VR4300_DCM(struct vr4300 *vr4300) {
   struct vr4300_dcwb_latch *dcwb_latch = &vr4300->pipeline.dcwb_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   struct vr4300_bus_request *request = &exdc_latch->request;
@@ -301,11 +307,6 @@ void VR4300_DCB(struct vr4300 *vr4300) {
       data + (i ^ (WORD_ADDR_XOR >> 2)));
 
   vr4300_dcache_fill(&vr4300->dcache, vaddr, paddr, data);
-}
-
-// DCM: Data cache miss interlock.
-void VR4300_DCM(struct vr4300 *vr4300) {
-  vr4300_common_interlocks(vr4300, 0, 6);
 }
 
 // DTLB: Data TLB exception.
