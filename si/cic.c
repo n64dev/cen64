@@ -11,6 +11,7 @@
 #include "common.h"
 #include "si/cic.h"
 
+#define CIC_SEED_NUS_5101 0x0000AC00U
 #define CIC_SEED_NUS_6101 0x00063F3FU
 #define CIC_SEED_NUS_6102 0x00023F3FU
 #define CIC_SEED_NUS_6103 0x0002783FU
@@ -18,6 +19,7 @@
 #define CIC_SEED_NUS_6106 0x0002853FU
 #define CIC_SEED_NUS_8303 0x0000DD00U
 
+#define CRC_NUS_5101 0x587BD543U
 #define CRC_NUS_6101 0x6170A4A1U
 #define CRC_NUS_6102 0x90BB6CB5U
 #define CRC_NUS_6103 0x0B050EE0U
@@ -30,8 +32,10 @@ cen64_cold static uint32_t si_crc32(const uint8_t *data, size_t size);
 // Determines the CIC seed for a cart, given the ROM data.
 int get_cic_seed(const uint8_t *rom_data, uint32_t *cic_seed) {
   uint32_t crc = si_crc32(rom_data + 0x40, 0x1000 - 0x40);
+  uint32_t aleck64crc = si_crc32(rom_data + 0x40, 0xC00 - 0x40);
 
-  switch (crc) {
+  if (aleck64crc == CRC_NUS_5101) *cic_seed = CIC_SEED_NUS_5101;
+  else switch (crc) {
     case CRC_NUS_6101:
       *cic_seed = CIC_SEED_NUS_6101;
       break;
