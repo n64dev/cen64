@@ -7,7 +7,7 @@
 #
 
 cmake_minimum_required(VERSION 2.8)
-project(cen64)
+project(cen64 C)
 
 if(APPLE)
   set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
@@ -36,6 +36,10 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 
     set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
     set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX)
+
+    if (WIN32)
+      set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -defsym __MINGW__=1")
+    endif (WIN32)
 
     if (${CEN64_ARCH_SUPPORT} MATCHES "SSE2")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
