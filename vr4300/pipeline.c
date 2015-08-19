@@ -347,8 +347,15 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
     }
 
     // Not a load/store, so execute cache operation.
-    else
-      return request->cacheop(vr4300, vaddr, paddr);
+    else {
+      unsigned delay;
+
+      if ((delay = request->cacheop(vr4300, vaddr, paddr))) {
+        vr4300->pipeline.cycles_to_stall = delay - 1;
+        vr4300->regs[PIPELINE_CYCLE_TYPE] = 2;
+        return 1;
+      }
+    }
   }
 
   return 0;

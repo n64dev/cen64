@@ -12,9 +12,9 @@
 #define __vr4300_fault_h__
 
 // Currently using fixed values....
-#define DCACHE_ACCESS_DELAY (48 - 2)
-#define ICACHE_ACCESS_DELAY (52 - 2)
-#define MEMORY_WORD_DELAY 40
+#define DCACHE_ACCESS_DELAY (46 - 2)
+#define ICACHE_ACCESS_DELAY (50 - 2)
+#define MEMORY_WORD_DELAY 38
 
 enum vr4300_fault_id {
 #define X(fault) VR4300_FAULT_##fault,
