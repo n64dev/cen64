@@ -32,6 +32,8 @@ cen64_cold int angrylion_rdp_init(struct cen64_device *device);
 cen64_cold static int device_debug_spin(struct cen64_device *device);
 cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 
+void sm5_cycle(void);
+
 // Creates and initializes a device.
 struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct rom_file *ddrom,
@@ -147,11 +149,38 @@ void device_run(struct cen64_device *device) {
 }
 
 // Continually cycles the device until setjmp returns.
+static void spin_rcp_two_cycles(struct cen64_device *device) {
+    unsigned i;
+
+    for (i = 0; i < 2; i++) {
+      vr4300_cycle(&device->vr4300);
+      rsp_cycle(&device->rsp);
+      ai_cycle(&device->ai);
+      vi_cycle(&device->vi);
+    }
+
+    vr4300_cycle(&device->vr4300);
+}
+
 int device_spin(struct cen64_device *device) {
   if (setjmp(device->bus.unwind_data))
     return 1;
 
   while (1) {
+    unsigned i;
+
+    for (i = 0; i < 4; i++)
+      spin_rcp_two_cycles(device);
+
+    sm5_cycle();
+  }
+
+  return 0;
+}
+
+// Continually cycles the device until setjmp returns.
+static void debug_spin_rcp_two_cycles(struct cen64_device *device,
+  struct vr4300_stats *vr4300_stats) {
     unsigned i;
 
     for (i = 0; i < 2; i++) {
@@ -160,15 +189,13 @@ int device_spin(struct cen64_device *device) {
       ai_cycle(&device->ai);
       vi_cycle(&device->vi);
 
+      vr4300_cycle_extra(&device->vr4300, vr4300_stats);
     }
 
     vr4300_cycle(&device->vr4300);
-  }
-
-  return 0;
+    vr4300_cycle_extra(&device->vr4300, vr4300_stats);
 }
 
-// Continually cycles the device until setjmp returns.
 int device_debug_spin(struct cen64_device *device) {
   struct vr4300_stats vr4300_stats;
 
@@ -182,18 +209,10 @@ int device_debug_spin(struct cen64_device *device) {
   while (1) {
     unsigned i;
 
-    for (i = 0; i < 2; i++) {
-      vr4300_cycle(&device->vr4300);
-      rsp_cycle(&device->rsp);
-      ai_cycle(&device->ai);
-      vi_cycle(&device->vi);
+    for (i = 0; i < 4; i++)
+      debug_spin_rcp_two_cycles(device, &vr4300_stats);
 
-      vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
-
-    }
-
-    vr4300_cycle(&device->vr4300);
-    vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+    sm5_cycle();
   }
 
   return 0;

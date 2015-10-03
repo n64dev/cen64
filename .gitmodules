@@ -1,0 +1,4 @@
+[submodule "si/sm5emu"]
+	path = si/sm5emu
+	url = https://github.com/tj90241/cen64-sm5emu.git
+  branch = cen64-sm5emu
