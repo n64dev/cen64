@@ -129,6 +129,8 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   string(REGEX MATCH "([a-zA-Z0-9])+" CLANG_MACHINE ${CLANG_MACHINE})
 
   if (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
+    enable_language(ASM-ATT)
+
     set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
     set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX Native)
 
@@ -148,6 +150,9 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
 
     set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
+
+    set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
+#    file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/gcc/*.s)
   endif (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
 
   if (${CLANG_MACHINE} STREQUAL "arm")
