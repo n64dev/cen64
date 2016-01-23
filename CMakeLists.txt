@@ -291,6 +291,7 @@ set(OS_POSIX_SOURCES
   ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
   ${PROJECT_SOURCE_DIR}/os/posix/main.c
   ${PROJECT_SOURCE_DIR}/os/posix/rom_file.c
+  ${PROJECT_SOURCE_DIR}/os/posix/save_file.c
   ${PROJECT_SOURCE_DIR}/os/posix/timer.c
 )
 
