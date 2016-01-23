@@ -122,6 +122,65 @@ int pif_perform_command(struct si_controller *si,
 
       break;
 
+    // Read from controller pak
+    case 0x02:
+      if (channel < 4) {
+        // TODO
+        break;
+      }
+
+      else
+        assert(0 && "Invalid channel for controller pak read");
+
+      return 1;
+
+    // Write to controller pak
+    case 0x03:
+      if (channel < 4) {
+        // TODO
+        break;
+      }
+
+      else
+        assert(0 && "Invalid channel for controller pak write");
+
+      return 1;
+
+    // EEPROM read
+    case 0x04:
+      if (channel != 4)
+        assert(0 && "Invalid channel for EEPROM read");
+      // TODO
+      return 1;
+
+    // EEPROM write
+    case 0x05:
+      if (channel != 4)
+        assert(0 && "Invalid channel for EEPROM write");
+      // TODO
+      return 1;
+
+    // RTC status
+    case 0x06:
+      if (channel != 4)
+        assert(0 && "Invalid channel for RTC status");
+      // TODO
+      return 1;
+
+    // RTC read
+    case 0x07:
+      if (channel != 4)
+        assert(0 && "Invalid channel for RTC read");
+      // TODO
+      return 1;
+
+    // RTC write
+    case 0x08:
+      if (channel != 4)
+        assert(0 && "Invalid channel for RTC write");
+      // TODO
+      return 1;
+
     // Unimplemented command:
     default:
       return 1;
