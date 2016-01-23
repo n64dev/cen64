@@ -15,6 +15,7 @@
 #include "device/options.h"
 #include "os/common/alloc.h"
 #include "os/common/rom_file.h"
+#include "os/common/save_file.h"
 #include "thread.h"
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -31,6 +32,7 @@ cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
 int cen64_main(int argc, const char **argv) {
 	struct cen64_options options = default_cen64_options;
   struct rom_file ddipl, ddrom, pifrom, cart;
+  struct save_file eeprom;
   struct cen64_mem cen64_device_mem;
   struct cen64_device *device;
   int status;
@@ -61,9 +63,16 @@ int cen64_main(int argc, const char **argv) {
   memset(&ddipl, 0, sizeof(ddipl));
   memset(&ddrom, 0, sizeof(ddrom));
   memset(&cart,  0, sizeof(cart));
+  memset(&eeprom, 0, sizeof(eeprom));
 
   if (load_roms(options.ddipl_path, options.ddrom_path, options.pifrom_path,
     options.cart_path, &ddipl, &ddrom, &pifrom, &cart)) {
+    cen64_alloc_cleanup();
+    return EXIT_FAILURE;
+  }
+
+  if (options.eeprom_path != NULL &&
+      open_save_file(options.eeprom_path, options.eeprom_size, &eeprom)) {
     cen64_alloc_cleanup();
     return EXIT_FAILURE;
   }
@@ -77,7 +86,7 @@ int cen64_main(int argc, const char **argv) {
   else {
     device = (struct cen64_device *) cen64_device_mem.ptr;
 
-    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart) == NULL) {
+    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;
     }

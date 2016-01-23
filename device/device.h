@@ -13,6 +13,7 @@
 #include "common.h"
 #include "device/options.h"
 #include "os/common/rom_file.h"
+#include "os/common/save_file.h"
 
 #include "ai/controller.h"
 #include "bus/controller.h"
@@ -47,7 +48,8 @@ struct cen64_device {
 cen64_cold void device_destroy(struct cen64_device *device);
 cen64_cold struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct rom_file *ddrom,
-  const struct rom_file *pifrom, const struct rom_file *cart);
+  const struct rom_file *pifrom, const struct rom_file *cart,
+  const struct save_file *eeprom);
 
 cen64_cold void device_exit(struct bus_controller *bus);
 cen64_cold void device_run(struct cen64_device *device);

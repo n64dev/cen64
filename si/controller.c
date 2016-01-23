@@ -37,7 +37,8 @@ static int eeprom_write(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_b
 
 // Initializes the SI.
 int si_init(struct si_controller *si, struct bus_controller *bus,
-  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present) {
+  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present,
+  const uint8_t *eeprom, size_t eeprom_size) {
   uint32_t cic_seed;
 
   si->bus = bus;
@@ -70,8 +71,8 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
     bus_write_word(si, 0x3F0, 0x800000, ~0U);
 
   // initialize EEPROM
-  si->eeprom.size = EEPROM_SIZE;
-  // TODO zero memory?
+  si->eeprom.data = eeprom;
+  si->eeprom.size = eeprom_size;
 
   return 0;
 }

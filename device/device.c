@@ -14,6 +14,7 @@
 #include "fpu/fpu.h"
 #include "gl_window.h"
 #include "os/common/rom_file.h"
+#include "os/common/save_file.h"
 
 #include "bus/controller.h"
 #include "ai/controller.h"
@@ -35,7 +36,8 @@ cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 // Creates and initializes a device.
 struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct rom_file *ddrom,
-  const struct rom_file *pifrom, const struct rom_file *cart) {
+  const struct rom_file *pifrom, const struct rom_file *cart,
+  const struct save_file *eeprom) {
 
   // Initialize the bus.
   device->bus.ai = &device->ai;
@@ -82,7 +84,7 @@ struct cen64_device *device_create(struct cen64_device *device,
 
   // Initialize the SI.
   if (si_init(&device->si, &device->bus, pifrom->ptr,
-    cart->ptr, ddipl->ptr != NULL)) {
+    cart->ptr, ddipl->ptr != NULL, eeprom->ptr, eeprom->size)) {
     debug("create_device: Failed to initialize the SI.\n");
     return NULL;
   }
