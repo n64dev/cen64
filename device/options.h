@@ -19,6 +19,9 @@ struct cen64_options {
   const char *cart_path;
   const char *debugger_addr;
 
+  const char *eeprom_path;
+  size_t eeprom_size;
+
 #ifdef _WIN32
   bool console;
 #endif
