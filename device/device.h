@@ -49,7 +49,8 @@ cen64_cold void device_destroy(struct cen64_device *device);
 cen64_cold struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct rom_file *ddrom,
   const struct rom_file *pifrom, const struct rom_file *cart,
-  const struct save_file *eeprom, const struct controller *controller,
+  const struct save_file *eeprom, const struct save_file *sram,
+  const struct controller *controller,
   bool no_interface);
 
 cen64_cold void device_exit(struct bus_controller *bus);

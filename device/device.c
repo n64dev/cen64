@@ -37,7 +37,8 @@ cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct rom_file *ddrom,
   const struct rom_file *pifrom, const struct rom_file *cart,
-  const struct save_file *eeprom, const struct controller *controller,
+  const struct save_file *eeprom, const struct save_file *sram,
+  const struct controller *controller,
   bool no_interface) {
 
   // Initialize the bus.
@@ -72,7 +73,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the PI.
-  if (pi_init(&device->pi, &device->bus, cart->ptr, cart->size)) {
+  if (pi_init(&device->pi, &device->bus, cart->ptr, cart->size, sram)) {
     debug("create_device: Failed to initialize the PI.\n");
     return NULL;
   }

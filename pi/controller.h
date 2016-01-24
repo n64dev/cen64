@@ -11,6 +11,7 @@
 #ifndef __pi_controller_h__
 #define __pi_controller_h__
 #include "common.h"
+#include "os/common/save_file.h"
 
 struct bus_controller *bus;
 
@@ -29,12 +30,13 @@ struct pi_controller {
   struct bus_controller *bus;
   const uint8_t *rom;
   size_t rom_size;
+  struct save_file *sram;
 
   uint32_t regs[NUM_PI_REGISTERS];
 };
 
 cen64_cold int pi_init(struct pi_controller *pi, struct bus_controller *bus,
-  const uint8_t *rom, size_t rom_size);
+  const uint8_t *rom, size_t rom_size, const struct save_file *sram);
 
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);
