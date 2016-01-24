@@ -16,6 +16,7 @@
 #include "gl_display.h"
 #include "gl_screen.h"
 #include "gl_window.h"
+#include "timer.h"
 
 struct bus_controller *bus;
 
@@ -61,6 +62,9 @@ struct vi_controller {
   struct render_area render_area;
   float viuv[8];
   float quad[8];
+
+  cen64_time last_update_time;
+  unsigned frame_count;
 };
 
 cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus,
