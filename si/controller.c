@@ -101,8 +101,12 @@ int pif_perform_command(struct si_controller *si,
           return 1;
 
         case 4:
+          // XXX hack alert: this returns 16k EEPROM in the case of a
+          // 16k EEPROM and returns 4k EEPROM in all other cases. This
+          // is likely a hack to make games that expect EEPROM work,
+          // even if the user doesn't supply one on the command line.
           recv_buf[0] = 0x00;
-          recv_buf[1] = 0x80;
+          recv_buf[1] = si->eeprom.size == 16384 ? 0xC0 : 0x80;
           recv_buf[2] = 0x00;
           break;
 
