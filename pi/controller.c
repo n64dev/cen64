@@ -80,8 +80,12 @@ static int pi_dma_write(struct pi_controller *pi) {
     memcpy(pi->bus->ri->ram + dest, pi->bus->dd->ipl_rom + source, length);
   }
 
-  else if ((source & 0x08000000) == 0x08000000) {
+  else if (source >= 0x08000000 && source < 0x08010000) {
+    // TODO: SRAM
+  }
 
+  else if (source >= 0x18000000 && source < 0x18400000) {
+    // TODO: 64DD modem
   }
 
   else if (pi->rom) {
