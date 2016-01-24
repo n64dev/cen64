@@ -106,7 +106,7 @@ int pif_perform_command(struct si_controller *si,
           // is likely a hack to make games that expect EEPROM work,
           // even if the user doesn't supply one on the command line.
           recv_buf[0] = 0x00;
-          recv_buf[1] = si->eeprom.size == 16384 ? 0xC0 : 0x80;
+          recv_buf[1] = si->eeprom.size == 0x800 ? 0xC0 : 0x80;
           recv_buf[2] = 0x00;
           break;
 
