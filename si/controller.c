@@ -136,9 +136,16 @@ int pif_perform_command(struct si_controller *si,
         case 0:
           memcpy(&bus, si, sizeof(bus));
 
-          cen64_mutex_lock(&bus->vi->window->event_mutex);
-          memcpy(recv_buf, si->input, sizeof(si->input));
-          cen64_mutex_unlock(&bus->vi->window->event_mutex);
+          if (likely(bus->vi->window)) {
+            cen64_mutex_lock(&bus->vi->window->event_mutex);
+            memcpy(recv_buf, si->input, sizeof(si->input));
+            cen64_mutex_unlock(&bus->vi->window->event_mutex);
+          }
+
+          // -nointerface
+          else
+            memset(recv_buf, 0x0, sizeof(si->input));
+
           break;
 
         default:

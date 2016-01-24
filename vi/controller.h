@@ -63,7 +63,8 @@ struct vi_controller {
   float quad[8];
 };
 
-cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus);
+cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus,
+  bool no_interface);
 
 cen64_flatten cen64_hot void vi_cycle(struct vi_controller *vi);
 

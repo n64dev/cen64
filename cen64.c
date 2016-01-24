@@ -26,7 +26,7 @@ cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
   struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart);
 cen64_cold static int load_paks(struct controller *controller);
 
-cen64_cold static int run_device(struct cen64_device *device);
+cen64_cold static int run_device(struct cen64_device *device, bool no_interface);
 cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
 
 // Called when another simulation instance is desired.
@@ -94,13 +94,14 @@ int cen64_main(int argc, const char **argv) {
   else {
     device = (struct cen64_device *) cen64_device_mem.ptr;
 
-    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom, controller) == NULL) {
+    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom,
+      controller, options.no_interface) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;
     }
 
     else {
-      status = run_device(device);
+      status = run_device(device, options.no_interface);
       device_destroy(device);
     }
 
@@ -189,7 +190,7 @@ cen64_cold int load_paks(struct controller *controller) {
 }
 
 // Spins the device until an exit request is received.
-int run_device(struct cen64_device *device) {
+int run_device(struct cen64_device *device, bool no_interface) {
   cen64_thread thread;
 
   if (cen64_thread_create(&thread, run_device_thread, device)) {
@@ -198,7 +199,9 @@ int run_device(struct cen64_device *device) {
     return 1;
   }
 
-  cen64_gl_window_thread(device);
+  if (!no_interface)
+    cen64_gl_window_thread(device);
+
   cen64_thread_join(&thread);
   return 0;
 }
