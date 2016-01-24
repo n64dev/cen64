@@ -31,7 +31,7 @@ struct save_file {
 #endif
 
 cen64_cold int close_save_file(const struct save_file *file);
-cen64_cold int open_save_file(const char *path, size_t size, struct save_file *file);
+cen64_cold int open_save_file(const char *path, size_t size, struct save_file *file, int *created);
 
 #endif
 

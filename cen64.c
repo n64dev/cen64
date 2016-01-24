@@ -72,7 +72,7 @@ int cen64_main(int argc, const char **argv) {
   }
 
   if (options.eeprom_path != NULL &&
-      open_save_file(options.eeprom_path, options.eeprom_size, &eeprom)) {
+      open_save_file(options.eeprom_path, options.eeprom_size, &eeprom, NULL)) {
     cen64_alloc_cleanup();
     return EXIT_FAILURE;
   }
