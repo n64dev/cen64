@@ -14,6 +14,7 @@
 #include "bus/controller.h"
 #include "device/device.h"
 #include "os/main.h"
+#include "timer.h"
 #include "ri/controller.h"
 #include "vi/controller.h"
 #include "vi/render.h"
@@ -114,8 +115,16 @@ void vi_cycle(struct vi_controller *vi) {
     cen64_gl_window_push_frame(window);
   }
 
-  else {
+  else if (++(vi->frame_count) == 60) {
+    cen64_time current_time;
+    float ns;
 
+    get_time(&current_time);
+    ns = compute_time_difference(&current_time, &vi->last_update_time);
+    vi->last_update_time = current_time;
+    vi->frame_count = 0;
+
+    printf("VI/s: %.2f\n", (60 / (ns / NS_PER_SEC)));
   }
 
   // Raise an interrupt to indicate refresh.
