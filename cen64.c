@@ -36,6 +36,7 @@ int cen64_main(int argc, const char **argv) {
   options.controller = controller;
   struct rom_file ddipl, ddrom, pifrom, cart;
   struct save_file eeprom;
+  struct save_file sram;
   struct cen64_mem cen64_device_mem;
   struct cen64_device *device;
   int status;
@@ -67,6 +68,7 @@ int cen64_main(int argc, const char **argv) {
   memset(&ddrom, 0, sizeof(ddrom));
   memset(&cart,  0, sizeof(cart));
   memset(&eeprom, 0, sizeof(eeprom));
+  memset(&sram,  0, sizeof(sram));
 
   if (load_roms(options.ddipl_path, options.ddrom_path, options.pifrom_path,
     options.cart_path, &ddipl, &ddrom, &pifrom, &cart)) {
@@ -85,6 +87,12 @@ int cen64_main(int argc, const char **argv) {
     return EXIT_FAILURE;
   }
 
+  if (options.sram_path != NULL &&
+      open_save_file(options.sram_path, 0x8000, &sram, NULL)) {
+    cen64_alloc_cleanup();
+    return EXIT_FAILURE;
+  }
+
   // Allocate memory for and create the device.
   if (cen64_alloc(&cen64_device_mem, sizeof(*device), false) == NULL) {
     printf("Failed to allocate enough memory for a device.\n");
@@ -94,7 +102,7 @@ int cen64_main(int argc, const char **argv) {
   else {
     device = (struct cen64_device *) cen64_device_mem.ptr;
 
-    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom,
+    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom, &sram,
       controller, options.no_interface) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;
