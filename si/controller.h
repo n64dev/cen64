@@ -25,6 +25,11 @@ enum si_register {
 extern const char *si_register_mnemonics[NUM_SI_REGISTERS];
 #endif
 
+struct eeprom {
+  uint8_t *data;
+  size_t size;
+};
+
 struct si_controller {
   struct bus_controller *bus;
   const uint8_t *rom;
@@ -34,10 +39,12 @@ struct si_controller {
   uint32_t regs[NUM_SI_REGISTERS];
   uint32_t pif_status;
   uint8_t input[4];
+  struct eeprom eeprom;
 };
 
 cen64_cold int si_init(struct si_controller *si, struct bus_controller *bus,
-  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present);
+  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present,
+  const uint8_t *eeprom, size_t eeprom_size);
 
 int read_pif_ram(void *opaque, uint32_t address, uint32_t *word);
 int read_pif_rom(void *opaque, uint32_t address, uint32_t *word);

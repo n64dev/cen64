@@ -17,6 +17,8 @@ const struct cen64_options default_cen64_options = {
   NULL, // pifrom_path
   NULL, // cart_path
   NULL, // debugger_addr
+  NULL, // eeprom_path
+  0,    // eeprom_size
 #ifdef _WIN32
   false, // console
 #endif
@@ -68,6 +70,26 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 
     else if (!strcmp(argv[i], "-nointerface"))
       options->no_interface = true;
+
+    else if (!strcmp(argv[i], "-eep4k")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-eep4k requires a path to the save file.\n\n");
+        return 1;
+      }
+
+      options->eeprom_path = argv[++i];
+      options->eeprom_size = 4096;
+    }
+
+    else if (!strcmp(argv[i], "-eep16k")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-eep16k requires a path to the save file.\n\n");
+        return 1;
+      }
+
+      options->eeprom_path = argv[++i];
+      options->eeprom_size = 16384;
+    }
 
     // TODO: Handle this better.
     else

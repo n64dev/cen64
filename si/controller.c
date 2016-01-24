@@ -32,9 +32,13 @@ static void pif_process(struct si_controller *si);
 static int pif_perform_command(struct si_controller *si, unsigned channel,
   uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes);
 
+static int eeprom_read(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes);
+static int eeprom_write(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes);
+
 // Initializes the SI.
 int si_init(struct si_controller *si, struct bus_controller *bus,
-  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present) {
+  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present,
+  const uint8_t *eeprom, size_t eeprom_size) {
   uint32_t cic_seed;
 
   si->bus = bus;
@@ -66,6 +70,10 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
   else if (si->ram[0x26] == 0x91 && si->ram[0x27] == 0x3F)
     bus_write_word(si, 0x3F0, 0x800000, ~0U);
 
+  // initialize EEPROM
+  si->eeprom.data = eeprom;
+  si->eeprom.size = eeprom_size;
+
   return 0;
 }
 
@@ -93,8 +101,12 @@ int pif_perform_command(struct si_controller *si,
           return 1;
 
         case 4:
+          // XXX hack alert: this returns 16k EEPROM in the case of a
+          // 16k EEPROM and returns 4k EEPROM in all other cases. This
+          // is likely a hack to make games that expect EEPROM work,
+          // even if the user doesn't supply one on the command line.
           recv_buf[0] = 0x00;
-          recv_buf[1] = 0x80;
+          recv_buf[1] = si->eeprom.size == 16384 ? 0xC0 : 0x80;
           recv_buf[2] = 0x00;
           break;
 
@@ -121,6 +133,63 @@ int pif_perform_command(struct si_controller *si,
       }
 
       break;
+
+    // Read from controller pak
+    case 0x02:
+      if (channel < 4) {
+        // TODO
+        break;
+      }
+
+      else
+        assert(0 && "Invalid channel for controller pak read");
+
+      return 1;
+
+    // Write to controller pak
+    case 0x03:
+      if (channel < 4) {
+        // TODO
+        break;
+      }
+
+      else
+        assert(0 && "Invalid channel for controller pak write");
+
+      return 1;
+
+    // EEPROM read
+    case 0x04:
+      if (channel != 4)
+        assert(0 && "Invalid channel for EEPROM read");
+      return eeprom_read(&si->eeprom, send_buf, send_bytes, recv_buf, recv_bytes);
+
+    // EEPROM write
+    case 0x05:
+      if (channel != 4)
+        assert(0 && "Invalid channel for EEPROM write");
+      return eeprom_write(&si->eeprom, send_buf, send_bytes, recv_buf, recv_bytes);
+
+    // RTC status
+    case 0x06:
+      if (channel != 4)
+        assert(0 && "Invalid channel for RTC status");
+      // TODO
+      return 1;
+
+    // RTC read
+    case 0x07:
+      if (channel != 4)
+        assert(0 && "Invalid channel for RTC read");
+      // TODO
+      return 1;
+
+    // RTC write
+    case 0x08:
+      if (channel != 4)
+        assert(0 && "Invalid channel for RTC write");
+      // TODO
+      return 1;
 
     // Unimplemented command:
     default:
@@ -286,3 +355,29 @@ int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   return 0;
 }
 
+
+int eeprom_read(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes) {
+  assert(send_bytes == 2 && recv_bytes == 8);
+
+  uint16_t address = send_buf[1] << 3;
+
+  if (address <= eeprom->size - 8) {
+    memcpy(recv_buf, &eeprom->data[address], 8);
+    return 0;
+  }
+
+  return 1;
+}
+
+static int eeprom_write(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes) {
+  assert(send_bytes == 10);
+
+  uint16_t address = send_buf[1] << 3;
+
+  if (address <= eeprom->size - 8) {
+    memcpy(&eeprom->data[address], send_buf + 2, 8);
+    return 0;
+  }
+
+  return 1;
+}
