@@ -45,6 +45,13 @@ static int pi_dma_read(struct pi_controller *pi) {
   if (length & 7)
     length = (length + 7) & ~7;
 
+  // SRAM
+  if (dest >= 0x08000000 && dest < 0x08010000) {
+    uint32_t addr = dest & 0x00FFFFF;
+    if (addr + length <= 0x8000)
+      memcpy(pi->sram->ptr + addr, pi->bus->ri->ram + source, length);
+  }
+
   pi->regs[PI_DRAM_ADDR_REG] += length;
   pi->regs[PI_CART_ADDR_REG] += length;
   pi->regs[PI_STATUS_REG] &= ~0x1;
@@ -80,8 +87,11 @@ static int pi_dma_write(struct pi_controller *pi) {
     memcpy(pi->bus->ri->ram + dest, pi->bus->dd->ipl_rom + source, length);
   }
 
+  // SRAM
   else if (source >= 0x08000000 && source < 0x08010000) {
-    // TODO: SRAM
+    uint32_t addr = source & 0x00FFFFF;
+    if (addr + length <= 0x8000)
+      memcpy(pi->bus->ri->ram + dest, pi->sram->ptr + addr, length);
   }
 
   else if (source >= 0x18000000 && source < 0x18400000) {
