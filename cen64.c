@@ -24,13 +24,16 @@
 cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
   const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
   struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart);
+cen64_cold static int load_paks(struct controller *controller);
 
 cen64_cold static int run_device(struct cen64_device *device);
 cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
 
 // Called when another simulation instance is desired.
 int cen64_main(int argc, const char **argv) {
+  struct controller controller[4] = { { NULL, }, };
 	struct cen64_options options = default_cen64_options;
+  options.controller = controller;
   struct rom_file ddipl, ddrom, pifrom, cart;
   struct save_file eeprom;
   struct cen64_mem cen64_device_mem;
@@ -71,8 +74,13 @@ int cen64_main(int argc, const char **argv) {
     return EXIT_FAILURE;
   }
 
+  if (load_paks(controller)) {
+    cen64_alloc_cleanup();
+    return EXIT_FAILURE;
+  }
+
   if (options.eeprom_path != NULL &&
-      open_save_file(options.eeprom_path, options.eeprom_size, &eeprom)) {
+      open_save_file(options.eeprom_path, options.eeprom_size, &eeprom, NULL)) {
     cen64_alloc_cleanup();
     return EXIT_FAILURE;
   }
@@ -86,7 +94,7 @@ int cen64_main(int argc, const char **argv) {
   else {
     device = (struct cen64_device *) cen64_device_mem.ptr;
 
-    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom) == NULL) {
+    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom, controller) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;
     }
@@ -160,6 +168,23 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
     return 4;
   }
 
+  return 0;
+}
+
+cen64_cold int load_paks(struct controller *controller) {
+  int i;
+
+  for (i = 0; i < 4; ++i) {
+    if (controller[i].pak == PAK_MEM && controller[i].mempak_path != NULL) {
+      int created = 0;
+      if (open_save_file(controller[i].mempak_path, MEMPAK_SIZE, &controller[i].mempak_save, &created) != 0) {
+        printf("Can't open mempak file %s\n", controller[i].mempak_path);
+        return -1;
+      }
+      if (created)
+        controller_pak_format(controller[i].mempak_save.ptr);
+    }
+  }
   return 0;
 }
 

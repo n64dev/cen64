@@ -35,7 +35,7 @@ cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct rom_file *ddrom,
   const struct rom_file *pifrom, const struct rom_file *cart,
-  const struct save_file *eeprom) {
+  const struct save_file *eeprom, const struct controller *controller) {
 
   // Initialize the bus.
   device->bus.ai = &device->ai;
@@ -82,7 +82,8 @@ struct cen64_device *device_create(struct cen64_device *device,
 
   // Initialize the SI.
   if (si_init(&device->si, &device->bus, pifrom->ptr,
-    cart->ptr, ddipl->ptr != NULL, eeprom->ptr, eeprom->size)) {
+    cart->ptr, ddipl->ptr != NULL, eeprom->ptr, eeprom->size,
+    controller)) {
     debug("create_device: Failed to initialize the SI.\n");
     return NULL;
   }
