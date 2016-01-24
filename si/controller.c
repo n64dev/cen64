@@ -38,7 +38,8 @@ static int eeprom_write(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_b
 // Initializes the SI.
 int si_init(struct si_controller *si, struct bus_controller *bus,
   const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present,
-  const uint8_t *eeprom, size_t eeprom_size) {
+  const uint8_t *eeprom, size_t eeprom_size,
+  const struct controller *controller) {
   uint32_t cic_seed;
 
   si->bus = bus;
@@ -74,6 +75,9 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
   si->eeprom.data = eeprom;
   si->eeprom.size = eeprom_size;
 
+  // controllers
+  memcpy(si->controller, controller, sizeof(struct controller) * 4);
+
   return 0;
 }
 
@@ -90,14 +94,23 @@ int pif_perform_command(struct si_controller *si,
     case 0xFF:
       switch(channel) {
         case 0:
+          // always return that controller 0 is connected so that users
+          // who don't specify a controller on command line will still
+          // have good experience
           recv_buf[0] = 0x05;
           recv_buf[1] = 0x00;
-          recv_buf[2] = 0x01;
+          recv_buf[2] = si->controller[channel].pak == PAK_NONE ? 0x00 : 0x01;
           break;
 
         case 1:
         case 2:
         case 3:
+          if (si->controller[channel].present) {
+            recv_buf[0] = 0x05;
+            recv_buf[1] = 0x00;
+            recv_buf[2] = si->controller[channel].pak == PAK_NONE ? 0x00 : 0x01;
+            break;
+          }
           return 1;
 
         case 4:
@@ -136,27 +149,19 @@ int pif_perform_command(struct si_controller *si,
 
     // Read from controller pak
     case 0x02:
-      if (channel < 4) {
-        // TODO
-        break;
-      }
-
+      if (channel < 4)
+        return controller_pak_read(&si->controller[channel],
+            send_buf, send_bytes, recv_buf, recv_bytes);
       else
         assert(0 && "Invalid channel for controller pak read");
 
-      return 1;
-
     // Write to controller pak
     case 0x03:
-      if (channel < 4) {
-        // TODO
-        break;
-      }
-
+      if (channel < 4)
+        return controller_pak_write(&si->controller[channel],
+            send_buf, send_bytes, recv_buf, recv_bytes);
       else
         assert(0 && "Invalid channel for controller pak write");
-
-      return 1;
 
     // EEPROM read
     case 0x04:

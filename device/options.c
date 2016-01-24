@@ -10,6 +10,9 @@
 
 #include "common.h"
 #include "options.h"
+#include "si/pak.h"
+
+static int parse_controller_options(const char *str, int *num, struct controller *opt);
 
 const struct cen64_options default_cen64_options = {
   NULL, // ddipl_path
@@ -19,6 +22,7 @@ const struct cen64_options default_cen64_options = {
   NULL, // debugger_addr
   NULL, // eeprom_path
   0,    // eeprom_size
+  { { NULL, }, }, // controller
 #ifdef _WIN32
   false, // console
 #endif
@@ -91,6 +95,23 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       options->eeprom_size = 0x800; // 16 kbit
     }
 
+    else if (!strcmp(argv[i], "-controller")) {
+      int num;
+      struct controller opt = { NULL, };
+
+      if ((i + 1) >= (argc - 1)) {
+        printf("-controller requires a controller description.\n\n");
+        return 1;
+      }
+
+      if (!parse_controller_options(argv[++i], &num, &opt)) {
+        printf("Incorrect option format\n\n");
+        return 1;
+      }
+
+      options->controller[num] = opt;
+    }
+
     // TODO: Handle this better.
     else
       break;
@@ -114,6 +135,51 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
   if (!options->ddipl_path && !options->ddrom_path && !options->cart_path)
     return 1;
 
+  return 0;
+}
+
+int parse_controller_options(const char *str, int *num, struct controller *opt) {
+  char *token;
+  char mempak_path[4096];
+  char *opt_string = strdup(str);
+
+  if (opt_string == NULL) {
+    printf("Unable to dup a string. You're gonna have trouble running games.\n");
+    exit(1);
+  }
+  *num = -1;
+
+  token = strtok(opt_string, ",");
+  while (token != NULL) {
+    if (sscanf(token, "num=%d", num) == 1)
+      ;
+    else if (strcmp(token, "pak=rumble") == 0)
+      opt->pak = PAK_RUMBLE;
+    else if (sscanf(token, "mempak=%4095s", mempak_path) == 1)
+      opt->pak = PAK_MEM;
+    else {
+      printf("Unrecognized controller option: %s\n", token);
+      goto err;
+    }
+    // TODO transfer pak options
+    token = strtok(NULL, ",");
+  }
+
+  if (*num < 1 || *num > 4) {
+    printf("Controller number invalid or unspecified.\n");
+    goto err;
+  }
+
+  --*num; // internally it's used as an index into an array
+  mempak_path[4095] = '\0';
+  opt->mempak_path = strdup(mempak_path);
+  opt->present = 1;
+
+  free(opt_string);
+  return 1;
+
+err:
+  free(opt_string);
   return 0;
 }
 
