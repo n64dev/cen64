@@ -78,7 +78,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       }
 
       options->eeprom_path = argv[++i];
-      options->eeprom_size = 4096;
+      options->eeprom_size = 0x200; // 4 kbit
     }
 
     else if (!strcmp(argv[i], "-eep16k")) {
@@ -88,7 +88,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       }
 
       options->eeprom_path = argv[++i];
-      options->eeprom_size = 16384;
+      options->eeprom_size = 0x800; // 16 kbit
     }
 
     // TODO: Handle this better.
