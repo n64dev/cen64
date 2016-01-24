@@ -21,14 +21,25 @@ int close_save_file(const struct save_file *file) {
 }
 
 // Maps a save into the host address pace, returns a pointer.
-int open_save_file(const char *path, size_t size, struct save_file *file) {
+int open_save_file(const char *path, size_t size, struct save_file *file, int *created) {
   struct stat sb;
   void *ptr;
   int fd;
+  int my_created;
 
-  // Open the file for read write, and create it if it doesn't exist.
-  if ((fd = open(path, O_RDWR | O_CREAT, 0666)) == -1)
-    return -1;
+  // Open the file O_EXCL to see if it exists
+  if ((fd = open(path, O_RDWR | O_CREAT | O_EXCL, 0666)) >= 0)
+    my_created = 1;
+
+  // Otherwise just open to the file
+  else {
+    if ((fd = open(path, O_RDWR, 0666)) == -1)
+      return -1;
+    my_created = 0;
+  }
+
+  if (created != NULL)
+    *created = my_created;
 
   // Get the file's size, map it into the address space.
   if (fstat(fd, &sb) == -1)
