@@ -21,6 +21,7 @@ struct cen64_options {
 
   const char *eeprom_path;
   size_t eeprom_size;
+  const char *sram_path;
 
   struct controller *controller;
 

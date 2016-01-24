@@ -22,6 +22,7 @@ const struct cen64_options default_cen64_options = {
   NULL, // debugger_addr
   NULL, // eeprom_path
   0,    // eeprom_size
+  NULL, // sram_path
   { { NULL, }, }, // controller
 #ifdef _WIN32
   false, // console
@@ -93,6 +94,15 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 
       options->eeprom_path = argv[++i];
       options->eeprom_size = 0x800; // 16 kbit
+    }
+
+    else if (!strcmp(argv[i], "-sram")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-sram requires a path to the save file.\n\n");
+        return 1;
+      }
+
+      options->sram_path = argv[++i];
     }
 
     else if (!strcmp(argv[i], "-controller")) {

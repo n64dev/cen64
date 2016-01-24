@@ -45,6 +45,13 @@ static int pi_dma_read(struct pi_controller *pi) {
   if (length & 7)
     length = (length + 7) & ~7;
 
+  // SRAM
+  if (dest >= 0x08000000 && dest < 0x08010000) {
+    uint32_t addr = dest & 0x00FFFFF;
+    if (pi->sram->ptr != NULL && addr + length <= 0x8000)
+      memcpy(pi->sram->ptr + addr, pi->bus->ri->ram + source, length);
+  }
+
   pi->regs[PI_DRAM_ADDR_REG] += length;
   pi->regs[PI_CART_ADDR_REG] += length;
   pi->regs[PI_STATUS_REG] &= ~0x1;
@@ -80,8 +87,15 @@ static int pi_dma_write(struct pi_controller *pi) {
     memcpy(pi->bus->ri->ram + dest, pi->bus->dd->ipl_rom + source, length);
   }
 
-  else if ((source & 0x08000000) == 0x08000000) {
+  // SRAM
+  else if (source >= 0x08000000 && source < 0x08010000) {
+    uint32_t addr = source & 0x00FFFFF;
+    if (pi->sram->ptr != NULL && addr + length <= 0x8000)
+      memcpy(pi->bus->ri->ram + dest, pi->sram->ptr + addr, length);
+  }
 
+  else if (source >= 0x18000000 && source < 0x18400000) {
+    // TODO: 64DD modem
   }
 
   else if (pi->rom) {
@@ -106,10 +120,11 @@ static int pi_dma_write(struct pi_controller *pi) {
 
 // Initializes the PI.
 int pi_init(struct pi_controller *pi, struct bus_controller *bus,
-  const uint8_t *rom, size_t rom_size) {
+  const uint8_t *rom, size_t rom_size, const struct save_file *sram) {
   pi->bus = bus;
   pi->rom = rom;
   pi->rom_size = rom_size;
+  pi->sram = sram;
 
   return 0;
 }
