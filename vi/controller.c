@@ -114,6 +114,10 @@ void vi_cycle(struct vi_controller *vi) {
     cen64_gl_window_push_frame(window);
   }
 
+  else {
+
+  }
+
   // Raise an interrupt to indicate refresh.
   signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
   vi->counter = VI_COUNTER_START;
@@ -122,14 +126,18 @@ void vi_cycle(struct vi_controller *vi) {
 }
 
 // Initializes the VI.
-int vi_init(struct vi_controller *vi, struct bus_controller *bus) {
+int vi_init(struct vi_controller *vi,
+  struct bus_controller *bus, bool no_interface) {
   vi->counter = VI_COUNTER_START;
   vi->bus = bus;
 
-  if (vi_create_window(vi))
-    return -1;
+  if (!no_interface) {
+    if (vi_create_window(vi))
+      return -1;
 
-  gl_window_init(vi);
+    gl_window_init(vi);
+  }
+
   return 0;
 }
 

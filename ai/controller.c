@@ -59,7 +59,11 @@ void ai_dma(struct ai_controller *ai) {
 
   // Need to raise an interrupt when the DMA engine
   // is doing the last 8-byte data bus transfer...
-  if (likely(ai->fifo[ai->fifo_ri].length > 0)) {
+  //
+  // XXX: Skipping this branch (no_output) will result in
+  // some ROMs not booting since they'll expect minimal
+  // amounts of functionality present.
+  if (likely(!ai->no_output && ai->fifo[ai->fifo_ri].length > 0)) {
     unsigned freq = (double) NTSC_DAC_FREQ / (ai->regs[AI_DACRATE_REG] + 1);
     unsigned samples = ai->fifo[ai->fifo_ri].length / 4;// - 1;
 
@@ -120,11 +124,15 @@ void ai_dma(struct ai_controller *ai) {
 
 // Initializes the AI.
 int ai_init(struct ai_controller *ai,
-  struct bus_controller *bus) {
+  struct bus_controller *bus, bool no_interface) {
   ai->bus = bus;
 
-  if (ai_context_create(&ai->ctx))
-    return 1;
+  ai->no_output = no_interface;
+
+  if (!no_interface) {
+    if (ai_context_create(&ai->ctx))
+      return 1;
+  }
 
   // We'll recalculate once the first DMA is issued.
   ai->counter = 0xFFFFFFFFU;

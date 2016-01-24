@@ -40,9 +40,11 @@ struct ai_controller {
 
   unsigned fifo_count, fifo_wi, fifo_ri;
   struct ai_fifo_entry fifo[2];
+  bool no_output;
 };
 
-cen64_cold int ai_init(struct ai_controller *ai, struct bus_controller *bus);
+cen64_cold int ai_init(struct ai_controller *ai, struct bus_controller *bus,
+  bool no_interface);
 
 cen64_flatten cen64_hot void ai_cycle(struct ai_controller *ai);
 
