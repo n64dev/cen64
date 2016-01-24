@@ -11,6 +11,7 @@
 #ifndef __si_controller_h__
 #define __si_controller_h__
 #include "common.h"
+#include "si/pak.h"
 
 struct bus_controller *bus;
 
@@ -40,11 +41,13 @@ struct si_controller {
   uint32_t pif_status;
   uint8_t input[4];
   struct eeprom eeprom;
+  struct controller controller[4];
 };
 
 cen64_cold int si_init(struct si_controller *si, struct bus_controller *bus,
   const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present,
-  const uint8_t *eeprom, size_t eeprom_size);
+  const uint8_t *eeprom, size_t eeprom_size,
+  const struct controller *controller);
 
 int read_pif_ram(void *opaque, uint32_t address, uint32_t *word);
 int read_pif_rom(void *opaque, uint32_t address, uint32_t *word);

@@ -22,6 +22,8 @@ struct cen64_options {
   const char *eeprom_path;
   size_t eeprom_size;
 
+  struct controller *controller;
+
 #ifdef _WIN32
   bool console;
 #endif
