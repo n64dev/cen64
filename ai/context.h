@@ -15,9 +15,11 @@
 #include <AL/alc.h>
 
 struct cen64_ai_context {
-  ALuint buffers[4];
+  ALuint buffers[2];
+  ALuint cur_frequency;
   ALuint frequency;
   ALuint source;
+  ALuint unqueued_buffers;
 
   ALCdevice *dev;
   ALCcontext *ctx;
@@ -25,6 +27,8 @@ struct cen64_ai_context {
 
 cen64_cold int ai_context_create(struct cen64_ai_context *context);
 cen64_cold void ai_context_destroy(struct cen64_ai_context *context);
+
+int ai_switch_frequency(struct cen64_ai_context *context, ALint frequency);
 
 #endif
 

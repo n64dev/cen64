@@ -76,6 +76,23 @@ void ai_dma(struct ai_controller *ai) {
 
     alGetSourcei(ai->ctx.source, AL_BUFFERS_PROCESSED, &val);
 
+    // XXX: Most games pick one frequency and stick with it.
+    // Instead of paying garbage, try to dynamically switch
+    // the frequency of the buffers that OpenAL is using.
+    //
+    // This will result in pops and other unpleasant things
+    // when the frequency changes underneath us, but it still
+    // seems to sound better than what we had before.
+    if (ai->ctx.cur_frequency != freq) {
+      if (val == sizeof(ai->ctx.buffers) / sizeof(ai->ctx.buffers[0])) {
+        printf("OpenAL: Switching context buffer frequency to: %u\n", freq);
+        ai_switch_frequency(&ai->ctx, freq);
+      }
+
+      else
+        val = 0;
+    }
+
     if (val) {
       for (i = 0; i < ai->fifo[ai->fifo_ri].length / 4; i++) {
         uint32_t word;
@@ -88,19 +105,35 @@ void ai_dma(struct ai_controller *ai) {
         memcpy(buf + sizeof(word) * i, &word, sizeof(word));
       }
 
-      alSourceUnqueueBuffers(ai->ctx.source, 1, &buffer);
+      if (ai->ctx.unqueued_buffers > 0) {
+        buffer = ai->ctx.buffers[sizeof(ai->ctx.buffers) /
+          sizeof(ai->ctx.buffers[0]) - ai->ctx.unqueued_buffers];
+
+        ai->ctx.unqueued_buffers--;
+      }
+
+      else
+        alSourceUnqueueBuffers(ai->ctx.source, 1, &buffer);
+
       alBufferData(buffer, AL_FORMAT_STEREO16, buf,
-        ai->fifo[ai->fifo_ri].length, 44100 /* ai->ctx.frequency */);
+        ai->fifo[ai->fifo_ri].length, freq);
       alSourceQueueBuffers(ai->ctx.source, 1, &buffer);
 
-      alGetSourcei(ai->ctx.source, AL_SOURCE_STATE, &val);
-
-      if(val != AL_PLAYING)
+      if (ai->ctx.unqueued_buffers == 1) {
         alSourcePlay(ai->ctx.source);
+      }
+
+      else {
+        alGetSourcei(ai->ctx.source, AL_SOURCE_STATE, &val);
+
+        if (val != AL_PLAYING)
+          alSourcePlay(ai->ctx.source);
+      }
 
       if (alGetError() != AL_NO_ERROR) {
-        fprintf(stderr, "OpenAL is angry!\n");
-        exit(255);
+        fprintf(stderr, "OpenAL: Reporting an error while playing sources!\n");
+        fprintf(stderr, "Disabling it from this point forward; sorry!\n");
+        ai->no_output = true;
       }
     }
 
