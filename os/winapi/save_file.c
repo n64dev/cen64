@@ -74,3 +74,43 @@ int open_save_file(const char *path, size_t size,
   return 0;
 }
 
+// Opening a game boy save: don't set a specific size and don't create
+// the file if it doesn't exist
+int open_gb_save(const char *path, struct save_file *file) {
+  void *ptr;
+  size_t size;
+  HANDLE mapping;
+  HANDLE hfile;
+
+  // Open the file, get its size.
+  if ((hfile = CreateFile(path, GENERIC_READ | GENERIC_WRITE,
+    0, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL))
+    == INVALID_HANDLE_VALUE)
+    return -1;
+
+  size = GetFileSize(hfile, NULL);
+
+  // Create a mapping and effectively enable it.
+  if ((mapping = CreateFileMapping(hfile, 0,
+    PAGE_READWRITE, 0, 0, NULL)) == NULL) {
+    CloseHandle(hfile);
+
+    return -2;
+  }
+
+  if ((ptr = MapViewOfFile(mapping, FILE_MAP_READ | FILE_MAP_WRITE,
+    0, 0, 0)) == NULL) {
+    CloseHandle(mapping);
+    CloseHandle(hfile);
+
+    return -3;
+  }
+
+  file->ptr = ptr;
+  file->size = size;
+  file->mapping = mapping;
+  file->file = hfile;
+
+  return 0;
+}
+
