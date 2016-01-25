@@ -373,7 +373,7 @@ int eeprom_read(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_bytes, ui
 
   uint16_t address = send_buf[1] << 3;
 
-  if (eeprom != NULL && address <= eeprom->size - 8) {
+  if (eeprom->data != NULL && address <= eeprom->size - 8) {
     memcpy(recv_buf, &eeprom->data[address], 8);
     return 0;
   }
@@ -386,7 +386,7 @@ static int eeprom_write(struct eeprom *eeprom, uint8_t *send_buf, uint8_t send_b
 
   uint16_t address = send_buf[1] << 3;
 
-  if (eeprom != NULL && address <= eeprom->size - 8) {
+  if (eeprom->data != NULL && address <= eeprom->size - 8) {
     memcpy(&eeprom->data[address], send_buf + 2, 8);
     return 0;
   }
