@@ -21,6 +21,7 @@ typedef HANDLE cen64_thread;
 typedef DWORD (*cen64_thread_func)(LPVOID arg);
 
 typedef HANDLE cen64_mutex;
+typedef HANDLE cen64_cv;
 
 //
 // Threads.
@@ -74,6 +75,36 @@ static inline int cen64_mutex_lock(cen64_mutex *m) {
 // Unlocks the mutex passed as an argument.
 static inline int cen64_mutex_unlock(cen64_mutex *m) {
   return !ReleaseMutex(*m);
+}
+
+//
+// Condition variables.
+//
+
+// Allocates resources for/initializes a CV.
+static inline int cen64_cv_create(cen64_cv *cv) {
+  if (unlikely((*cv = CreateSemaphore(NULL, 0, 1, NULL)) == NULL))
+    return 1;
+
+  return 0;
+}
+
+// Releases resources acquired by cen64_cv_create.
+static inline int cen64_cv_destroy(cen64_cv *cv) {
+  return !CloseHandle(*cv);
+}
+
+// Releases the mutex and waits until cen64_cv_signal is called.
+static inline int cen64_cv_wait(cen64_cv *cv, cen64_mutex *m) {
+  if (likely(SignalObjectAndWait(*cv, *m, INFINITE, FALSE) == WAIT_OBJECT_0))
+    return 0;
+
+  return 1;
+}
+
+// Signals the condition variable.
+static inline int cen64_cv_signal(cen64_cv *cv) {
+  return !ReleaseSemaphore(*cv, 1, 0);
 }
 
 #endif
