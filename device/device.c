@@ -170,7 +170,6 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
 
     for (i = 0; i < 6250; i++) {
       rsp_cycle(&device->rsp);
-      ai_cycle(&device->ai);
       vi_cycle(&device->vi);
     }
 
@@ -196,10 +195,15 @@ CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *opaque) {
   struct cen64_device *device = (struct cen64_device *) opaque;
 
   while (1) {
-    unsigned i;
+    unsigned i, j;
 
-    for (i = 0; i < 9375; i++)
-      vr4300_cycle(&device->vr4300);
+    for (i = 0; i < 6250 / 10; i++) {
+      for (j = 0; j < 10; j++)
+        ai_cycle(&device->ai);
+
+      for (j = 0; j < 15; j++)
+        vr4300_cycle(&device->vr4300);
+    }
 
     // Sync up with the RCP thread.
     cen64_mutex_lock(&device->sync_mutex);
