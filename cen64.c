@@ -11,6 +11,7 @@
 #include "common.h"
 #include "bus/controller.h"
 #include "cen64.h"
+#include "device/cart_db.h"
 #include "device/device.h"
 #include "device/options.h"
 #include "os/common/alloc.h"
@@ -35,15 +36,18 @@ int cen64_main(int argc, const char **argv) {
 	struct cen64_options options = default_cen64_options;
   options.controller = controller;
   struct rom_file ddipl, ddrom, pifrom, cart;
-  struct save_file eeprom;
-  struct save_file sram;
   struct cen64_mem cen64_device_mem;
   struct cen64_device *device;
   int status;
 
-  // Clear OpenAL error if it exists...
-  // This is really just here for safety.
-  alGetError();
+  const struct cart_db_entry *cart_info;
+  struct save_file eeprom;
+  struct save_file sram;
+
+  if (cart_db_is_well_formed()) {
+    printf("Internal cart detection database is not well-formed.\n");
+    return EXIT_FAILURE;
+  }
 
   if (cen64_alloc_init()) {
     printf("Failed to initialize the low-level allocators.\n");
@@ -75,6 +79,9 @@ int cen64_main(int argc, const char **argv) {
     cen64_alloc_cleanup();
     return EXIT_FAILURE;
   }
+
+  if (cart.size >= 0x40 && (cart_info = cart_db_get_entry(cart.ptr)) != NULL)
+    printf("Detected cart: %s\n", cart_info->image_name);
 
   if (load_paks(controller)) {
     cen64_alloc_cleanup();

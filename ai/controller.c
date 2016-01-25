@@ -130,6 +130,8 @@ int ai_init(struct ai_controller *ai,
   ai->no_output = no_interface;
 
   if (!no_interface) {
+    alGetError();
+
     if (ai_context_create(&ai->ctx))
       return 1;
   }
