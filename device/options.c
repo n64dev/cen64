@@ -151,6 +151,8 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 int parse_controller_options(const char *str, int *num, struct controller *opt) {
   char *token;
   char mempak_path[4096];
+  char tpak_rom_path[4096] = { 0, };
+  char tpak_save_path[4096] = { 0, };
   char *opt_string = strdup(str);
 
   if (opt_string == NULL) {
@@ -165,8 +167,14 @@ int parse_controller_options(const char *str, int *num, struct controller *opt) 
       ;
     else if (strcmp(token, "pak=rumble") == 0)
       opt->pak = PAK_RUMBLE;
+    else if (strcmp(token, "pak=transfer") == 0)
+      opt->pak = PAK_TRANSFER;
     else if (sscanf(token, "mempak=%4095s", mempak_path) == 1)
       opt->pak = PAK_MEM;
+    else if (sscanf(token, "tpak_rom=%4095s", tpak_rom_path) == 1)
+      opt->pak = PAK_TRANSFER;
+    else if (sscanf(token, "tpak_save=%4095s", tpak_save_path) == 1)
+      opt->pak = PAK_TRANSFER;
     else {
       printf("Unrecognized controller option: %s\n", token);
       goto err;
@@ -182,7 +190,14 @@ int parse_controller_options(const char *str, int *num, struct controller *opt) 
 
   --*num; // internally it's used as an index into an array
   mempak_path[4095] = '\0';
-  opt->mempak_path = strdup(mempak_path);
+  if (strlen(mempak_path) > 0)
+    opt->mempak_path = strdup(mempak_path);
+  tpak_rom_path[4095] = '\0';
+  if (strlen(tpak_rom_path) > 0)
+    opt->tpak_rom_path = strdup(tpak_rom_path);
+  tpak_save_path[4095] = '\0';
+  if (strlen(tpak_save_path) > 0)
+    opt->tpak_save_path = strdup(tpak_save_path);
   opt->present = 1;
 
   free(opt_string);

@@ -200,6 +200,29 @@ cen64_cold int load_paks(struct controller *controller) {
       if (created)
         controller_pak_format(controller[i].mempak_save.ptr);
     }
+
+    else if (controller[i].pak == PAK_TRANSFER) {
+      if (controller[i].tpak_rom_path != NULL) {
+        if (open_rom_file(controller[i].tpak_rom_path,
+              &controller[i].tpak_rom)) {
+          printf("Can't open transfer pak ROM\n");
+          return -1;
+        }
+      } else {
+        printf("No ROM supplied for transfer pak.\n");
+        printf("The game will run but probably won't do anything interest\n");
+      }
+      if (controller[i].tpak_save_path != NULL) {
+        if (open_gb_save(controller[i].tpak_save_path,
+              &controller[i].tpak_save)) {
+          printf("Can't open transfer pak save\n");
+          return -1;
+        }
+      } else {
+        printf("No save supplied for transfer pak. Just FYI.\n");
+      }
+
+    }
   }
   return 0;
 }
