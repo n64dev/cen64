@@ -31,12 +31,14 @@ struct pi_controller {
   const uint8_t *rom;
   size_t rom_size;
   struct save_file *sram;
+  struct save_file *flashram;
 
   uint32_t regs[NUM_PI_REGISTERS];
 };
 
 cen64_cold int pi_init(struct pi_controller *pi, struct bus_controller *bus,
-  const uint8_t *rom, size_t rom_size, const struct save_file *sram);
+  const uint8_t *rom, size_t rom_size, const struct save_file *sram,
+  const struct save_file *flashram);
 
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);

@@ -23,6 +23,7 @@ const struct cen64_options default_cen64_options = {
   NULL, // eeprom_path
   0,    // eeprom_size
   NULL, // sram_path
+  NULL, // flashram_path
   { { NULL, }, }, // controller
 #ifdef _WIN32
   false, // console
@@ -122,6 +123,15 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       }
 
       options->sram_path = argv[++i];
+    }
+
+    else if (!strcmp(argv[i], "-flash")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-flash requires a path to the save file.\n\n");
+        return 1;
+      }
+
+      options->flashram_path = argv[++i];
     }
 
     else if (!strcmp(argv[i], "-controller")) {
