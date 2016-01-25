@@ -53,13 +53,12 @@ uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
   src = SP_REGISTER_OFFSET + src;
 
   switch(src) {
-    case RSP_CP0_REGISTER_SP_RESERVED:
-      if (!rsp->regs[RSP_CP0_REGISTER_SP_RESERVED]) {
-        rsp->regs[RSP_CP0_REGISTER_SP_RESERVED] = 1;
-        return 0;
-      }
+    case RSP_CP0_REGISTER_SP_STATUS:
+      return *((volatile uint32_t *) &rsp->regs[RSP_CP0_REGISTER_SP_STATUS]);
 
-      return 1;
+    case RSP_CP0_REGISTER_SP_RESERVED:
+      return !__sync_bool_compare_and_swap(
+          &rsp->regs[RSP_CP0_REGISTER_SP_RESERVED], 0, 1);
 
     case RSP_CP0_REGISTER_DMA_FULL:
     case RSP_CP0_REGISTER_DMA_BUSY:
@@ -88,75 +87,80 @@ uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
 
 // Updates the SP_STATUS register according to bitmask in rt.
 void rsp_status_write(struct rsp *rsp, uint32_t rt) {
-  uint32_t status = rsp->regs[RSP_CP0_REGISTER_SP_STATUS];
+  uint32_t prev_status, status;
 
-  if (rt & SP_CLR_HALT) {
-    rsp_pipeline_init(&rsp->pipeline);
-    status &= ~SP_STATUS_HALT;
-  }
+  do {
+    prev_status = rsp->regs[RSP_CP0_REGISTER_SP_STATUS];
+    status = prev_status;
 
-  else if (rt & SP_SET_HALT)
-    status |= SP_STATUS_HALT;
+    if (rt & SP_CLR_HALT) {
+      rsp_pipeline_init(&rsp->pipeline);
+      status &= ~SP_STATUS_HALT;
+    }
 
-  if (rt & SP_CLR_BROKE)
-    status &= ~SP_STATUS_BROKE;
+    else if (rt & SP_SET_HALT)
+      status |= SP_STATUS_HALT;
 
-  if (rt & SP_CLR_INTR)
-    clear_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
-  else if (rt & SP_SET_INTR)
-    signal_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
+    if (rt & SP_CLR_BROKE)
+      status &= ~SP_STATUS_BROKE;
 
-  if (rt & SP_CLR_SSTEP)
-    status &= ~SP_STATUS_SSTEP;
-  else if (rt & SP_SET_SSTEP)
-    status |= SP_STATUS_SSTEP;
+    if (rt & SP_CLR_INTR)
+      clear_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
+    else if (rt & SP_SET_INTR)
+      signal_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
 
-  if (rt & SP_CLR_INTR_BREAK)
-    status &= ~SP_STATUS_INTR_BREAK;
-  else if  (rt & SP_SET_INTR_BREAK)
-    status |= SP_STATUS_INTR_BREAK;
+    if (rt & SP_CLR_SSTEP)
+      status &= ~SP_STATUS_SSTEP;
+    else if (rt & SP_SET_SSTEP)
+      status |= SP_STATUS_SSTEP;
 
-  if (rt & SP_CLR_SIG0)
-    status &= ~SP_STATUS_SIG0;
-  else if (rt & SP_SET_SIG0)
-    status |= SP_STATUS_SIG0;
+    if (rt & SP_CLR_INTR_BREAK)
+      status &= ~SP_STATUS_INTR_BREAK;
+    else if  (rt & SP_SET_INTR_BREAK)
+      status |= SP_STATUS_INTR_BREAK;
 
-  if (rt & SP_CLR_SIG1)
-    status &= ~SP_STATUS_SIG1;
-  else if (rt & SP_SET_SIG1)
-    status |= SP_STATUS_SIG1;
+    if (rt & SP_CLR_SIG0)
+      status &= ~SP_STATUS_SIG0;
+    else if (rt & SP_SET_SIG0)
+      status |= SP_STATUS_SIG0;
 
-  if (rt & SP_CLR_SIG2)
-    status &= ~SP_STATUS_SIG2;
-  else if (rt & SP_SET_SIG2)
-    status |= SP_STATUS_SIG2;
+    if (rt & SP_CLR_SIG1)
+      status &= ~SP_STATUS_SIG1;
+    else if (rt & SP_SET_SIG1)
+      status |= SP_STATUS_SIG1;
 
-  if (rt & SP_CLR_SIG3)
-    status &= ~SP_STATUS_SIG3;
-  else if (rt & SP_SET_SIG3)
-    status |= SP_STATUS_SIG3;
+    if (rt & SP_CLR_SIG2)
+      status &= ~SP_STATUS_SIG2;
+    else if (rt & SP_SET_SIG2)
+      status |= SP_STATUS_SIG2;
 
-  if (rt & SP_CLR_SIG4)
-    status &= ~SP_STATUS_SIG4;
-  else if (rt & SP_SET_SIG4)
-    status |= SP_STATUS_SIG4;
+    if (rt & SP_CLR_SIG3)
+      status &= ~SP_STATUS_SIG3;
+    else if (rt & SP_SET_SIG3)
+      status |= SP_STATUS_SIG3;
 
-  if (rt & SP_CLR_SIG5)
-    status &= ~SP_STATUS_SIG5;
-  else if (rt & SP_SET_SIG5)
-    status |= SP_STATUS_SIG5;
+    if (rt & SP_CLR_SIG4)
+      status &= ~SP_STATUS_SIG4;
+    else if (rt & SP_SET_SIG4)
+      status |= SP_STATUS_SIG4;
 
-  if (rt & SP_CLR_SIG6)
-    status &= ~SP_STATUS_SIG6;
-  else if (rt & SP_SET_SIG6)
-    status |= SP_STATUS_SIG6;
+    if (rt & SP_CLR_SIG5)
+      status &= ~SP_STATUS_SIG5;
+    else if (rt & SP_SET_SIG5)
+      status |= SP_STATUS_SIG5;
 
-  if (rt & SP_CLR_SIG7)
-    status &= ~SP_STATUS_SIG7;
-  else if (rt & SP_SET_SIG7)
-    status |= SP_STATUS_SIG7;
+    if (rt & SP_CLR_SIG6)
+      status &= ~SP_STATUS_SIG6;
+    else if (rt & SP_SET_SIG6)
+      status |= SP_STATUS_SIG6;
 
-  rsp->regs[RSP_CP0_REGISTER_SP_STATUS] = status;
+    if (rt & SP_CLR_SIG7)
+      status &= ~SP_STATUS_SIG7;
+    else if (rt & SP_SET_SIG7)
+      status |= SP_STATUS_SIG7;
+  } while (!__sync_bool_compare_and_swap(
+    &rsp->regs[RSP_CP0_REGISTER_SP_STATUS],
+    prev_status, status));
 }
 
 // Writes a value to the control processor.
@@ -187,8 +191,10 @@ void rsp_write_cp0_reg(struct rsp *rsp, unsigned dest, uint32_t rt) {
       break;
 
     case RSP_CP0_REGISTER_SP_RESERVED:
-      if (rt == 0)
-        rsp->regs[RSP_CP0_REGISTER_SP_RESERVED] = 0;
+      if (rt == 0) {
+        *((volatile uint32_t *) &rsp->regs[RSP_CP0_REGISTER_SP_RESERVED]) = 0;
+        __asm__ __volatile__("" ::: "memory");
+      }
 
       break;
 
