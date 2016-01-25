@@ -21,6 +21,7 @@ typedef pthread_t cen64_thread;
 typedef void* (*cen64_thread_func)(void *arg);
 
 typedef pthread_mutex_t cen64_mutex;
+typedef pthread_cond_t cen64_cv;
 
 //
 // Threads.
@@ -62,6 +63,30 @@ static inline int cen64_mutex_lock(cen64_mutex *m) {
 // Unlocks the mutex passed as an argument.
 static inline int cen64_mutex_unlock(cen64_mutex *m) {
   return pthread_mutex_unlock(m);
+}
+
+//
+// Condition variables.
+//
+
+// Allocates resources for/initializes a CV.
+static inline int cen64_cv_create(cen64_cv *cv) {
+  return pthread_cond_init(cv, NULL);
+}
+
+// Releases resources acquired by cen64_cv_create.
+static inline int cen64_cv_destroy(cen64_cv *cv) {
+  return pthread_cond_destroy(cv);
+}
+
+// Releases the mutex and waits until cen64_cv_signal is called.
+static inline int cen64_cv_wait(cen64_cv *cv, cen64_mutex *m) {
+  return pthread_cond_wait(cv, m) || pthread_mutex_unlock(m);
+}
+
+// Signals the condition variable.
+static inline int cen64_cv_signal(cen64_cv *cv) {
+  return pthread_cond_signal(cv);
 }
 
 #endif

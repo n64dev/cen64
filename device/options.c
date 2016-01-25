@@ -28,6 +28,7 @@ const struct cen64_options default_cen64_options = {
   false, // console
 #endif
   false, // enable_debugger
+  false, // multithread
   false, // no_audio
   false, // no_video
 };
@@ -54,6 +55,15 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 
       else
         options->debugger_addr = "localhost:64646";
+    }
+
+    else if (!strcmp(argv[i], "-multithread")) {
+      options->multithread = true;
+
+      // OpenAL and Windows don't get along here...
+#ifdef _WIN32
+      options->no_audio = true;
+#endif
     }
 
     else if (!strcmp(argv[i], "-ddipl")) {
@@ -134,6 +144,11 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     // TODO: Handle this better.
     else
       break;
+  }
+
+  if (options->enable_debugger && options->multithread) {
+    printf("Debugging not supported while using -multithread.\n");
+    return 1;
   }
 
   // Took this out to permit emulation
@@ -231,6 +246,8 @@ void print_command_line_usage(const char *invokation_string) {
 #endif
       "  -debug [addr][:port]       : Starts the debugger on interface:port.\n"
       "                               By default, CEN64 uses localhost:64646.\n"
+      "  -multithread               : Run in a threaded (but quasi-accurate) mode.\n"
+      "                             : This mode cannot be run with the debugger.\n"
       "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"
       "  -ddrom <path>              : Path to the 64DD disk ROM (requires -ddipl).\n"
       "  -headless                  : Run emulator without user-interface components.\n"

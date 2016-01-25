@@ -23,6 +23,7 @@
 #include "si/controller.h"
 #include "rdp/cpu.h"
 #include "rsp/cpu.h"
+#include "thread.h"
 #include "vi/controller.h"
 #include "vr4300/cpu.h"
 
@@ -42,7 +43,13 @@ struct cen64_device {
 
   struct rdp rdp;
   struct rsp rsp;
+
   int debug_sfd;
+
+  bool multithread;
+  bool other_thread_is_waiting;
+  cen64_mutex sync_mutex;
+  cen64_cv sync_cv;
 };
 
 cen64_cold void device_destroy(struct cen64_device *device);

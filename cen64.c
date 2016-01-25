@@ -18,8 +18,6 @@
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
 #include "thread.h"
-#include <AL/al.h>
-#include <AL/alc.h>
 #include <stdlib.h>
 
 cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
@@ -28,7 +26,6 @@ cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
 cen64_cold static int load_paks(struct controller *controller);
 
 cen64_cold static int run_device(struct cen64_device *device, bool no_video);
-
 cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
 
 // Called when another simulation instance is desired.
@@ -117,6 +114,7 @@ int cen64_main(int argc, const char **argv) {
     }
 
     else {
+      device->multithread = options.multithread;
       status = run_device(device, options.no_video);
       device_destroy(device);
     }
@@ -188,7 +186,7 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
   return 0;
 }
 
-cen64_cold int load_paks(struct controller *controller) {
+int load_paks(struct controller *controller) {
   int i;
 
   for (i = 0; i < 4; ++i) {

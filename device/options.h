@@ -30,6 +30,7 @@ struct cen64_options {
 #endif
 
   bool enable_debugger;
+  bool multithread;
   bool no_audio;
   bool no_video;
 };
