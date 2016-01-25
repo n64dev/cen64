@@ -120,11 +120,13 @@ static int pi_dma_write(struct pi_controller *pi) {
 
 // Initializes the PI.
 int pi_init(struct pi_controller *pi, struct bus_controller *bus,
-  const uint8_t *rom, size_t rom_size, const struct save_file *sram) {
+  const uint8_t *rom, size_t rom_size, const struct save_file *sram,
+  const struct save_file *flashram) {
   pi->bus = bus;
   pi->rom = rom;
   pi->rom_size = rom_size;
   pi->sram = sram;
+  pi->flashram = flashram;
 
   return 0;
 }
