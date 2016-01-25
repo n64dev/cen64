@@ -30,7 +30,8 @@ struct cen64_options {
 #endif
 
   bool enable_debugger;
-  bool no_interface;
+  bool no_audio;
+  bool no_video;
 };
 
 extern const struct cen64_options default_cen64_options;
