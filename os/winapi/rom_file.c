@@ -20,7 +20,7 @@ int close_rom_file(const struct rom_file *file) {
   return 0;
 }
 
-// Maps a ROM into the host address pace, returns a pointer.
+// Maps a ROM into the host address space, returns a pointer.
 int open_rom_file(const char *path, struct rom_file *file) {
   void *ptr;
   size_t size;
