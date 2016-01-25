@@ -9,6 +9,7 @@
 //
 
 #include "pak.h"
+#include "pak_transfer.h"
 
 static uint8_t controller_pak_crc(uint8_t *data);
 
@@ -27,12 +28,13 @@ int controller_pak_read(struct controller *controller,
       assert(0 && "invalid mempak address");
   }
 
+  else if (controller->pak == PAK_TRANSFER)
+    transfer_pak_read(controller, send_buf, send_bytes, recv_buf, recv_bytes);
+
   else {
     uint8_t peripheral = 0x00;
     if (controller->pak == PAK_RUMBLE)
       peripheral = 0x80;
-    else if (controller->pak == PAK_TRANSFER)
-      peripheral = 0x84;
     memset(recv_buf, peripheral, 0x20);
   }
 
@@ -49,8 +51,13 @@ int controller_pak_write(struct controller *controller,
   address &= ~0b11111; // lower 5 bits are a checksum
   // printf("write to %04x\n", address);
 
-  if (address == 0x8000)
-    ; // initializing device, do nothing
+  if (address == 0x8000) {
+    // maybe only for transfer pak, unclear
+    if (send_buf[3] == 0xfe)
+      controller->pak_enabled = 0;
+    else if (send_buf[3] == 0x84)
+      controller->pak_enabled = 1;
+  }
 
   else if (controller->pak == PAK_MEM) {
     if (address <= MEMPAK_SIZE - 0x20)
@@ -69,6 +76,9 @@ int controller_pak_write(struct controller *controller,
     else
       ; // printf("Unknown rumble address\n");
   }
+
+  else if (controller->pak == PAK_TRANSFER)
+    transfer_pak_write(controller, send_buf, send_bytes, recv_buf, recv_bytes);
 
   recv_buf[0] = controller_pak_crc(send_buf+3);
 
