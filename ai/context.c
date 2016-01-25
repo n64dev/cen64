@@ -18,6 +18,8 @@ int ai_context_create(struct cen64_ai_context *context) {
   uint8_t buf[8];
   unsigned i;
 
+  context->cur_frequency = 31985;
+
   if ((context->dev = alcOpenDevice(NULL)) == NULL) {
     printf("Failed to open the OpenAL device.\n");
     return 1;
@@ -60,7 +62,7 @@ int ai_context_create(struct cen64_ai_context *context) {
 
   for (i = 0; i < sizeof(context->buffers) / sizeof(*context->buffers); i++)
     alBufferData(context->buffers[i], AL_FORMAT_STEREO16,
-      buf, sizeof(buf), 44100);
+      buf, sizeof(buf), context->cur_frequency);
 
   alSourceQueueBuffers(context->source,
     sizeof(context->buffers) / sizeof(*context->buffers),
@@ -88,6 +90,7 @@ int ai_context_create(struct cen64_ai_context *context) {
     return 1;
   }
 
+  context->unqueued_buffers = 0;
   return 0;
 }
 
@@ -100,5 +103,22 @@ void ai_context_destroy(struct cen64_ai_context *context) {
   alcMakeContextCurrent(NULL);
   alcDestroyContext(context->ctx);
   alcCloseDevice(context->dev);
+}
+
+// Generate buffers for some given frequency.
+int ai_switch_frequency(struct cen64_ai_context *context, ALint frequency) {
+  alDeleteSources(1, &context->source);
+  alDeleteBuffers(sizeof(context->buffers) / sizeof(*context->buffers),
+    context->buffers);
+
+  alGenBuffers(sizeof(context->buffers) / sizeof(*context->buffers),
+    context->buffers);
+  alGenSources(1, &context->source);
+
+  context->cur_frequency = frequency;
+  context->unqueued_buffers = sizeof(context->buffers) /
+    sizeof(*context->buffers);
+
+  return 0;
 }
 
