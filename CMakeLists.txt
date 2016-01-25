@@ -302,6 +302,7 @@ set(OS_WINAPI_SOURCES
   ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c
   ${PROJECT_SOURCE_DIR}/os/winapi/main.c
   ${PROJECT_SOURCE_DIR}/os/winapi/rom_file.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/save_file.c
   ${PROJECT_SOURCE_DIR}/os/winapi/timer.c
 )
 

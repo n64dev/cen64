@@ -20,7 +20,7 @@ int close_save_file(const struct save_file *file) {
   return munmap(file->ptr, file->size);
 }
 
-// Maps a save into the host address pace, returns a pointer.
+// Maps a save into the host address space, returns a pointer.
 int open_save_file(const char *path, size_t size, struct save_file *file, int *created) {
   struct stat sb;
   void *ptr;
