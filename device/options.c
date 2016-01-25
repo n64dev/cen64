@@ -28,7 +28,8 @@ const struct cen64_options default_cen64_options = {
   false, // console
 #endif
   false, // enable_debugger
-  false, // no_interface
+  false, // no_audio
+  false, // no_video
 };
 
 // Parses the passed command line arguments.
@@ -73,8 +74,16 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       options->ddrom_path = argv[++i];
     }
 
-    else if (!strcmp(argv[i], "-nointerface"))
-      options->no_interface = true;
+    else if (!strcmp(argv[i], "-headless")) {
+      options->no_audio = true;
+      options->no_video = true;
+    }
+
+    else if (!strcmp(argv[i], "-noaudio"))
+      options->no_audio = true;
+
+    else if (!strcmp(argv[i], "-novideo"))
+      options->no_video = true;
 
     else if (!strcmp(argv[i], "-eep4k")) {
       if ((i + 1) >= (argc - 1)) {
@@ -224,7 +233,9 @@ void print_command_line_usage(const char *invokation_string) {
       "                               By default, CEN64 uses localhost:64646.\n"
       "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"
       "  -ddrom <path>              : Path to the 64DD disk ROM (requires -ddipl).\n"
-      "  -nointerface               : Run emulator without a user interface.\n"
+      "  -headless                  : Run emulator without user-interface components.\n"
+      "  -noaudio                   : Run emulator without audio.\n"
+      "  -novideo                   : Run emulator without video.\n"
 
     ,invokation_string
   );

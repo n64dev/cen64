@@ -39,7 +39,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *pifrom, const struct rom_file *cart,
   const struct save_file *eeprom, const struct save_file *sram,
   const struct controller *controller,
-  bool no_interface) {
+  bool no_audio, bool no_video) {
 
   // Initialize the bus.
   device->bus.ai = &device->ai;
@@ -60,7 +60,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the AI.
-  if (ai_init(&device->ai, &device->bus, no_interface)) {
+  if (ai_init(&device->ai, &device->bus, no_audio)) {
     debug("create_device: Failed to initialize the AI.\n");
     return NULL;
   }
@@ -93,7 +93,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the VI.
-  if (vi_init(&device->vi, &device->bus, no_interface)) {
+  if (vi_init(&device->vi, &device->bus, no_video)) {
     debug("create_device: Failed to initialize the VI.\n");
     return NULL;
   }
