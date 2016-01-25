@@ -11,6 +11,7 @@
 #ifndef __si_pak_h__
 #define __si_pak_h__
 #include "common.h"
+#include "os/common/rom_file.h"
 #include "os/common/save_file.h"
 
 #define MEMPAK_SIZE 0x8000
@@ -25,9 +26,17 @@ enum pak_type {
 struct controller {
   const char *mempak_path;
   struct save_file mempak_save;
+
   const char *tpak_rom_path;
+  struct rom_file tpak_rom;
   const char *tpak_save_path;
+  struct save_file tpak_save;
+  int tpak_mode;
+  int tpak_mode_changed;
+  int tpak_bank;
+
   enum pak_type pak;
+  int pak_enabled;
   int present;
 };
 
