@@ -276,6 +276,7 @@ set(DD_SOURCES
 
 set(DEVICE_SOURCES
   ${PROJECT_SOURCE_DIR}/cen64.c
+  ${PROJECT_SOURCE_DIR}/device/cart_db.c
   ${PROJECT_SOURCE_DIR}/device/device.c
   ${PROJECT_SOURCE_DIR}/device/netapi.c
   ${PROJECT_SOURCE_DIR}/device/options.c
