@@ -32,6 +32,7 @@ struct save_file {
 
 cen64_cold int close_save_file(const struct save_file *file);
 cen64_cold int open_save_file(const char *path, size_t size, struct save_file *file, int *created);
+cen64_cold int open_gb_save(const char *path, struct save_file *file);
 
 #endif
 
