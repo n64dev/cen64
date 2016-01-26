@@ -257,7 +257,8 @@ void pif_process(struct si_controller *si) {
     channel++;
   }
 
-  si->ram[0x3F] = 0;
+  // clear the PIF's busy flag
+  si->ram[0x3F] &= ~0x80;
 }
 
 // Reads a word from PIF RAM.
