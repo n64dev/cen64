@@ -102,6 +102,7 @@ void ai_dma(struct ai_controller *ai) {
         memcpy(&word, bus->ri->ram + (ai->fifo[
           ai->fifo_ri].address + sizeof(word) * i), sizeof(word));
         word = byteswap_32(word);
+        word = (word >> 16) | (word << 16);
         memcpy(buf + sizeof(word) * i, &word, sizeof(word));
       }
 
