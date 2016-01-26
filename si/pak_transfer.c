@@ -80,7 +80,7 @@ void transfer_pak_write(struct controller *controller,
   else if (address >= 0xC000) {
     uint16_t gb_addr = address - 0xC000
       + (controller->tpak_bank & 3) * 0x4000;
-    gameboy_write(controller, gb_addr, send_buf);
+    gameboy_write(controller, gb_addr, send_buf + 3);
   }
 }
 
