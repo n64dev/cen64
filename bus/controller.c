@@ -25,7 +25,7 @@
 #include "vr4300/cpu.h"
 #include "vr4300/interface.h"
 
-#define NUM_MAPPINGS 19
+#define NUM_MAPPINGS 20
 
 struct bus_controller_mapping {
   memory_rd_function read;
@@ -50,6 +50,7 @@ int bus_init(struct bus_controller *bus) {
     {read_vi_regs, write_vi_regs, VI_REGS_BASE_ADDRESS, VI_REGS_ADDRESS_LEN},
 
     {read_cart_rom, write_cart_rom, ROM_CART_BASE_ADDRESS, ROM_CART_ADDRESS_LEN},
+    {read_flashram, write_flashram, FLASHRAM_BASE_ADDRESS, FLASHRAM_ADDRESS_LEN},
     {read_dd_c2s_buffer, write_dd_c2s_buffer, DD_C2S_BUFFER_ADDRESS, DD_C2S_BUFFER_LEN},
     {read_dd_ds_buffer, write_dd_ds_buffer, DD_DS_BUFFER_ADDRESS, DD_DS_BUFFER_LEN},
     {read_dd_ms_ram, write_dd_ms_ram, DD_MS_RAM_ADDRESS, DD_MS_RAM_LEN},
@@ -72,6 +73,7 @@ int bus_init(struct bus_controller *bus) {
     bus->rsp,
     bus->vi,
 
+    bus->pi,
     bus->pi,
     bus->dd,
     bus->dd,

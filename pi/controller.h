@@ -26,12 +26,32 @@ enum pi_register {
 extern const char *pi_register_mnemonics[NUM_PI_REGISTERS];
 #endif
 
+#define FLASHRAM_SIZE 0x20000
+
+enum flashram_mode {
+  FLASHRAM_IDLE = 0,
+  FLASHRAM_ERASE,
+  FLASHRAM_WRITE,
+  FLASHRAM_READ,
+  FLASHRAM_STATUS,
+};
+
+struct flashram {
+  uint8_t *data;
+  uint64_t status;
+  enum flashram_mode mode;
+  size_t offset;
+  size_t rdram_pointer;
+};
+
 struct pi_controller {
   struct bus_controller *bus;
   const uint8_t *rom;
   size_t rom_size;
   struct save_file *sram;
-  struct save_file *flashram;
+  struct save_file *flashram_file;
+
+  struct flashram flashram;
 
   uint32_t regs[NUM_PI_REGISTERS];
 };
@@ -44,6 +64,8 @@ int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_cart_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int read_flashram(void *opaque, uint32_t address, uint32_t *word);
+int write_flashram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

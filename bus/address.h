@@ -91,5 +91,8 @@
 #define VI_REGS_BASE_ADDRESS      0x04400000
 #define VI_REGS_ADDRESS_LEN       0x00000038
 
+#define FLASHRAM_BASE_ADDRESS     0x08000000
+#define FLASHRAM_ADDRESS_LEN      0x00010004 // FIXME is this accurate?
+
 #endif
 
