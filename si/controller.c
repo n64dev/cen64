@@ -109,9 +109,10 @@ int pif_perform_command(struct si_controller *si,
             recv_buf[0] = 0x05;
             recv_buf[1] = 0x00;
             recv_buf[2] = si->controller[channel].pak == PAK_NONE ? 0x00 : 0x01;
-            break;
           }
-          return 1;
+          else
+            recv_buf[0] = recv_buf[1] = recv_buf[2] = 0;
+          break;
 
         case 4:
           // XXX hack alert: this returns 16k EEPROM in the case of a
@@ -256,7 +257,8 @@ void pif_process(struct si_controller *si) {
     channel++;
   }
 
-  si->ram[0x3F] = 0;
+  // clear the PIF's busy flag
+  si->ram[0x3F] &= ~0x80;
 }
 
 // Reads a word from PIF RAM.
