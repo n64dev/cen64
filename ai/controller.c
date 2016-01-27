@@ -42,11 +42,12 @@ void ai_cycle(struct ai_controller *ai) {
 
     ai->fifo_ri = (ai->fifo_ri == 1) ? 0 : 1;
     ai->regs[AI_STATUS_REG] &= ~0xC0000001;
-    ai->counter = 0xFFFFFFFFU;
     ai->fifo_count--;
 
-    if (ai->fifo_count > 0)
+    if (ai->fifo_count > 0) {
+      ai->regs[AI_STATUS_REG] = 0x40000000;
       ai_dma(ai);
+    }
   }
 }
 
@@ -148,13 +149,14 @@ void ai_dma(struct ai_controller *ai) {
     signal_rcp_interrupt(bus->vr4300, MI_INTR_AI);
 
     ai->fifo_ri = (ai->fifo_ri == 1) ? 0 : 1;
-    ai->regs[AI_STATUS_REG] &= ~0x80000001;
-    ai->counter = 0xFFFFFFFFU;
+    ai->regs[AI_STATUS_REG] &= ~0xC0000001;
     ai->fifo_count--;
-  }
 
-  if (ai->fifo_count > 0)
-    ai->regs[AI_STATUS_REG] |= 0x40000000;
+    if (ai->fifo_count > 0) {
+      ai->regs[AI_STATUS_REG] |= 0x40000000;
+      ai->counter = 1;
+    }
+  }
 }
 
 // Initializes the AI.
@@ -170,9 +172,6 @@ int ai_init(struct ai_controller *ai,
     if (ai_context_create(&ai->ctx))
       return 1;
   }
-
-  // We'll recalculate once the first DMA is issued.
-  ai->counter = 0xFFFFFFFFU;
 
   return 0;
 }
@@ -227,8 +226,10 @@ int write_ai_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
       ai->regs[AI_STATUS_REG] |= 0x80000001U;
 
     // If we're not DMA-ing already, start DMA engine.
-    if (!(ai->regs[AI_STATUS_REG] & 0x40000000U))
+    if (!(ai->regs[AI_STATUS_REG] & 0x40000000U)) {
+      ai->regs[AI_STATUS_REG] = 0x40000000;
       ai_dma(ai);
+    }
   }
 
   else if (reg == AI_STATUS_REG) {
