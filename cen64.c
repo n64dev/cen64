@@ -164,6 +164,13 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
     return 1;
   }
 
+  if (ddipl_path != NULL && !validate_sha(ddipl, sha1_dd_ipl)) {
+    printf("Invalid SHA1 on DD IPL.\n");
+
+    close_rom_file(ddipl);
+    return 6;
+  }
+
   if (ddrom_path && open_rom_file(ddrom_path, ddrom)) {
     printf("Failed to load DD ROM: %s.\n", ddrom_path);
 
