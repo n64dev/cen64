@@ -57,89 +57,90 @@ void ai_dma(struct ai_controller *ai) {
   // Shove things into the audio context, slide the window.
   memcpy(&bus, ai, sizeof(bus));
 
-  // Need to raise an interrupt when the DMA engine
-  // is doing the last 8-byte data bus transfer...
-  //
-  // XXX: Skipping this branch (no_output) will result in
-  // some ROMs not booting since they'll expect minimal
-  // amounts of functionality present.
-  if (likely(!ai->no_output && ai->fifo[ai->fifo_ri].length > 0)) {
+  if (ai->fifo[ai->fifo_ri].length > 0) {
     unsigned freq = (double) NTSC_DAC_FREQ / (ai->regs[AI_DACRATE_REG] + 1);
-    unsigned samples = ai->fifo[ai->fifo_ri].length / 4;// - 1;
+    unsigned samples = ai->fifo[ai->fifo_ri].length / 4;
 
-    // Shovel things into the audio context.
-    uint8_t buf[0x40000];
-    unsigned i;
-
-    ALuint buffer;
-    ALint val;
-
-    alGetSourcei(ai->ctx.source, AL_BUFFERS_PROCESSED, &val);
-
-    // XXX: Most games pick one frequency and stick with it.
-    // Instead of paying garbage, try to dynamically switch
-    // the frequency of the buffers that OpenAL is using.
+    // Need to raise an interrupt when the DMA engine
+    // is doing the last 8-byte data bus transfer...
     //
-    // This will result in pops and other unpleasant things
-    // when the frequency changes underneath us, but it still
-    // seems to sound better than what we had before.
-    if (ai->ctx.cur_frequency != freq) {
-      if (val == sizeof(ai->ctx.buffers) / sizeof(ai->ctx.buffers[0])) {
-        printf("OpenAL: Switching context buffer frequency to: %u\n", freq);
-        ai_switch_frequency(&ai->ctx, freq);
+    // XXX: Should be > 2, I think, but don't want to
+    // risk breaking things and would need to verify.
+    ai->counter = (62500000.0 / freq) * (samples - 2);
+
+    if (likely(ai->fifo[ai->fifo_ri].length > 0)) {
+
+      // Shovel things into the audio context.
+      uint8_t buf[0x40000];
+      unsigned i;
+
+      ALuint buffer;
+      ALint val;
+
+      alGetSourcei(ai->ctx.source, AL_BUFFERS_PROCESSED, &val);
+
+      // XXX: Most games pick one frequency and stick with it.
+      // Instead of paying garbage, try to dynamically switch
+      // the frequency of the buffers that OpenAL is using.
+      //
+      // This will result in pops and other unpleasant things
+      // when the frequency changes underneath us, but it still
+      // seems to sound better than what we had before.
+      if (ai->ctx.cur_frequency != freq) {
+        if (val == sizeof(ai->ctx.buffers) / sizeof(ai->ctx.buffers[0])) {
+          printf("OpenAL: Switching context buffer frequency to: %u\n", freq);
+          ai_switch_frequency(&ai->ctx, freq);
+        }
+
+        else
+          val = 0;
       }
 
-      else
-        val = 0;
-    }
+      if (val) {
+        for (i = 0; i < ai->fifo[ai->fifo_ri].length / 4; i++) {
+          uint32_t word;
 
-    if (val) {
-      for (i = 0; i < ai->fifo[ai->fifo_ri].length / 4; i++) {
-        uint32_t word;
-
-        // Byteswap audio buffer to native format.
-        // TODO: Can we specify endian-ness somehow?
-        memcpy(&word, bus->ri->ram + (ai->fifo[
+          // Byteswap audio buffer to native format.
+          // TODO: Can we specify endian-ness somehow?
+          memcpy(&word, bus->ri->ram + (ai->fifo[
           ai->fifo_ri].address + sizeof(word) * i), sizeof(word));
-        word = byteswap_32(word);
-        word = (word >> 16) | (word << 16);
-        memcpy(buf + sizeof(word) * i, &word, sizeof(word));
-      }
+          word = byteswap_32(word);
+          word = (word >> 16) | (word << 16);
+          memcpy(buf + sizeof(word) * i, &word, sizeof(word));
+        }
 
-      if (ai->ctx.unqueued_buffers > 0) {
-        buffer = ai->ctx.buffers[sizeof(ai->ctx.buffers) /
-          sizeof(ai->ctx.buffers[0]) - ai->ctx.unqueued_buffers];
+        if (ai->ctx.unqueued_buffers > 0) {
+          buffer = ai->ctx.buffers[sizeof(ai->ctx.buffers) /
+            sizeof(ai->ctx.buffers[0]) - ai->ctx.unqueued_buffers];
 
-        ai->ctx.unqueued_buffers--;
-      }
+          ai->ctx.unqueued_buffers--;
+        }
 
-      else
-        alSourceUnqueueBuffers(ai->ctx.source, 1, &buffer);
+        else
+          alSourceUnqueueBuffers(ai->ctx.source, 1, &buffer);
 
-      alBufferData(buffer, AL_FORMAT_STEREO16, buf,
-        ai->fifo[ai->fifo_ri].length, freq);
-      alSourceQueueBuffers(ai->ctx.source, 1, &buffer);
+        alBufferData(buffer, AL_FORMAT_STEREO16, buf,
+          ai->fifo[ai->fifo_ri].length, freq);
+        alSourceQueueBuffers(ai->ctx.source, 1, &buffer);
 
-      if (ai->ctx.unqueued_buffers == 1) {
-        alSourcePlay(ai->ctx.source);
-      }
-
-      else {
-        alGetSourcei(ai->ctx.source, AL_SOURCE_STATE, &val);
-
-        if (val != AL_PLAYING)
+        if (ai->ctx.unqueued_buffers == 1) {
           alSourcePlay(ai->ctx.source);
-      }
+        }
 
-      if (alGetError() != AL_NO_ERROR) {
-        fprintf(stderr, "OpenAL: Reporting an error while playing sources!\n");
-        fprintf(stderr, "Disabling it from this point forward; sorry!\n");
-        ai->no_output = true;
+        else {
+          alGetSourcei(ai->ctx.source, AL_SOURCE_STATE, &val);
+
+          if (val != AL_PLAYING)
+            alSourcePlay(ai->ctx.source);
+        }
+
+        if (alGetError() != AL_NO_ERROR) {
+          fprintf(stderr, "OpenAL: Reporting an error while playing sources!\n");
+          fprintf(stderr, "Disabling it from this point forward; sorry!\n");
+          ai->no_output = true;
+        }
       }
     }
-
-    ai->counter = (62500000.0 / freq) * samples;
-    //printf("Wait %lu cycles to raise interrupt.\n", ai->counter);
   }
 
   // If the length was zero, just interrupt now?
