@@ -292,6 +292,7 @@ set(DEVICE_SOURCES
   ${PROJECT_SOURCE_DIR}/device/device.c
   ${PROJECT_SOURCE_DIR}/device/netapi.c
   ${PROJECT_SOURCE_DIR}/device/options.c
+  ${PROJECT_SOURCE_DIR}/device/sha1.c
 )
 
 set(OS_SOURCES
