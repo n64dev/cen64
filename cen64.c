@@ -185,8 +185,12 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
     return 3;
   }
 
-  if (!validate_sha(pifrom, sha1_pifrom_ntsc)) {
-    printf("Invalid SHA1 on %s.\n", pifrom_path);
+  if (validate_sha(pifrom, sha1_pifrom_ntsc))
+    printf("Using NTSC PIFROM\n");
+  else if (validate_sha(pifrom, sha1_pifrom_pal))
+    printf("Using PAL PIFROM\n");
+  else {
+    printf("Unknown or corrupted PIFROM: %s.\n", pifrom_path);
 
     if (ddipl_path)
       close_rom_file(ddipl);
