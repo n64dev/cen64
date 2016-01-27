@@ -1,5 +1,5 @@
 //
-// si/pak.c: Controller pak routines
+// si/pak_transfer.c: Controller pak routines
 //
 // CEN64: Cycle-Accurate Nintendo 64 Emulator.
 // Copyright (C) 2016, Mike Ryan.
