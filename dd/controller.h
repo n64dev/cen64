@@ -31,6 +31,13 @@ struct dd_controller {
   const uint8_t *ipl_rom;
   const uint8_t *rom;
   size_t rom_size;
+  bool retail;
+
+  bool write;
+  uint32_t track_offset;
+  uint32_t zone;
+  uint8_t start_block;
+  bool bm_reset_held;
 
   uint32_t regs[DD_REGS_ADDRESS_LEN / 4];
   uint8_t c2s_buffer[DD_C2S_BUFFER_LEN];
@@ -40,6 +47,11 @@ struct dd_controller {
 
 cen64_cold int dd_init(struct dd_controller *dd, struct bus_controller *bus,
   const uint8_t *ddipl, const uint8_t *ddrom, size_t ddrom_size);
+
+void dd_pi_write(void *opaque, uint32_t address);
+
+int dd_dma_read(void *opaque, uint32_t source, uint32_t dest, uint32_t length);
+int dd_dma_write(void *opaque, uint32_t source, uint32_t dest, uint32_t length);
 
 int read_dd_ipl_rom(void *opaque, uint32_t address, uint32_t *word);
 int write_dd_ipl_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
