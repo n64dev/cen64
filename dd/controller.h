@@ -32,7 +32,7 @@ struct dd_controller {
   const uint8_t *rom;
   size_t rom_size;
 
-  uint32_t regs[NUM_DD_REGISTERS];
+  uint32_t regs[DD_REGS_ADDRESS_LEN / 4];
   uint8_t c2s_buffer[DD_C2S_BUFFER_LEN];
   uint8_t ds_buffer[DD_DS_BUFFER_LEN];
   uint8_t ms_ram[DD_MS_RAM_LEN];
@@ -41,18 +41,11 @@ struct dd_controller {
 cen64_cold int dd_init(struct dd_controller *dd, struct bus_controller *bus,
   const uint8_t *ddipl, const uint8_t *ddrom, size_t ddrom_size);
 
-int read_dd_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-
 int read_dd_ipl_rom(void *opaque, uint32_t address, uint32_t *word);
 int write_dd_ipl_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
-int read_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t *word);
-int write_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-int read_dd_ds_buffer(void *opaque, uint32_t address, uint32_t *word);
-int write_dd_ds_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word);
-int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int read_dd_controller(void *opaque, uint32_t address, uint32_t *word);
+int write_dd_controller(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

@@ -28,6 +28,9 @@ const char *si_register_mnemonics[NUM_SI_REGISTERS] = {
 };
 #endif
 
+static int read_pif_ram(void *opaque, uint32_t address, uint32_t *word);
+static int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
 static void pif_process(struct si_controller *si);
 static int pif_perform_command(struct si_controller *si, unsigned channel,
   uint8_t *send_buf, uint8_t send_bytes, uint8_t *recv_buf, uint8_t recv_bytes);
@@ -285,9 +288,12 @@ int read_pif_ram(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Reads a word from PIF ROM.
-int read_pif_rom(void *opaque, uint32_t address, uint32_t *word) {
+int read_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t *word) {
   uint32_t offset = address - PIF_ROM_BASE_ADDRESS;
   struct si_controller *si = (struct si_controller*) opaque;
+
+  if (address >= PIF_RAM_BASE_ADDRESS)
+    return read_pif_ram(opaque, address, word);
 
   memcpy(word, si->rom + offset, sizeof(*word));
   *word = byteswap_32(*word);
@@ -322,7 +328,10 @@ int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 }
 
 // Writes a word to PIF ROM.
-int write_pif_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+int write_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  if (address >= PIF_RAM_BASE_ADDRESS)
+    return write_pif_ram(opaque, address, word, dqm);
+
   assert(0 && "Attempt to write to PIF ROM.");
   return 0;
 }

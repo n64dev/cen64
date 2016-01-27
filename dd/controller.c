@@ -34,6 +34,12 @@ const char *dd_register_mnemonics[NUM_DD_REGISTERS] = {
 };
 #endif
 
+static int read_dd_regs(void *opaque, uint32_t address, uint32_t *word);
+static int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
+static int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word);
+static int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
 // ASIC_CMD_STATUS flags.
 #define DD_CMD_NOOP           0x00000000U
 #define DD_CMD_SEEK_READ      0x00010001U
@@ -108,6 +114,11 @@ int read_dd_regs(void *opaque, uint32_t address, uint32_t *word) {
   unsigned offset = address - DD_REGS_BASE_ADDRESS;
   enum dd_register reg = (offset >> 2);
 
+  // XXX: There is some 'extra' space in the DD register MMIO
+  // space that gets mapped here in order to make the memory
+  // map a little more efficient. It shouldn't impact anything,
+  // but be wary.
+
   *word = dd->regs[reg];
   debug_mmio_read(dd, dd_register_mnemonics[reg], *word);
   return 0;
@@ -118,6 +129,11 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
   unsigned offset = address - DD_REGS_BASE_ADDRESS;
   enum dd_register reg = (offset >> 2);
+
+  // XXX: There is some 'extra' space in the DD register MMIO
+  // space that gets mapped here in order to make the memory
+  // map a little more efficient. It shouldn't impact anything,
+  // but be wary.
 
   debug_mmio_write(dd, dd_register_mnemonics[reg], word, dqm);
 
@@ -195,39 +211,37 @@ int write_dd_ipl_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm
   return 0;
 }
 
-// Reads a word from the DD C2S buffer.
-int read_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t *word) {
+// Reads a word from the DD C2S/DS buffer.
+int read_dd_controller(void *opaque, uint32_t address, uint32_t *word) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_C2S_BUFFER_ADDRESS;
+  unsigned offset = address - DD_CONTROLLER_ADDRESS;
 
-  debug_mmio_read(dd, "DD_C2S_BUFFER", *word);
+  // XXX: Hack to reduce memorymap entries.
+  if (address >= DD_MS_RAM_ADDRESS)
+    return read_dd_ms_ram(opaque, address, word);
+
+  else if (address >= DD_REGS_BASE_ADDRESS)
+    return read_dd_regs(opaque, address, word);
+
+  // XXX: Normal CS2/DS buffer access begins here.
+  debug_mmio_read(dd, "DD_C2S/DS_BUFFER", *word);
   return 0;
 }
 
-// Writes a word to the DD C2S BUFFER.
-int write_dd_c2s_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+// Writes a word to the DD C2S/DS BUFFER.
+int write_dd_controller(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_C2S_BUFFER_ADDRESS;
+  unsigned offset = address - DD_CONTROLLER_ADDRESS;
 
-  debug_mmio_write(dd, "DD_C2S_BUFFER", word, dqm);
-  return 0;
-}
+  // XXX: Hack to reduce memorymap entries.
+  if (address >= DD_MS_RAM_ADDRESS)
+    return write_dd_ms_ram(opaque, address, word, dqm);
 
-// Reads a word from the DD DS buffer.
-int read_dd_ds_buffer(void *opaque, uint32_t address, uint32_t *word) {
-  struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_DS_BUFFER_ADDRESS;
+  else if (address >= DD_REGS_BASE_ADDRESS)
+    return write_dd_regs(opaque, address, word, dqm);
 
-  debug_mmio_read(dd, "DD_DS_BUFFER", *word);
-  return 0;
-}
-
-// Writes a word to the DD DS BUFFER.
-int write_dd_ds_buffer(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
-  struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_DS_BUFFER_ADDRESS;
-
-  debug_mmio_write(dd, "DD_DS_BUFFER", word, dqm);
+  // XXX: Normal CS2/DS buffer access begins here.
+  debug_mmio_write(dd, "DD_C2S/DS_BUFFER", word, dqm);
   return 0;
 }
 
