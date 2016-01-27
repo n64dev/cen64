@@ -77,6 +77,15 @@ static int pi_dma_read(struct pi_controller *pi) {
       pi->flashram.rdram_pointer = source;
   }
 
+  else if (dest & 0x05000000)
+    dd_dma_read(pi->bus->dd, source, dest, length);
+
+  pi->regs[PI_DRAM_ADDR_REG] += length;
+  pi->regs[PI_CART_ADDR_REG] += length;
+  pi->regs[PI_STATUS_REG] &= ~0x1;
+  pi->regs[PI_STATUS_REG] |= 0x8;
+
+  signal_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
   return 0;
 }
 
@@ -97,6 +106,9 @@ static int pi_dma_write(struct pi_controller *pi) {
 
     memcpy(pi->bus->ri->ram + dest, pi->bus->dd->ipl_rom + source, length);
   }
+
+  else if (source & 0x05000000)
+    dd_dma_write(pi->bus->dd, source, dest, length);
 
   // SRAM and FlashRAM
   else if (source >= 0x08000000 && source < 0x08010000) {
@@ -202,6 +214,13 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
       clear_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
       pi->regs[reg] &= ~0x8;
     }
+  }
+
+  else if (reg == PI_CART_ADDR_REG) {
+    pi->regs[reg] &= ~dqm;
+    pi->regs[reg] |= word;
+
+    dd_pi_write(pi->bus->dd, word);
   }
 
   else {
