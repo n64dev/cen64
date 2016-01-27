@@ -13,6 +13,11 @@
 #include <time.h>
 #include <sys/time.h>
 
+// NS_PER_USEC is not defined on OS X
+#ifndef NS_PER_USEC
+#define NS_PER_USEC 1000
+#endif
+
 // Computes the difference, in ns, between two times.
 unsigned long long compute_time_difference(
   const cen64_time *now, const cen64_time *before) {
