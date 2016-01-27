@@ -13,6 +13,7 @@
 #include "common.h"
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
+#include "gb.h"
 
 #define MEMPAK_SIZE 0x8000
 
@@ -27,6 +28,11 @@ struct controller {
   const char *mempak_path;
   struct save_file mempak_save;
 
+  enum pak_type pak;
+  int pak_enabled;
+  int present;
+  
+  // tpak stuff
   const char *tpak_rom_path;
   struct rom_file tpak_rom;
   const char *tpak_save_path;
@@ -34,10 +40,11 @@ struct controller {
   int tpak_mode;
   int tpak_mode_changed;
   int tpak_bank;
-
-  enum pak_type pak;
-  int pak_enabled;
-  int present;
+  
+  // gb cart stuff
+  uint8_t (*gb_readmem [0x100])(struct controller *controller, uint16_t address);
+  void    (*gb_writemem[0x100])(struct controller *controller, uint16_t address, uint8_t data);
+  struct gb_cart cart;
 };
 
 void controller_pak_format(uint8_t *ptr);

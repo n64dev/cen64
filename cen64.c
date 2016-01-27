@@ -233,6 +233,7 @@ int load_paks(struct controller *controller) {
         printf("No save supplied for transfer pak. Just FYI.\n");
       }
 
+      gb_init(&controller[i]);
     }
   }
   return 0;

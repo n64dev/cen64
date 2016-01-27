@@ -9,6 +9,7 @@
 //
 
 #include "pak.h"
+#include "gb.h"
 
 static void gameboy_read(struct controller *controller, uint16_t address,
     uint8_t *buffer);
@@ -87,13 +88,21 @@ void transfer_pak_write(struct controller *controller,
 // read 0x20 bytes from Game Boy cart at address
 void gameboy_read(struct controller *controller, uint16_t address,
     uint8_t *buffer) {
-  // TODO handle mappers
-  if (address < 0x8000)
-    memcpy(buffer, controller->tpak_rom.ptr + address, 0x20);
+  for(int i=0;i<0x20;i++)
+    buffer[i] = gb_read(controller, address+i);
+  
+//   printf("read:  %04X: ", address);
+//   for(int i=0;i<32;i++) {
+//     if(i==16) printf("\n             ");
+//     printf("%02X ", buffer[i]);
+//   }
+//   printf("\n");
 }
 
 // write 0x20 bytes from buffer to Game Boy cart at address
 void gameboy_write(struct controller *controller, uint16_t address,
     uint8_t *buffer) {
-  // TODO
+  for(int i=0;i<0x20;i++)
+    gb_write(controller, address+i, buffer[i]);
+//   printf("write: %04X:%02X\n", address, buffer[0]);
 }

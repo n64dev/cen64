@@ -349,6 +349,7 @@ set(SI_SOURCES
   ${PROJECT_SOURCE_DIR}/si/controller.c
   ${PROJECT_SOURCE_DIR}/si/pak.c
   ${PROJECT_SOURCE_DIR}/si/pak_transfer.c
+  ${PROJECT_SOURCE_DIR}/si/gb.c
 )
 
 set(VI_SOURCES
