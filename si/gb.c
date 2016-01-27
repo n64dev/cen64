@@ -208,7 +208,7 @@ void mbc_mbc3_write_ram_bank_select( struct controller *controller, uint16_t add
 
 // write 6000-7FFF
 void mbc_mbc3_write_clock_data_latch( struct controller *controller, uint16_t address, uint8_t data ) {
-  printf("wrote clock data latch: %04X:%02X\n", address, data);
+  // TODO
 }
 
 // read A000-BFFF extram
@@ -223,9 +223,10 @@ void mbc_mbc3_write_extram( struct controller *controller, uint16_t address, uin
 
 // read A000-BFFF rtc
 uint8_t mbc_mbc3_read_rtc( struct controller *controller, uint16_t address ) {
-  return 0x00;
+  return 0x00;  // TODO
 }
 
 // write A000-BFFF rtc
 void mbc_mbc3_write_rtc( struct controller *controller, uint16_t address, uint8_t data ) {
+  // TODO
 }
