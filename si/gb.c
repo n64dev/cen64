@@ -1,3 +1,13 @@
+//
+// si/gb.c: Game Boy pak functions
+//
+// CEN64: Cycle-Accurate Nintendo 64 Emulator.
+// Copyright (C) 2016, Jason Benaim.
+//
+// This file is subject to the terms and conditions defined in
+// 'LICENSE', which is part of this source code package.
+//
+
 #include <stddef.h>
 #include "pak.h"
 #include "gb.h"
