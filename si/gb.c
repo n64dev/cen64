@@ -34,7 +34,6 @@ void gb_write(struct controller *controller, uint16_t address, uint8_t data) {
 }
 
 void gb_init(struct controller *controller) {
-  printf("gb_init\n");
   for(int i=0;i<0x100;i++) {
     controller->gb_readmem [i] = NULL;
     controller->gb_writemem[i] = NULL;
