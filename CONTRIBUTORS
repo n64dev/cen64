@@ -11,6 +11,12 @@ Iconoclast:        Although we hardly ever see eye-to-eye with regards to
                    ification of the RSP algorithms would have been even more
                    testing than it already was.
 
+mikeryan:          For single-handedly implementing virtually all of the save-
+                   related bits and pieces, fixing hard-to-catch PIF bugs, your
+                   work on the SM5, OSX fixes, advice on locking down cen64.com,
+                   and all the other help you've provided. Consider this message
+                   to be an effective coupon for a beer on me!
+
 OzOnE/LuigiBlood   For your fantastic documentation and efforts on reversing
                    the 64DD. Without your efforts, there's no way that CEN64
                    would have 64DD support.
