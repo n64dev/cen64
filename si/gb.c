@@ -40,15 +40,23 @@ void gb_init(struct controller *controller) {
     controller->gb_writemem[i] = NULL;
   }
   
-  // set up cart params
   struct gb_cart *cart = &controller->cart;
+  
+  // set up pak rom
   cart->cartromsize = controller->tpak_rom.size;
   cart->cartrom = (uint8_t *)(controller->tpak_rom.ptr);
   cart->cartrom_bank_zero = cart->cartrom;
   cart->cartrom_bank_n = cart->cartrom + 0x4000;
-  cart->extram = (uint8_t *)(controller->tpak_save.ptr);
+  
+  // set up pak ram
+  if( controller->tpak_save.ptr != NULL ) {
+    cart->extram = (uint8_t *)(controller->tpak_save.ptr);
+    cart->extram_size = controller->tpak_save.size;
+  } else {
+    cart->extram = calloc( 1, 65536 );  // TODO: deallocate this eventually?
+    cart->extram_size = 65536;
+  }   
   cart->extram_bank = cart->extram;
-  cart->extram_size=32768;  // HACK
   
   mbc_mbc3_install(controller);
 }
