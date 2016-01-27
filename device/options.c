@@ -58,14 +58,8 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
         options->debugger_addr = "localhost:64646";
     }
 
-    else if (!strcmp(argv[i], "-multithread")) {
+    else if (!strcmp(argv[i], "-multithread"))
       options->multithread = true;
-
-      // OpenAL and Windows don't get along here...
-#ifdef _WIN32
-      options->no_audio = true;
-#endif
-    }
 
     else if (!strcmp(argv[i], "-ddipl")) {
       if ((i + 1) >= (argc - 1)) {
