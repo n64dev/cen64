@@ -68,7 +68,9 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
     set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
 
-    set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
+    if (NOT APPLE)
+      set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
+    endif ()
 #    file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/gcc/*.s)
   endif (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
 
@@ -151,7 +153,9 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
     set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
 
-    set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
+    if (NOT APPLE)
+      set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
+    endif ()
 #    file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/gcc/*.s)
   endif (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
 
@@ -251,13 +255,17 @@ set(AI_SOURCES
 )
 
 set(ARCH_X86_64_SOURCES
-  ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s
   ${PROJECT_SOURCE_DIR}/arch/x86_64/tlb/tlb.c
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vrcpsq.c
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vmov.c
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vdivh.c
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/rsp.c
 )
+
+if (NOT APPLE)
+  list(APPEND ARCH_X86_64_SOURCES
+    ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
+endif ()
 
 set(BUS_SOURCES
   ${PROJECT_SOURCE_DIR}/bus/controller.c

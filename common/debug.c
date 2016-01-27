@@ -17,17 +17,23 @@
 
 // Writes a formatted string to standard output.
 int debug(const char *fmt, ...) {
+#ifndef __APPLE__
   struct cen64_context c;
+#endif
   va_list ap;
   int ret;
 
+#ifndef __APPLE__
   cen64_context_save(&c);
+#endif
 
   va_start(ap, fmt);
   ret = vfprintf(stdout, fmt, ap);
   va_end(ap);
 
+#ifndef __APPLE__
   cen64_context_restore(&c);
+#endif
   return ret;
 }
 
