@@ -25,7 +25,7 @@
 #include "vr4300/cpu.h"
 #include "vr4300/interface.h"
 
-#define NUM_MAPPINGS 20
+#define NUM_MAPPINGS 16
 
 struct bus_controller_mapping {
   memory_rd_function read;
@@ -40,7 +40,6 @@ int bus_init(struct bus_controller *bus) {
 
   static const struct bus_controller_mapping mappings[NUM_MAPPINGS] = {
     {read_ai_regs, write_ai_regs, AI_REGS_BASE_ADDRESS, AI_REGS_ADDRESS_LEN},
-    {read_dd_regs, write_dd_regs, DD_REGS_BASE_ADDRESS, DD_REGS_ADDRESS_LEN},
     {read_dp_regs, write_dp_regs, DP_REGS_BASE_ADDRESS, DP_REGS_ADDRESS_LEN},
     {read_mi_regs, write_mi_regs, MI_REGS_BASE_ADDRESS, MI_REGS_ADDRESS_LEN},
     {read_pi_regs, write_pi_regs, PI_REGS_BASE_ADDRESS, PI_REGS_ADDRESS_LEN},
@@ -51,12 +50,9 @@ int bus_init(struct bus_controller *bus) {
 
     {read_cart_rom, write_cart_rom, ROM_CART_BASE_ADDRESS, ROM_CART_ADDRESS_LEN},
     {read_flashram, write_flashram, FLASHRAM_BASE_ADDRESS, FLASHRAM_ADDRESS_LEN},
-    {read_dd_c2s_buffer, write_dd_c2s_buffer, DD_C2S_BUFFER_ADDRESS, DD_C2S_BUFFER_LEN},
-    {read_dd_ds_buffer, write_dd_ds_buffer, DD_DS_BUFFER_ADDRESS, DD_DS_BUFFER_LEN},
-    {read_dd_ms_ram, write_dd_ms_ram, DD_MS_RAM_ADDRESS, DD_MS_RAM_LEN},
+    {read_dd_controller, write_dd_controller, DD_CONTROLLER_ADDRESS, DD_CONTROLLER_LEN},
     {read_dd_ipl_rom, write_dd_ipl_rom, DD_IPL_ROM_ADDRESS, DD_IPL_ROM_LEN},
-    {read_pif_ram, write_pif_ram, PIF_RAM_BASE_ADDRESS, PIF_RAM_ADDRESS_LEN},
-    {read_pif_rom, write_pif_rom, PIF_ROM_BASE_ADDRESS, PIF_ROM_ADDRESS_LEN},
+    {read_pif_rom_and_ram, write_pif_rom_and_ram, PIF_BASE_ADDRESS, PIF_ADDRESS_LEN},
     {read_rdram_regs, write_rdram_regs, RDRAM_REGS_BASE_ADDRESS, RDRAM_REGS_ADDRESS_LEN},
     {read_sp_regs2, write_sp_regs2, SP_REGS2_BASE_ADDRESS, SP_REGS2_ADDRESS_LEN},
     {read_sp_mem, write_sp_mem, SP_MEM_BASE_ADDRESS, SP_MEM_ADDRESS_LEN},
@@ -64,7 +60,6 @@ int bus_init(struct bus_controller *bus) {
 
   void *instances[NUM_MAPPINGS] = {
     bus->ai,
-    bus->dd,
     bus->rdp,
     bus->vr4300,
     bus->pi,
@@ -75,8 +70,6 @@ int bus_init(struct bus_controller *bus) {
 
     bus->pi,
     bus->pi,
-    bus->dd,
-    bus->dd,
     bus->dd,
     bus->dd,
     bus->si,

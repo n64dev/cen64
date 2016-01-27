@@ -49,11 +49,10 @@ cen64_cold int si_init(struct si_controller *si, struct bus_controller *bus,
   const uint8_t *eeprom, size_t eeprom_size,
   const struct controller *controller);
 
-int read_pif_ram(void *opaque, uint32_t address, uint32_t *word);
-int read_pif_rom(void *opaque, uint32_t address, uint32_t *word);
+int read_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t *word);
+int write_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
 int read_si_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
-int write_pif_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 int write_si_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
