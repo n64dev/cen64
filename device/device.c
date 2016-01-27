@@ -194,11 +194,11 @@ CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *opaque) {
   while (1) {
     unsigned i, j;
 
-    for (i = 0; i < 6250 / 10; i++) {
-      for (j = 0; j < 10; j++)
+    for (i = 0; i < 6250 / 2; i++) {
+      for (j = 0; j < 2; j++)
         ai_cycle(&device->ai);
 
-      for (j = 0; j < 15; j++)
+      for (j = 0; j < 3; j++)
         vr4300_cycle(&device->vr4300);
     }
 
