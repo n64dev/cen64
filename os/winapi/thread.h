@@ -96,7 +96,7 @@ static inline int cen64_cv_destroy(cen64_cv *cv) {
 
 // Releases the mutex and waits until cen64_cv_signal is called.
 static inline int cen64_cv_wait(cen64_cv *cv, cen64_mutex *m) {
-  if (likely(SignalObjectAndWait(*cv, *m, INFINITE, FALSE) == WAIT_OBJECT_0))
+  if (likely(SignalObjectAndWait(*m, *cv, INFINITE, FALSE) == WAIT_OBJECT_0))
     return 0;
 
   return 1;
