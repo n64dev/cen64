@@ -14,6 +14,8 @@
 #include "device/cart_db.h"
 #include "device/device.h"
 #include "device/options.h"
+#include "device/sha1.h"
+#include "device/sha1_sums.h"
 #include "os/common/alloc.h"
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
@@ -24,6 +26,7 @@ cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
   const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
   struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart);
 cen64_cold static int load_paks(struct controller *controller);
+cen64_cold static int validate_sha(struct rom_file *rom, const uint8_t *good_sum);
 
 cen64_cold static int run_device(struct cen64_device *device, bool no_video);
 cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
@@ -161,6 +164,13 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
     return 1;
   }
 
+  if (ddipl_path != NULL && !validate_sha(ddipl, sha1_dd_ipl)) {
+    printf("Invalid SHA1 on DD IPL.\n");
+
+    close_rom_file(ddipl);
+    return 6;
+  }
+
   if (ddrom_path && open_rom_file(ddrom_path, ddrom)) {
     printf("Failed to load DD ROM: %s.\n", ddrom_path);
 
@@ -180,6 +190,24 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
       close_rom_file(ddrom);
 
     return 3;
+  }
+
+  if (validate_sha(pifrom, sha1_pifrom_ntsc))
+    printf("Using NTSC-U PIFROM\n");
+  else if (validate_sha(pifrom, sha1_pifrom_ntsc_j))
+    printf("Using NTSC-J PIFROM\n");
+  else if (validate_sha(pifrom, sha1_pifrom_pal))
+    printf("Using PAL PIFROM\n");
+  else {
+    printf("Unknown or corrupted PIFROM: %s.\n", pifrom_path);
+
+    if (ddipl_path)
+      close_rom_file(ddipl);
+
+    if (ddrom_path)
+      close_rom_file(ddrom);
+
+    return 5;
   }
 
   if (cart_path && open_rom_file(cart_path, cart)) {
@@ -236,6 +264,12 @@ int load_paks(struct controller *controller) {
     }
   }
   return 0;
+}
+
+int validate_sha(struct rom_file *rom, const uint8_t *good_sum) {
+  uint8_t sha1_calc[20];
+  sha1(rom->ptr, rom->size, sha1_calc);
+  return memcmp(sha1_calc, good_sum, SHA1_SIZE) == 0;
 }
 
 // Spins the device until an exit request is received.
