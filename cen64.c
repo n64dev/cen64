@@ -193,7 +193,9 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
   }
 
   if (validate_sha(pifrom, sha1_pifrom_ntsc))
-    printf("Using NTSC PIFROM\n");
+    printf("Using NTSC-U PIFROM\n");
+  else if (validate_sha(pifrom, sha1_pifrom_ntsc_j))
+    printf("Using NTSC-J PIFROM\n");
   else if (validate_sha(pifrom, sha1_pifrom_pal))
     printf("Using PAL PIFROM\n");
   else {
