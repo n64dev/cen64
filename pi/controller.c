@@ -240,6 +240,11 @@ int read_flashram(void *opaque, uint32_t address, uint32_t *word) {
 int write_flashram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct pi_controller *pi = (struct pi_controller *) opaque;
 
+  if (pi->flashram.data == NULL) {
+    debug("write to FlashRAM but no FlashRAM present\n");
+    return 1;
+  }
+
   if (address == 0x08000000) {
     debug("write to flash status, ignored");
     return 0;
