@@ -167,7 +167,11 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   endif (${CLANG_MACHINE} STREQUAL "arm")
 
   # Set architecture-independent flags.
-  set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
+  if (APPLE)
+    set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0")
+  else ()
+    set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -g3 -O0 -fsanitize=undefined")
+  endif ()
   set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
   set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -DNDEBUG -ggdb3 -g3")
