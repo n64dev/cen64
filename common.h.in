@@ -136,8 +136,10 @@ typedef char bool;
 #define htonll(x) (x)
 #define ntohll(x) (x)
 #else
+#ifndef __APPLE__
 #define htonll(x) __builtin_bswap64(x)
 #define ntohll(x) __builtin_bswap64(x)
+#endif
 #endif
 #endif
 
