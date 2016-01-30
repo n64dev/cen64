@@ -42,6 +42,11 @@
 
 #include "sha1.h"
 
+/* XXX: hacky */
+#ifdef _WIN32
+#define BYTE_ORDER LITTLE_ENDIAN
+#endif
+
 /* sanity check */
 #if BYTE_ORDER != BIG_ENDIAN
 # if BYTE_ORDER != LITTLE_ENDIAN
@@ -166,7 +171,7 @@ sha1_step(ctxt)
 	H(3) = H(3) + d;
 	H(4) = H(4) + e;
 
-	bzero(&ctxt->m.b8[0], 64);
+	memset(&ctxt->m.b8[0], 0, 64);
 }
 
 /*------------------------------------------------------------*/
@@ -175,7 +180,7 @@ void
 sha1_init(ctxt)
 	struct sha1_ctxt *ctxt;
 {
-	bzero(ctxt, sizeof(struct sha1_ctxt));
+	memset(ctxt, 0, sizeof(struct sha1_ctxt));
 	H(0) = 0x67452301;
 	H(1) = 0xefcdab89;
 	H(2) = 0x98badcfe;
@@ -195,14 +200,14 @@ sha1_pad(ctxt)
 	padstart = COUNT % 64;
 	padlen = 64 - padstart;
 	if (padlen < 8) {
-		bzero(&ctxt->m.b8[padstart], padlen);
+		memset(&ctxt->m.b8[padstart], 0, padlen);
 		COUNT += padlen;
 		COUNT %= 64;
 		sha1_step(ctxt);
 		padstart = COUNT % 64;	/* should be 0 */
 		padlen = 64 - padstart;	/* should be 64 */
 	}
-	bzero(&ctxt->m.b8[padstart], padlen - 8);
+	memset(&ctxt->m.b8[padstart], 0, padlen - 8);
 	COUNT += (padlen - 8);
 	COUNT %= 64;
 #if BYTE_ORDER == BIG_ENDIAN
