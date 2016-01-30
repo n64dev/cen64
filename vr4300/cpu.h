@@ -114,7 +114,27 @@ struct vr4300_stats {
 cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);
 cen64_cold void vr4300_print_summary(struct vr4300_stats *stats);
 
-cen64_flatten cen64_hot void vr4300_cycle(struct vr4300 *vr4300);
+cen64_flatten cen64_hot void vr4300_cycle_(struct vr4300 *vr4300);
+
+cen64_flatten cen64_hot static void vr4300_cycle(struct vr4300 *vr4300) {
+  struct vr4300_pipeline *pipeline = &vr4300->pipeline;
+
+  // Increment counters.
+  vr4300->regs[VR4300_CP0_REGISTER_COUNT]++;
+
+  if ((uint32_t) (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1) ==
+    (uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COMPARE])
+    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
+
+  // We're stalling for something...
+  if (pipeline->cycles_to_stall > 0)
+    pipeline->cycles_to_stall--;
+
+  else
+    vr4300_cycle_(vr4300);
+}
+
+
 cen64_cold void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *stats);
 
 #endif
