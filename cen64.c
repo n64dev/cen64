@@ -167,8 +167,10 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
   if (ddipl_path != NULL && !validate_sha(ddipl, sha1_dd_ipl)) {
     printf("Invalid SHA1 on DD IPL.\n");
 
+#if 0
     close_rom_file(ddipl);
     return 6;
+#endif
   }
 
   if (ddrom_path && open_rom_file(ddrom_path, ddrom)) {
@@ -201,6 +203,7 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
   else {
     printf("Unknown or corrupted PIFROM: %s.\n", pifrom_path);
 
+#if 0
     if (ddipl_path)
       close_rom_file(ddipl);
 
@@ -208,6 +211,7 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
       close_rom_file(ddrom);
 
     return 5;
+#endif
   }
 
   if (cart_path && open_rom_file(cart_path, cart)) {
