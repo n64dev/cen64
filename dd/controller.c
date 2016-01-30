@@ -26,6 +26,10 @@
 
 #include <time.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 #define debug_mmio_read(what, mnemonic, val) printf(#what": READ [%s]: 0x%.8X\n", mnemonic, val)
 #define debug_mmio_write(what, mnemonic, val, dqm) printf(#what": WRITE [%s]: 0x%.8X/0x%.8X\n", mnemonic, val, dqm)
@@ -588,6 +592,17 @@ void get_dd_time(uint8_t *out) {
   time_t now = time(NULL);
   struct tm time = { 0, };
 
+#ifdef _WIN32
+  SYSTEMTIME sysTime;
+  GetLocalTime(&sysTime);
+
+  out[0] = (uint8_t)(((sysTime.wYear / 10) << 4) | (sysTime.wYear % 10));
+  out[1] = (uint8_t)(((sysTime.wMonth / 10) << 4) | (sysTime.wMonth % 10));
+  out[2] = (uint8_t)(((sysTime.wDay / 10) << 4) | (sysTime.wDay % 10));
+  out[3] = (uint8_t)(((sysTime.wHour / 10) << 4) | (sysTime.wHour % 10));
+  out[4] = (uint8_t)(((sysTime.wMinute / 10) << 4) | (sysTime.wMinute % 10));
+  out[5] = (uint8_t)(((sysTime.wSecond / 10) << 4) | (sysTime.wSecond % 10));
+#else
   localtime_r(&now, &time);
   time.tm_mon += 1; // month is zero-indexed in this struct
 
@@ -597,4 +612,5 @@ void get_dd_time(uint8_t *out) {
   out[3] = (uint8_t)(((time.tm_hour / 10) << 4) | (time.tm_hour % 10));
   out[4] = (uint8_t)(((time.tm_min / 10) << 4) | (time.tm_min % 10));
   out[5] = (uint8_t)(((time.tm_sec / 10) << 4) | (time.tm_sec % 10));
+#endif
 }
