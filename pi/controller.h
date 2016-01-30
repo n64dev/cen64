@@ -46,12 +46,16 @@ struct flashram {
 
 struct pi_controller {
   struct bus_controller *bus;
+
   const uint8_t *rom;
   size_t rom_size;
   struct save_file *sram;
   struct save_file *flashram_file;
-
   struct flashram flashram;
+
+  uint64_t counter;
+  uint32_t bytes_to_copy;
+  bool is_dma_read;
 
   uint32_t regs[NUM_PI_REGISTERS];
 };
@@ -59,6 +63,8 @@ struct pi_controller {
 cen64_cold int pi_init(struct pi_controller *pi, struct bus_controller *bus,
   const uint8_t *rom, size_t rom_size, const struct save_file *sram,
   const struct save_file *flashram);
+
+cen64_flatten cen64_hot void ai_cycle(struct ai_controller *ai);
 
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);
