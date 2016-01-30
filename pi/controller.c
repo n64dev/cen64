@@ -158,7 +158,7 @@ int read_cart_rom(void *opaque, uint32_t address, uint32_t *word) {
 
   // TODO: Need to figure out correct behaviour.
   // Should this even happen to begin with?
-  if (offset > pi->rom_size) {
+  if (pi->rom == NULL || offset > pi->rom_size - sizeof(*word)) {
     *word = 0;
     return 0;
   }
