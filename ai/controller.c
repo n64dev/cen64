@@ -29,9 +29,7 @@ const char *ai_register_mnemonics[NUM_AI_REGISTERS] = {
 static void ai_dma(struct ai_controller *ai);
 
 // Advances the controller by one clock cycle.
-void ai_cycle(struct ai_controller *ai) {
-  if (likely(ai->counter-- != 0))
-    return;
+void ai_cycle_(struct ai_controller *ai) {
 
   // DMA engine is finishing up with one entry.
   if (ai->fifo_count > 0) {

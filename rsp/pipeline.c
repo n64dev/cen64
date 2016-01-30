@@ -206,10 +206,7 @@ static inline void rsp_wb_stage(struct rsp *rsp) {
 }
 
 // Advances the processor pipeline by one clock.
-void rsp_cycle(struct rsp *rsp) {
-  if (rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_HALT)
-    return;
-
+void rsp_cycle_(struct rsp *rsp) {
   rsp_wb_stage(rsp);
   rsp_df_stage(rsp);
 

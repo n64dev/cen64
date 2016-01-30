@@ -64,7 +64,13 @@ cen64_cold int pi_init(struct pi_controller *pi, struct bus_controller *bus,
   const uint8_t *rom, size_t rom_size, const struct save_file *sram,
   const struct save_file *flashram);
 
-cen64_flatten cen64_hot void ai_cycle(struct ai_controller *ai);
+// Only invoke pi_cycle_ when the counter has expired (timeout).
+void pi_cycle_(struct pi_controller *pi);
+
+cen64_flatten cen64_hot static inline void pi_cycle(struct pi_controller *pi) {
+  if (unlikely(pi->counter-- == 0))
+    pi_cycle_(pi);
+}
 
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);

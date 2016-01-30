@@ -29,10 +29,9 @@ static int pi_dma_read(struct pi_controller *pi);
 static int pi_dma_write(struct pi_controller *pi);
 
 // Advances the controller by one clock cycle.
-void pi_cycle(struct pi_controller *pi) {
-  if (likely(pi->counter-- != 0))
-    return;
+void pi_cycle_(struct pi_controller *pi) {
 
+  // DMA engine is finishing up with one entry.
   if (pi->bytes_to_copy > 0) {
     uint32_t bytes = pi->bytes_to_copy;
 
