@@ -218,7 +218,7 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
       }
 
       pi->bytes_to_copy = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF) + 1;
-      pi->counter = pi->bytes_to_copy / 8 + 1; // Assume ~4 bytes/clock?
+      pi->counter = pi->bytes_to_copy + 1; // Assume ~4 bytes/clock?
       pi->regs[PI_STATUS_REG] |= 0x9; // I'm busy!
       pi->is_dma_read = false;
     }
@@ -233,7 +233,7 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
       }
 
       pi->bytes_to_copy = (pi->regs[PI_RD_LEN_REG] & 0xFFFFFF) + 1;
-      pi->counter = pi->bytes_to_copy / 8 + 1; // Assume ~4 bytes/clock?
+      pi->counter = pi->bytes_to_copy + 1; // Assume ~4 bytes/clock?
       pi->regs[PI_STATUS_REG] |= 0x9; // I'm busy!
       pi->is_dma_read = true;
     }
