@@ -47,11 +47,19 @@ int open_save_file(const char *path, size_t size,
     *created = my_created;
 
   sz.QuadPart = size;
-  SetFilePointerEx(hfile, sz, 0, FILE_BEGIN);
-  SetEndOfFile(hfile);
+  if(SetFilePointerEx(hfile, sz, NULL, FILE_BEGIN) == FALSE) {
+    CloseHandle(hfile);
+
+    return -4;
+  }
+  if(SetEndOfFile(hfile) == FALSE) {
+    CloseHandle(hfile);
+
+    return -5;
+  }
 
   // Create a mapping and effectively enable it.
-  if ((mapping = CreateFileMapping(hfile, 0,
+  if ((mapping = CreateFileMapping(hfile, NULL,
     PAGE_READWRITE, 0, 0, NULL)) == NULL) {
     CloseHandle(hfile);
 
@@ -81,6 +89,7 @@ int open_gb_save(const char *path, struct save_file *file) {
   size_t size;
   HANDLE mapping;
   HANDLE hfile;
+  LARGE_INTEGER sz;
 
   // Open the file, get its size.
   if ((hfile = CreateFile(path, GENERIC_READ | GENERIC_WRITE,
@@ -88,7 +97,12 @@ int open_gb_save(const char *path, struct save_file *file) {
     == INVALID_HANDLE_VALUE)
     return -1;
 
-  size = GetFileSize(hfile, NULL);
+  if(GetFileSizeEx(hfile, &sz) == FALSE) {
+    CloseHandle(hfile);
+
+    return -4;
+  }
+  size = sz.QuadPart;
 
   // Create a mapping and effectively enable it.
   if ((mapping = CreateFileMapping(hfile, 0,
