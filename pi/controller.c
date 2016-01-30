@@ -77,6 +77,15 @@ static int pi_dma_read(struct pi_controller *pi) {
       pi->flashram.rdram_pointer = source;
   }
 
+  else if (dest & 0x05000000)
+    dd_dma_read(pi->bus->dd, source, dest, length);
+
+  pi->regs[PI_DRAM_ADDR_REG] += length;
+  pi->regs[PI_CART_ADDR_REG] += length;
+  pi->regs[PI_STATUS_REG] &= ~0x1;
+  pi->regs[PI_STATUS_REG] |= 0x8;
+
+  signal_rcp_interrupt(pi->bus->vr4300, MI_INTR_PI);
   return 0;
 }
 
@@ -97,6 +106,9 @@ static int pi_dma_write(struct pi_controller *pi) {
 
     memcpy(pi->bus->ri->ram + dest, pi->bus->dd->ipl_rom + source, length);
   }
+
+  else if (source & 0x05000000)
+    dd_dma_write(pi->bus->dd, source, dest, length);
 
   // SRAM and FlashRAM
   else if (source >= 0x08000000 && source < 0x08010000) {
@@ -158,7 +170,7 @@ int read_cart_rom(void *opaque, uint32_t address, uint32_t *word) {
 
   // TODO: Need to figure out correct behaviour.
   // Should this even happen to begin with?
-  if (offset > pi->rom_size) {
+  if (pi->rom == NULL || offset > pi->rom_size - sizeof(*word)) {
     *word = 0;
     return 0;
   }
@@ -204,6 +216,13 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     }
   }
 
+  else if (reg == PI_CART_ADDR_REG) {
+    pi->regs[reg] &= ~dqm;
+    pi->regs[reg] |= word;
+
+    dd_pi_write(pi->bus->dd, word);
+  }
+
   else {
     pi->regs[reg] &= ~dqm;
     pi->regs[reg] |= word;
@@ -218,7 +237,7 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
       }
 
       pi->bytes_to_copy = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF) + 1;
-      pi->counter = pi->bytes_to_copy / 8 + 1; // Assume ~4 bytes/clock?
+      pi->counter = pi->bytes_to_copy + 1; // Assume ~4 bytes/clock?
       pi->regs[PI_STATUS_REG] |= 0x9; // I'm busy!
       pi->is_dma_read = false;
     }
@@ -233,7 +252,7 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
       }
 
       pi->bytes_to_copy = (pi->regs[PI_RD_LEN_REG] & 0xFFFFFF) + 1;
-      pi->counter = pi->bytes_to_copy / 8 + 1; // Assume ~4 bytes/clock?
+      pi->counter = pi->bytes_to_copy + 1; // Assume ~4 bytes/clock?
       pi->regs[PI_STATUS_REG] |= 0x9; // I'm busy!
       pi->is_dma_read = true;
     }

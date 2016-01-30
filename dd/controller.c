@@ -2,7 +2,7 @@
 // dd/controller.c: DD controller.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Emulator.
-// Copyright (C) 2015, Tyler J. Stachecki.
+// Copyright (C) 2016, Mike Ryan
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
@@ -13,20 +13,23 @@
 // engineering, documenting, and assisting with the reversal of
 // this device!
 //
-
-//
-// TODO: Currently, the DD IPL spams the controller with DD_CMD_NOOP.
-// This is normal. Once you signify that a disk is present (using the
-// DD_STATUS_DISK_PRES), the DD IPL attempts to start performing seeks.
+// Thanks also go out to Happy_ for a clean implementation in MESS
+// and for assistance debugging this rat's nest
 //
 
 #include "common.h"
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "dd/controller.h"
+#include "ri/controller.h"
 #include "vr4300/interface.h"
 
+#include <time.h>
+
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
+#define debug_mmio_read(what, mnemonic, val) printf(#what": READ [%s]: 0x%.8X\n", mnemonic, val)
+#define debug_mmio_write(what, mnemonic, val, dqm) printf(#what": WRITE [%s]: 0x%.8X/0x%.8X\n", mnemonic, val, dqm)
+
 const char *dd_register_mnemonics[NUM_DD_REGISTERS] = {
 #define X(reg) #reg,
 #include "dd/registers.md"
@@ -79,7 +82,7 @@ static int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32
 #define DD_STATUS_DISK_CHNG   0x00010000U
 
 // ASIC_BM_STATUS_CTL flags.
-#define DD_BM_STATUS_RUNNING  0x00000000U
+#define DD_BM_STATUS_RUNNING  0x80000000U
 #define DD_BM_STATUS_ERROR    0x04000000U
 #define DD_BM_STATUS_MICRO    0x02000000U // ???
 #define DD_BM_STATUS_BLOCK    0x01000000U
@@ -97,6 +100,25 @@ static int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32
 #define DD_BM_CTL_BLK_TRANS   0x02000000U
 #define DD_BM_CTL_MECHA_RST   0x01000000U
 
+#define DD_TRACK_LOCK         0x60000000U
+
+#define DD_DS_BUFFER_ADDRESS  0x05000400
+#define DD_C2S_BUFFER_ADDRESS 0x05000000
+
+// Magic numbers courtesy of Happy_
+const uint32_t zone_sec_size[16] = {
+  232, 216, 208, 192, 176, 160, 144, 128,
+  216, 208, 192, 176, 160, 144, 128, 112,
+};
+#define SECTORS_PER_BLOCK 85
+#define BLOCKS_PER_TRACK   2
+
+static void dd_update_bm(struct dd_controller *dd);
+static void dd_write_sector(struct dd_controller *dd);
+static void dd_read_sector(struct dd_controller *dd);
+static void set_offset(struct dd_controller *dd);
+static void get_dd_time(uint8_t *out);
+
 // Initializes the DD.
 int dd_init(struct dd_controller *dd, struct bus_controller *bus,
   const uint8_t *ddipl, const uint8_t *ddrom, size_t ddrom_size) {
@@ -104,6 +126,9 @@ int dd_init(struct dd_controller *dd, struct bus_controller *bus,
   dd->ipl_rom = ddipl;
   dd->rom = ddrom;
   dd->rom_size = ddrom_size;
+
+  dd->retail = true;
+  dd->regs[DD_ASIC_ID_REG] = 0x00030000;
 
   return 0;
 }
@@ -121,6 +146,30 @@ int read_dd_regs(void *opaque, uint32_t address, uint32_t *word) {
 
   *word = dd->regs[reg];
   debug_mmio_read(dd, dd_register_mnemonics[reg], *word);
+  // FIXME this mmio_read won't catch updates to DD_ASIC_CMD_STATUS
+
+  switch (reg) {
+    case DD_ASIC_CMD_STATUS:
+      if (dd->rom != NULL)
+        dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DISK_PRES;
+      else
+        dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DISK_PRES;
+      *word = dd->regs[DD_ASIC_CMD_STATUS];
+
+      // important! we do not return this updated status as part of the read
+      if ((dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) &&
+          (SECTORS_PER_BLOCK < dd->regs[DD_ASIC_CUR_SECTOR])) {
+        // debug("DD Read Gap, Clearing INT\n");
+        dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_BM_INT;
+        clear_dd_interrupt(dd->bus->vr4300);
+        dd_update_bm(dd);
+      }
+      break;
+
+    default:
+      break;
+  }
+
   return 0;
 }
 
@@ -139,37 +188,103 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
   // Command register written: do something.
   if (reg == DD_ASIC_CMD_STATUS) {
+    uint8_t now[6];
 
-    // Get time [minute/second]:
-    if (word == DD_CMD_GET_MIN_SEC) {
-      // dd->regs[DD_ASIC_DATA] = ...
+    switch (word) {
+      // get time
+      case DD_CMD_GET_YEAR_MONTH:
+      case DD_CMD_GET_DAY_HOUR:
+      case DD_CMD_GET_MIN_SEC:
+        get_dd_time(now);
+        if (word == DD_CMD_GET_YEAR_MONTH)
+          dd->regs[DD_ASIC_DATA] = (now[0] << 24) | (now[1] << 16);
+        else if (word == DD_CMD_GET_DAY_HOUR)
+          dd->regs[DD_ASIC_DATA] = (now[2] << 24) | (now[3] << 16);
+        else if (word == DD_CMD_GET_MIN_SEC)
+          dd->regs[DD_ASIC_DATA] = (now[4] << 24) | (now[5] << 16);
+        break;
+
+      case DD_CMD_SEEK_READ:
+        dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA] >> 16;
+        set_offset(dd);
+        dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
+        dd->write = false;
+        break;
+
+      case DD_CMD_SEEK_WRITE:
+        dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA] >> 16;
+        set_offset(dd);
+        dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
+        dd->write = true;
+        break;
+
+      case DD_CMD_CLR_DSK_CHNG:
+        dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DISK_CHNG;
+        break;
+
+      case DD_CMD_CLR_RESET:
+        dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_RST_STATE;
+        break;
+
+      default:
+        debug("Unimplemented DD command %04x\n", word >> 16);
     }
-
-    else if (word == DD_CMD_GET_DAY_HOUR) {
-      // dd->regs[DD_ASIC_DATA] = ...
-    }
-
-    else if (word == DD_CMD_GET_YEAR_MONTH) {
-      // dd->regs[DD_ASIC_DATA] = ...
-    }
-
-    else if (word == DD_CMD_CLR_RESET)
-      dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_RST_STATE;
 
     // Always signal an interrupt in response.
+    // debug("Sending MECHA Int\n");
     dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_MECHA_INT;
     signal_dd_interrupt(dd->bus->vr4300);
   }
 
   // Buffer manager control request: handle it.
   else if (reg == DD_ASIC_BM_STATUS_CTL) {
-    if (word == DD_BM_CTL_RESET)
-      dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_CTL_INTMASK;
+    uint8_t start_sector = (word >> 16) & 0xff;
+    if (start_sector == 0x00) {
+      dd->start_block = 0;
+      dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+    }
+    else if (start_sector == 0x5A) {
+      dd->start_block = 1;
+      dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+    } else {
+      assert(0 && "sector not aligned");
+    }
 
-    else if (word == DD_BM_CTL_MECHA_RST)
+    if (word & DD_BM_CTL_BLK_TRANS) // start block xfer
+      dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_BLOCK;
+    if (word & DD_BM_CTL_MECHA_RST) // reset MECHA int
       dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_MECHA_INT;
 
-    clear_dd_interrupt(dd->bus->vr4300);
+    // handle reset
+    if (word & DD_BM_CTL_RESET)
+      dd->bm_reset_held = true;
+    if (!(word & DD_BM_CTL_RESET) && dd->bm_reset_held) {
+      dd->bm_reset_held = false;
+      dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_BM_INT;
+      dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_BM_ERR;
+      dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DATA_RQ;
+      dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_C2_XFER;
+      dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
+      dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+      dd->start_block = 0;
+      debug("dd: BM RESET\n");
+    }
+
+    // clear DD interrupt if BM and MECHA int are clear
+    if (!(dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) &&
+        !(dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_MECHA_INT))
+      clear_dd_interrupt(dd->bus->vr4300);
+
+    // start transfer
+    if (word & DD_BM_CTL_START) {
+      if (dd->write && (word & DD_BM_CTL_MNGRMODE))
+        debug("Attempt to write disk with BM mode 1\n");
+      if (dd->write && !(word & DD_BM_CTL_MNGRMODE))
+        debug("Attempt to write disk with BM mode 0\n");
+      dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_RUNNING;
+      debug("dd: Start BM\n");
+      dd_update_bm(dd);
+    }
   }
 
   // This is done by the IPL and a lot of games. The only word
@@ -188,6 +303,25 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   return 0;
 }
 
+// PI write to PI_CART_ADDR_REG
+void dd_pi_write(void *opaque, uint32_t address) {
+  struct dd_controller *dd = opaque;
+
+  // clear DATA RQ
+  if (address == DD_DS_BUFFER_ADDRESS && dd->rom != NULL) {
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DATA_RQ;
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_BM_INT;
+    clear_dd_interrupt(dd->bus->vr4300);
+  }
+
+  // clear C2
+  else if (address == DD_C2S_BUFFER_ADDRESS && dd->rom != NULL) {
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_C2_XFER;
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_BM_INT;
+    clear_dd_interrupt(dd->bus->vr4300);
+  }
+}
+
 // Reads a word from the DD IPL ROM.
 int read_dd_ipl_rom(void *opaque, uint32_t address, uint32_t *word) {
   uint32_t offset = address - DD_IPL_ROM_ADDRESS;
@@ -201,7 +335,52 @@ int read_dd_ipl_rom(void *opaque, uint32_t address, uint32_t *word) {
     *word = byteswap_32(*word);
   }
 
-  //debug_mmio_read(dd, "DD_IPL_ROM", *word);
+  debug_mmio_read(dd, "DD_IPL_ROM", *word);
+  return 0;
+}
+
+// copy data from RDRAM to DD
+int dd_dma_read(void *opaque, uint32_t source, uint32_t dest, uint32_t length) {
+  struct dd_controller *dd = (struct dd_controller *)opaque;
+
+  // data buffer
+  if (dest == DD_DS_BUFFER_ADDRESS) {
+    memcpy(dd->ds_buffer, dd->bus->ri->ram + source, length);
+    dd_update_bm(dd);
+  }
+
+  // microsequencer, not actually used by CEN
+  else if (dest == DD_MS_RAM_ADDRESS) {
+    uint32_t offset = dest - DD_MS_RAM_ADDRESS;
+    assert(offset + length <= DD_MS_RAM_LEN);
+    memcpy(dd->ms_ram + offset, dd->bus->ri->ram + source, length);
+  }
+
+  else
+    debug("Unknown DD DMA read (%08x)\n", dest);
+
+  return 0;
+}
+
+// copy data from DD to RDRAM
+int dd_dma_write(void *opaque, uint32_t source, uint32_t dest, uint32_t length) {
+  struct dd_controller *dd = (struct dd_controller *)opaque;
+
+  // data buffer
+  if (source == DD_DS_BUFFER_ADDRESS) {
+    memcpy(dd->bus->ri->ram + dest, dd->ds_buffer, length);
+    dd_update_bm(dd);
+  }
+
+  // C2 buffer, always 0's
+  else if (source == DD_C2S_BUFFER_ADDRESS) {
+    memset(dd->bus->ri->ram + dest, 0, length);
+    dd_update_bm(dd);
+  }
+
+  else
+    debug("Unknown DD DMA write (%08x)\n", source);
+
   return 0;
 }
 
@@ -214,7 +393,6 @@ int write_dd_ipl_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm
 // Reads a word from the DD C2S/DS buffer.
 int read_dd_controller(void *opaque, uint32_t address, uint32_t *word) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_CONTROLLER_ADDRESS;
 
   // XXX: Hack to reduce memorymap entries.
   if (address >= DD_MS_RAM_ADDRESS)
@@ -231,7 +409,6 @@ int read_dd_controller(void *opaque, uint32_t address, uint32_t *word) {
 // Writes a word to the DD C2S/DS BUFFER.
 int write_dd_controller(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_CONTROLLER_ADDRESS;
 
   // XXX: Hack to reduce memorymap entries.
   if (address >= DD_MS_RAM_ADDRESS)
@@ -248,7 +425,6 @@ int write_dd_controller(void *opaque, uint32_t address, uint32_t word, uint32_t 
 // Reads a word from the DD MS RAM.
 int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_MS_RAM_ADDRESS;
 
   debug_mmio_read(dd, "DD_MS_RAM", *word);
   return 0;
@@ -257,9 +433,168 @@ int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word) {
 // Writes a word to the DD MS RAM.
 int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct dd_controller *dd = (struct dd_controller *) opaque;
-  unsigned offset = address - DD_MS_RAM_ADDRESS;
 
   debug_mmio_write(dd, "DD_MS_RAM", word, dqm);
   return 0;
 }
 
+void dd_update_bm(struct dd_controller *dd) {
+  // quit if not running
+  if (!(dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_RUNNING))
+    return;
+
+  // handle writes
+  if (dd->write) {
+    // first sector: issue an interrupt to actually get data to be written
+    if (dd->regs[DD_ASIC_CUR_SECTOR] == 0) {
+      dd->regs[DD_ASIC_CUR_SECTOR] += 1;
+      dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
+    }
+
+    // subsequent data sectors, write previous sector's data
+    else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
+      dd_write_sector(dd);
+      dd->regs[DD_ASIC_CUR_SECTOR] += 1;
+      dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
+    }
+
+    // final data sector: write the last sector
+    else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK + 1) {
+      // continue to next block
+      if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
+        dd_write_sector(dd);
+        dd->start_block = 1 - dd->start_block;
+        dd->regs[DD_ASIC_CUR_SECTOR] = 1;
+        dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_BLOCK;
+        dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
+      }
+      // quit writing after second block
+      else {
+        dd_write_sector(dd);
+        dd->regs[DD_ASIC_CUR_SECTOR] += 1;
+        dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
+      }
+    } else {
+      assert(0 && "DD write sector overrun");
+    }
+    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_BM_INT;
+    signal_dd_interrupt(dd->bus->vr4300);
+  }
+
+  // if we aren't writing, we're doing a read BM mode 1
+
+  // track 6 fails to read on retail units
+  if (dd->retail &&
+      ((dd->regs[DD_ASIC_CUR_TK] & 0xFFF) == 6) && (dd->start_block == 0)) {
+    // fail read LBA 12 if retail drive
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DATA_RQ;
+    dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
+  }
+
+  // data sectors: read into buffer and signal interrupt
+  else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
+    dd_read_sector(dd);
+    dd->regs[DD_ASIC_CUR_SECTOR] += 1;
+    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
+  }
+
+  // C2 sectors: do nothing since they're always loaded with 0's
+  else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK + 4) {
+    dd->regs[DD_ASIC_CUR_SECTOR] += 1;
+    if (dd->regs[DD_ASIC_CUR_SECTOR] == SECTORS_PER_BLOCK + 4)
+      dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_C2_XFER;
+  }
+
+  // gap sector
+  else if (dd->regs[DD_ASIC_CUR_SECTOR] == SECTORS_PER_BLOCK + 4) {
+    if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
+      dd->start_block = 1 - dd->start_block;
+      dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+      dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_BLOCK;
+    } else {
+      dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
+    }
+  } else {
+    assert(0 && "DD read sector overrun");
+  }
+
+  dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_BM_INT;
+  signal_dd_interrupt(dd->bus->vr4300);
+}
+
+void dd_write_sector(struct dd_controller *dd) {
+  // TODO actually write data
+  /*
+  uint32_t offset = dd->track_offset +
+    dd->start_block * SECTORS_PER_BLOCK * zone_sec_size[dd->zone] +
+    dd->regs[DD_ASIC_CUR_SECTOR] * zone_sec_size[dd->zone];
+
+  memcpy(dd->ds_buffer, dd->rom + offset, zone_sec_size[dd->zone]);
+  */
+}
+
+void dd_read_sector(struct dd_controller *dd) {
+  uint32_t offset = dd->track_offset +
+    dd->start_block * SECTORS_PER_BLOCK * zone_sec_size[dd->zone] +
+    dd->regs[DD_ASIC_CUR_SECTOR] * zone_sec_size[dd->zone];
+
+  memcpy(dd->ds_buffer, dd->rom + offset, zone_sec_size[dd->zone]);
+}
+
+// This magic brought to you by Happy_
+void set_offset(struct dd_controller *dd) {
+  uint16_t head   = (dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 9;
+  uint16_t track  = dd->regs[DD_ASIC_CUR_TK] & 0xFFF;
+  uint16_t tr_off = 0;
+
+  static const uint32_t start_offset[16] = {
+    0x00000000, 0x005F15E0, 0x00B79D00, 0x010801A0,
+    0x01523720, 0x01963D80, 0x01D414C0, 0x020BBCE0,
+    0x023196E0, 0x028A1E00, 0x02DF5DC0, 0x03299340,
+    0x036D99A0, 0x03AB70E0, 0x03E31900, 0x04149200
+  };
+
+  if (track >= 0x425) {
+    dd->zone = 7 + head;
+    tr_off = track - 0x425;
+  } else if (track >= 0x390) {
+    dd->zone = 6 + head;
+    tr_off = track - 0x390;
+  } else if (track >= 0x2FB) {
+    dd->zone = 5 + head;
+    tr_off = track - 0x2FB;
+  } else if (track >= 0x266) {
+    dd->zone = 4 + head;
+    tr_off = track - 0x266;
+  } else if (track >= 0x1D1) {
+    dd->zone = 3 + head;
+    tr_off = track - 0x1D1;
+  } else if (track >= 0x13C) {
+    dd->zone = 2 + head;
+    tr_off = track - 0x13C;
+  } else if (track >= 0x9E) {
+    dd->zone = 1 + head;
+    tr_off = track - 0x9E;
+  } else {
+    dd->zone = 0 + head;
+    tr_off = track;
+  }
+
+  dd->track_offset = start_offset[dd->zone] +
+    tr_off * zone_sec_size[dd->zone] * SECTORS_PER_BLOCK * BLOCKS_PER_TRACK;
+}
+
+void get_dd_time(uint8_t *out) {
+  time_t now = time(NULL);
+  struct tm time = { 0, };
+
+  localtime_r(&now, &time);
+  time.tm_mon += 1; // month is zero-indexed in this struct
+
+  out[0] = (uint8_t)(((time.tm_year / 10) << 4) | (time.tm_year % 10));
+  out[1] = (uint8_t)(((time.tm_mon / 10) << 4) | (time.tm_mon % 10));
+  out[2] = (uint8_t)(((time.tm_mday / 10) << 4) | (time.tm_mday % 10));
+  out[3] = (uint8_t)(((time.tm_hour / 10) << 4) | (time.tm_hour % 10));
+  out[4] = (uint8_t)(((time.tm_min / 10) << 4) | (time.tm_min % 10));
+  out[5] = (uint8_t)(((time.tm_sec / 10) << 4) | (time.tm_sec % 10));
+}
