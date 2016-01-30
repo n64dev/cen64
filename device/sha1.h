@@ -37,31 +37,32 @@
 
 #ifndef _NETINET6_SHA1_H_
 #define _NETINET6_SHA1_H_
+#include "common.h"
 
 #define SHA1_SIZE 20
 
 struct sha1_ctxt {
 	union {
-		u_int8_t	b8[20];
-		u_int32_t	b32[5];
+		uint8_t	b8[20];
+		uint32_t	b32[5];
 	} h;
 	union {
-		u_int8_t	b8[8];
-		u_int64_t	b64[1];
+		uint8_t	b8[8];
+		uint64_t	b64[1];
 	} c;
 	union {
-		u_int8_t	b8[64];
-		u_int32_t	b32[16];
+		uint8_t	b8[64];
+		uint32_t	b32[16];
 	} m;
-	u_int8_t	count;
+	uint8_t	count;
 };
 
 extern void sha1_init(struct sha1_ctxt *);
 extern void sha1_pad(struct sha1_ctxt *);
-extern void sha1_loop(struct sha1_ctxt *, const u_int8_t *, size_t);
-extern void sha1_result(struct sha1_ctxt *, u_int8_t *);
+extern void sha1_loop(struct sha1_ctxt *, const uint8_t *, size_t);
+extern void sha1_result(struct sha1_ctxt *, uint8_t *);
 
-extern void sha1(const u_int8_t *, size_t, u_int8_t *);
+extern void sha1(const uint8_t *, size_t, uint8_t *);
 
 /* compatibilty with other SHA1 source codes */
 typedef struct sha1_ctxt SHA1_CTX;
