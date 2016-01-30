@@ -494,24 +494,13 @@ cen64_align(static const pipeline_function
 };
 
 // Advances the processor pipeline by one pclock.
-void vr4300_cycle(struct vr4300 *vr4300) {
+void vr4300_cycle_(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
-
-  // Increment counters.
-  vr4300->regs[VR4300_CP0_REGISTER_COUNT]++;
-
-  if ((uint32_t) (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1) ==
-    (uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COMPARE])
-    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
-
-  // We're stalling for something...
-  if (pipeline->cycles_to_stall > 0)
-    pipeline->cycles_to_stall--;
 
   // Ordinarily, we would need to check every pipeline stage to see if it is
   // aborted, and conditionally not execute it. Since faults are rare, we'll
   // only bother checking for aborted stages when we know they can be present.
-  else if (pipeline->fault_present + vr4300->regs[PIPELINE_CYCLE_TYPE])
+  if (pipeline->fault_present + vr4300->regs[PIPELINE_CYCLE_TYPE])
     pipeline_function_lut[vr4300->regs[PIPELINE_CYCLE_TYPE]](vr4300);
 
   else {
