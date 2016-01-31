@@ -302,6 +302,7 @@ set(OS_SOURCES
 
 set(OS_POSIX_SOURCES
   ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
+  ${PROJECT_SOURCE_DIR}/os/posix/local_time.c
   ${PROJECT_SOURCE_DIR}/os/posix/main.c
   ${PROJECT_SOURCE_DIR}/os/posix/rom_file.c
   ${PROJECT_SOURCE_DIR}/os/posix/save_file.c
@@ -312,6 +313,7 @@ set(OS_WINAPI_SOURCES
   ${PROJECT_SOURCE_DIR}/os/winapi/alloc.c
   ${PROJECT_SOURCE_DIR}/os/winapi/gl_config.c
   ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/local_time.c
   ${PROJECT_SOURCE_DIR}/os/winapi/main.c
   ${PROJECT_SOURCE_DIR}/os/winapi/rom_file.c
   ${PROJECT_SOURCE_DIR}/os/winapi/save_file.c
