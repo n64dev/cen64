@@ -357,6 +357,7 @@ set(SI_SOURCES
   ${PROJECT_SOURCE_DIR}/si/pak.c
   ${PROJECT_SOURCE_DIR}/si/pak_transfer.c
   ${PROJECT_SOURCE_DIR}/si/gb.c
+  ${PROJECT_SOURCE_DIR}/si/rtc.c
 )
 
 set(VI_SOURCES
