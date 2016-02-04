@@ -192,25 +192,35 @@ cen64_align(const uint16_t ror_l2b_keys[16][8], CACHE_LINE_SIZE) = {
   {0x010E, 0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0F0C},
 };
 
-// TODO: Highly optimized. More of a stopgap measure.
 #ifndef __SSSE3__
-static inline __m128i sse2_pshufb(__m128i v, const uint16_t *keys) {
-  uint8_t dest[16];
-  uint8_t temp[16];
+static inline __m128i sse2_pshufb_loop8(__m128i v, const uint8_t *keys) {
+  cen64_align(uint8_t temp[(0x80|128)+1], 16);
   unsigned j;
 
-  _mm_storeu_si128((__m128i *) temp, v);
+  _mm_store_si128((__m128i *) temp, v);
+  temp[0x80] = 0;
 
-  for (j = 0; j < 8; j++) {
-    uint16_t key = keys[j];
-    uint8_t key_hi = key >> 8;
-    uint8_t key_lo = key >> 0;
-
-    dest[(j << 1) + 1] = key_hi == 0x80 ? 0x00 : temp[key_hi];
-    dest[(j << 1) + 0] = key_lo == 0x80 ? 0x00 : temp[key_lo];
+  #if 0
+  for (j = 0; j < 16; j++)
+    temp[j + 16] = temp[keys[j]];
+  #else
+  for (j = 0; j < 16; j+=4) {
+    temp[j + 16] = temp[keys[j+0]];
+    temp[j + 17] = temp[keys[j+1]];
+    temp[j + 18] = temp[keys[j+2]];
+    temp[j + 19] = temp[keys[j+3]];
   }
+  #endif
 
-  return _mm_loadu_si128((__m128i *) dest);
+  return _mm_load_si128(((__m128i *)temp)+1);
+}
+static inline __m128i sse2_pshufb(__m128i v, const uint16_t *keys) {
+  union {
+    const uint16_t *k16;
+    const uint8_t *k8;
+  } x;
+  x.k16 = keys;
+  return sse2_pshufb_loop8(v, x.k8);
 }
 #endif
 
