@@ -14,7 +14,7 @@ static inline __m128i rsp_sclamp_acc_tomd(
 
 static inline __m128i rsp_uclamp_acc(__m128i val,
   __m128i acc_md, __m128i acc_hi, __m128i zero) {
-  __m128i clamp_mask, clamped_val;
+  __m128i clamp_mask;
   __m128i hi_sign_check, md_sign_check;
   __m128i md_negative, hi_negative;
 
@@ -27,19 +27,6 @@ static inline __m128i rsp_uclamp_acc(__m128i val,
   md_sign_check = _mm_cmpeq_epi16(hi_negative, md_negative);
   clamp_mask = _mm_and_si128(md_sign_check, hi_sign_check);
 
-  // Generate the value in the event we need to clamp.
-  //   * hi_negative, mid_sign => xxxx
-  //   * hi_negative, !mid_sign => 0000
-  //   * !hi_negative, mid_sign => FFFF
-  //   * !hi_negative, !mid_sign => xxxx
-  clamped_val = _mm_cmpeq_epi16(hi_negative, zero);
-
-#ifndef __SSE4_1__
-  clamped_val = _mm_and_si128(clamp_mask, val);
-  val = _mm_andnot_si128(clamp_mask, clamped_val);
-  return _mm_or_si128(val, clamped_val);
-#else
-  return _mm_blendv_epi8(clamped_val, val, clamp_mask);
-#endif
+  return _mm_and_si128(clamp_mask, val);
 }
 
