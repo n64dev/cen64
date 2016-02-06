@@ -15,6 +15,7 @@
 #include "ri/controller.h"
 #include "si/cic.h"
 #include "si/controller.h"
+#include "si/rtc.h"
 #include "thread.h"
 #include "vi/controller.h"
 #include "vr4300/interface.h"
@@ -190,22 +191,19 @@ int pif_perform_command(struct si_controller *si,
     case 0x06:
       if (channel != 4)
         assert(0 && "Invalid channel for RTC status");
-      // TODO
-      return 1;
+      return rtc_status(send_buf, send_bytes, recv_buf, recv_bytes);
 
     // RTC read
     case 0x07:
       if (channel != 4)
         assert(0 && "Invalid channel for RTC read");
-      // TODO
-      return 1;
+      return rtc_read(send_buf, send_bytes, recv_buf, recv_bytes);
 
     // RTC write
     case 0x08:
       if (channel != 4)
         assert(0 && "Invalid channel for RTC write");
-      // TODO
-      return 1;
+      return rtc_write(send_buf, send_bytes, recv_buf, recv_bytes);
 
     // Unimplemented command:
     default:
