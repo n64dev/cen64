@@ -257,6 +257,20 @@ void print_command_line_usage(const char *invokation_string) {
       "  -headless                  : Run emulator without user-interface components.\n"
       "  -noaudio                   : Run emulator without audio.\n"
       "  -novideo                   : Run emulator without video.\n"
+      "\n"
+      "Controller Options:\n"
+      "  -controller num=<1-4>      : Controller with no pak.\n"
+      " Pak options:\n"
+      "   .. num=<1-4>,pak=rumble\n"
+      "   .. num=<1-4>,mempak=<path>\n"
+      "   .. num=<1-4>,tpak_rom=<path>,tpak_save=<path>\n"
+      "\n"
+      "Save Options:\n"
+      "  -eep4k <path>              : Path to 4 kbit EEPROM save.\n"
+      "  -eep16k <path>             : Path to 16 kbit EEPROM save.\n"
+      "  -sram <path>               : Path to SRAM save.\n"
+      "  -flash <path>              : Path to FlashRAM save.\n"
+      "    For mempak see controller options.\n"
 
     ,invokation_string
   );
