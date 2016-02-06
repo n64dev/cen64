@@ -65,14 +65,15 @@ cen64_align(static const uint16_t rsp_qr_lut[16][8], CACHE_LINE_SIZE) = {
 };
 
 // Mask to select link address register for some branches.
-cen64_align(static const uint32_t rsp_branch_lut[2], 8) = {
-  ~0U, 0U
-};
+static inline uint32_t rsp_branch_mask(uint32_t iw, unsigned index) {
+  iw = (uint32_t)(   (int32_t)(iw << (31 - index)) >> 31  );
+  return ~iw; /* ones' complement must be done last on return */
+}
 
 // Mask to selectively sign-extend loaded values.
-cen64_align(static const uint32_t rsp_load_sex_mask[2][4], 32) = {
-  {~0U,   ~0U,     0U, ~0U}, // sex
-  {0xFFU, 0xFFFFU, 0U, ~0U}, // zex
+cen64_align(static const uint32_t rsp_load_sex_mask[8], 32) = {
+  ~0U,   ~0U,     0U, ~0U, // sex
+  0xFFU, 0xFFFFU, 0U, ~0U, // zex
 };
 
 // Function to sign-extend 6-bit values.
@@ -284,9 +285,10 @@ cen64_hot void RSP_INT_MEM(struct rsp *rsp,
 
   uint32_t address = rs + (int16_t) iw;
   uint32_t sel_mask = (int32_t) (iw << 2) >> 31;
-  unsigned request_size = (iw >> 26 & 0x3);
+  unsigned request_index = (iw >> 26 & 0x7);
+  uint32_t rdqm = rsp_load_sex_mask[request_index];
+  unsigned request_size = request_index & 0x3;
   unsigned lshiftamt = (3 - request_size) << 3;
-  uint32_t rdqm = rsp_load_sex_mask[iw >> 28 & 0x1][request_size];
   uint32_t wdqm = ~0U << lshiftamt;
 
   exdf_latch->request.addr = address;
@@ -323,9 +325,8 @@ void RSP_J_JAL(struct rsp *rsp,
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
-  bool is_jal = iw >> 26 & 0x1;
   uint32_t target = iw << 2 & 0xFFC;
-  uint32_t mask = rsp_branch_lut[is_jal];
+  uint32_t mask = rsp_branch_mask(iw, 26); //is_jal
 
   exdf_latch->result.result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
   exdf_latch->result.dest = RSP_REGISTER_RA & ~mask;
@@ -343,8 +344,7 @@ void RSP_JALR_JR(struct rsp *rsp,
   struct rsp_rdex_latch *rdex_latch = &rsp->pipeline.rdex_latch;
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
 
-  bool is_jalr = iw & 0x1;
-  uint32_t mask = rsp_branch_lut[is_jalr];
+  uint32_t mask = rsp_branch_mask(iw, 0); // is_jalr
   unsigned rd = GET_RD(iw);
 
   exdf_latch->result.result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
