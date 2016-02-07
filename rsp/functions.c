@@ -22,9 +22,24 @@
 #include "vr4300/interface.h"
 
 // Mask to negate second operand if subtract operation.
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+static inline uint32_t rsp_addsub_mask(uint32_t iw)
+{
+  uint32_t mask;
+  __asm__("shr $2,       %k[iwiw];"
+          "sbb %k[mask], %k[mask];"
+    : [mask] "=r" (mask), [iwiw] "+r" (iw) : : "cc");
+  return mask;
+}
+#else
 cen64_align(static const uint32_t rsp_addsub_lut[4], 16) = {
   0x0U, ~0x0U, ~0x0U, ~0x0U
 };
+static inline uint32_t rsp_addsub_mask(uint32_t iw)
+{
+  return rsp_addsub_lut[iw & 0x2];
+}
+#endif
 
 // Mask to select outputs for bitwise operations.
 cen64_align(static const uint32_t rsp_bitwise_lut[4][2], 32) = {
@@ -108,7 +123,7 @@ void RSP_ADDIU_LUI_SUBIU(struct rsp *rsp,
 void RSP_ADDU_SUBU(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-  uint32_t mask = rsp_addsub_lut[iw & 0x2];
+  uint32_t mask = rsp_addsub_mask(iw);
 
   unsigned dest;
   uint32_t rd;
