@@ -24,3 +24,13 @@ with excellent memories. I'd also like to thank the community on all their
 hard work and effort spent reverse-engineering this little gem. Without
 further ado... "Get N or get out"!
 
+# Keyboard controls
+
+* 3D stick:       arrow keys
+* A button:       X
+* B button:       C
+* Z button:       Z
+* Start button:   enter
+* L/R buttons:    A/S
+* C-pad:          TFGH
+* D-pad:          IJKL
