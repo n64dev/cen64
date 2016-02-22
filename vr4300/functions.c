@@ -76,6 +76,33 @@ cen64_align(static const uint64_t vr4300_load_sex_mask[8], CACHE_LINE_SIZE) = {
   0xFFULL, 0xFFFFULL, 0ULL, 0xFFFFFFFFULL,  // zex
 };
 
+#if defined(__GNUC__) && defined(__x86_64__)
+static inline uint64_t VR4300_LWR_forceset(unsigned offset)
+{
+  uint64_t mask;
+  __asm__("add $4294967293, %k[offs];"
+          "sbb %q[mask],    %q[mask];"
+    : [mask] "=r" (mask), [offs] "+r" (offset) : : "cc");
+  return mask;
+}
+#elif defined(__GNUC__) && defined(__i386__)
+static inline uint64_t VR4300_LWR_forceset(unsigned offset)
+{
+  int32_t mask;
+  __asm__("add $4294967293, %k[offs];"
+          "sbb %k[mask],    %k[mask];"
+    : [mask] "=r" (mask), [offs] "+r" (offset) : : "cc");
+  return (uint64_t)((int64_t)mask);
+}
+#else
+cen64_align(static const uint64_t VR4300_LWR_forceset_lut[], 32) =
+  {0ULL, 0ULL, 0ULL, ~0ULL};
+static inline uint64_t VR4300_LWR_forceset(unsigned offset)
+{
+  return VR4300_LWR_forceset_lut[offset];
+}
+#endif
+
 //
 // Raises a MCI interlock for a set number of cycles.
 //
@@ -1116,9 +1143,6 @@ int VR4300_LWL_LWR(struct vr4300 *vr4300,
 
   // LWR
   if (iw >> 28 & 0x1) {
-    cen64_align(static const uint64_t forceset[], 32) =
-      {0ULL, 0ULL, 0ULL, ~0ULL};
-
     size = offset + 1;
     dqm = ~0U >> ((4 - size) << 3);
     address ^= offset;
@@ -1126,7 +1150,8 @@ int VR4300_LWL_LWR(struct vr4300 *vr4300,
     //
     // TODO/FIXME: Assume 32-bit mode.
     //
-    dqm |= forceset[offset];
+
+    dqm |= VR4300_LWR_forceset(offset);
   }
 
   // LWL
