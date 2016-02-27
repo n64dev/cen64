@@ -21,11 +21,22 @@ OzOnE/LuigiBlood   For your fantastic documentation and efforts on reversing
                    the 64DD. Without your efforts, there's no way that CEN64
                    would have 64DD support.
 
+izy:               For all your optimization work - from the VR4300 to RSP,
+                   audio, and beyond! CEN64's performance on x86 has improved
+                   due to your work!
+
+jrra:              For your work on MBC3/transfer pak and the various other
+                   things you've done to help the project!
+
+simer:             Thanks for your work on the cart database! (whether it be
+Snowstorm64:       populating entries, shifting from the use of cart title to
+                   cart ID, or adding additional save types)
+
 AIO:               Thank you for your RSP/SSE optimizations. It's always nice
                    to see someone else's approaches to vectorizing some of the
                    RSP instructions!
 
 #n64dev:           Thank you to everyone else that's helped out in the past:
-                   marshallh, mikeryan, balrog, jrra, and anyone else that
-                   I'm forgetting.
+                   marshallh, mikeryan, balrog, and anyone else that I'm
+                   forgetting.
 
