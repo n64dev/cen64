@@ -1,5 +1,5 @@
 //
-// device/save_list.c: Save list detection.
+// device/cart_db.c: Save list detection.
 //
 // CEN64: Cycle-Accurate Nintendo 64 Emulator.
 // Copyright (C) 2015, Tyler J. Stachecki.
@@ -17,119 +17,127 @@
 #define NUM_CART_DB_ENTRIES (sizeof(cart_db_table) / sizeof(*cart_db_table))
 
 static const struct cart_db_entry cart_db_table[] = {
-  {"1080 SNOWBOARDING   ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"AERO FIGHTERS ASSAUL", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"AEROGAUGE           ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"ALL STAR TENNIS '99 ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"BANJO TOOIE         ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"BASS HUNTER 64      ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"BODY HARVEST        ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"BOMBERMAN HERO      ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"BOMBERMAN64U        ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"BOMBERMAN64U2       ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Banjo-Kazooie       ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Battle for Naboo    ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Big Mountain 2000   ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Blast Corps         ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"CHOPPER_ATTACK      ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"CONKER BFD          ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"CRUIS'N WORLD       ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"Chameleon Twist     ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Command&Conquer     ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"Cruis'n USA         ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"CruisnExotica       ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"DONKEY KONG 64      ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"DR.MARIO 64         ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Diddy Kong Racing   ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"EARTHWORM JIM 3D    ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"EXCITEBIKE64        ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"F-ZERO X            ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"F1 WORLD GRAND PRIX ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Fighter's Destiny   ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"GOLDENEYE           ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"GT64                ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Glover              ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"HARVESTMOON64       ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"INDY RACING 2000    ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Indiana Jones       ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"JET FORCE GEMINI    ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"KEN GRIFFEY SLUGFEST", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"KILLER INSTINCT GOLD", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Kirby64             ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"LT DUCK DODGERS     ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Lode Runner 3D      ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MARIOKART64         ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MICKEY USA          ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MISCHIEF MAKERS     ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MISSION IMPOSSIBLE  ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MLB FEATURING K G JR", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"MULTI RACING        ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MarioGolf64         ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"MarioParty          ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MarioParty2         ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"MarioParty3         ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"MarioTennis         ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"Mega Man 64         ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"NBA COURTSIDE       ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"NBA Courtside 2     ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"NEWTETRIS           ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"OgreBattle64        ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"PAPER MARIO         ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"PGA European Tour   ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"POKEMON SNAP        ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"POKEMON STADIUM     ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"POKEMON STADIUM 2   ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"PUZZLE LEAGUE N64   ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"Perfect Dark        ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"Pilot Wings64       ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"RIDGE RACER 64      ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"ROCKETROBOTONWHEELS ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Resident Evil II    ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"Rogue Squadron      ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"SMASH BROTHERS      ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"SNOWBOARD KIDS2     ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"STAR SOLDIER        ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"STAR WARS EP1 RACER ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"STARCRAFT 64        ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"STARFOX64           ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"SUPER MARIO 64      ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Shadow of the Empire", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Silicon Valley      ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Starshot            ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"TETRISPHERE         ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"THE LEGEND OF ZELDA ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"TOM AND JERRY       ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Tigger's Honey Hunt ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"Top Gear Overdrive  ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"V-RALLY             ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"WAVE RACE 64        ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"WCW / nWo  REVENGE  ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"WORMS ARMAGEDDON    ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"WRESTLEMANIA 2000   ", CART_DB_SAVE_TYPE_SRAM_512KBIT},
-  {"WWF No Mercy        ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"Waialae Country Club", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"YOSHI STORY         ", CART_DB_SAVE_TYPE_EEPROM_16KBIT},
-  {"ZELDA MAJORA'S MASK ", CART_DB_SAVE_TYPE_FLASH_1MBIT},
-  {"hey you, pikachu    ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"monopoly            ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},
-  {"Killer Instinct Gold", CART_DB_SAVE_TYPE_EEPROM_4KBIT}
+  {"CFZ", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* F-Zero X (NTSC) */
+  {"CLB", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Mario Party (NTSC) */
+  {"CZL", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Ocarina of Time (NTSC) */
+  {"NAB", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Air Boarder 64 */
+  {"NAD", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Worms Armageddon (NTSC) */
+  {"NAG", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* AeroGauge (?) */
+  {"NAL", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* Super Smash Bros */
+  {"NB7", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Banjo-Tooie */
+  {"NBC", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Blast Corps */
+  {"NBD", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Bomberman Hero */
+  {"NBH", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Body Harvest */
+  {"NBK", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Banjo-Kazooie */
+  {"NBM", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Bomberman 64 */
+  {"NBV", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Bomberman 64: The Second Attack! */
+  {"NCC", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Command & Conquer */
+  {"NCH", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Chopper Attack */
+  {"NCK", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* NBA Courtside 2 */
+  {"NCT", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Chameleon Twist */
+  {"NCU", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Cruis'n USA */
+  {"NCW", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Cruis'n World */
+  {"NDO", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Donkey Kong 64 */
+  {"NDU", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Duck Dodgers */
+  {"NDY", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Diddy Kong Racing */
+  {"NEA", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* PGA European Tour */
+  {"NEP", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Star Wars Episode I: Racer */
+  {"NER", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* AeroFighters Assault (NTSC) */
+  {"NF2", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* F-1 World Grand Prix II */
+  {"NFH", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Bass Hunter 64 */
+  {"NFU", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Conker's Bad Fur Day */
+  {"NFW", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* F-1 World Grand Prix */
+  {"NFX", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Star Fox 64 */
+  {"NFZ", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* F-Zero X (PAL) */
+  {"NGC", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* GT 64: Championship Edition */
+  {"NGE", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* 007: Goldeneye */
+  {"NGV", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Glover */
+  {"NIC", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Indy Racing 2000 */
+  {"NIJ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Indiana Jones and the Infernal Machine */
+  {"NJF", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Jet Force Gemini */
+  {"NJM", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Earthworm Jim 3D */
+  {"NK2", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Snowboard Kids 2 */
+  {"NK4", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Kirby 64: The Crystal Shards */
+  {"NKA", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Fighters Destiny */
+  {"NKG", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* MLB featuring Ken Griffey Jr. */
+  {"NKI", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Killer Instinct Gold */
+  {"NKJ", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Ken Griffey Jr.'s Slugfest */
+  {"NKT", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Mario Kart 64 */
+  {"NLB", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Mario Party (PAL) */
+  {"NLR", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Lode Runner 3D */
+  {"NM6", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Mega Man 64 */
+  {"NM8", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Mario Tennis */
+  {"NMF", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* Mario Golf */
+  {"NMI", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Mission: Impossible */
+  {"NML", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Mickey's Speedway USA */
+  {"NMO", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Monopoly */
+  {"NMQ", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Paper Mario */
+  {"NMR", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Multi Racing Championship */
+  {"NMU", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Big Mountain 2000 */
+  {"NMV", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Mario Party 3 */
+  {"NMW", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Mario Party 2 */
+  {"NMX", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Excitebike 64 */
+  {"NN6", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Dr. Mario 64 */
+  {"NNA", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Star Wars Episode I: Battle for Naboo */
+  {"NNB", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* NBA Courtside */
+  {"NOB", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* Ogre Battle 64  */
+  {"NP3", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Pokemon Stadium 2 */
+  {"NPD", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Perfect Dark */
+  {"NPF", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Pokemon Snap */
+  {"NPG", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Hey You, Pikachu! */
+  {"NPN", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Pokemon Puzzle League */
+  {"NPO", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Pokemon Stadium */
+  {"NPW", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Pilotwings 64 */
+  {"NRC", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Top Gear Overdrive */
+  {"NRE", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* Resident Evil 2 */
+  {"NRI", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* The New Tetris */
+  {"NRS", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Star Wars: Rogue Squadron */
+  {"NRZ", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Ridge Racer 64 */
+  {"NS6", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Star Soldier: Vanishing Earth */
+  {"NSA", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* AeroFighters Assault (PAL) */
+  {"NSC", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Starshot: Space Circus Fever */
+  {"NSM", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Super Mario 64 */
+  {"NSQ", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* StarCraft 64 */
+  {"NSU", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Rocket: Robot on Wheels */
+  {"NSV", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* SpaceStation Silicon Valley  */
+  {"NSW", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Star Wars: Shadows of the Empire */
+  {"NT9", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Tigger's Honey Hunt */
+  {"NTE", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* 1080 Snowboarding */
+  {"NTJ", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Tom and Jerry in Fists of Furry */
+  {"NTM", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Mischief Makers */
+  {"NTN", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* All-Star Tennis 99 */
+  {"NTP", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Tetrisphere */
+  {"NTR", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Top Gear Rally (PAL, Japan) */
+  {"NTX", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Taz Express */
+  {"NVL", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* V-Rally 99 */
+  {"NW2", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* WCW/nWo Revenge */
+  {"NW4", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* WWF No Mercy */
+  {"NWL", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Waialae Country Club */
+  {"NWR", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Wave Race 64 */
+  {"NWU", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Worms Armageddon (PAL) */
+  {"NWX", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* WWF WrestleMania 2000 */
+  {"NXO", CART_DB_SAVE_TYPE_EEPROM_4KBIT},  /* Cruis'n Exotica */
+  {"NYS", CART_DB_SAVE_TYPE_EEPROM_16KBIT}, /* Yoshi's Story */
+  {"NYW", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* Harvest Moon 64 */
+  {"NZL", CART_DB_SAVE_TYPE_SRAM_256KBIT},  /* Legend of Zelda: Ocarina of Time */
+  {"NZS", CART_DB_SAVE_TYPE_FLASH_1MBIT},   /* Legend of Zelda: Majora's Mask */
 };
 
 static int cart_db_table_sorter(const void *a, const void *b) {
   const struct cart_db_entry *entry_a = (const struct cart_db_entry *) a;
   const struct cart_db_entry *entry_b = (const struct cart_db_entry *) b;
-  return strcmp(entry_a->image_name, entry_b->image_name);
+  return strcmp(entry_a->rom_id, entry_b->rom_id);
 }
 
 const struct cart_db_entry *cart_db_get_entry(const uint8_t *rom) {
-  char image_name[21];
+  char rom_id[4];
   size_t i;
 
-  memcpy(image_name, rom + 0x20, sizeof(image_name) - 1);
-  image_name[20] = '\0';
+  memcpy(rom_id, rom + 0x3b, sizeof(rom_id) - 1);
+  rom_id[3] = '\0';
 
   for (i = 0; i < NUM_CART_DB_ENTRIES; i++) {
-    if (!strcmp(cart_db_table[i].image_name, image_name))
+    if (!strcmp(cart_db_table[i].rom_id, rom_id))
       return cart_db_table + i;
   }
 
@@ -145,14 +153,14 @@ bool cart_db_is_well_formed(void) {
     cart_db_table_sorter);
 
   for (i = 0; i < NUM_CART_DB_ENTRIES - 1; i++) {
-    if (!strcmp(cart_db_table_sorted[i].image_name,
-      cart_db_table_sorted[i+1].image_name)) {
+    if (!strcmp(cart_db_table_sorted[i].rom_id,
+      cart_db_table_sorted[i+1].rom_id)) {
       return true;
     }
   }
 
   for (i = 0; i < NUM_CART_DB_ENTRIES; i++) {
-    if (strlen(cart_db_table_sorted[i].image_name) != 20)
+    if (strlen(cart_db_table_sorted[i].rom_id) != 3)
       return false;
   }
 

@@ -15,11 +15,11 @@ enum cart_db_save_type {
   CART_DB_SAVE_TYPE_EEPROM_4KBIT,
   CART_DB_SAVE_TYPE_EEPROM_16KBIT,
   CART_DB_SAVE_TYPE_FLASH_1MBIT,
-  CART_DB_SAVE_TYPE_SRAM_512KBIT,
+  CART_DB_SAVE_TYPE_SRAM_256KBIT,
 };
 
 struct cart_db_entry {
-  const char *image_name;
+  const char *rom_id;
   enum cart_db_save_type save_type;
 };
 
