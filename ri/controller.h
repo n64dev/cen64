@@ -43,6 +43,8 @@ struct ri_controller {
 
   uint32_t rdram_regs[NUM_RDRAM_REGISTERS];
   uint32_t regs[NUM_RI_REGISTERS];
+
+  uint64_t force_ram_alignment;
   uint8_t ram[MAX_RDRAM_SIZE];
 };
 

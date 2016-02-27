@@ -14,6 +14,7 @@
 #include "bus/address.h"
 #include "bus/controller.h"
 #include "ri/controller.h"
+#include "rsp/rsp.h"
 #include "vr4300/interface.h"
 
 #define NTSC_DAC_FREQ 48681812 // 48.681812MHz
@@ -27,6 +28,8 @@ const char *ai_register_mnemonics[NUM_AI_REGISTERS] = {
 #endif
 
 static void ai_dma(struct ai_controller *ai);
+static const uint8_t *byteswap_audio_buffer(const uint8_t *input,
+    uint8_t *output, uint32_t length);
 
 // Advances the controller by one clock cycle.
 void ai_cycle_(struct ai_controller *ai) {
@@ -67,77 +70,63 @@ void ai_dma(struct ai_controller *ai) {
     // risk breaking things and would need to verify.
     ai->counter = (62500000.0 / freq) * (samples - 2);
 
-    if (likely(ai->fifo[ai->fifo_ri].length > 0)) {
+    // Shovel things into the audio context.
+    ALuint buffer;
+    ALint val;
 
-      // Shovel things into the audio context.
-      uint8_t buf[0x40000];
-      unsigned i;
+    alGetSourcei(ai->ctx.source, AL_BUFFERS_PROCESSED, &val);
 
-      ALuint buffer;
-      ALint val;
-
-      alGetSourcei(ai->ctx.source, AL_BUFFERS_PROCESSED, &val);
-
-      // XXX: Most games pick one frequency and stick with it.
-      // Instead of paying garbage, try to dynamically switch
-      // the frequency of the buffers that OpenAL is using.
-      //
-      // This will result in pops and other unpleasant things
-      // when the frequency changes underneath us, but it still
-      // seems to sound better than what we had before.
-      if (ai->ctx.cur_frequency != freq) {
-        if (val == sizeof(ai->ctx.buffers) / sizeof(ai->ctx.buffers[0])) {
-          printf("OpenAL: Switching context buffer frequency to: %u\n", freq);
-          ai_switch_frequency(&ai->ctx, freq);
-        }
-
-        else
-          val = 0;
+    // XXX: Most games pick one frequency and stick with it.
+    // Instead of paying garbage, try to dynamically switch
+    // the frequency of the buffers that OpenAL is using.
+    //
+    // This will result in pops and other unpleasant things
+    // when the frequency changes underneath us, but it still
+    // seems to sound better than what we had before.
+    if (ai->ctx.cur_frequency != freq) {
+      if (val == sizeof(ai->ctx.buffers) / sizeof(ai->ctx.buffers[0])) {
+        printf("OpenAL: Switching context buffer frequency to: %u\n", freq);
+        ai_switch_frequency(&ai->ctx, freq);
       }
 
-      if (val) {
-        for (i = 0; i < ai->fifo[ai->fifo_ri].length / 4; i++) {
-          uint32_t word;
+      else
+        val = 0;
+    }
 
-          // Byteswap audio buffer to native format.
-          // TODO: Can we specify endian-ness somehow?
-          memcpy(&word, bus->ri->ram + (ai->fifo[
-          ai->fifo_ri].address + sizeof(word) * i), sizeof(word));
-          word = byteswap_32(word);
-          word = (word >> 16) | (word << 16);
-          memcpy(buf + sizeof(word) * i, &word, sizeof(word));
-        }
+    if (val) {
+      cen64_align(uint8_t buf[0x40000], 16);
+      uint32_t length = ai->fifo[ai->fifo_ri].length;
+      uint8_t *input = bus->ri->ram + ai->fifo[ai->fifo_ri].address;
+      const uint8_t *buf_ptr = byteswap_audio_buffer(input, buf, length);
 
-        if (ai->ctx.unqueued_buffers > 0) {
-          buffer = ai->ctx.buffers[sizeof(ai->ctx.buffers) /
-            sizeof(ai->ctx.buffers[0]) - ai->ctx.unqueued_buffers];
+      if (ai->ctx.unqueued_buffers > 0) {
+        buffer = ai->ctx.buffers[sizeof(ai->ctx.buffers) /
+          sizeof(ai->ctx.buffers[0]) - ai->ctx.unqueued_buffers];
 
-          ai->ctx.unqueued_buffers--;
-        }
+        ai->ctx.unqueued_buffers--;
+      }
 
-        else
-          alSourceUnqueueBuffers(ai->ctx.source, 1, &buffer);
+      else
+        alSourceUnqueueBuffers(ai->ctx.source, 1, &buffer);
 
-        alBufferData(buffer, AL_FORMAT_STEREO16, buf,
-          ai->fifo[ai->fifo_ri].length, freq);
-        alSourceQueueBuffers(ai->ctx.source, 1, &buffer);
+      alBufferData(buffer, AL_FORMAT_STEREO16, buf_ptr, length, freq);
+      alSourceQueueBuffers(ai->ctx.source, 1, &buffer);
 
-        if (ai->ctx.unqueued_buffers == 1) {
+      if (ai->ctx.unqueued_buffers == 1) {
+        alSourcePlay(ai->ctx.source);
+      }
+
+      else {
+        alGetSourcei(ai->ctx.source, AL_SOURCE_STATE, &val);
+
+        if (val != AL_PLAYING)
           alSourcePlay(ai->ctx.source);
-        }
+      }
 
-        else {
-          alGetSourcei(ai->ctx.source, AL_SOURCE_STATE, &val);
-
-          if (val != AL_PLAYING)
-            alSourcePlay(ai->ctx.source);
-        }
-
-        if (alGetError() != AL_NO_ERROR) {
-          fprintf(stderr, "OpenAL: Reporting an error while playing sources!\n");
-          fprintf(stderr, "Disabling it from this point forward; sorry!\n");
-          ai->no_output = true;
-        }
+      if (alGetError() != AL_NO_ERROR) {
+        fprintf(stderr, "OpenAL: Reporting an error while playing sources!\n");
+        fprintf(stderr, "Disabling it from this point forward; sorry!\n");
+        ai->no_output = true;
       }
     }
   }
@@ -251,5 +240,72 @@ int write_ai_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     ai->regs[reg] = word;
 
   return 0;
+}
+
+const uint8_t *byteswap_audio_buffer(const uint8_t *input,
+    uint8_t *output, uint32_t length) {
+  uint32_t i = 0;
+
+#ifdef __SSE2__
+#ifdef __SSSE3__
+  static const uint32_t byteswap_key[] = {
+      0x02030001, 0x06070405, 0x0A0B0809, 0x0E0F0C0D};
+  const __m128i key = _mm_load_si128((__m128i*) byteswap_key);
+#endif
+  const uint8_t *ret_buf;
+  uintptr_t input_ptr;
+
+  memcpy(&input_ptr, &input, sizeof(input_ptr));
+
+  // Align input buffer to 16 bytes (since transfers are 8 bytes).
+  if (input_ptr & 0x8) {
+    __m128i samples = _mm_loadl_epi64((__m128i*) input);
+#ifdef __SSSE3__
+    samples = _mm_shuffle_epi8(samples, key);
+#else
+    __m128i swapleft = _mm_slli_epi16(samples, 8);
+    __m128i swapright = _mm_srli_epi16(samples, 8);
+    samples = _mm_or_si128(swapleft, swapright);
+#endif
+    _mm_storel_epi64((__m128i*) (output + sizeof(uint64_t)), samples);
+
+    output += sizeof(uint64_t);
+    i += sizeof(uint64_t);
+  }
+
+  ret_buf = output;
+
+  // Byteswap the majority of the buffer just our 16-byte algorithm.
+  while ((length - i) >= sizeof(__m128i)) {
+    __m128i samples = _mm_load_si128((__m128i*) (input + i));
+#ifdef __SSSE3__
+    samples = _mm_shuffle_epi8(samples, key);
+#else
+    __m128i swapleft = _mm_slli_epi16(samples, 8);
+    __m128i swapright = _mm_srli_epi16(samples, 8);
+    samples = _mm_or_si128(swapleft, swapright);
+#endif
+    _mm_store_si128((__m128i*) (output + i), samples);
+    i += sizeof(samples);
+  }
+
+  // Finish last (8 byte) segment if one exists.
+  if (length != i) {
+    __m128i samples = _mm_loadl_epi64((__m128i*) (input + i));
+#ifdef __SSSE3__
+    samples = _mm_shuffle_epi8(samples, key);
+#else
+    __m128i swapleft = _mm_slli_epi16(samples, 8);
+    __m128i swapright = _mm_srli_epi16(samples, 8);
+    samples = _mm_or_si128(swapleft, swapright);
+#endif
+    _mm_storel_epi64((__m128i*) (output + i), samples);
+  }
+
+  return ret_buf;
+#else
+#error "Unimplemented byteswap_audio_buffer!"
+#endif
+
 }
 
