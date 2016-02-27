@@ -41,7 +41,7 @@ void ai_cycle_(struct ai_controller *ai) {
     memcpy(&bus, ai, sizeof(bus));
     signal_rcp_interrupt(bus->vr4300, MI_INTR_AI);
 
-    ai->fifo_ri = (ai->fifo_ri == 1) ? 0 : 1;
+    ai->fifo_ri ^= 0x1;
     ai->regs[AI_STATUS_REG] &= ~0xC0000001;
     ai->fifo_count--;
 
@@ -135,7 +135,7 @@ void ai_dma(struct ai_controller *ai) {
   else {
     signal_rcp_interrupt(bus->vr4300, MI_INTR_AI);
 
-    ai->fifo_ri = (ai->fifo_ri == 1) ? 0 : 1;
+    ai->fifo_ri ^= 0x1;
     ai->regs[AI_STATUS_REG] &= ~0xC0000001;
     ai->fifo_count--;
 
@@ -206,7 +206,7 @@ int write_ai_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     // Fill the next FIFO entry in the DMA engine.
     ai->fifo[ai->fifo_wi].address = ai->regs[AI_DRAM_ADDR_REG];
     ai->fifo[ai->fifo_wi].length = ai->regs[AI_LEN_REG];
-    ai->fifo_wi = (ai->fifo_wi == 1) ? 0 : 1;
+    ai->fifo_wi ^= 0x1;
     ai->fifo_count++;
 
     if (ai->fifo_count == 2)
@@ -229,8 +229,7 @@ int write_ai_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   else if (reg == AI_DACRATE_REG) {
     ai->regs[AI_DACRATE_REG] = word & 0x3FFF;
 
-    ai->ctx.frequency = (double) NTSC_DAC_FREQ /
-      (ai->regs[AI_DACRATE_REG] + 1);
+    ai->ctx.frequency = (double) NTSC_DAC_FREQ / (ai->regs[AI_DACRATE_REG] + 1);
   }
 
   else if (reg == AI_BITRATE_REG)
