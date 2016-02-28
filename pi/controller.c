@@ -321,3 +321,16 @@ int write_flashram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) 
 
   return 0;
 }
+
+// Mapped read of SRAM
+int read_sram(void *opaque, uint32_t address, uint32_t *word) {
+  fprintf(stderr, "SRAM read\n");
+  return 0;
+}
+
+// Mapped write of SRAM
+int write_sram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
+  fprintf(stderr, "SRAM write\n");
+  return 0;
+}
+

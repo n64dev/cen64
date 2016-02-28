@@ -76,8 +76,11 @@ int read_cart_rom(void *opaque, uint32_t address, uint32_t *word);
 int read_pi_regs(void *opaque, uint32_t address, uint32_t *word);
 int write_cart_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+
 int read_flashram(void *opaque, uint32_t address, uint32_t *word);
 int write_flashram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int read_sram(void *opaque, uint32_t address, uint32_t *word);
+int write_sram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif
 

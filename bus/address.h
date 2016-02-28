@@ -94,6 +94,10 @@
 #define SP_REGS2_BASE_ADDRESS     0x04080000
 #define SP_REGS2_ADDRESS_LEN      0x00000008
 
+// SRAM.
+#define SRAM_BASE_ADDRESS         0x08000000
+#define SRAM_ADDRESS_LEN          0x0801FFFF
+
 // Video interface registers.
 #define VI_REGS_BASE_ADDRESS      0x04400000
 #define VI_REGS_ADDRESS_LEN       0x00000038
