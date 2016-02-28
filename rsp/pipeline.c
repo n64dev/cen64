@@ -32,7 +32,6 @@ static inline void rsp_if_stage(struct rsp *rsp) {
   ifrd_latch->pc = (pc + 4) & 0xFFC;
 
   memcpy(&iw, rsp->mem + 0x1000 + pc, sizeof(iw));
-  iw = byteswap_32(iw);
 
   ifrd_latch->common.pc = pc;
   ifrd_latch->opcode = rsp->opcode_cache[pc >> 2];
