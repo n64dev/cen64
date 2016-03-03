@@ -76,7 +76,7 @@ void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
 
 // Called when the window was resized.
 void gl_window_resize_cb(int width, int height) {
-  float aspect = 4.0 / 3.0;
+  float aspect = 640.0 / 474.0;
 
   if (height <= 0)
     height = 1;
@@ -86,7 +86,7 @@ void gl_window_resize_cb(int width, int height) {
   glLoadIdentity();
 
   if((float) width / (float) height > aspect) {
-    aspect = 3.0 / 4.0;
+    aspect = 474.0 / 640.0;
     aspect *= (float)width / (float)height;
     glOrtho(-aspect, aspect, -1, 1, -1, 1);
   }

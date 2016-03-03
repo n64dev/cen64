@@ -59,7 +59,7 @@ cen64_gl_window cen64_gl_window_create(
     ButtonPressMask | StructureNotifyMask;
 
   window->window = XCreateWindow(display, XRootWindow(display, screen),
-    0, 0, 640, 480, 0, window->visual_info->depth, InputOutput,
+    0, 0, 640, 474, 0, window->visual_info->depth, InputOutput,
     window->visual_info->visual, CWBorderPixel | CWColormap | CWEventMask,
     &window->attr);
 

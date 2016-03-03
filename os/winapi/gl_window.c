@@ -128,7 +128,7 @@ cen64_gl_window cen64_gl_window_create(
   window_rect.left = 0;
   window_rect.right = 640;
   window_rect.top = 0;
-  window_rect.bottom = 480;
+  window_rect.bottom = 474;
 
   window->hinstance = GetModuleHandle(NULL);
   window->pixel_format = config->pixel_format;

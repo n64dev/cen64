@@ -18,7 +18,7 @@
 #include "thread.h"
 #include <windows.h>
 
-#define FRAMEBUF_SZ (640 * 480 * 4)
+#define FRAMEBUF_SZ (640 * 474 * 4)
 #define CEN64_GL_WINDOW_BAD (NULL)
 struct cen64_gl_window {
   HINSTANCE hinstance;

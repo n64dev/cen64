@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <X11/Xlib.h>
 
-#define FRAMEBUF_SZ (640 * 480 * 4)
+#define FRAMEBUF_SZ (640 * 474 * 4)
 #define CEN64_GL_WINDOW_BAD (NULL)
 struct cen64_gl_window {
   cen64_gl_display display;
