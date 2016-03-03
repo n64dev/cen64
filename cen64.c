@@ -46,7 +46,7 @@ int cen64_main(int argc, const char **argv) {
   struct save_file sram;
   struct save_file flashram;
 
-  if (cart_db_is_well_formed()) {
+  if (!cart_db_is_well_formed()) {
     printf("Internal cart detection database is not well-formed.\n");
     return EXIT_FAILURE;
   }
@@ -84,7 +84,7 @@ int cen64_main(int argc, const char **argv) {
   }
 
   if (cart.size >= 0x40 && (cart_info = cart_db_get_entry(cart.ptr)) != NULL)
-    printf("Detected cart: %s\n", cart_info->rom_id);
+    printf("Detected cart: %s* [%s]\n", cart_info->rom_id, cart_info->description);
 
   if (load_paks(controller)) {
     cen64_alloc_cleanup();

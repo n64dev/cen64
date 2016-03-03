@@ -21,6 +21,7 @@ enum cart_db_save_type {
 struct cart_db_entry {
   const char *rom_id;
   enum cart_db_save_type save_type;
+  const char *description;
 };
 
 cen64_cold const struct cart_db_entry *cart_db_get_entry(const uint8_t *rom);
