@@ -120,7 +120,7 @@ static const struct cart_db_entry cart_db_table[] = {
   {"NYS", CART_DB_SAVE_TYPE_EEPROM_16KBIT, "Yoshi's Story"},
   {"NYW", CART_DB_SAVE_TYPE_SRAM_256KBIT,  "Harvest Moon 64"},
   {"NZL", CART_DB_SAVE_TYPE_SRAM_256KBIT,  "Legend of Zelda: Ocarina of Time (PAL)"},
-  {"NZS", CART_DB_SAVE_TYPE_FLASH_1MBIT,   "Legend of Zelda: Majora's Mask (PAL)"},
+  {"NZS", CART_DB_SAVE_TYPE_FLASH_1MBIT,   "Legend of Zelda: Majora's Mask"},
 };
 
 static int cart_db_table_sorter(const void *a, const void *b) {
