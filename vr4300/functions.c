@@ -51,14 +51,6 @@ static inline uint64_t vr4300_addsub_mask(uint32_t iw)
 }
 #endif
 
-// Mask to select outputs for bitwise operations.
-cen64_align(static const uint64_t vr4300_bitwise_lut[4][2], 64) = {
-  {~0ULL,  0ULL}, // AND
-  {~0ULL, ~0ULL}, // OR
-  { 0ULL, ~0ULL}, // XOR
-  { 0ULL,  0ULL}, // -
-};
-
 // Mask to kill the instruction word if "likely" branch.
 static inline uint32_t vr4300_branch_mask(uint32_t iw, unsigned index) {
   iw = (uint32_t)(   (int32_t)(iw << (31 - index)) >> 31  );
@@ -210,14 +202,18 @@ int VR4300_ADDU_SUBU(struct vr4300 *vr4300,
 int VR4300_AND_OR_XOR(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t and_mask = vr4300_bitwise_lut[iw & 0x3][0];
-  uint64_t xor_mask = vr4300_bitwise_lut[iw & 0x3][1];
 
   unsigned dest;
-  uint64_t rd;
+  uint64_t rd, rand, rxor;
 
   dest = GET_RD(iw);
-  rd = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
+  rand = rs & rt;
+  rxor = rs ^ rt;
+  rd = rand + rxor; // lea
+  if((iw & 1) == 0) // cmov
+    rd = rxor;
+  if((iw & 3) == 0) // cmov
+    rd = rand;
 
   exdc_latch->result = rd;
   exdc_latch->dest = dest;
@@ -232,16 +228,21 @@ int VR4300_AND_OR_XOR(struct vr4300 *vr4300,
 int VR4300_ANDI_ORI_XORI(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  uint64_t and_mask = vr4300_bitwise_lut[iw >> 26 & 0x3][0];
-  uint64_t xor_mask = vr4300_bitwise_lut[iw >> 26 & 0x3][1];
 
   unsigned dest;
+  uint64_t rd, rand, rxor;
 
   dest = GET_RT(iw);
   rt = (uint16_t) iw;
-  rt = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
+  rand = rs & rt;
+  rxor = rs ^ rt;
+  rd = rand + rxor; // lea
+  if((iw & 67108864) == 0) // cmov
+    rd = rxor;
+  if((iw & 201326592) == 0) // cmov
+    rd = rand;
 
-  exdc_latch->result = rt;
+  exdc_latch->result = rd;
   exdc_latch->dest = dest;
   return 0;
 }

@@ -41,14 +41,6 @@ static inline uint32_t rsp_addsub_mask(uint32_t iw)
 }
 #endif
 
-// Mask to select outputs for bitwise operations.
-cen64_align(static const uint32_t rsp_bitwise_lut[4][2], 32) = {
-  {~0U,  0U}, // AND
-  {~0U, ~0U}, // OR
-  { 0U, ~0U}, // XOR
-  { 0U,  0U}, // -
-};
-
 // Mask to denote which part of the vector to load/store.
 cen64_align(static const uint16_t rsp_bdls_lut[4][4], CACHE_LINE_SIZE) = {
   {0xFF00, 0x0000, 0x0000, 0x0000}, // B
@@ -144,14 +136,18 @@ void RSP_ADDU_SUBU(struct rsp *rsp,
 void RSP_AND_OR_XOR(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-  uint32_t and_mask = rsp_bitwise_lut[iw & 0x3][0];
-  uint32_t xor_mask = rsp_bitwise_lut[iw & 0x3][1];
 
   unsigned dest;
-  uint32_t rd;
+  uint32_t rd, rand, rxor;
 
   dest = GET_RD(iw);
-  rd = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
+  rand = rs & rt;
+  rxor = rs ^ rt;
+  rd = rand + rxor; // lea
+  if((iw & 1) == 0) // cmov
+    rd = rxor;
+  if((iw & 3) == 0) // cmov
+    rd = rand;
 
   exdf_latch->result.result = rd;
   exdf_latch->result.dest = dest;
@@ -165,16 +161,21 @@ void RSP_AND_OR_XOR(struct rsp *rsp,
 void RSP_ANDI_ORI_XORI(struct rsp *rsp,
   uint32_t iw, uint32_t rs, uint32_t rt) {
   struct rsp_exdf_latch *exdf_latch = &rsp->pipeline.exdf_latch;
-  uint32_t and_mask = rsp_bitwise_lut[iw >> 26 & 0x3][0];
-  uint32_t xor_mask = rsp_bitwise_lut[iw >> 26 & 0x3][1];
 
   unsigned dest;
+  uint32_t rd, rand, rxor;
 
   dest = GET_RT(iw);
   rt = (uint16_t) iw;
-  rt = ((rs & rt) & and_mask) | ((rs ^ rt) & xor_mask);
+  rand = rs & rt;
+  rxor = rs ^ rt;
+  rd = rand + rxor; // lea
+  if((iw & 67108864) == 0) // cmov
+    rd = rxor;
+  if((iw & 201326592) == 0) // cmov
+    rd = rand;
 
-  exdf_latch->result.result = rt;
+  exdf_latch->result.result = rd;
   exdf_latch->result.dest = dest;
 }
 
