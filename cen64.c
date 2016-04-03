@@ -84,7 +84,7 @@ int cen64_main(int argc, const char **argv) {
   }
 
   if (cart.size >= 0x40 && (cart_info = cart_db_get_entry(cart.ptr)) != NULL)
-    printf("Detected cart: %s* [%s]\n", cart_info->rom_id, cart_info->description);
+    printf("Detected cart: %s[%s] - %s\n", cart_info->rom_id, cart_info->regions, cart_info->description);
 
   if (load_paks(controller)) {
     cen64_alloc_cleanup();

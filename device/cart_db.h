@@ -20,6 +20,7 @@ enum cart_db_save_type {
 
 struct cart_db_entry {
   const char *rom_id;
+  const char *regions;
   enum cart_db_save_type save_type;
   const char *description;
 };
