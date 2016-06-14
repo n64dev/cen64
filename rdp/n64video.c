@@ -513,6 +513,7 @@ typedef struct{
 static void rdp_set_other_modes(uint32_t w1, uint32_t w2);
 static void fetch_texel(COLOR color, int s, int t, uint32_t tilenum);
 static void fetch_texel_entlut(COLOR color, int s, int t, uint32_t tilenum);
+static void fetch_texel_quadro_rgba16(COLOR color0, COLOR color1, COLOR color2, COLOR color3, uint32_t c0, uint32_t c1, uint32_t c2, uint32_t c3);
 static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void fetch_texel_entlut_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
@@ -2433,7 +2434,61 @@ static void fetch_texel_entlut(COLOR color, int s, int t, uint32_t tilenum)
 
 }
 
+static void fetch_texel_quadro_rgba16(COLOR color0, COLOR color1, COLOR color2, COLOR color3, uint32_t c0, uint32_t c1, uint32_t c2, uint32_t c3) {
+#if 0
+	color0[0] = GET_HI_RGBA16_TMEM(c0);
+	color0[1] = GET_MED_RGBA16_TMEM(c0);
+	color0[2] = GET_LOW_RGBA16_TMEM(c0);
+	color0[3] = (c0 & 1) ? 0xff : 0;
+	color1[0] = GET_HI_RGBA16_TMEM(c1);
+	color1[1] = GET_MED_RGBA16_TMEM(c1);
+	color1[2] = GET_LOW_RGBA16_TMEM(c1);
+	color1[3] = (c1 & 1) ? 0xff : 0;
+	color2[0] = GET_HI_RGBA16_TMEM(c2);
+	color2[1] = GET_MED_RGBA16_TMEM(c2);
+	color2[2] = GET_LOW_RGBA16_TMEM(c2);
+	color2[3] = (c2 & 1) ? 0xff : 0;
+	color3[0] = GET_HI_RGBA16_TMEM(c3);
+	color3[1] = GET_MED_RGBA16_TMEM(c3);
+	color3[2] = GET_LOW_RGBA16_TMEM(c3);
+	color3[3] = (c3 & 1) ? 0xff : 0;
+#endif
+  __m128i al_v, hi_v, md_v, lo_v;
+  __m128i hi_md_unpack, lo_al_unpack;
+  __m128i color_01, color_23;
 
+  // Shuffle the values from TMEM into a 4x16-bit vector.
+  uint64_t c_scalar = (
+    ((uint64_t) c0)  |
+    ((uint64_t) c1 << 16) |
+    ((uint64_t) c2 << 32) |
+    ((uint64_t) c3 << 48)
+  );
+
+  // Shift bits into high left part of halfword.
+  al_v = hi_v = md_v = lo_v = _mm_loadl_epi64(&c_scalar);
+  md_v = _mm_slli_epi16(md_v, 5);
+  lo_v = _mm_slli_epi16(lo_v, 10);
+  hi_md_unpack = _mm_unpacklo_epi16(hi_v, md_v);
+
+  // Perform a replicated_rgba lookup.
+  // hi[0], md[0], hi[1], md[1], ..., hi[3], md[3]
+  // lo[0], al[0], lo[1], al[1], ..., lo[3], al[3]
+  al_v = _mm_srli_epi16(_mm_srai_epi16(_mm_slli_epi16(al_v, 15), 7), 8);
+  lo_v = _mm_or_si128(_mm_srli_epi16(lo_v, 13), _mm_slli_epi16(_mm_srli_epi16(lo_v, 11), 3));
+  lo_al_unpack = _mm_unpacklo_epi16(lo_v, al_v);
+
+  hi_md_unpack = _mm_or_si128(_mm_srli_epi16(hi_md_unpack, 13), _mm_slli_epi16(_mm_srli_epi16(hi_md_unpack, 11), 3));
+
+  // Spill out the color to memory.
+  color_01 = _mm_unpacklo_epi32(hi_md_unpack, lo_al_unpack);
+  color_23 = _mm_unpackhi_epi32(hi_md_unpack, lo_al_unpack);
+
+  _mm_store_si128(color0, _mm_cvtepu16_epi32(color_01));
+  _mm_store_si128(color2, _mm_cvtepu16_epi32(color_23));
+  _mm_store_si128(color1, _mm_cvtepu16_epi32(_mm_srli_si128(color_01, 8)));
+  _mm_store_si128(color3, _mm_cvtepu16_epi32(_mm_srli_si128(color_23, 8)));
+}
 
 static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum)
 {
@@ -2568,23 +2623,8 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			c1 = tc16[taddr1];
 			c2 = tc16[taddr2];
 			c3 = tc16[taddr3];
-			color0[0] = GET_HI_RGBA16_TMEM(c0);
-			color0[1] = GET_MED_RGBA16_TMEM(c0);
-			color0[2] = GET_LOW_RGBA16_TMEM(c0);
-			color0[3] = (c0 & 1) ? 0xff : 0;
-			color1[0] = GET_HI_RGBA16_TMEM(c1);
-			color1[1] = GET_MED_RGBA16_TMEM(c1);
-			color1[2] = GET_LOW_RGBA16_TMEM(c1);
-			color1[3] = (c1 & 1) ? 0xff : 0;
-			color2[0] = GET_HI_RGBA16_TMEM(c2);
-			color2[1] = GET_MED_RGBA16_TMEM(c2);
-			color2[2] = GET_LOW_RGBA16_TMEM(c2);
-			color2[3] = (c2 & 1) ? 0xff : 0;
-			color3[0] = GET_HI_RGBA16_TMEM(c3);
-			color3[1] = GET_MED_RGBA16_TMEM(c3);
-			color3[2] = GET_LOW_RGBA16_TMEM(c3);
-			color3[3] = (c3 & 1) ? 0xff : 0;
-		}
+      fetch_texel_quadro_rgba16(color0, color1, color2, color3, c0, c1, c2, c3);
+    }
 		break;
 	case TEXEL_RGBA32:
 		{
@@ -3482,6 +3522,7 @@ static void fetch_texel_entlut_quadro(COLOR color0, COLOR color1, COLOR color2, 
 
 	if (!other_modes.tlut_type)
 	{
+#if 0
 		color0[0] = GET_HI_RGBA16_TMEM(c0);
 		color0[1] = GET_MED_RGBA16_TMEM(c0);
 		color0[2] = GET_LOW_RGBA16_TMEM(c0);
@@ -3498,6 +3539,8 @@ static void fetch_texel_entlut_quadro(COLOR color0, COLOR color1, COLOR color2, 
 		color3[1] = GET_MED_RGBA16_TMEM(c3);
 		color3[2] = GET_LOW_RGBA16_TMEM(c3);
 		color3[3] = (c3 & 1) ? 0xff : 0;
+#endif
+    fetch_texel_quadro_rgba16(color0, color1, color2, color3, c0, c1, c2, c3);
 	}
 	else
 	{
