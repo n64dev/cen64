@@ -74,7 +74,6 @@ int bus_init(struct bus_controller *bus) {
     bus->dd,
     bus->dd,
     bus->si,
-    bus->si,
     bus->ri,
     bus->rsp,
     bus->rsp,
