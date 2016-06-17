@@ -428,6 +428,10 @@ configure_file(
 #
 # Create the executable.
 #
+if (NOT MSVC)
+  set_source_files_properties(${PROJECT_SOURCE_DIR}/rdp/n64video.c PROPERTIES COMPILE_FLAGS -fno-strict-aliasing)
+endif (NOT MSVC)
+
 add_executable(cen64
   ${EXTRA_OS_EXE}
   ${AI_SOURCES}
