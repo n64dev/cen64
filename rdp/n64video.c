@@ -214,30 +214,23 @@ typedef struct
 	int lx, rx;
 	int unscrx;
 	int validline;
-	int32_t r, g, b, a, s, t, w, z;
+  int rgbastwz[8];
 	int32_t majorx[4];
 	int32_t minorx[4];
 	int32_t invalyscan[4];
-} SPAN;
+} SPAN __attribute__((aligned(16)));
 
 cen64_align(static SPAN span[1024], 16);
 uint8_t cvgbuf[1024];
 
-
-static int spans_ds;
-static int spans_dt;
-static int spans_dw;
-static int spans_dr;
-static int spans_dg;
-static int spans_db;
-static int spans_da;
-static int spans_dz;
+static int spans_drgba[4] __attribute__((aligned(16)));
+static int spans_dstwz[4] __attribute__((aligned(16)));
 static int spans_dzpix;
 
-int spans_drdy, spans_dgdy, spans_dbdy, spans_dady, spans_dzdy;
+int spans_drgbady[4] __attribute__((aligned(16)));
 int spans_cdr, spans_cdg, spans_cdb, spans_cda, spans_cdz;
 
-static int spans_dsdy, spans_dtdy, spans_dwdy;
+static int spans_dstwzdy[4] __attribute__((aligned(16)));
 
 
 
@@ -4285,26 +4278,26 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 
 	if (flip)
 	{
-		drinc = spans_dr;
-		dginc = spans_dg;
-		dbinc = spans_db;
-		dainc = spans_da;
-		dzinc = spans_dz;
-		dsinc = spans_ds;
-		dtinc = spans_dt;
-		dwinc = spans_dw;
+		drinc = spans_drgba[0];
+		dginc = spans_drgba[1];
+		dbinc = spans_drgba[2];
+		dainc = spans_drgba[3];
+		dzinc = spans_dstwz[3];
+		dsinc = spans_dstwz[0];
+		dtinc = spans_dstwz[1];
+		dwinc = spans_dstwz[2];
 		xinc = 1;
 	}
 	else
 	{
-		drinc = -spans_dr;
-		dginc = -spans_dg;
-		dbinc = -spans_db;
-		dainc = -spans_da;
-		dzinc = -spans_dz;
-		dsinc = -spans_ds;
-		dtinc = -spans_dt;
-		dwinc = -spans_dw;
+		drinc = -spans_drgba[0];
+		dginc = -spans_drgba[1];
+		dbinc = -spans_drgba[2];
+		dainc = -spans_drgba[3];
+		dzinc = -spans_dstwz[3];
+		dsinc = -spans_dstwz[0];
+		dtinc = -spans_dstwz[1];
+		dwinc = -spans_dstwz[2];
 		xinc = -1;
 	}
 
@@ -4314,7 +4307,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dzdy = 0;
+		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4336,14 +4329,14 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		r = span[i].r;
-		g = span[i].g;
-		b = span[i].b;
-		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
-		s = span[i].s;
-		t = span[i].t;
-		w = span[i].w;
+		r = span[i].rgbastwz[0];
+		g = span[i].rgbastwz[1];
+		b = span[i].rgbastwz[2];
+		a = span[i].rgbastwz[3];
+		z = other_modes.z_source_sel ? primitive_z : span[i].rgbastwz[7];
+		s = span[i].rgbastwz[4];
+		t = span[i].rgbastwz[5];
+		w = span[i].rgbastwz[6];
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -4489,26 +4482,26 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 	int xinc;
 	if (flip)
 	{
-		drinc = spans_dr;
-		dginc = spans_dg;
-		dbinc = spans_db;
-		dainc = spans_da;
-		dzinc = spans_dz;
-		dsinc = spans_ds;
-		dtinc = spans_dt;
-		dwinc = spans_dw;
+		drinc = spans_drgba[0];
+		dginc = spans_drgba[1];
+		dbinc = spans_drgba[2];
+		dainc = spans_drgba[3];
+		dzinc = spans_dstwz[3];
+		dsinc = spans_dstwz[0];
+		dtinc = spans_dstwz[1];
+		dwinc = spans_dstwz[2];
 		xinc = 1;
 	}
 	else
 	{
-		drinc = -spans_dr;
-		dginc = -spans_dg;
-		dbinc = -spans_db;
-		dainc = -spans_da;
-		dzinc = -spans_dz;
-		dsinc = -spans_ds;
-		dtinc = -spans_dt;
-		dwinc = -spans_dw;
+		drinc = -spans_drgba[0];
+		dginc = -spans_drgba[1];
+		dbinc = -spans_drgba[2];
+		dainc = -spans_drgba[3];
+		dzinc = -spans_dstwz[3];
+		dsinc = -spans_dstwz[0];
+		dtinc = -spans_dstwz[1];
+		dwinc = -spans_dstwz[2];
 		xinc = -1;
 	}
 
@@ -4518,7 +4511,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dzdy = 0;
+		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4539,14 +4532,14 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		r = span[i].r;
-		g = span[i].g;
-		b = span[i].b;
-		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
-		s = span[i].s;
-		t = span[i].t;
-		w = span[i].w;
+		r = span[i].rgbastwz[0];
+		g = span[i].rgbastwz[1];
+		b = span[i].rgbastwz[2];
+		a = span[i].rgbastwz[3];
+		z = other_modes.z_source_sel ? primitive_z : span[i].rgbastwz[7];
+		s = span[i].rgbastwz[4];
+		t = span[i].rgbastwz[5];
+		w = span[i].rgbastwz[6];
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -4652,20 +4645,20 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
 
 	if (flip)
 	{
-		drinc = spans_dr;
-		dginc = spans_dg;
-		dbinc = spans_db;
-		dainc = spans_da;
-		dzinc = spans_dz;
+		drinc = spans_drgba[0];
+		dginc = spans_drgba[1];
+		dbinc = spans_drgba[2];
+		dainc = spans_drgba[3];
+		dzinc = spans_dstwz[3];
 		xinc = 1;
 	}
 	else
 	{
-		drinc = -spans_dr;
-		dginc = -spans_dg;
-		dbinc = -spans_db;
-		dainc = -spans_da;
-		dzinc = -spans_dz;
+		drinc = -spans_drgba[0];
+		dginc = -spans_drgba[1];
+		dbinc = -spans_drgba[2];
+		dainc = -spans_drgba[3];
+		dzinc = -spans_dstwz[3];
 		xinc = -1;
 	}
 	
@@ -4675,7 +4668,7 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dzdy = 0;
+		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4695,11 +4688,11 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		r = span[i].r;
-		g = span[i].g;
-		b = span[i].b;
-		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		r = span[i].rgbastwz[0];
+		g = span[i].rgbastwz[1];
+		b = span[i].rgbastwz[2];
+		a = span[i].rgbastwz[3];
+		z = other_modes.z_source_sel ? primitive_z : span[i].rgbastwz[7];
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -4794,26 +4787,26 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip)
 	int xinc;
 	if (flip)
 	{
-		drinc = spans_dr;
-		dginc = spans_dg;
-		dbinc = spans_db;
-		dainc = spans_da;
-		dzinc = spans_dz;
-		dsinc = spans_ds;
-		dtinc = spans_dt;
-		dwinc = spans_dw;
+		drinc = spans_drgba[0];
+		dginc = spans_drgba[1];
+		dbinc = spans_drgba[2];
+		dainc = spans_drgba[3];
+		dzinc = spans_dstwz[3];
+		dsinc = spans_dstwz[0];
+		dtinc = spans_dstwz[1];
+		dwinc = spans_dstwz[2];
 		xinc = 1;
 	}
 	else
 	{
-		drinc = -spans_dr;
-		dginc = -spans_dg;
-		dbinc = -spans_db;
-		dainc = -spans_da;
-		dzinc = -spans_dz;
-		dsinc = -spans_ds;
-		dtinc = -spans_dt;
-		dwinc = -spans_dw;
+		drinc = -spans_drgba[0];
+		dginc = -spans_drgba[1];
+		dbinc = -spans_drgba[2];
+		dainc = -spans_drgba[3];
+		dzinc = -spans_dstwz[3];
+		dsinc = -spans_dstwz[0];
+		dtinc = -spans_dstwz[1];
+		dwinc = -spans_dstwz[2];
 		xinc = -1;
 	}
 
@@ -4823,7 +4816,7 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip)
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dzdy = 0;
+		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4845,14 +4838,14 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip)
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		r = span[i].r;
-		g = span[i].g;
-		b = span[i].b;
-		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
-		s = span[i].s;
-		t = span[i].t;
-		w = span[i].w;
+		r = span[i].rgbastwz[0];
+		g = span[i].rgbastwz[1];
+		b = span[i].rgbastwz[2];
+		a = span[i].rgbastwz[3];
+		z = other_modes.z_source_sel ? primitive_z : span[i].rgbastwz[7];
+		s = span[i].rgbastwz[4];
+		t = span[i].rgbastwz[5];
+		w = span[i].rgbastwz[6];
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -5001,26 +4994,26 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip)
 	int xinc;
 	if (flip)
 	{
-		drinc = spans_dr;
-		dginc = spans_dg;
-		dbinc = spans_db;
-		dainc = spans_da;
-		dzinc = spans_dz;
-		dsinc = spans_ds;
-		dtinc = spans_dt;
-		dwinc = spans_dw;
+		drinc = spans_drgba[0];
+		dginc = spans_drgba[1];
+		dbinc = spans_drgba[2];
+		dainc = spans_drgba[3];
+		dzinc = spans_dstwz[3];
+		dsinc = spans_dstwz[0];
+		dtinc = spans_dstwz[1];
+		dwinc = spans_dstwz[2];
 		xinc = 1;
 	}
 	else
 	{
-		drinc = -spans_dr;
-		dginc = -spans_dg;
-		dbinc = -spans_db;
-		dainc = -spans_da;
-		dzinc = -spans_dz;
-		dsinc = -spans_ds;
-		dtinc = -spans_dt;
-		dwinc = -spans_dw;
+		drinc = -spans_drgba[0];
+		dginc = -spans_drgba[1];
+		dbinc = -spans_drgba[2];
+		dainc = -spans_drgba[3];
+		dzinc = -spans_dstwz[3];
+		dsinc = -spans_dstwz[0];
+		dtinc = -spans_dstwz[1];
+		dwinc = -spans_dstwz[2];
 		xinc = -1;
 	}
 
@@ -5030,7 +5023,7 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip)
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dzdy = 0;
+		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -5052,14 +5045,14 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip)
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		r = span[i].r;
-		g = span[i].g;
-		b = span[i].b;
-		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
-		s = span[i].s;
-		t = span[i].t;
-		w = span[i].w;
+		r = span[i].rgbastwz[0];
+		g = span[i].rgbastwz[1];
+		b = span[i].rgbastwz[2];
+		a = span[i].rgbastwz[3];
+		z = other_modes.z_source_sel ? primitive_z : span[i].rgbastwz[7];
+		s = span[i].rgbastwz[4];
+		t = span[i].rgbastwz[5];
+		w = span[i].rgbastwz[6];
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -5167,26 +5160,26 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip)
 	int xinc;
 	if (flip)
 	{
-		drinc = spans_dr;
-		dginc = spans_dg;
-		dbinc = spans_db;
-		dainc = spans_da;
-		dzinc = spans_dz;
-		dsinc = spans_ds;
-		dtinc = spans_dt;
-		dwinc = spans_dw;
+		drinc = spans_drgba[0];
+		dginc = spans_drgba[1];
+		dbinc = spans_drgba[2];
+		dainc = spans_drgba[3];
+		dzinc = spans_dstwz[3];
+		dsinc = spans_dstwz[0];
+		dtinc = spans_dstwz[1];
+		dwinc = spans_dstwz[2];
 		xinc = 1;
 	}
 	else
 	{
-		drinc = -spans_dr;
-		dginc = -spans_dg;
-		dbinc = -spans_db;
-		dainc = -spans_da;
-		dzinc = -spans_dz;
-		dsinc = -spans_ds;
-		dtinc = -spans_dt;
-		dwinc = -spans_dw;
+		drinc = -spans_drgba[0];
+		dginc = -spans_drgba[1];
+		dbinc = -spans_drgba[2];
+		dainc = -spans_drgba[3];
+		dzinc = -spans_dstwz[3];
+		dsinc = -spans_dstwz[0];
+		dtinc = -spans_dstwz[1];
+		dwinc = -spans_dstwz[2];
 		xinc = -1;
 	}
 
@@ -5196,7 +5189,7 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip)
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dzdy = 0;
+		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -5218,14 +5211,14 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip)
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		r = span[i].r;
-		g = span[i].g;
-		b = span[i].b;
-		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
-		s = span[i].s;
-		t = span[i].t;
-		w = span[i].w;
+		r = span[i].rgbastwz[0];
+		g = span[i].rgbastwz[1];
+		b = span[i].rgbastwz[2];
+		a = span[i].rgbastwz[3];
+		z = other_modes.z_source_sel ? primitive_z : span[i].rgbastwz[7];
+		s = span[i].rgbastwz[4];
+		t = span[i].rgbastwz[5];
+		w = span[i].rgbastwz[6];
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -5328,20 +5321,20 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 	int xinc;
 	if (flip)
 	{
-		drinc = spans_dr;
-		dginc = spans_dg;
-		dbinc = spans_db;
-		dainc = spans_da;
-		dzinc = spans_dz;
+		drinc = spans_drgba[0];
+		dginc = spans_drgba[1];
+		dbinc = spans_drgba[2];
+		dainc = spans_drgba[3];
+		dzinc = spans_dstwz[3];
 		xinc = 1;
 	}
 	else
 	{
-		drinc = -spans_dr;
-		dginc = -spans_dg;
-		dbinc = -spans_db;
-		dainc = -spans_da;
-		dzinc = -spans_dz;
+		drinc = -spans_drgba[0];
+		dginc = -spans_drgba[1];
+		dbinc = -spans_drgba[2];
+		dainc = -spans_drgba[3];
+		dzinc = -spans_dstwz[3];
 		xinc = -1;
 	}
 
@@ -5351,7 +5344,7 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dzdy = 0;
+		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -5372,11 +5365,11 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		r = span[i].r;
-		g = span[i].g;
-		b = span[i].b;
-		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		r = span[i].rgbastwz[0];
+		g = span[i].rgbastwz[1];
+		b = span[i].rgbastwz[2];
+		a = span[i].rgbastwz[3];
+		z = other_modes.z_source_sel ? primitive_z : span[i].rgbastwz[7];
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -5531,16 +5524,16 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 	int xinc;
 	if (flip)
 	{
-		dsinc = spans_ds;
-		dtinc = spans_dt;
-		dwinc = spans_dw;
+		dsinc = spans_dstwz[0];
+		dtinc = spans_dstwz[2];
+		dwinc = spans_dstwz[3];
 		xinc = 1;
 	}
 	else
 	{
-		dsinc = -spans_ds;
-		dtinc = -spans_dt;
-		dwinc = -spans_dw;
+		dsinc = -spans_dstwz[0];
+		dtinc = -spans_dstwz[1];
+		dwinc = -spans_dstwz[2];
 		xinc = -1;
 	}
 
@@ -5568,9 +5561,9 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 		if (span[i].validline)
 		{
 
-		s = span[i].s;
-		t = span[i].t;
-		w = span[i].w;
+		s = span[i].rgbastwz[4];
+		t = span[i].rgbastwz[5];
+		w = span[i].rgbastwz[6];
 		
 		xstart = span[i].lx;
 		xendsc = span[i].rx;
@@ -5677,8 +5670,8 @@ void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut
 	int i, j;
 
 	int dsinc, dtinc;
-	dsinc = spans_ds;
-	dtinc = spans_dt;
+	dsinc = spans_dstwz[0];
+	dtinc = spans_dstwz[1];
 
 	int s, t;
 	int ss, st;
@@ -5744,8 +5737,8 @@ void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
 		xendsc = span[i].rx;
-		s = span[i].s;
-		t = span[i].t;
+		s = span[i].rgbastwz[4];
+		t = span[i].rgbastwz[5];
 
 		ti_index = ti_width * i + xend;
 		tiptr = ti_address + PIXELS_TO_BYTES(ti_index, ti_size);
@@ -5922,15 +5915,31 @@ void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut
 	}
 }
 
+static void edgewalker_for_prims_unpack(const int32_t* ewdata, __m128i *out1, __m128i *out2) {
+  __m128i v1 = _mm_load_si128(ewdata + 8);
+  __m128i v2 = _mm_load_si128(ewdata + 12);
+  __m128i lshift, rshift;
+
+  lshift = _mm_slli_epi32(v1, 16);
+  rshift = _mm_srli_epi32(v1, 16);
+  v1 = _mm_or_si128(lshift, rshift);
+
+  lshift = _mm_slli_epi32(v2, 16);
+  rshift = _mm_srli_epi32(v2, 16);
+  v2 = _mm_or_si128(lshift, rshift);
+
+  *out1 = _mm_unpacklo_epi16(v2, v1);
+  *out2 = _mm_unpackhi_epi16(v2, v1);
+}
+
 static void edgewalker_for_prims(int32_t* ewdata)
 {
+  __m128i rgba_v, drgbadx_v, drgbade_v, drgbady_v;
+  __m128i stwz_v, dstwzdx_v, dstwzde_v, dstwzdy_v;
+
 	int j = 0;
 	int xleft = 0, xright = 0, xleft_inc = 0, xright_inc = 0;
-	int r = 0, g = 0, b = 0, a = 0, z = 0, s = 0, t = 0, w = 0;
 	int dr = 0, dg = 0, db = 0, da = 0;
-	int drdx = 0, dgdx = 0, dbdx = 0, dadx = 0, dzdx = 0, dsdx = 0, dtdx = 0, dwdx = 0;
-	int drdy = 0, dgdy = 0, dbdy = 0, dady = 0, dzdy = 0, dsdy = 0, dtdy = 0, dwdy = 0;
-	int drde = 0, dgde = 0, dbde = 0, dade = 0, dzde = 0, dsde = 0, dtde = 0, dwde = 0;
 	int tilenum = 0, flip = 0;
 	int32_t yl = 0, ym = 0, yh = 0;
 	int32_t xl = 0, xm = 0, xh = 0;
@@ -5962,88 +5971,44 @@ static void edgewalker_for_prims(int32_t* ewdata)
 	dxhdy = SIGN(ewdata[5], 30);
 	dxmdy = SIGN(ewdata[7], 30);
 
-	
-	r    = (ewdata[8] & 0xffff0000) | ((ewdata[12] >> 16) & 0x0000ffff);
-	g    = ((ewdata[8] << 16) & 0xffff0000) | (ewdata[12] & 0x0000ffff);
-	b    = (ewdata[9] & 0xffff0000) | ((ewdata[13] >> 16) & 0x0000ffff);
-	a    = ((ewdata[9] << 16) & 0xffff0000) | (ewdata[13] & 0x0000ffff);
-	drdx = (ewdata[10] & 0xffff0000) | ((ewdata[14] >> 16) & 0x0000ffff);
-	dgdx = ((ewdata[10] << 16) & 0xffff0000) | (ewdata[14] & 0x0000ffff);
-	dbdx = (ewdata[11] & 0xffff0000) | ((ewdata[15] >> 16) & 0x0000ffff);
-	dadx = ((ewdata[11] << 16) & 0xffff0000) | (ewdata[15] & 0x0000ffff);
-	drde = (ewdata[16] & 0xffff0000) | ((ewdata[20] >> 16) & 0x0000ffff);
-	dgde = ((ewdata[16] << 16) & 0xffff0000) | (ewdata[20] & 0x0000ffff);
-	dbde = (ewdata[17] & 0xffff0000) | ((ewdata[21] >> 16) & 0x0000ffff);
-	dade = ((ewdata[17] << 16) & 0xffff0000) | (ewdata[21] & 0x0000ffff);
-	drdy = (ewdata[18] & 0xffff0000) | ((ewdata[22] >> 16) & 0x0000ffff);
-	dgdy = ((ewdata[18] << 16) & 0xffff0000) | (ewdata[22] & 0x0000ffff);
-	dbdy = (ewdata[19] & 0xffff0000) | ((ewdata[23] >> 16) & 0x0000ffff);
-	dady = ((ewdata[19] << 16) & 0xffff0000) | (ewdata[23] & 0x0000ffff);
+  edgewalker_for_prims_unpack(ewdata, &rgba_v, &drgbadx_v);
+  edgewalker_for_prims_unpack(ewdata + 8, &drgbade_v, &drgbady_v);
+  edgewalker_for_prims_unpack(ewdata + 16, &stwz_v, &dstwzdx_v);
+  edgewalker_for_prims_unpack(ewdata + 24, &dstwzde_v, &dstwzdy_v);
 
-	
-	s    = (ewdata[24] & 0xffff0000) | ((ewdata[28] >> 16) & 0x0000ffff);
-	t    = ((ewdata[24] << 16) & 0xffff0000)	| (ewdata[28] & 0x0000ffff);
-	w    = (ewdata[25] & 0xffff0000) | ((ewdata[29] >> 16) & 0x0000ffff);
-	dsdx = (ewdata[26] & 0xffff0000) | ((ewdata[30] >> 16) & 0x0000ffff);
-	dtdx = ((ewdata[26] << 16) & 0xffff0000)	| (ewdata[30] & 0x0000ffff);
-	dwdx = (ewdata[27] & 0xffff0000) | ((ewdata[31] >> 16) & 0x0000ffff);
-	dsde = (ewdata[32] & 0xffff0000) | ((ewdata[36] >> 16) & 0x0000ffff);
-	dtde = ((ewdata[32] << 16) & 0xffff0000)	| (ewdata[36] & 0x0000ffff);
-	dwde = (ewdata[33] & 0xffff0000) | ((ewdata[37] >> 16) & 0x0000ffff);
-	dsdy = (ewdata[34] & 0xffff0000) | ((ewdata[38] >> 16) & 0x0000ffff);
-	dtdy = ((ewdata[34] << 16) & 0xffff0000)	| (ewdata[38] & 0x0000ffff);
-	dwdy = (ewdata[35] & 0xffff0000) | ((ewdata[39] >> 16) & 0x0000ffff);
-	
-	
-	z    = ewdata[40];
-	dzdx = ewdata[41];
-	dzde = ewdata[42];
-	dzdy = ewdata[43];
+  // TODO: Get rid of these by adjusting the decoder.
+  stwz_v    = _mm_insert_epi32(stwz_v, ewdata[40], 3);
+  dstwzdx_v = _mm_insert_epi32(dstwzdx_v, ewdata[41], 3);
+  dstwzde_v = _mm_insert_epi32(dstwzde_v, ewdata[42], 3);
+  dstwzdy_v = _mm_insert_epi32(dstwzdy_v, ewdata[43], 3);
 
+  _mm_store_si128(spans_drgba, _mm_slli_epi32(_mm_srli_epi32(drgbadx_v, 5), 5));
+  _mm_store_si128(spans_dstwz, _mm_slli_epi32(_mm_srli_epi32(dstwzdx_v, 5), 5));
+	spans_dstwz[3] = ewdata[41];
 	
-	
-	
-	
-	
-
-	spans_ds = dsdx & ~0x1f;
-	spans_dt = dtdx & ~0x1f;
-	spans_dw = dwdx & ~0x1f;
-	spans_dr = drdx & ~0x1f;
-	spans_dg = dgdx & ~0x1f;
-	spans_db = dbdx & ~0x1f;
-	spans_da = dadx & ~0x1f;
-	spans_dz = dzdx;
-	
-	
-	spans_drdy = drdy >> 14;
-	spans_dgdy = dgdy >> 14;
-	spans_dbdy = dbdy >> 14;
-	spans_dady = dady >> 14;
-	spans_dzdy = dzdy >> 10;
-	spans_drdy = SIGN(spans_drdy, 13);
-	spans_dgdy = SIGN(spans_dgdy, 13);
-	spans_dbdy = SIGN(spans_dbdy, 13);
-	spans_dady = SIGN(spans_dady, 13);
-	spans_dzdy = SIGN(spans_dzdy, 22);
-	spans_cdr = spans_dr >> 14;
+	_mm_store_si128(spans_drgbady, _mm_srai_epi32(drgbady_v, 14));
+	spans_drgbady[0] = SIGN(spans_drgbady[0], 13);
+	spans_drgbady[1] = SIGN(spans_drgbady[1], 13);
+	spans_drgbady[2] = SIGN(spans_drgbady[2], 13);
+	spans_drgbady[3] = SIGN(spans_drgbady[3], 13);
+	spans_cdr = spans_drgba[0] >> 14;
 	spans_cdr = SIGN(spans_cdr, 13);
-	spans_cdg = spans_dg >> 14;
+	spans_cdg = spans_drgba[1] >> 14;
 	spans_cdg = SIGN(spans_cdg, 13);
-	spans_cdb = spans_db >> 14;
+	spans_cdb = spans_drgba[2] >> 14;
 	spans_cdb = SIGN(spans_cdb, 13);
-	spans_cda = spans_da >> 14;
+	spans_cda = spans_drgba[3] >> 14;
 	spans_cda = SIGN(spans_cda, 13);
-	spans_cdz = spans_dz >> 10;
+	spans_cdz = spans_dstwz[3] >> 10;
 	spans_cdz = SIGN(spans_cdz, 22);
 	
-	spans_dsdy = dsdy & ~0x7fff;
-	spans_dtdy = dtdy & ~0x7fff;
-	spans_dwdy = dwdy & ~0x7fff;
+  _mm_store_si128(spans_dstwzdy, _mm_slli_epi32(_mm_srli_epi32(dstwzdy_v, 15), 15));
+	spans_dstwzdy[3] = /* dzdy */ ewdata[43] >> 10;
+	spans_dstwzdy[3] = SIGN(spans_dstwzdy[3], 22);
 
 	
-	int dzdy_dz = (dzdy >> 16) & 0xffff;
-	int dzdx_dz = (dzdx >> 16) & 0xffff;
+	int dzdy_dz = (/* dzdy */ ewdata[43] >> 16) & 0xffff;
+	int dzdx_dz = (/* dzdx */ ewdata[41] >> 16) & 0xffff;
 	
 	spans_dzpix = ((dzdy_dz & 0x8000) ? ((~dzdy_dz) & 0x7fff) : dzdy_dz) + ((dzdx_dz & 0x8000) ? ((~dzdx_dz) & 0x7fff) : dzdx_dz);
 	spans_dzpix = normalize_dzpix(spans_dzpix & 0xffff) & 0xffff;
@@ -6060,97 +6025,62 @@ static void edgewalker_for_prims(int32_t* ewdata)
 		
 	int k = 0;
 
-	int dsdiff, dtdiff, dwdiff, drdiff, dgdiff, dbdiff, dadiff, dzdiff;
+  __m128i drgbadiff_v, dstwzdiff_v;
 	int sign_dxhdy = (ewdata[5] & 0x80000000) ? 1 : 0;
-	
-	int dsdeh, dtdeh, dwdeh, drdeh, dgdeh, dbdeh, dadeh, dzdeh, dsdyh, dtdyh, dwdyh, drdyh, dgdyh, dbdyh, dadyh, dzdyh; 
 	int do_offset = !(sign_dxhdy ^ flip);
+
+  drgbadiff_v = _mm_setzero_si128();
+  dstwzdiff_v = _mm_setzero_si128();
 
 	if (do_offset)
 	{
-		dsdeh = dsde & ~0x1ff;
-		dtdeh = dtde & ~0x1ff;	
-		dwdeh = dwde & ~0x1ff;	
-		drdeh = drde & ~0x1ff;	
-		dgdeh = dgde & ~0x1ff;	
-		dbdeh = dbde & ~0x1ff;	
-		dadeh = dade & ~0x1ff;	
-		dzdeh = dzde & ~0x1ff;
-
-		dsdyh = dsdy & ~0x1ff;
-		dtdyh = dtdy & ~0x1ff;
-		dwdyh = dwdy & ~0x1ff;
-		drdyh = drdy & ~0x1ff;
-		dgdyh = dgdy & ~0x1ff;
-		dbdyh = dbdy & ~0x1ff;
-		dadyh = dady & ~0x1ff;
-		dzdyh = dzdy & ~0x1ff;
-
-
+    __m128i drgbadeh_v = _mm_slli_epi32(_mm_srli_epi32(drgbade_v, 9), 9);
+    __m128i drgbadyh_v = _mm_slli_epi32(_mm_srli_epi32(drgbady_v, 9), 9);
+    __m128i dstwzdeh_v = _mm_slli_epi32(_mm_srli_epi32(dstwzde_v, 9), 9);
+    __m128i dstwzdyh_v = _mm_slli_epi32(_mm_srli_epi32(dstwzdy_v, 9), 9);
 		
-		dsdiff = dsdeh - dsdyh;
-		dsdiff -= (dsdiff >> 2);
-		dtdiff = dtdeh - dtdyh;
-		dtdiff -= (dtdiff >> 2);
-		dwdiff = dwdeh - dwdyh;
-		dwdiff -= (dwdiff >> 2);
-		drdiff = drdeh - drdyh;
-		drdiff -= (drdiff >> 2);
-		dgdiff = dgdeh - dgdyh;
-		dgdiff -= (dgdiff >> 2);
-		dbdiff = dbdeh - dbdyh;
-		dbdiff -= (dbdiff >> 2);
-		dadiff = dadeh - dadyh;
-		dadiff -= (dadiff >> 2);
-		dzdiff = dzdeh - dzdyh;
-		dzdiff -= (dzdiff >> 2);
+    drgbadiff_v = _mm_sub_epi32(drgbadeh_v, drgbadyh_v);
+    drgbadiff_v = _mm_sub_epi32(drgbadiff_v, _mm_srai_epi32(drgbadiff_v, 2));
+    dstwzdiff_v = _mm_sub_epi32(dstwzdeh_v, dstwzdyh_v);
+    dstwzdiff_v = _mm_sub_epi32(dstwzdiff_v, _mm_srai_epi32(dstwzdiff_v, 2));
 	}
-	else
-		dsdiff = dtdiff = dwdiff = drdiff = dgdiff = dbdiff = dadiff = dzdiff = 0;
 
 	int xfrac = 0;
 
-	int dsdxh, dtdxh, dwdxh, drdxh, dgdxh, dbdxh, dadxh, dzdxh;
+  __m128i drgbadxh_v, dstwzdxh_v;
+
+  drgbadxh_v = _mm_setzero_si128();
+  dstwzdxh_v = _mm_setzero_si128();
+
 	if (other_modes.cycle_type != CYCLE_TYPE_COPY)
 	{
-		dsdxh = (dsdx >> 8) & ~1;
-		dtdxh = (dtdx >> 8) & ~1;
-		dwdxh = (dwdx >> 8) & ~1;
-		drdxh = (drdx >> 8) & ~1;
-		dgdxh = (dgdx >> 8) & ~1;
-		dbdxh = (dbdx >> 8) & ~1;
-		dadxh = (dadx >> 8) & ~1;
-		dzdxh = (dzdx >> 8) & ~1;
+    drgbadxh_v = _mm_slli_epi32(_mm_srai_epi32(drgbadx_v, 9), 1);
+    dstwzdxh_v = _mm_slli_epi32(_mm_srai_epi32(dstwzdx_v, 9), 1);
 	}
-	else
-		dsdxh = dtdxh = dwdxh = drdxh = dgdxh = dbdxh = dadxh = dzdxh = 0;
 
 
 
 
 
 #define ADJUST_ATTR_PRIM()		\
-{							\
-	span[j].s = ((s & ~0x1ff) + dsdiff - (xfrac * dsdxh)) & ~0x3ff;				\
-	span[j].t = ((t & ~0x1ff) + dtdiff - (xfrac * dtdxh)) & ~0x3ff;				\
-	span[j].w = ((w & ~0x1ff) + dwdiff - (xfrac * dwdxh)) & ~0x3ff;				\
-	span[j].r = ((r & ~0x1ff) + drdiff - (xfrac * drdxh)) & ~0x3ff;				\
-	span[j].g = ((g & ~0x1ff) + dgdiff - (xfrac * dgdxh)) & ~0x3ff;				\
-	span[j].b = ((b & ~0x1ff) + dbdiff - (xfrac * dbdxh)) & ~0x3ff;				\
-	span[j].a = ((a & ~0x1ff) + dadiff - (xfrac * dadxh)) & ~0x3ff;				\
-	span[j].z = ((z & ~0x1ff) + dzdiff - (xfrac * dzdxh)) & ~0x3ff;				\
+{	\
+  __m128i xfrac_v = _mm_set1_epi32(xfrac); \
+  __m128i rgba_adjust = _mm_slli_epi32(_mm_srli_epi32(rgba_v, 9), 9); \
+  __m128i stwz_adjust = _mm_slli_epi32(_mm_srli_epi32(stwz_v, 9), 9); \
+  __m128i rgba_xfrac_adjust = _mm_mullo_epi32(xfrac_v, drgbadxh_v); \
+  __m128i stwz_xfrac_adjust = _mm_mullo_epi32(xfrac_v, dstwzdxh_v); \
+  __m128i rgba_sum = _mm_sub_epi32(_mm_add_epi32(rgba_adjust, drgbadiff_v), rgba_xfrac_adjust); \
+  __m128i stwz_sum = _mm_sub_epi32(_mm_add_epi32(stwz_adjust, dstwzdiff_v), stwz_xfrac_adjust); \
+  __m128i rgba_result = _mm_slli_epi32(_mm_srli_epi32(rgba_sum, 10), 10); \
+  __m128i stwz_result = _mm_slli_epi32(_mm_srli_epi32(stwz_sum, 10), 10); \
+  _mm_store_si128(span[j].rgbastwz, rgba_result); \
+  _mm_store_si128(&span[j].rgbastwz[4], stwz_result); \
 }
 
 
 #define ADDVALUES_PRIM() {	\
-			s += dsde;	\
-			t += dtde;	\
-			w += dwde; \
-			r += drde; \
-			g += dgde; \
-			b += dbde; \
-			a += dade; \
-			z += dzde; \
+      rgba_v = _mm_add_epi32(rgba_v, drgbade_v); \
+      stwz_v = _mm_add_epi32(stwz_v, dstwzde_v); \
 }
 
 	int32_t maxxmx, minxmx, maxxhx, minxhx;
@@ -6433,9 +6363,9 @@ static void edgewalker_for_loads(int32_t* lewdata)
 	dsdy = 0;
 	dtdy = (lewdata[8] & 0xffff) << 16;
 
-	spans_ds = dsdx & ~0x1f;
-	spans_dt = dtdx & ~0x1f;
-	spans_dw = 0;
+	spans_dstwz[0] = dsdx & ~0x1f;
+	spans_dstwz[1] = dtdx & ~0x1f;
+	spans_dstwz[2] = 0;
 
 	
 	
@@ -6460,8 +6390,8 @@ static void edgewalker_for_loads(int32_t* lewdata)
 
 #define ADJUST_ATTR_LOAD()										\
 {																\
-	span[j].s = s & ~0x3ff;										\
-	span[j].t = t & ~0x3ff;										\
+	span[j].rgbastwz[4] = s & ~0x3ff;										\
+	span[j].rgbastwz[5] = t & ~0x3ff;										\
 }
 
 
@@ -9572,11 +9502,11 @@ static inline void rgbaz_correct_clip(int offx, int offy, int r, int g, int b, i
 	}
 	else
 	{
-		summand_r = offx * spans_cdr + offy * spans_drdy;
-		summand_g = offx * spans_cdg + offy * spans_dgdy;
-		summand_b = offx * spans_cdb + offy * spans_dbdy;
-		summand_a = offx * spans_cda + offy * spans_dady;
-		summand_z = offx * spans_cdz + offy * spans_dzdy;
+		summand_r = offx * spans_cdr + offy * spans_drgbady[0];
+		summand_g = offx * spans_cdg + offy * spans_drgbady[1];
+		summand_b = offx * spans_cdb + offy * spans_drgbady[2];
+		summand_a = offx * spans_cda + offy * spans_drgbady[3];
+		summand_z = offx * spans_cdz + offy * spans_dstwzdy[3];
 
 		r = ((r << 2) + summand_r) >> 4;
 		g = ((g << 2) + summand_g) >> 4;
@@ -9753,9 +9683,9 @@ static inline void tclod_2cycle_current(int32_t* sss, int32_t* sst, int32_t next
 		
 		
 		
-		nextys = (s + spans_dsdy) >> 16;
-		nextyt = (t + spans_dtdy) >> 16;
-		nextysw = (w + spans_dwdy) >> 16;
+		nextys = (s + spans_dstwzdy[0]) >> 16;
+		nextyt = (t + spans_dstwzdy[1]) >> 16;
+		nextysw = (w + spans_dstwzdy[2]) >> 16;
 
 		tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
 
@@ -9816,9 +9746,9 @@ static inline void tclod_2cycle_current_simple(int32_t* sss, int32_t* sst, int32
 		nextsw = (w + dwinc) >> 16;
 		nexts = (s + dsinc) >> 16;
 		nextt = (t + dtinc) >> 16;
-		nextys = (s + spans_dsdy) >> 16;
-		nextyt = (t + spans_dtdy) >> 16;
-		nextysw = (w + spans_dwdy) >> 16;
+		nextys = (s + spans_dstwzdy[0]) >> 16;
+		nextyt = (t + spans_dstwzdy[1]) >> 16;
+		nextysw = (w + spans_dstwzdy[2]) >> 16;
 
 		tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
 		tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
@@ -9876,9 +9806,9 @@ static inline void tclod_2cycle_current_notexel1(int32_t* sss, int32_t* sst, int
 		nextsw = (w + dwinc) >> 16;
 		nexts = (s + dsinc) >> 16;
 		nextt = (t + dtinc) >> 16;
-		nextys = (s + spans_dsdy) >> 16;
-		nextyt = (t + spans_dtdy) >> 16;
-		nextysw = (w + spans_dwdy) >> 16;
+		nextys = (s + spans_dstwzdy[0]) >> 16;
+		nextyt = (t + spans_dstwzdy[1]) >> 16;
+		nextysw = (w + spans_dstwzdy[2]) >> 16;
 
 		tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
 		tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
@@ -9920,9 +9850,9 @@ static inline void tclod_2cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 		nextsw = (w + dwinc) >> 16;
 		nexts = (s + dsinc) >> 16;
 		nextt = (t + dtinc) >> 16;
-		nextys = (s + spans_dsdy) >> 16;
-		nextyt = (t + spans_dtdy) >> 16;
-		nextysw = (w + spans_dwdy) >> 16;
+		nextys = (s + spans_dstwzdy[0]) >> 16;
+		nextyt = (t + spans_dstwzdy[1]) >> 16;
+		nextysw = (w + spans_dstwzdy[2]) >> 16;
 
 		tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
 		tcdiv_ptr(nextys, nextyt, nextysw, &nextys, &nextyt);
@@ -10029,9 +9959,9 @@ static inline void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t next
 			}
 			else
 			{
-				fart = (span[nextscan].t + dtinc) >> 16; 
-				fars = (span[nextscan].s + dsinc) >> 16; 
-				farsw = (span[nextscan].w + dwinc) >> 16;
+				fart = (span[nextscan].rgbastwz[5] + dtinc) >> 16; 
+				fars = (span[nextscan].rgbastwz[4] + dsinc) >> 16; 
+				farsw = (span[nextscan].rgbastwz[6] + dwinc) >> 16;
 			}
 		}
 		else
@@ -10105,12 +10035,12 @@ static inline void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32
 			}
 			else
 			{
-				nextt = span[nextscan].t >> 16;
-				nexts = span[nextscan].s >> 16;
-				nextsw = span[nextscan].w >> 16;
-				fart = (span[nextscan].t + dtinc) >> 16; 
-				fars = (span[nextscan].s + dsinc) >> 16; 
-				farsw = (span[nextscan].w + dwinc) >> 16;
+				nextt = span[nextscan].rgbastwz[5] >> 16;
+				nexts = span[nextscan].rgbastwz[4] >> 16;
+				nextsw = span[nextscan].rgbastwz[6] >> 16;
+				fart = (span[nextscan].rgbastwz[5] + dtinc) >> 16; 
+				fars = (span[nextscan].rgbastwz[4] + dsinc) >> 16; 
+				farsw = (span[nextscan].rgbastwz[6] + dwinc) >> 16;
 			}
 		}
 		else
@@ -10183,9 +10113,9 @@ static inline void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 				}
 				else
 				{
-					nextt = span[nextscan].t;
-					nexts = span[nextscan].s;
-					nextsw = span[nextscan].w;
+					nextt = span[nextscan].rgbastwz[5];
+					nexts = span[nextscan].rgbastwz[4];
+					nextsw = span[nextscan].rgbastwz[6];
 					fart = (nextt + dtinc) >> 16; 
 					fars = (nexts + dsinc) >> 16; 
 					farsw = (nextsw + dwinc) >> 16;
@@ -10198,9 +10128,9 @@ static inline void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 			{
 				if (!sigs->onelessthanmid)
 				{
-					nextt = span[nextscan].t + dtinc;
-					nexts = span[nextscan].s + dsinc;
-					nextsw = span[nextscan].w + dwinc;
+					nextt = span[nextscan].rgbastwz[5] + dtinc;
+					nexts = span[nextscan].rgbastwz[4] + dsinc;
+					nextsw = span[nextscan].rgbastwz[6] + dwinc;
 					fart = (nextt + dtinc) >> 16; 
 					fars = (nexts + dsinc) >> 16; 
 					farsw = (nextsw + dwinc) >> 16;
@@ -10340,9 +10270,9 @@ static inline void get_texel1_1cycle(int32_t* s1, int32_t* t1, int32_t s, int32_
 	else
 	{
 		int32_t nextscan = scanline + 1;
-		nextt = span[nextscan].t >> 16;
-		nexts = span[nextscan].s >> 16;
-		nextsw = span[nextscan].w >> 16;
+		nextt = span[nextscan].rgbastwz[5] >> 16;
+		nexts = span[nextscan].rgbastwz[4] >> 16;
+		nextsw = span[nextscan].rgbastwz[6] >> 16;
 	}
 
 	tcdiv_ptr(nexts, nextt, nextsw, s1, t1);
