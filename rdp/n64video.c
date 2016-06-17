@@ -777,7 +777,7 @@ CVtcmaskDERIVATIVE cvarray[0x100];
 
 struct onetime
 {
-	int ntscnolerp, copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash;
+       int nolerp, copymstrangecrashes, fillmcrashes, fillmbitcrashes, syncfullcrash, vbusclock;
 } onetimewarnings;
 
 uint32_t z64gl_command = 0;
