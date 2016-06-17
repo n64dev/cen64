@@ -46,7 +46,7 @@ struct si_controller {
 
 cen64_cold int si_init(struct si_controller *si, struct bus_controller *bus,
   const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present,
-  const uint8_t *eeprom, size_t eeprom_size,
+  uint8_t *eeprom, size_t eeprom_size,
   const struct controller *controller);
 
 int read_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t *word);

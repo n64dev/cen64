@@ -10,8 +10,6 @@
 
 #include "common.h"
 #include "ai/context.h"
-#include <AL/al.h>
-#include <AL/alc.h>
 
 // Creates and initializes an audio context.
 int ai_context_create(struct cen64_ai_context *context) {

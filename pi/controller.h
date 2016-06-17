@@ -49,8 +49,8 @@ struct pi_controller {
 
   const uint8_t *rom;
   size_t rom_size;
-  struct save_file *sram;
-  struct save_file *flashram_file;
+  const struct save_file *sram;
+  const struct save_file *flashram_file;
   struct flashram flashram;
 
   uint64_t counter;

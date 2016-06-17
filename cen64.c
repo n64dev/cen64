@@ -33,7 +33,7 @@ cen64_cold static CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque);
 
 // Called when another simulation instance is desired.
 int cen64_main(int argc, const char **argv) {
-  struct controller controller[4] = { { NULL, }, };
+  struct controller controller[4] = { { 0, }, };
 	struct cen64_options options = default_cen64_options;
   options.controller = controller;
   struct rom_file ddipl, ddrom, pifrom, cart;

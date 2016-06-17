@@ -19,7 +19,7 @@
 // Creates a rendering window/context for the VI controller.
 int vi_create_window(struct vi_controller *vi) {
   struct cen64_gl_hints hints = cen64_default_gl_hints;
-  struct cen64_gl_config *config;
+  cen64_gl_config *config;
   int num_matching;
 
   // Create a window for rendering. If we're successful,

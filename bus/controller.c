@@ -77,7 +77,7 @@ int bus_init(struct bus_controller *bus) {
     bus->ri,
     bus->rsp,
     bus->rsp,
-    bus->pi
+    bus->pi,
   };
 
   create_memory_map(&bus->map);

@@ -68,13 +68,15 @@ int controller_pak_write(struct controller *controller,
 
   else if (controller->pak == PAK_RUMBLE) {
     if (address == 0xC000) {
-      if (send_buf[3] == 0x01)
-        ; // printf("Enable rumble\n");
-      else
-        ; // printf("Disable rumble\n");
+      if (send_buf[3] == 0x01) {
+        // printf("Enable rumble\n");
+      } else {
+        // printf("Disable rumble\n");
+      }
     }
-    else
-      ; // printf("Unknown rumble address\n");
+    else {
+      // printf("Unknown rumble address\n");
+    }
   }
 
   else if (controller->pak == PAK_TRANSFER)

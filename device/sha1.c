@@ -285,7 +285,7 @@ extern void sha1(data, size, digest)
     size_t size;
     uint8_t *digest;
 {
-  struct sha1_ctxt ctx = { 0, };
+  struct sha1_ctxt ctx;
   sha1_init(&ctx);
   sha1_loop(&ctx, data, size);
   sha1_result(&ctx, digest);

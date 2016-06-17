@@ -24,7 +24,7 @@ const struct cen64_options default_cen64_options = {
   0,    // eeprom_size
   NULL, // sram_path
   NULL, // flashram_path
-  { { NULL, }, }, // controller
+  NULL, // controller
 #ifdef _WIN32
   false, // console
 #endif
@@ -130,7 +130,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
 
     else if (!strcmp(argv[i], "-controller")) {
       int num;
-      struct controller opt = { NULL, };
+      struct controller opt = { 0, };
 
       if ((i + 1) >= (argc - 1)) {
         printf("-controller requires a controller description.\n\n");

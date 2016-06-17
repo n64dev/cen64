@@ -390,9 +390,7 @@ int write_dd_ipl_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm
 }
 
 // Reads a word from the DD C2S/DS buffer.
-int read_dd_controller(void *opaque, uint32_t address, uint32_t *word) {
-  struct dd_controller *dd = (struct dd_controller *) opaque;
-
+int read_dd_controller(void *opaque __attribute__ ((unused)), uint32_t address, uint32_t *word) {
   // XXX: Hack to reduce memorymap entries.
   if (address >= DD_MS_RAM_ADDRESS)
     return read_dd_ms_ram(opaque, address, word);
@@ -406,9 +404,7 @@ int read_dd_controller(void *opaque, uint32_t address, uint32_t *word) {
 }
 
 // Writes a word to the DD C2S/DS BUFFER.
-int write_dd_controller(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
-  struct dd_controller *dd = (struct dd_controller *) opaque;
-
+int write_dd_controller(void *opaque __attribute__ ((unused)), uint32_t address, uint32_t word, uint32_t dqm) {
   // XXX: Hack to reduce memorymap entries.
   if (address >= DD_MS_RAM_ADDRESS)
     return write_dd_ms_ram(opaque, address, word, dqm);
@@ -422,17 +418,13 @@ int write_dd_controller(void *opaque, uint32_t address, uint32_t word, uint32_t 
 }
 
 // Reads a word from the DD MS RAM.
-int read_dd_ms_ram(void *opaque, uint32_t address, uint32_t *word) {
-  struct dd_controller *dd = (struct dd_controller *) opaque;
-
+int read_dd_ms_ram(void *opaque __attribute__ ((unused)), uint32_t address, uint32_t *word) {
   debug_mmio_read(dd, "DD_MS_RAM", *word);
   return 0;
 }
 
 // Writes a word to the DD MS RAM.
-int write_dd_ms_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
-  struct dd_controller *dd = (struct dd_controller *) opaque;
-
+int write_dd_ms_ram(void *opaque __attribute__ ((unused)), uint32_t address, uint32_t word, uint32_t dqm) {
   debug_mmio_write(dd, "DD_MS_RAM", word, dqm);
   return 0;
 }

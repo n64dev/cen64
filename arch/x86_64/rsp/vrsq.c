@@ -65,7 +65,7 @@ __m128i rsp_vrsq(struct rsp *rsp, int dp,
 #endif
 
     idx = (((unsigned long long) data << shift) & 0x7FC00000U) >> 22;
-    idx = (idx | 0x200) & 0x3FE | (shift % 2);
+    idx = ((idx | 0x200) & 0x3FE) | (shift % 2);
     result = rsp_reciprocal_rom[idx];
 
     result = ((0x10000 | result) << 14) >> ((31 - shift) >> 1);
