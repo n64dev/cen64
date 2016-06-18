@@ -518,13 +518,13 @@ static void compute_color_index(uint32_t* cidx, uint32_t readshort, uint32_t nyb
 static void read_tmem_copy(int s, int s1, int s2, int s3, int t, uint32_t tilenum, uint32_t* sortshort, int* hibits, int* lowbits);
 static void replicate_for_copy(uint32_t* outbyte, uint32_t inshort, uint32_t nybbleoffset, uint32_t tilenum, uint32_t tformat, uint32_t tsize);
 static void fetch_qword_copy(uint32_t* hidword, uint32_t* lowdword, int32_t ssss, int32_t ssst, uint32_t tilenum);
-static void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
 static void render_spans_fill(int start, int end, int flip);
 static void render_spans_copy(int start, int end, int tilenum, int flip);
 static inline void combiner_1cycle(int adseed, uint32_t* curpixel_cvg);
@@ -696,8 +696,8 @@ void (*fbfill_ptr)(uint32_t) = fbfill_4;
 void (*get_dither_noise_ptr)(int, int, int*, int*) = get_dither_noise_complete;
 void (*rgb_dither_ptr)(int*, int*, int*, int) = rgb_dither_complete;
 void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*) = tcdiv_nopersp;
-void (*render_spans_1cycle_ptr)(int, int, int, int) = render_spans_1cycle_complete;
-void (*render_spans_2cycle_ptr)(int, int, int, int, __m128i) = render_spans_2cycle_notexel1;
+void (*render_spans_1cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i) = render_spans_1cycle_complete;
+void (*render_spans_2cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i) = render_spans_2cycle_notexel1;
 
 typedef struct{
 	uint8_t cvg;
@@ -4235,7 +4235,7 @@ static inline void tc_pipeline_load(int32_t* sss, int32_t* sst, int tilenum, int
 
 
 
-void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v)
+void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4442,7 +4442,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m
 }
 
 
-void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v)
+void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4608,7 +4608,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m
 }
 
 
-void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v)
+void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4738,7 +4738,7 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128
 	}
 }
 
-void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4953,7 +4953,7 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m
 
 
 
-void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4970,8 +4970,8 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, 
 	int i, j;
 
   __m128i rgba_v, stwz_v;
-  __m128i drgbainc = _mm_load_si128(spans_drgba);
-  __m128i dstwzinc = _mm_load_si128(spans_dstwz);
+  __m128i drgbainc = spans_drgba_v;
+  __m128i dstwzinc = spans_dstwz_v;
 	int xinc = 1;
 
   if (!flip) {
@@ -5083,7 +5083,7 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, 
 }
 
 
-void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -5248,7 +5248,7 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m
 }
 
 
-void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -5925,9 +5925,11 @@ static void edgewalker_for_prims(int32_t* ewdata)
   dstwzdy_v = _mm_insert_epi32(dstwzdy_v, ewdata[43], 3);
 
   __m128i spans_drgba_v = _mm_slli_epi32(_mm_srli_epi32(drgbadx_v, 5), 5);
+  __m128i spans_dstwz_v = _mm_slli_epi32(_mm_srli_epi32(dstwzdx_v, 5), 5);
+  spans_dstwz_v = _mm_insert_epi32(spans_dstwz_v, ewdata[41], 3);
+  // TODO: Remove after vectorizing all render spans.
   _mm_store_si128(spans_drgba, spans_drgba_v);
-  _mm_store_si128(spans_dstwz, _mm_slli_epi32(_mm_srli_epi32(dstwzdx_v, 5), 5));
-	spans_dstwz[3] = ewdata[41];
+  _mm_store_si128(spans_dstwz, spans_dstwz_v);
 
   __m128i spans_drgbady_v = _mm_srai_epi32(_mm_slli_epi32(drgbady_v, 5), 19); 
   __m128i spans_cdrgba_v = _mm_srai_epi32(_mm_slli_epi32(spans_drgba_v, 5), 19);
@@ -6244,8 +6246,8 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 	switch(other_modes.cycle_type)
 	{
-		case CYCLE_TYPE_1: render_spans_1cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
-		case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_cdrgba_drgbady_v); break;
+		case CYCLE_TYPE_1: render_spans_1cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_cdrgba_drgbady_v); break;
+		case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_cdrgba_drgbady_v); break;
 		case CYCLE_TYPE_COPY: render_spans_copy(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
 		case CYCLE_TYPE_FILL: render_spans_fill(yhlimit >> 2, yllimit >> 2, flip); break;
 		default: debug("cycle_type %d", other_modes.cycle_type); break;
