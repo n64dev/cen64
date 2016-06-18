@@ -31,7 +31,7 @@
 
 cen64_cold int angrylion_rdp_init(struct cen64_device *device);
 cen64_cold static int device_debug_spin(struct cen64_device *device);
-cen64_cold static int device_multithread_spin(struct cen64_device *device);
+cen64_flatten cen64_hot static int device_multithread_spin(struct cen64_device *device);
 cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 
 cen64_flatten cen64_hot static CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *);
