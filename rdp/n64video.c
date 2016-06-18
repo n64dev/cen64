@@ -579,10 +579,8 @@ static inline void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, u
 static inline void gamma_filters(int* r, int* g, int* b, int gamma_and_dither);
 static inline void adjust_brightness(int* r, int* g, int* b, int brightcoeff);
 static void clearfb16(uint16_t* fb, uint32_t width,uint32_t height);
-static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
-static void tcdiv_persp_sse(__m128i stwz, int32_t ssst[2]);
-static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
-static void tcdiv_nopersp_sse(__m128i stwz, int32_t ssst[2]);
+static void tcdiv_persp(__m128i stwz, int32_t ssst[2]);
+static void tcdiv_nopersp(__m128i stwz, int32_t ssst[2]);
 static inline void tclod_4x17_to_15(int32_t scurr, int32_t snext, int32_t tcurr, int32_t tnext, int32_t previous, int32_t* lod);
 static inline void tclod_tcclamp(int32_t* sss, int32_t* sst);
 static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* l_tile, uint32_t* magnify, uint32_t* distant);
@@ -665,7 +663,7 @@ static void (*rgb_dither_func[2])(int*, int*, int*, int) =
 	rgb_dither_complete, rgb_dither_nothing
 };
 
-static void (*tcdiv_func[2])(int32_t, int32_t, int32_t, int32_t*, int32_t*) =
+static void (*tcdiv_func[2])(__m128i, int32_t[2]) =
 {
 	tcdiv_nopersp, tcdiv_persp
 };
@@ -686,7 +684,7 @@ void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, 
 void (*fbfill_ptr)(uint32_t) = fbfill_4;
 void (*get_dither_noise_ptr)(int, int, int*, int*) = get_dither_noise_complete;
 void (*rgb_dither_ptr)(int*, int*, int*, int) = rgb_dither_complete;
-void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*) = tcdiv_nopersp;
+void (*tcdiv_ptr)(__m128i, int32_t[2]) = tcdiv_nopersp;
 void (*render_spans_1cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_1cycle_complete;
 void (*render_spans_2cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_2cycle_notexel1;
 
@@ -4339,7 +4337,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m
 			}
 			else
 			{
-				tcdiv_ptr == tcdiv_nopersp ? tcdiv_nopersp_sse(sstwz, ssst) : tcdiv_persp_sse(sstwz, ssst);
+        tcdiv_ptr(sstwz, ssst);
 
 				tclod_1cycle_current(ssst, newst[0], newst[1], stwz_v, dstwzinc, i, prim_tile, &tile1, &sigs);
 				
@@ -4483,7 +4481,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m
 
 			lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
-      tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(sstwz, ssst) : tcdiv_nopersp_sse(sstwz, ssst);
+      tcdiv_ptr(sstwz, ssst);
 
 			tclod_1cycle_current_simple(ssst, stwz_v, dstwzinc, i, prim_tile, &tile1, &sigs);
 
@@ -4738,7 +4736,7 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m
 			}
 			else
 			{
-        tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(sstwz, ssst) : tcdiv_nopersp_sse(sstwz, ssst);
+        tcdiv_ptr(sstwz, ssst);
 
 				tclod_2cycle_current(ssst, newst[0], newst[1], stwz_v, prim_tile, &tile1, &tile2, spans_dstwzdy_v);
 				
@@ -4890,7 +4888,7 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, 
 
 			lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
-      tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(sstwz_v, ssst) : tcdiv_nopersp_sse(sstwz_v, ssst);
+      tcdiv_ptr(sstwz_v, ssst);
 
 			tclod_2cycle_current_simple(ssst, stwz_v, dstwzinc, prim_tile, &tile1, &tile2, spans_dstwzdy_v);
 				
@@ -5019,8 +5017,8 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m
       __m128i sstwz = _mm_srai_epi32(stwz_v, 16);
 
 			lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
-			
-      tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(sstwz, ssst) : tcdiv_nopersp_sse(sstwz, ssst);
+
+      tcdiv_ptr(sstwz, ssst);
 
 			tclod_2cycle_current_notexel1(ssst, stwz_v, dstwzinc, prim_tile, &tile1, spans_dstwzdy_v);
 			
@@ -5300,7 +5298,7 @@ void render_spans_copy(int start, int end, int tilenum, int flip, __m128i spans_
 		for (j = 0; j <= length; j += fbadvance)
 		{
       sstwz_v = _mm_srai_epi32(stwz_v, 16);
-      tcdiv_ptr == tcdiv_nopersp ? tcdiv_nopersp_sse(sstwz_v, ssst) : tcdiv_persp_sse(sstwz_v, ssst);
+      tcdiv_ptr(sstwz_v, ssst);
 			
 			tclod_copy(ssst, stwz_v, dstwzinc, prim_tile, &tile1);
 			
@@ -9244,18 +9242,11 @@ static void clearfb16(uint16_t* fb, uint32_t width,uint32_t height)
 	}
 }
 
-static void tcdiv_nopersp_sse(__m128i stwz, int32_t ssst[2]) {
+static void tcdiv_nopersp(__m128i stwz, int32_t ssst[2]) {
   _mm_storel_epi64(ssst, _mm_srli_epi32(_mm_srai_epi32(_mm_slli_epi32(stwz, 16), 1), 15));
 }
 
-static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
-{
-
-	*sss = (SIGN16(ss)) & 0x1ffff;
-	*sst = (SIGN16(st)) & 0x1ffff;
-}
-
-static void tcdiv_persp_sse(__m128i stwz, int32_t ssst[2]) {
+static void tcdiv_persp(__m128i stwz, int32_t ssst[2]) {
   int32_t ss, st, sw;
 
   ss = _mm_extract_epi32(stwz, 0);
@@ -9336,84 +9327,6 @@ static void tcdiv_persp_sse(__m128i stwz, int32_t ssst[2]) {
 	ssst[1] = (tempt & 0x1ffff) | overunder_t;
 }
 
-static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
-{
-
-
-	int w_carry = 0;
-	int shift; 
-	int tlu_rcp;
-    int sprod, tprod;
-	int outofbounds_s, outofbounds_t;
-	int tempmask;
-	int shift_value;
-	int32_t temps, tempt;
-
-	
-	
-	int overunder_s = 0, overunder_t = 0;
-	
-	
-	if (SIGN16(sw) <= 0)
-		w_carry = 1;
-
-	sw &= 0x7fff;
-
-	
-	
-	shift = tcdiv_table[sw];
-	tlu_rcp = shift >> 4;
-	shift &= 0xf;
-
-	sprod = SIGN16(ss) * tlu_rcp;
-	tprod = SIGN16(st) * tlu_rcp;
-
-	
-	
-	
-	tempmask = ((1 << 30) - 1) & -((1 << 29) >> shift);
-	
-	outofbounds_s = sprod & tempmask;
-	outofbounds_t = tprod & tempmask;
-	
-	if (shift != 0xe)
-	{
-		shift_value = 13 - shift;
-		temps = sprod = (sprod >> shift_value);
-		tempt = tprod = (tprod >> shift_value);
-	}
-	else
-	{
-		temps = sprod << 1;
-		tempt = tprod << 1;
-	}
-	
-	if (outofbounds_s != tempmask && outofbounds_s != 0)
-	{
-		if (!(sprod & (1 << 29)))
-			overunder_s = 2 << 17;
-		else
-			overunder_s = 1 << 17;
-	}
-
-	if (outofbounds_t != tempmask && outofbounds_t != 0)
-	{
-		if (!(tprod & (1 << 29)))
-			overunder_t = 2 << 17;
-		else
-			overunder_t = 1 << 17;
-	}
-
-	if (w_carry)
-	{
-		overunder_s |= (2 << 17);
-		overunder_t |= (2 << 17);
-	}
-
-	*sss = (temps & 0x1ffff) | overunder_s;
-	*sst = (tempt & 0x1ffff) | overunder_t;
-}
-
 static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t nextt, __m128i stwz, int32_t prim_tile, int32_t* t1, int32_t* t2, __m128i spans_dstwzdy_v)
 {
   __m128i nextystw;
@@ -9432,7 +9345,7 @@ static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t 
 	{
     nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
-    tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(nextystw, nextyst) : tcdiv_nopersp_sse(nextystw, nextyst);
+    tcdiv_ptr(nextystw, nextyst);
 
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextyst[0] & 0x60000) || (nextyst[1] & 0x60000);
 		
@@ -9490,13 +9403,8 @@ static inline void tclod_2cycle_current_simple(int32_t ssst[2], __m128i stwz, __
     nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
     nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
-    if (tcdiv_ptr == tcdiv_nopersp) {
-      tcdiv_nopersp_sse(nextstw, nextst);
-      tcdiv_nopersp_sse(nextystw, nextyst);
-    } else {
-      tcdiv_persp_sse(nextstw, nextst);
-      tcdiv_persp_sse(nextystw, nextyst);
-    }
+    tcdiv_ptr(nextstw, nextst);
+    tcdiv_ptr(nextystw, nextyst);
 
 		lodclamp = (initt & 0x60000) || (nextst[1] & 0x60000) || (inits & 0x60000) || (nextst[0] & 0x60000) || (nextyst[0] & 0x60000) || (nextyst[1] & 0x60000);
 
@@ -9551,13 +9459,8 @@ static inline void tclod_2cycle_current_notexel1(int32_t ssst[2], __m128i stwz, 
     nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
     nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
-    if (tcdiv_ptr == tcdiv_nopersp) {
-      tcdiv_nopersp_sse(nextstw, nextst);
-      tcdiv_nopersp_sse(nextystw, nextyst);
-    } else {
-      tcdiv_persp_sse(nextstw, nextst);
-      tcdiv_persp_sse(nextystw, nextyst);
-    }
+    tcdiv_ptr(nextstw, nextst);
+    tcdiv_ptr(nextystw, nextyst);
 
 		lodclamp = (initt & 0x60000) || (nextst[1] & 0x60000) || (inits & 0x60000) || (nextst[0] & 0x60000) || (nextyst[0] & 0x60000) || (nextyst[1] & 0x60000);
 
@@ -9597,13 +9500,8 @@ static inline void tclod_2cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstw
     nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
     nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
-    if (tcdiv_ptr == tcdiv_nopersp) {
-      tcdiv_nopersp_sse(nextstw, nextst);
-      tcdiv_nopersp_sse(nextystw, nextyst);
-    } else {
-      tcdiv_persp_sse(nextstw, nextst);
-      tcdiv_persp_sse(nextystw, nextyst);
-    }
+    tcdiv_ptr(nextstw, nextst);
+    tcdiv_ptr(nextystw, nextyst);
 	
 		lodclamp = (initt & 0x60000) || (nextst[1] & 0x60000) || (inits & 0x60000) || (nextst[0] & 0x60000) || (nextyst[0] & 0x60000) || (nextyst[1] & 0x60000);
 
@@ -9705,7 +9603,7 @@ static inline void tclod_1cycle_current(int32_t ssst[2], int32_t nexts, int32_t 
 
     farstw = _mm_srai_epi32(farstw, 16);
 
-		tcdiv_ptr == tcdiv_nopersp ? tcdiv_nopersp_sse(farstw, farst) : tcdiv_persp_sse(farstw, farst);
+    tcdiv_ptr(farstw, farst);
 
 		lodclamp = (farst[1] & 0x60000) || (nextt & 0x60000) || (farst[0] & 0x60000) || (nexts & 0x60000);
 		
@@ -9774,13 +9672,8 @@ static inline void tclod_1cycle_current_simple(int32_t ssst[2], __m128i stwz, __
     nextstw = _mm_srai_epi32(nextstw, 16);
     farstw = _mm_srai_epi32(farstw, 16);
 
-    if (tcdiv_ptr == tcdiv_nopersp) {
-      tcdiv_nopersp_sse(nextstw, nextst);
-      tcdiv_nopersp_sse(farstw, farst);
-    } else {
-      tcdiv_persp_sse(nextstw, nextst);
-      tcdiv_persp_sse(farstw, farst);
-    }
+    tcdiv_ptr(nextstw, nextst);
+    tcdiv_ptr(farstw, farst);
 
 		lodclamp = (farst[1] & 0x60000) || (nextst[1] & 0x60000) || (farst[0] & 0x60000) || (nextst[0] & 0x60000);
 
@@ -9861,13 +9754,8 @@ static inline void tclod_1cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstw
     nextstw = _mm_srai_epi16(nextstw, 16);
     farstw = _mm_srai_epi16(farstw, 16);
 
-    if (tcdiv_ptr == tcdiv_nopersp) {
-      tcdiv_nopersp_sse(nextstw, nextst);
-      tcdiv_nopersp_sse(farstw, farst);
-    } else {
-      tcdiv_persp_sse(nextstw, nextst);
-      tcdiv_persp_sse(farstw, farst);
-    }
+    tcdiv_ptr(nextstw, nextst);
+    tcdiv_ptr(farstw, farst);
 
 		lodclamp = (farst[1] & 0x60000) || (nextst[1] & 0x60000) || (farst[0] & 0x60000) || (nextst[0] & 0x60000);
 		
@@ -9925,13 +9813,8 @@ static inline void tclod_copy(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, i
     nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
     farstw = _mm_srai_epi32(_mm_add_epi32(stwz, _mm_slli_epi32(dstwzinc, 1)), 16);
 
-    if (tcdiv_ptr == tcdiv_nopersp) {
-      tcdiv_nopersp_sse(nextstw, nextst);
-      tcdiv_nopersp_sse(farstw, farst);
-    } else {
-      tcdiv_persp_sse(nextstw, nextst);
-      tcdiv_persp_sse(farstw, farst);
-    }
+    tcdiv_ptr(nextstw, nextst);
+    tcdiv_ptr(farstw, farst);
 
 		lodclamp = (farst[1] & 0x60000) || (nextst[1] & 0x60000) || (farst[0] & 0x60000) || (nextst[0] & 0x60000);
 
@@ -9971,14 +9854,13 @@ static inline void get_texel1_1cycle(int32_t st[2], __m128i stwz, __m128i dstwzi
 	}
 
   nextstw = _mm_srai_epi16(nextstw, 16);
-	tcdiv_ptr == tcdiv_nopersp ? tcdiv_nopersp_sse(nextstw, st) : tcdiv_persp_sse(nextstw, st);
+  tcdiv_ptr(nextstw, st);
 }
 
 static inline void get_nexttexel0_2cycle(int32_t st[2], __m128i stwz, __m128i dstwzinc)
 {
   __m128i nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
-  tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(nextstw, st) : tcdiv_nopersp_sse(nextstw, st);
-
+  tcdiv_ptr(nextstw, st);
 }
 
 
