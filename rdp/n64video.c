@@ -223,14 +223,9 @@ typedef struct
 cen64_align(static SPAN span[1024], 16);
 uint8_t cvgbuf[1024];
 
-static int spans_dstwz[4] __attribute__((aligned(16)));
 static int spans_dzpix;
 
 int spans_cdz;
-
-static int spans_dstwzdy[4] __attribute__((aligned(16)));
-
-
 
 typedef int32_t COLOR[4] __attribute__((aligned(16)));
 typedef int8_t FBCOLOR[3];
@@ -508,7 +503,7 @@ static void fetch_texel_quadro_rgba16(COLOR color0, COLOR color1, COLOR color2, 
 static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void fetch_texel_entlut_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
-static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut);
+static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut, int dsinc, int dtinc);
 static void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
 static void sort_tmem_idx(uint32_t *idx, uint32_t idxa, uint32_t idxb, uint32_t idxc, uint32_t idxd, uint32_t bankno);
 static void sort_tmem_shorts_lowhalf(uint32_t* bindshort, uint32_t short0, uint32_t short1, uint32_t short2, uint32_t short3, uint32_t bankno);
@@ -516,15 +511,15 @@ static void compute_color_index(uint32_t* cidx, uint32_t readshort, uint32_t nyb
 static void read_tmem_copy(int s, int s1, int s2, int s3, int t, uint32_t tilenum, uint32_t* sortshort, int* hibits, int* lowbits);
 static void replicate_for_copy(uint32_t* outbyte, uint32_t inshort, uint32_t nybbleoffset, uint32_t tilenum, uint32_t tformat, uint32_t tsize);
 static void fetch_qword_copy(uint32_t* hidword, uint32_t* lowdword, int32_t ssss, int32_t ssst, uint32_t tilenum);
-static void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
+static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
 static void render_spans_fill(int start, int end, int flip);
-static void render_spans_copy(int start, int end, int tilenum, int flip);
+static void render_spans_copy(int start, int end, int tilenum, int flip, __m128i spans_dstwz_v);
 static inline void combiner_1cycle(int adseed, uint32_t* curpixel_cvg);
 static inline void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* acalpha);
 static inline int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, int dith, uint32_t blend_en, uint32_t prewrap, uint32_t curpixel_cvg, uint32_t curpixel_cvbit);
@@ -594,11 +589,11 @@ static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* 
 static inline void tclod_1cycle_current(int32_t ssst[2], int32_t nexts, int32_t nextt, __m128i stwz, __m128i dstwzinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs);
 static inline void tclod_1cycle_current_simple(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs);
 static inline void tclod_1cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs, int32_t* prelodfrac);
-static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t nextt, __m128i stwz, int32_t prim_tile, int32_t* t1, int32_t* t2);
-static inline void tclod_2cycle_current_simple(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2);
-static inline void tclod_2cycle_current_notexel1(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1);
-static inline void tclod_2cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2, int32_t* prelodfrac);
-static inline void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1);
+static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t nextt, __m128i stwz, int32_t prim_tile, int32_t* t1, int32_t* t2, __m128i spans_dstwzdy_v);
+static inline void tclod_2cycle_current_simple(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2, __m128i spans_dstwzdy_v);
+static inline void tclod_2cycle_current_notexel1(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, __m128i spans_dstwzdy_v);
+static inline void tclod_2cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2, int32_t* prelodfrac, __m128i spans_dstwzdy_v);
+static inline void tclod_copy(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1);
 static inline void get_texel1_1cycle(int32_t st[2], __m128i stwz, __m128i dstwzinc, int32_t scanline, SPANSIGS* sigs);
 static inline void get_nexttexel0_2cycle(int32_t st[2], __m128i stwz, __m128i dstwzinc);
 static inline void video_max_optimized(uint32_t* Pixels, uint32_t* penumin, uint32_t* penumax, int numofels);
@@ -610,7 +605,7 @@ static void get_dither_noise_complete(int x, int y, int* cdith, int* adith);
 static void get_dither_only(int x, int y, int* cdith, int* adith);
 static void get_dither_nothing(int x, int y, int* cdith, int* adith);
 static inline void vi_vl_lerp(CCVG up, CCVG down, uint32_t frac);
-static inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int *z, uint32_t curpixel_cvg, __m128i spans_cdrgba_drgbady_v);
+static inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int *z, uint32_t curpixel_cvg, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
 static inline void vi_fetch_filter16(CCVG res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
 static inline void vi_fetch_filter32(CCVG res, uint32_t fboffset, uint32_t cur_x, uint32_t fsaa, uint32_t dither_filter, uint32_t vres, uint32_t fetchstate);
 cen64_cold static uint32_t vi_integer_sqrt(uint32_t a);
@@ -675,12 +670,12 @@ static void (*tcdiv_func[2])(int32_t, int32_t, int32_t, int32_t*, int32_t*) =
 	tcdiv_nopersp, tcdiv_persp
 };
 
-static void (*render_spans_1cycle_func[3])(int, int, int, int, __m128i, __m128i, __m128i) =
+static void (*render_spans_1cycle_func[3])(int, int, int, int, __m128i, __m128i, __m128i, __m128i) =
 {
 	render_spans_1cycle_notex, render_spans_1cycle_notexel1, render_spans_1cycle_complete
 };
 
-static void (*render_spans_2cycle_func[4])(int, int, int, int, __m128i, __m128i, __m128i) =
+static void (*render_spans_2cycle_func[4])(int, int, int, int, __m128i, __m128i, __m128i, __m128i) =
 {
 	render_spans_2cycle_notex, render_spans_2cycle_notexel1, render_spans_2cycle_notexelnext, render_spans_2cycle_complete
 };
@@ -692,8 +687,8 @@ void (*fbfill_ptr)(uint32_t) = fbfill_4;
 void (*get_dither_noise_ptr)(int, int, int*, int*) = get_dither_noise_complete;
 void (*rgb_dither_ptr)(int*, int*, int*, int) = rgb_dither_complete;
 void (*tcdiv_ptr)(int32_t, int32_t, int32_t, int32_t*, int32_t*) = tcdiv_nopersp;
-void (*render_spans_1cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i) = render_spans_1cycle_complete;
-void (*render_spans_2cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i) = render_spans_2cycle_notexel1;
+void (*render_spans_1cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_1cycle_complete;
+void (*render_spans_2cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_2cycle_notexel1;
 
 typedef struct{
 	uint8_t cvg;
@@ -4231,7 +4226,7 @@ static inline void tc_pipeline_load(int32_t* sss, int32_t* sst, int tilenum, int
 
 
 
-void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
+void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4265,8 +4260,9 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m
 	else
 	{
 		dzpix = primitive_delta_z;
-		spans_cdz = spans_dstwzdy[3] = 0;
-    dstwzinc = _mm_insert_epi32(dstwzinc, spans_cdz, 3);
+		spans_cdz;
+    spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, 0, 3);
+    dstwzinc = _mm_insert_epi32(dstwzinc, 0, 3);
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4362,7 +4358,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m
 
 			texture_pipeline_cycle(texel1_color, texel1_color, newst[0], newst[1], newtile, 0);
 
-			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_cdrgba_drgbady_v);
+			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_dstwzdy_v, spans_cdrgba_drgbady_v);
 
 			get_dither_noise_ptr(x, i, &cdith, &adith);
 			combiner_1cycle(adith, &curpixel_cvg);
@@ -4390,7 +4386,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip, __m
 }
 
 
-void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
+void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4422,8 +4418,9 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m
 	else
 	{
 		dzpix = primitive_delta_z;
-		spans_cdz = spans_dstwzdy[3] = 0;
-    dstwzinc = _mm_insert_epi32(dstwzinc, spans_cdz, 3);
+		spans_cdz = 0;
+    spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, 0, 3);
+    dstwzinc = _mm_insert_epi32(dstwzinc, 0, 3);
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4492,7 +4489,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m
 
 			texture_pipeline_cycle(texel0_color, texel0_color, ssst[0], ssst[1], tile1, 0);
 
-			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_cdrgba_drgbady_v);
+			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_dstwzdy_v, spans_cdrgba_drgbady_v);
 
 			get_dither_noise_ptr(x, i, &cdith, &adith);
 			combiner_1cycle(adith, &curpixel_cvg);
@@ -4520,7 +4517,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip, __m
 }
 
 
-void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
+void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4548,7 +4545,8 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
+		dzinc = spans_cdz = 0;
+    spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, 0, 3);
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4601,7 +4599,7 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128
 
 			lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
-			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_cdrgba_drgbady_v);
+			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_dstwzdy_v, spans_cdrgba_drgbady_v);
 
 			get_dither_noise_ptr(x, i, &cdith, &adith);
 			combiner_1cycle(adith, &curpixel_cvg);
@@ -4628,7 +4626,7 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip, __m128
 	}
 }
 
-void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4669,8 +4667,9 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m
 	else
 	{
 		dzpix = primitive_delta_z;
-		spans_cdz = spans_dstwzdy[3] = 0;
-    dstwzinc = _mm_insert_epi32(dstwzinc, spans_cdz, 3);
+		spans_cdz = 0;
+    dstwzinc = _mm_insert_epi32(dstwzinc, 0, 3);
+    spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, 0, 3);
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4741,7 +4740,7 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m
 			{
         tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(sstwz, ssst) : tcdiv_nopersp_sse(sstwz, ssst);
 
-				tclod_2cycle_current(ssst, newst[0], newst[1], stwz_v, prim_tile, &tile1, &tile2);
+				tclod_2cycle_current(ssst, newst[0], newst[1], stwz_v, prim_tile, &tile1, &tile2, spans_dstwzdy_v);
 				
 
 				
@@ -4753,12 +4752,12 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m
 
       stwz_v = _mm_add_epi32(stwz_v, dstwzinc);
 
-			tclod_2cycle_next(newst, stwz_v, dstwzinc, prim_tile, &newtile1, &newtile2, &prelodfrac);
+			tclod_2cycle_next(newst, stwz_v, dstwzinc, prim_tile, &newtile1, &newtile2, &prelodfrac, spans_dstwzdy_v);
 
 			texture_pipeline_cycle(nexttexel_color, nexttexel_color, newst[0], newst[1], newtile1, 0);
 			texture_pipeline_cycle(nexttexel1_color, nexttexel_color, newst[0], newst[1], newtile2, 1);
 
-			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_cdrgba_drgbady_v);
+			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_dstwzdy_v, spans_cdrgba_drgbady_v);
 					
 			get_dither_noise_ptr(x, i, &cdith, &adith);
 			combiner_2cycle(adith, &curpixel_cvg, &acalpha);
@@ -4798,7 +4797,7 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip, __m
 
 
 
-void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4831,8 +4830,9 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, 
 	else
 	{
 		dzpix = primitive_delta_z;
-		spans_cdz = spans_dstwzdy[3] = 0;
-    dstwzinc = _mm_insert_epi32(dstwzinc, spans_cdz, 3);
+		spans_cdz = 0;
+    dstwzinc = _mm_insert_epi32(dstwzinc, 0, 3);
+    spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, 0, 3);
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -4892,12 +4892,12 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, 
 
       tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(sstwz_v, ssst) : tcdiv_nopersp_sse(sstwz_v, ssst);
 
-			tclod_2cycle_current_simple(ssst, stwz_v, dstwzinc, prim_tile, &tile1, &tile2);
+			tclod_2cycle_current_simple(ssst, stwz_v, dstwzinc, prim_tile, &tile1, &tile2, spans_dstwzdy_v);
 				
 			texture_pipeline_cycle(texel0_color, texel0_color, ssst[0], ssst[1], tile1, 0);
 			texture_pipeline_cycle(texel1_color, texel0_color, ssst[0], ssst[1], tile2, 1);
 
-			rgbaz_correct_clip(offx, offy, srgba_v, &sz, curpixel_cvg, spans_cdrgba_drgbady_v);
+			rgbaz_correct_clip(offx, offy, srgba_v, &sz, curpixel_cvg, spans_dstwzdy_v, spans_cdrgba_drgbady_v);
 
 			get_dither_noise_ptr(x, i, &cdith, &adith);
 			combiner_2cycle(adith, &curpixel_cvg, &acalpha);
@@ -4928,7 +4928,7 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, 
 }
 
 
-void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -4960,8 +4960,9 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m
 	else
 	{
 		dzpix = primitive_delta_z;
-		spans_cdz = spans_dstwzdy[3] = 0;
-    dstwzinc = _mm_insert_epi32(dstwzinc, spans_cdz, 3);
+		spans_cdz = 0;
+    dstwzinc = _mm_insert_epi32(dstwzinc, 0, 3);
+    spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, 0, 3);
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -5021,12 +5022,12 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m
 			
       tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(sstwz, ssst) : tcdiv_nopersp_sse(sstwz, ssst);
 
-			tclod_2cycle_current_notexel1(ssst, stwz_v, dstwzinc, prim_tile, &tile1);
+			tclod_2cycle_current_notexel1(ssst, stwz_v, dstwzinc, prim_tile, &tile1, spans_dstwzdy_v);
 			
 			
 			texture_pipeline_cycle(texel0_color, texel0_color, ssst[0], ssst[1], tile1, 0);
 
-			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_cdrgba_drgbady_v);
+			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_dstwzdy_v, spans_cdrgba_drgbady_v);
 
 			get_dither_noise_ptr(x, i, &cdith, &adith);
 			combiner_2cycle(adith, &curpixel_cvg, &acalpha);
@@ -5057,7 +5058,7 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m
 }
 
 
-void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_cdrgba_drgbady_v)
+void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v)
 {
 	int zb = zb_address >> 1;
 	int zbcur;
@@ -5085,7 +5086,8 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128
 	else
 	{
 		dzpix = primitive_delta_z;
-		dzinc = spans_cdz = spans_dstwzdy[3] = 0;
+		dzinc = spans_cdz = 0;
+    spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, 0, 3);
 	}
 	int dzpixenc = dz_compress(dzpix);
 
@@ -5140,7 +5142,7 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128
 
 			lookup_cvmask_derivatives(cvgbuf[x], &offx, &offy, &curpixel_cvg, &curpixel_cvbit);
 
-			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_cdrgba_drgbady_v);
+			rgbaz_correct_clip(offx, offy, srgba, &sz, curpixel_cvg, spans_dstwzdy_v, spans_cdrgba_drgbady_v);
 
 			get_dither_noise_ptr(x, i, &cdith, &adith);
 			combiner_2cycle(adith, &curpixel_cvg, &acalpha);
@@ -5237,7 +5239,7 @@ void render_spans_fill(int start, int end, int flip)
 	}
 }
 
-void render_spans_copy(int start, int end, int tilenum, int flip)
+void render_spans_copy(int start, int end, int tilenum, int flip, __m128i spans_dstwz_v)
 {
 	int i, j, k;
 
@@ -5250,27 +5252,19 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 	int tile1 = tilenum;
 	int prim_tile = tilenum;
 
-	int dsinc, dtinc, dwinc;
-	int xinc;
-	if (flip)
-	{
-		dsinc = spans_dstwz[0];
-		dtinc = spans_dstwz[2];
-		dwinc = spans_dstwz[3];
-		xinc = 1;
-	}
-	else
-	{
-		dsinc = -spans_dstwz[0];
-		dtinc = -spans_dstwz[1];
-		dwinc = -spans_dstwz[2];
-		xinc = -1;
+  __m128i stwz_v, sstwz_v;
+  __m128i dstwzinc = spans_dstwz_v;
+	int xinc = 1;
+
+	if (!flip) {
+    dstwzinc = _mm_sub_epi32(_mm_setzero_si128(), dstwzinc);
+		xinc = -xinc;
 	}
 
 	int xstart = 0, xendsc;
-	int s = 0, t = 0, w = 0, ss = 0, st = 0, sw = 0, sss = 0, sst = 0, ssw = 0;
 	int fb_index, length;
 	int diff = 0;
+  int ssst[2];
 
 	uint32_t hidword = 0, lowdword = 0;
 	uint32_t hidword1 = 0, lowdword1 = 0;
@@ -5290,10 +5284,7 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 	{
 		if (span[i].validline)
 		{
-
-		s = span[i].rgbastwz[4];
-		t = span[i].rgbastwz[5];
-		w = span[i].rgbastwz[6];
+    stwz_v = _mm_load_si128(&span[i].rgbastwz[4]);
 		
 		xstart = span[i].lx;
 		xendsc = span[i].rx;
@@ -5308,17 +5299,14 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 
 		for (j = 0; j <= length; j += fbadvance)
 		{
-			ss = s >> 16;
-			st = t >> 16;
-			sw = w >> 16;
-
-			tcdiv_ptr(ss, st, sw, &sss, &sst);
+      sstwz_v = _mm_srai_epi32(stwz_v, 16);
+      tcdiv_ptr == tcdiv_nopersp ? tcdiv_nopersp_sse(sstwz_v, ssst) : tcdiv_persp_sse(sstwz_v, ssst);
 			
-			tclod_copy(&sss, &sst, s, t, w, dsinc, dtinc, dwinc, prim_tile, &tile1);
+			tclod_copy(ssst, stwz_v, dstwzinc, prim_tile, &tile1);
 			
 			
 			
-			fetch_qword_copy(&hidword, &lowdword, sss, sst, tile1);
+			fetch_qword_copy(&hidword, &lowdword, ssst[0], ssst[1], tile1);
 
 			
 			
@@ -5381,10 +5369,8 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 				tempdword += xinc;
 				copywmask--;
 			}
-			
-			s += dsinc;
-			t += dtinc;
-			w += dwinc;
+
+      stwz_v = _mm_add_epi32(stwz_v, dstwzinc);
 			fbptr += fbptr_advance;
 		}
 		}
@@ -5392,16 +5378,10 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 }
 
 
-void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut)
+void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut, int dsinc, int dtinc)
 {
-
-
 	int localdebugmode = 0, cnt = 0;
 	int i, j;
-
-	int dsinc, dtinc;
-	dsinc = spans_dstwz[0];
-	dtinc = spans_dstwz[1];
 
 	int s, t;
 	int ss, st;
@@ -5715,8 +5695,6 @@ static void edgewalker_for_prims(int32_t* ewdata)
   __m128i spans_drgba_v = _mm_slli_epi32(_mm_srli_epi32(drgbadx_v, 5), 5);
   __m128i spans_dstwz_v = _mm_slli_epi32(_mm_srli_epi32(dstwzdx_v, 5), 5);
   spans_dstwz_v = _mm_insert_epi32(spans_dstwz_v, ewdata[41], 3);
-  // TODO: Remove after vectorizing all render spans.
-  _mm_store_si128(spans_dstwz, spans_dstwz_v);
 
   __m128i spans_drgbady_v = _mm_srai_epi32(_mm_slli_epi32(drgbady_v, 5), 19); 
   __m128i spans_cdrgba_v = _mm_srai_epi32(_mm_slli_epi32(spans_drgba_v, 5), 19);
@@ -5724,13 +5702,11 @@ static void edgewalker_for_prims(int32_t* ewdata)
     _mm_unpacklo_epi32(spans_cdrgba_v, spans_drgbady_v),
     _mm_unpackhi_epi32(spans_cdrgba_v, spans_drgbady_v));
 
-	spans_cdz = spans_dstwz[3] >> 10;
+	spans_cdz = _mm_extract_epi32(spans_dstwz_v, 3) >> 10;
 	spans_cdz = SIGN(spans_cdz, 22);
-	
-  _mm_store_si128(spans_dstwzdy, _mm_slli_epi32(_mm_srli_epi32(dstwzdy_v, 15), 15));
-	spans_dstwzdy[3] = /* dzdy */ ewdata[43] >> 10;
-	spans_dstwzdy[3] = SIGN(spans_dstwzdy[3], 22);
 
+  __m128i spans_dstwzdy_v = _mm_slli_epi32(_mm_srli_epi32(dstwzdy_v, 15), 15);
+  spans_dstwzdy_v = _mm_insert_epi32(spans_dstwzdy_v, SIGN(/*dzdy*/ ewdata[43] >> 10, 22), 3);	
 	
 	int dzdy_dz = (/* dzdy */ ewdata[43] >> 16) & 0xffff;
 	int dzdx_dz = (/* dzdx */ ewdata[41] >> 16) & 0xffff;
@@ -6030,9 +6006,9 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 	switch(other_modes.cycle_type)
 	{
-		case CYCLE_TYPE_1: render_spans_1cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_cdrgba_drgbady_v); break;
-		case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_cdrgba_drgbady_v); break;
-		case CYCLE_TYPE_COPY: render_spans_copy(yhlimit >> 2, yllimit >> 2, tilenum, flip); break;
+		case CYCLE_TYPE_1: render_spans_1cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_dstwzdy_v, spans_cdrgba_drgbady_v); break;
+		case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_dstwzdy_v, spans_cdrgba_drgbady_v); break;
+		case CYCLE_TYPE_COPY: render_spans_copy(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_dstwz_v); break;
 		case CYCLE_TYPE_FILL: render_spans_fill(yhlimit >> 2, yllimit >> 2, flip); break;
 		default: debug("cycle_type %d", other_modes.cycle_type); break;
 	}
@@ -6088,15 +6064,6 @@ static void edgewalker_for_loads(int32_t* lewdata)
 	dsdy = 0;
 	dtdy = (lewdata[8] & 0xffff) << 16;
 
-	spans_dstwz[0] = dsdx & ~0x1f;
-	spans_dstwz[1] = dtdx & ~0x1f;
-	spans_dstwz[2] = 0;
-
-	
-	
-
-	
-	
 	xright = xh & ~0x1;
 	xleft = xm & ~0x1;
 		
@@ -6196,7 +6163,7 @@ static void edgewalker_for_loads(int32_t* lewdata)
 
 	}
 
-	loading_pipeline(yhlimit >> 2, yllimit >> 2, tilenum, coord_quad, ltlut);
+	loading_pipeline(yhlimit >> 2, yllimit >> 2, tilenum, coord_quad, ltlut, dsdx & ~0x1f, dtdx & ~0x1f);
 }
 
 
@@ -9207,7 +9174,7 @@ static inline void vi_vl_lerp(CCVG up, CCVG down, uint32_t frac)
 
 }
 
-static inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int *z, uint32_t curpixel_cvg, __m128i spans_cdrgba_drgbady_v) {
+static inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int *z, uint32_t curpixel_cvg, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v) {
   __m128i rgba2;
   int sz = *z;
   int zanded;
@@ -9221,7 +9188,7 @@ static inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int *z, 
     __m128i off_v = _mm_set1_epi32(offx + (offy << 16));
     __m128i summand_rgba = _mm_madd_epi16(off_v, spans_cdrgba_drgbady_v);
 
-    int summand_z = offx * spans_cdz + offy * spans_dstwzdy[3];
+    int summand_z = offx * spans_cdz + offy * _mm_extract_epi32(spans_dstwzdy_v, 3);
     sz = ((sz << 2) + summand_z) >> 5;
 
     rgba = _mm_add_epi32(_mm_slli_epi32(rgba, 2), summand_rgba);
@@ -9447,7 +9414,7 @@ static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_
 	*sst = (tempt & 0x1ffff) | overunder_t;
 }
 
-static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t nextt, __m128i stwz, int32_t prim_tile, int32_t* t1, int32_t* t2)
+static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t nextt, __m128i stwz, int32_t prim_tile, int32_t* t1, int32_t* t2, __m128i spans_dstwzdy_v)
 {
   __m128i nextystw;
   int nextyst[2];
@@ -9463,7 +9430,7 @@ static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t 
 
 	if (other_modes.f.dolod)
 	{
-    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, _mm_load_si128(spans_dstwzdy)), 16);
+    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
     tcdiv_ptr == tcdiv_persp ? tcdiv_persp_sse(nextystw, nextyst) : tcdiv_nopersp_sse(nextystw, nextyst);
 
@@ -9506,7 +9473,7 @@ static inline void tclod_2cycle_current(int32_t ssst[2], int32_t nexts, int32_t 
 	}
 }
 
-static inline void tclod_2cycle_current_simple(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2) {
+static inline void tclod_2cycle_current_simple(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2, __m128i spans_dstwzdy_v) {
   __m128i nextstw, nextystw;
   int nextst[2], nextyst[2];
 	int lodclamp = 0;
@@ -9521,7 +9488,7 @@ static inline void tclod_2cycle_current_simple(int32_t ssst[2], __m128i stwz, __
 	if (other_modes.f.dolod)
 	{
     nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
-    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, _mm_load_si128(spans_dstwzdy)), 16);
+    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
     if (tcdiv_ptr == tcdiv_nopersp) {
       tcdiv_nopersp_sse(nextstw, nextst);
@@ -9566,7 +9533,7 @@ static inline void tclod_2cycle_current_simple(int32_t ssst[2], __m128i stwz, __
 	}
 }
 
-static inline void tclod_2cycle_current_notexel1(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1)
+static inline void tclod_2cycle_current_notexel1(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, __m128i spans_dstwzdy_v)
 {
   __m128i nextystw, nextstw;
   int nextyst[2], nextst[2];
@@ -9582,7 +9549,7 @@ static inline void tclod_2cycle_current_notexel1(int32_t ssst[2], __m128i stwz, 
 	if (other_modes.f.dolod)
 	{
     nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
-    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, _mm_load_si128(spans_dstwzdy)), 16);
+    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
     if (tcdiv_ptr == tcdiv_nopersp) {
       tcdiv_nopersp_sse(nextstw, nextst);
@@ -9612,7 +9579,7 @@ static inline void tclod_2cycle_current_notexel1(int32_t ssst[2], __m128i stwz, 
 	}
 }
 
-static inline void tclod_2cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2, int32_t* prelodfrac)
+static inline void tclod_2cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1, int32_t* t2, int32_t* prelodfrac, __m128i spans_dstwzdy_v)
 {
   __m128i nextstw, nextystw;
   int nextst[2], nextyst[2];
@@ -9628,7 +9595,7 @@ static inline void tclod_2cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstw
 	if (other_modes.f.dolod)
 	{
     nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
-    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, _mm_load_si128(spans_dstwzdy)), 16);
+    nextystw = _mm_srai_epi32(_mm_add_epi32(stwz, spans_dstwzdy_v), 16);
 
     if (tcdiv_ptr == tcdiv_nopersp) {
       tcdiv_nopersp_sse(nextstw, nextst);
@@ -9943,37 +9910,32 @@ static inline void tclod_1cycle_next(int32_t ssst[2], __m128i stwz, __m128i dstw
 	}
 }
 
-static inline void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t prim_tile, int32_t* t1)
+static inline void tclod_copy(int32_t ssst[2], __m128i stwz, __m128i dstwzinc, int32_t prim_tile, int32_t* t1)
 {
-
-
-
-
-	int nexts, nextt, nextsw, fars, fart, farsw;
+  __m128i nextstw, farstw;
+  int nextst[2], farst[2];
 	int lodclamp = 0;
 	int32_t lod = 0;
 	uint32_t l_tile = 0, magnify = 0, distant = 0;
 
-	tclod_tcclamp(sss, sst);
+	tclod_tcclamp(&ssst[0], &ssst[1]);
 
 	if (other_modes.tex_lod_en)
 	{
-		
-		
-		
-		nextsw = (w + dwinc) >> 16;
-		nexts = (s + dsinc) >> 16;
-		nextt = (t + dtinc) >> 16;
-		farsw = (w + (dwinc << 1)) >> 16;
-		fars = (s + (dsinc << 1)) >> 16;
-		fart = (t + (dtinc << 1)) >> 16;
-	
-		tcdiv_ptr(nexts, nextt, nextsw, &nexts, &nextt);
-		tcdiv_ptr(fars, fart, farsw, &fars, &fart);
+    nextstw = _mm_srai_epi32(_mm_add_epi32(stwz, dstwzinc), 16);
+    farstw = _mm_srai_epi32(_mm_add_epi32(stwz, _mm_slli_epi32(dstwzinc, 1)), 16);
 
-		lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
+    if (tcdiv_ptr == tcdiv_nopersp) {
+      tcdiv_nopersp_sse(nextstw, nextst);
+      tcdiv_nopersp_sse(farstw, farst);
+    } else {
+      tcdiv_persp_sse(nextstw, nextst);
+      tcdiv_persp_sse(farstw, farst);
+    }
 
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		lodclamp = (farst[1] & 0x60000) || (nextst[1] & 0x60000) || (farst[0] & 0x60000) || (nextst[0] & 0x60000);
+
+		tclod_4x17_to_15(nextst[0], farst[0], nextst[1], farst[1], 0, &lod);
 
 		if ((lod & 0x4000) || lodclamp)
 			lod = 0x7fff;
@@ -9992,7 +9954,6 @@ static inline void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32_t t, 
 		else
 			*t1 = (prim_tile + l_tile + 1) & 7;
 	}
-
 }
 
 static inline void get_texel1_1cycle(int32_t st[2], __m128i stwz, __m128i dstwzinc, int32_t scanline, SPANSIGS* sigs)
