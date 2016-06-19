@@ -3996,7 +3996,7 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
         __m128i prod_a;
 
         __m128i sub_a = _mm_unpacklo_epi16(t1_v, t2_v);
-        __m128i sub_b = _mm_unpacklo_epi16(t0_v, t3_v);
+        __m128i sub_b = _mm_unpacklo_epi16(t0_v, t0_v);
         __m128i prod_b = _mm_sub_epi16(sub_a, sub_b);
 
 				if (!convert)
