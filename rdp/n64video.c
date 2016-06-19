@@ -503,9 +503,9 @@ typedef struct{
 static void rdp_set_other_modes(uint32_t w1, uint32_t w2);
 static void fetch_texel(COLOR color, int s, int t, uint32_t tilenum);
 static void fetch_texel_entlut(COLOR color, int s, int t, uint32_t tilenum);
-static void fetch_texel_quadro_rgba16(COLOR color0123[4], const int16_t colors[4]);
-static void fetch_texel_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum);
-static void fetch_texel_entlut_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum);
+static void fetch_texel_quadro_rgba16(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, const int16_t colors[4]);
+static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum);
+static void fetch_texel_entlut_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
 static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut, int dsinc, int dtinc);
 static void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
@@ -2425,7 +2425,7 @@ static void fetch_texel_entlut(COLOR color, int s, int t, uint32_t tilenum)
 
 }
 
-static void fetch_texel_quadro_rgba16(COLOR color0123[4], const int16_t colors[4]) {
+static void fetch_texel_quadro_rgba16(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, const int16_t colors[4]) {
   __m128i al_v, hi_v, md_v, lo_v;
   __m128i hi_md_unpack, lo_al_unpack;
   __m128i color_01, color_23;
@@ -2449,20 +2449,20 @@ static void fetch_texel_quadro_rgba16(COLOR color0123[4], const int16_t colors[4
   color_01 = _mm_unpacklo_epi32(hi_md_unpack, lo_al_unpack);
   color_23 = _mm_unpackhi_epi32(hi_md_unpack, lo_al_unpack);
 
-  _mm_store_si128(color0123[0], color_01);
-  _mm_store_si128(color0123[2], color_23);
+  *c0 = color_01;
+  *c2 = color_23;
+  *c1 = _mm_srli_si128(color_01, 8);
+  *c3 = _mm_srli_si128(color_23, 8);
 }
 
-static void fetch_texel_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum)
+static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum)
 {
 
 	uint32_t tbase0 = tile[tilenum].line * t0 + tile[tilenum].tmem;
 	uint32_t tbase2 = tile[tilenum].line * t1 + tile[tilenum].tmem;
 	uint32_t tpal	= tile[tilenum].palette;
 	uint32_t xort = 0, ands = 0;
-
-	
-	
+  COLOR color0123[4];
 
 	uint16_t *tc16 = (uint16_t*)TMEM;
 	uint32_t taddr0 = 0, taddr1 = 0, taddr2 = 0, taddr3 = 0;
@@ -2576,8 +2576,6 @@ static void fetch_texel_quadro(COLOR color0123[4], int s0, int s1, int t0, int t
 			taddr2 ^= xort;
 			taddr3 ^= xort;
 					
-			uint32_t c0, c1, c2, c3;
-					
 			taddr0 &= 0x7ff;
 			taddr1 &= 0x7ff;
 			taddr2 &= 0x7ff;
@@ -2589,9 +2587,10 @@ static void fetch_texel_quadro(COLOR color0123[4], int s0, int s1, int t0, int t
 			colors[1] = tc16[taddr1];
 			colors[2] = tc16[taddr2];
 			colors[3] = tc16[taddr3];
-      fetch_texel_quadro_rgba16(color0123, colors);
+
+      fetch_texel_quadro_rgba16(c0, c1, c2, c3, colors);
     }
-		break;
+		return;
 	case TEXEL_RGBA32:
 		{
 			taddr0 = ((tbase0 << 2) + s0);
@@ -3280,9 +3279,13 @@ static void fetch_texel_quadro(COLOR color0123[4], int s0, int s1, int t0, int t
 		debug("fetch_texel_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
+  *c0 = _mm_loadl_epi64(color0123[0]);
+  *c1 = _mm_loadl_epi64(color0123[1]);
+  *c2 = _mm_loadl_epi64(color0123[2]);
+  *c3 = _mm_loadl_epi64(color0123[3]);
 }
 
-static void fetch_texel_entlut_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum)
+static void fetch_texel_entlut_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum)
 {
 	uint32_t tbase0 = tile[tilenum].line * t0 + tile[tilenum].tmem;
 	uint32_t tbase2 = tile[tilenum].line * t1 + tile[tilenum].tmem;
@@ -3486,36 +3489,21 @@ static void fetch_texel_entlut_quadro(COLOR color0123[4], int s0, int s1, int t0
 
 	if (!other_modes.tlut_type)
 	{
-#if 0
-		color0[0] = GET_HI_RGBA16_TMEM(c0);
-		color0[1] = GET_MED_RGBA16_TMEM(c0);
-		color0[2] = GET_LOW_RGBA16_TMEM(c0);
-		color0[3] = (c0 & 1) ? 0xff : 0;
-		color1[0] = GET_HI_RGBA16_TMEM(c1);
-		color1[1] = GET_MED_RGBA16_TMEM(c1);
-		color1[2] = GET_LOW_RGBA16_TMEM(c1);
-		color1[3] = (c1 & 1) ? 0xff : 0;
-		color2[0] = GET_HI_RGBA16_TMEM(c2);
-		color2[1] = GET_MED_RGBA16_TMEM(c2);
-		color2[2] = GET_LOW_RGBA16_TMEM(c2);
-		color2[3] = (c2 & 1) ? 0xff : 0;
-		color3[0] = GET_HI_RGBA16_TMEM(c3);
-		color3[1] = GET_MED_RGBA16_TMEM(c3);
-		color3[2] = GET_LOW_RGBA16_TMEM(c3);
-		color3[3] = (c3 & 1) ? 0xff : 0;
-#endif
-    fetch_texel_quadro_rgba16(color0123, colors);
+    fetch_texel_quadro_rgba16(c0, c1, c2, c3, colors);
 	}
 	else
 	{
-		color0123[0][0] = color0123[0][1] = color0123[0][2] = colors[0] >> 8;
-		color0123[0][3] = colors[0] & 0xff;
-		color0123[1][0] = color0123[1][1] = color0123[1][2] = colors[1] >> 8;
-		color0123[1][3] = colors[1] & 0xff;
-		color0123[2][0] = color0123[2][1] = color0123[2][2] = colors[2] >> 8;
-		color0123[2][3] = colors[2] & 0xff;
-		color0123[3][0] = color0123[3][1] = color0123[3][2] = colors[3] >> 8;
-		color0123[3][3] = colors[3] & 0xff;
+    __m128i colors_v = _mm_srli_epi16(_mm_loadl_epi64(colors), 8);
+
+    *c0 = _mm_shufflelo_epi16(colors_v, _MM_SHUFFLE(0, 0, 0, 0));
+    *c1 = _mm_shufflelo_epi16(colors_v, _MM_SHUFFLE(1, 1, 1, 1));
+    *c2 = _mm_shufflelo_epi16(colors_v, _MM_SHUFFLE(2, 2, 2, 2));
+    *c3 = _mm_shufflelo_epi16(colors_v, _MM_SHUFFLE(3, 3, 3, 3));
+
+    *c0 = _mm_insert_epi8(*c0, colors[0], 6);
+    *c1 = _mm_insert_epi8(*c1, colors[1], 6);
+    *c2 = _mm_insert_epi8(*c2, colors[2], 6);
+    *c3 = _mm_insert_epi8(*c3, colors[3], 6);
 	}
 }
 
@@ -3895,7 +3883,6 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 	int upper = 0;
 	int bilerp = cycle ? other_modes.bi_lerp1 : other_modes.bi_lerp0;
 	int convert = other_modes.convert_one && cycle;
-  COLOR t0123[4] __attribute__((aligned(16)));
 	int sss1, sst1, sss2, sst2;
 
 	sss1 = SSS;
@@ -3928,38 +3915,27 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 		
 		tcmask_coupled(&sss1, &sss2, &sst1, &sst2, tilenum);
 		
-		
-
-		
-		
-		
-		
-
-		
     __m128i summand, sum;
 		if (bilerp)
-		{			
-			if (!other_modes.en_tlut)
-				fetch_texel_quadro(t0123, sss1, sss2, sst1, sst2, tilenum);
+		{
+      __m128i t0_v, t1_v, t2_v, t3_v;
+
+			if (!other_modes.en_tlut) {
+				fetch_texel_quadro(&t0_v, &t1_v, &t2_v, &t3_v, sss1, sss2, sst1, sst2, tilenum);
+      }
 			else
-				fetch_texel_entlut_quadro(t0123, sss1, sss2, sst1, sst2, tilenum);
+				fetch_texel_entlut_quadro(&t0_v, &t1_v, &t2_v, &t3_v, sss1, sss2, sst1, sst2, tilenum);
 
 			if (tile[tilenum].format == FORMAT_YUV)
 			{
-				t0123[0][0] = SIGN(t0123[0][0], 9);
-				t0123[0][1] = SIGN(t0123[0][1], 9);
-				t0123[1][0] = SIGN(t0123[1][0], 9);
-				t0123[1][1] = SIGN(t0123[1][1], 9);
-				t0123[2][0] = SIGN(t0123[2][0], 9);
-				t0123[2][1] = SIGN(t0123[2][1], 9);
-				t0123[3][0] = SIGN(t0123[3][0], 9);
-				t0123[3][1] = SIGN(t0123[3][1], 9);
+        __m128i packed_01 = _mm_unpacklo_epi64(t0_v, t1_v);
+        __m128i packed_23 = _mm_unpacklo_epi64(t2_v, t3_v);
+        t0_v = _mm_blend_epi16(_mm_srai_epi16(_mm_slli_epi16(packed_01, 7), 7), packed_01, 0x33);
+        t2_v = _mm_blend_epi16(_mm_srai_epi16(_mm_slli_epi16(packed_23, 7), 7), packed_23, 0x33);
+        t1_v = _mm_srli_si128(t0_v, 8);
+        t3_v = _mm_srli_si128(t2_v, 8);
 			}
 
-      __m128i t0_v = _mm_loadl_epi64(t0123[0]);
-      __m128i t1_v = _mm_loadl_epi64(t0123[1]);
-      __m128i t2_v = _mm_loadl_epi64(t0123[2]);
-      __m128i t3_v = _mm_loadl_epi64(t0123[3]);
       __m128i sum, summand;
 
 			if (!other_modes.mid_texel || sfrac != 0x10 || tfrac != 0x10)
@@ -4045,6 +4021,8 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 		}
 		else
 		{
+      COLOR t0123[4];
+
 			if (!other_modes.en_tlut)
 				fetch_texel(t0123[0], sss1, sst1, tilenum);
 			else
@@ -4072,9 +4050,7 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 	}
 	else																								
 	{
-		
-		
-		
+    COLOR t0123[4];
 
 		tcclamp_cycle_light(&sss1, &sst1, maxs, maxt, tilenum);
 		
