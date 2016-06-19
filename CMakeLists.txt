@@ -32,30 +32,19 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
   string(REGEX MATCH "([a-zA-Z0-9])+" GCC_MACHINE ${GCC_MACHINE})
 
   if (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
-    enable_language(ASM-ATT)
-
     set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
     set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX)
 
-    if (WIN32)
-      set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -defsym __MINGW__=1")
-    endif (WIN32)
-
     if (${CEN64_ARCH_SUPPORT} MATCHES "SSE2")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
-      set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=sse2 --defsym __SSE2__=1")
     elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSSE3")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
-      set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=ssse3 --defsym __SSSE3__=1 --defsym __SSE3__=1")
     elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE3")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
-      set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=sse3 --defsym __SSE3__=1 --defsym __SSE2__=1")
     elseif (${CEN64_ARCH_SUPPORT} MATCHES "SSE4.1")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4")
-      set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=sse4.1 --defsym __SSE4_1__=1 --defsym __SSSE3__=1 --defsym __SSE3__=1")
     elseif (${CEN64_ARCH_SUPPORT} MATCHES "AVX")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx")
-      set(CMAKE_ASM-ATT_FLAGS "${CMAKE_ASM-ATT_FLAGS} -march=avx --defsym __AVX__=1")
     endif ()
 
     if (${GCC_MACHINE} MATCHES "i.86.*" OR ${GCC_MACHINE} MATCHES "x86.*")
@@ -131,8 +120,6 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
   string(REGEX MATCH "([a-zA-Z0-9])+" CLANG_MACHINE ${CLANG_MACHINE})
 
   if (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
-    enable_language(ASM-ATT)
-
     set(CEN64_ARCH_SUPPORT "SSE2" CACHE STRING "Architectural extension(s) to use")
     set_property(CACHE CEN64_ARCH_SUPPORT PROPERTY STRINGS SSE2 SSE3 SSSE3 SSE4.1 AVX Native)
 
