@@ -50,6 +50,8 @@ struct cen64_device {
   bool other_thread_is_waiting;
   cen64_mutex sync_mutex;
   cen64_cv sync_cv;
+
+  bool running;
 };
 
 cen64_cold void device_destroy(struct cen64_device *device);

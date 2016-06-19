@@ -164,7 +164,7 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
   if (setjmp(device->bus.unwind_data))
     return CEN64_THREAD_RETURN_VAL;
 
-  while (1) {
+  while (likely(device->running)) {
     unsigned i;
 
     for (i = 0; i < 6250; i++) {
@@ -193,7 +193,7 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
 CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *opaque) {
   struct cen64_device *device = (struct cen64_device *) opaque;
 
-  while (1) {
+  while (likely(device->running)) {
     unsigned i, j;
 
     for (i = 0; i < 6250 / 2; i++) {
@@ -261,7 +261,7 @@ int device_spin(struct cen64_device *device) {
   if (setjmp(device->bus.unwind_data))
     return 1;
 
-  while (1) {
+  while (likely(device->running)) {
     unsigned i;
 
     for (i = 0; i < 2; i++) {
@@ -290,7 +290,7 @@ int device_debug_spin(struct cen64_device *device) {
   if (setjmp(device->bus.unwind_data))
     return 1;
 
-  while (1) {
+  while (likely(device->running)) {
     unsigned i;
 
     for (i = 0; i < 2; i++) {

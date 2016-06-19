@@ -281,6 +281,8 @@ int validate_sha(struct rom_file *rom, const uint8_t *good_sum) {
 int run_device(struct cen64_device *device, bool no_video) {
   cen64_thread thread;
 
+  device->running = true;
+
   if (cen64_thread_create(&thread, run_device_thread, device)) {
     printf("Failed to create the main emulation thread.\n");
     device_destroy(device);
@@ -290,6 +292,7 @@ int run_device(struct cen64_device *device, bool no_video) {
   if (!no_video)
     cen64_gl_window_thread(device);
 
+  device->running = false;
   cen64_thread_join(&thread);
   return 0;
 }
