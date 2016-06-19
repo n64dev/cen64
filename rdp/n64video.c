@@ -3936,7 +3936,7 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 		
 
 		
-    __m128i tex_v;
+    __m128i summand, sum;
 		if (bilerp)
 		{			
 			if (!other_modes.en_tlut)
@@ -3956,139 +3956,92 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 				t0123[3][1] = SIGN(t0123[3][1], 9);
 			}
 
-      __m128i t0_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[0]));
-      __m128i t1_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[1]));
-      __m128i t2_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[2]));
-      __m128i t3_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[3]));
+      __m128i t0_v = _mm_loadl_epi64(t0123[0]);
+      __m128i t1_v = _mm_loadl_epi64(t0123[1]);
+      __m128i t2_v = _mm_loadl_epi64(t0123[2]);
+      __m128i t3_v = _mm_loadl_epi64(t0123[3]);
+      __m128i sum, summand;
 
 			if (!other_modes.mid_texel || sfrac != 0x10 || tfrac != 0x10)
 			{
 				if (!convert)
 				{
+          __m128i prod_a, prod_b, sub_a, sub_b;
           __m128i cv_v = _mm_set1_epi32(0x10);
-          __m128i prod_a, prod_b, summand;
 
 					if (UPPER)
 					{
-						
 						invsf = 0x20 - sfrac;
 						invtf = 0x20 - tfrac;
-#if 0
-						TEX[0] = t0123[3][0] + ((((invsf * (t0123[2][0] - t0123[3][0])) + (invtf * (t0123[1][0] - t0123[3][0]))) + 0x10) >> 5);	
-						TEX[1] = t0123[3][1] + ((((invsf * (t0123[2][1] - t0123[3][1])) + (invtf * (t0123[1][1] - t0123[3][1]))) + 0x10) >> 5);																		
-						TEX[2] = t0123[3][2] + ((((invsf * (t0123[2][2] - t0123[3][2])) + (invtf * (t0123[1][2] - t0123[3][2]))) + 0x10) >> 5);																
-						TEX[3] = t0123[3][3] + ((((invsf * (t0123[2][3] - t0123[3][3])) + (invtf * (t0123[1][3] - t0123[3][3]))) + 0x10) >> 5);
-#endif
-            __m128i invsf_v = _mm_set1_epi32(invsf);
-            __m128i invtf_v = _mm_set1_epi32(invtf);
 
-            prod_a = _mm_mullo_epi32(invsf_v, _mm_sub_epi32(t2_v, t3_v));
-            prod_b = _mm_mullo_epi32(invtf_v, _mm_sub_epi32(t1_v, t3_v));
+            sub_a = _mm_unpacklo_epi16(t2_v, t1_v);
+            sub_b = _mm_unpacklo_epi16(t3_v, t3_v);
+            prod_a = _mm_set1_epi32(invsf | (invtf << 16));
             summand = t3_v;
 					}
-					else
-					{
-#if 0
-						TEX[0] = t0123[0][0] + ((((sfrac * (t0123[1][0] - t0123[0][0])) + (tfrac * (t0123[2][0] - t0123[0][0]))) + 0x10) >> 5);											
-						TEX[1] = t0123[0][1] + ((((sfrac * (t0123[1][1] - t0123[0][1])) + (tfrac * (t0123[2][1] - t0123[0][1]))) + 0x10) >> 5);											
-						TEX[2] = t0123[0][2] + ((((sfrac * (t0123[1][2] - t0123[0][2])) + (tfrac * (t0123[2][2] - t0123[0][2]))) + 0x10) >> 5);									
-						TEX[3] = t0123[0][3] + ((((sfrac * (t0123[1][3] - t0123[0][3])) + (tfrac * (t0123[2][3] - t0123[0][3]))) + 0x10) >> 5);
-#endif
-            __m128i sfrac_v = _mm_set1_epi32(sfrac);
-            __m128i tfrac_v = _mm_set1_epi32(tfrac);
-
-            prod_a = _mm_mullo_epi32(sfrac_v, _mm_sub_epi32(t1_v, t0_v));
-            prod_b = _mm_mullo_epi32(tfrac_v, _mm_sub_epi32(t2_v, t0_v));
+					else {
+            sub_a = _mm_unpacklo_epi16(t1_v, t2_v);
+            sub_b = _mm_unpacklo_epi16(t0_v, t0_v);
+            prod_a = _mm_set1_epi32(sfrac | (tfrac << 16));
             summand = t0_v;
 					}
 
-          __m128i sum = _mm_add_epi32(_mm_add_epi32(prod_a, prod_b), cv_v);
-          tex_v = _mm_add_epi32(summand, _mm_srai_epi32(sum, 5));
+          prod_b = _mm_sub_epi16(sub_a, sub_b);
+          sum = _mm_srai_epi32(_mm_add_epi32(cv_v, _mm_madd_epi16(prod_a, prod_b)), 5);
 				}
 				else
 				{
-          __m128i prev0_v = _mm_set1_epi32(prev[0]);
-          __m128i prev1_v = _mm_set1_epi32(prev[1]);
-          __m128i prev2_v = _mm_set1_epi32(prev[2]);
+          __m128i prod_b, sub_a, sub_b;
           __m128i cv_v = _mm_set1_epi32(0x80);
 
-          __m128i prev0_prod, prev1_prod;
+          __m128i prod_a = _mm_set1_epi32(prev[0] | (prev[1] << 16));
+          summand = _mm_set1_epi16(prev[2]);
 
 					if (UPPER)
 					{
-#if 0
-						TEX[0] = prev[2] + ((((prev[0] * (t0123[2][0] - t0123[3][0])) + (prev[1] * (t0123[1][0] - t0123[3][0]))) + 0x80) >> 8);	
-						TEX[1] = prev[2] + ((((prev[0] * (t0123[2][1] - t0123[3][1])) + (prev[1] * (t0123[1][1] - t0123[3][1]))) + 0x80) >> 8);																		
-						TEX[2] = prev[2] + ((((prev[0] * (t0123[2][2] - t0123[3][2])) + (prev[1] * (t0123[1][2] - t0123[3][2]))) + 0x80) >> 8);																
-						TEX[3] = prev[2] + ((((prev[0] * (t0123[2][3] - t0123[3][3])) + (prev[1] * (t0123[1][3] - t0123[3][3]))) + 0x80) >> 8);
-#endif
-            prev0_prod = _mm_mullo_epi32(prev0_v, _mm_sub_epi32(t2_v, t3_v));
-            prev1_prod = _mm_mullo_epi32(prev1_v, _mm_sub_epi32(t1_v, t3_v));
+            sub_a = _mm_unpacklo_epi16(t2_v, t1_v);
+            sub_b = _mm_unpacklo_epi16(t3_v, t3_v);
 					}
 					else
 					{
-#if 0
-						TEX[0] = prev[2] + ((((prev[0] * (t0123[1][0] - t0123[0][0])) + (prev[1] * (t0123[2][0] - t0123[0][0]))) + 0x80) >> 8);											
-						TEX[1] = prev[2] + ((((prev[0] * (t0123[1][1] - t0123[0][1])) + (prev[1] * (t0123[2][1] - t0123[0][1]))) + 0x80) >> 8);											
-						TEX[2] = prev[2] + ((((prev[0] * (t0123[1][2] - t0123[0][2])) + (prev[1] * (t0123[2][2] - t0123[0][2]))) + 0x80) >> 8);									
-						TEX[3] = prev[2] + ((((prev[0] * (t0123[1][3] - t0123[0][3])) + (prev[1] * (t0123[2][3] - t0123[0][3]))) + 0x80) >> 8);
-#endif
-            prev0_prod = _mm_mullo_epi32(prev0_v, _mm_sub_epi32(t1_v, t0_v));
-            prev1_prod = _mm_mullo_epi32(prev1_v, _mm_sub_epi32(t2_v, t0_v));
-					}	
+            sub_a = _mm_unpacklo_epi16(t1_v, t2_v);
+            sub_b = _mm_unpacklo_epi16(t0_v, t0_v);
+					}
 
-          __m128i sum = _mm_add_epi32(_mm_add_epi32(prev0_prod, prev1_prod), cv_v);
-          tex_v = _mm_add_epi32(prev2_v, _mm_srai_epi32(sum, 8));
+          prod_b = _mm_sub_epi16(sub_a, sub_b);
+          sum = _mm_srai_epi32(_mm_add_epi32(cv_v, _mm_madd_epi16(prod_a, prod_b)), 8);
 				}
-				
 			}
 			else
 			{
-#if 0
-				invt0r  = ~t0123[0][0]; invt0g = ~t0123[0][1]; invt0b = ~t0123[0][2]; invt0a = ~t0123[0][3];
-#endif
-        __m128i invt0r_v = _mm_xor_si128(t0_v, _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128()));
-        __m128i invt0r_shiftsum = _mm_slli_epi32(_mm_add_epi32(invt0r_v, t3_v), 6);
+        __m128i allset_v = _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128());
+        __m128i invt0r_v = _mm_unpacklo_epi16(_mm_cvtepi16_epi32(_mm_xor_si128(t0_v, allset_v)), allset_v);
         __m128i cv_v = _mm_set1_epi32(0xc0);
-        __m128i prod_a, prod_b;
+        __m128i prod_a;
+
+        __m128i sub_a = _mm_unpacklo_epi16(t1_v, t2_v);
+        __m128i sub_b = _mm_unpacklo_epi16(t0_v, t3_v);
+        __m128i prod_b = _mm_sub_epi16(sub_a, sub_b);
 
 				if (!convert)
 				{
 					sfrac <<= 2;
 					tfrac <<= 2;
 
-          __m128i sfrac_v = _mm_set1_epi32(sfrac);
-          __m128i tfrac_v = _mm_set1_epi32(tfrac);
-#if 0
-					TEX[0] = t0123[0][0] + ((((sfrac * (t0123[1][0] - t0123[0][0])) + (tfrac * (t0123[2][0] - t0123[0][0]))) + ((invt0r + t0123[3][0]) << 6) + 0xc0) >> 8);											
-					TEX[1] = t0123[0][1] + ((((sfrac * (t0123[1][1] - t0123[0][1])) + (tfrac * (t0123[2][1] - t0123[0][1]))) + ((invt0g + t0123[3][1]) << 6) + 0xc0) >> 8);											
-					TEX[2] = t0123[0][2] + ((((sfrac * (t0123[1][2] - t0123[0][2])) + (tfrac * (t0123[2][2] - t0123[0][2]))) + ((invt0b + t0123[3][2]) << 6) + 0xc0) >> 8);									
-					TEX[3] = t0123[0][3] + ((((sfrac * (t0123[1][3] - t0123[0][3])) + (tfrac * (t0123[2][3] - t0123[0][3]))) + ((invt0a + t0123[3][3]) << 6) + 0xc0) >> 8);
-#endif
-          prod_a = _mm_mullo_epi32(sfrac_v, _mm_sub_epi32(t1_v, t0_v));
-          prod_b = _mm_mullo_epi32(tfrac_v, _mm_sub_epi32(t2_v, t0_v));
+          prod_a = _mm_set1_epi32(sfrac | (tfrac << 16));
+          summand = t0_v;
 				}
 				else
 				{
-#if 0
-					TEX[0] = prev[2] + ((((prev[0] * (t0123[1][0] - t0123[0][0])) + (prev[1] * (t0123[2][0] - t0123[0][0]))) + ((invt0r + t0123[3][0]) << 6) + 0xc0) >> 8);											
-					TEX[1] = prev[2] + ((((prev[0] * (t0123[1][1] - t0123[0][1])) + (prev[1] * (t0123[2][1] - t0123[0][1]))) + ((invt0g + t0123[3][1]) << 6) + 0xc0) >> 8);											
-					TEX[2] = prev[2] + ((((prev[0] * (t0123[1][2] - t0123[0][2])) + (prev[1] * (t0123[2][2] - t0123[0][2]))) + ((invt0b + t0123[3][2]) << 6) + 0xc0) >> 8);									
-					TEX[3] = prev[2] + ((((prev[0] * (t0123[1][3] - t0123[0][3])) + (prev[1] * (t0123[2][3] - t0123[0][3]))) + ((invt0a + t0123[3][3]) << 6) + 0xc0) >> 8);
-#endif
-
-          __m128i prev0_v = _mm_set1_epi32(prev[0]);
-          __m128i prev1_v = _mm_set1_epi32(prev[1]);
-          __m128i prev2_v = _mm_set1_epi32(prev[2]);
-
-          prod_a = _mm_mullo_epi32(prev0_v, _mm_sub_epi32(t1_v, t0_v));
-          prod_b = _mm_mullo_epi32(prev1_v, _mm_sub_epi32(t2_v, t0_v));
+          prod_a = _mm_set1_epi32(prev[0] | (prev[1] << 16));
+          summand = _mm_set1_epi16(prev[2]);
 				}
 
-        __m128i sum = _mm_add_epi32(_mm_add_epi32(_mm_add_epi32(prod_a, prod_b), invt0r_shiftsum), cv_v);
-        tex_v = _mm_add_epi32(t0_v, _mm_srai_epi32(sum, 8));
+        invt0r_v = _mm_slli_epi32(_mm_add_epi32(invt0r_v, _mm_unpacklo_epi16(t3_v, _mm_setzero_si128())), 6);
+        sum = _mm_srai_epi32(_mm_add_epi32(_mm_add_epi32(_mm_madd_epi16(prod_a, prod_b), invt0r_v), cv_v), 8);
 			}
 			
+      _mm_storel_epi64(TEX, _mm_add_epi16(summand, _mm_packs_epi32(sum, sum)));
 		}
 		else
 		{
@@ -4110,20 +4063,15 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 			TEX[1] = t0123[0][2] + ((k1_tf * t0123[0][0] + k2_tf * t0123[0][1] + 0x80) >> 8);
 			TEX[2] = t0123[0][2] + ((k3_tf * t0123[0][0] + 0x80) >> 8);
 			TEX[3] = t0123[0][2];
-      tex_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(TEX));
 		}
 
-#if 0
-		TEX[0] &= 0x1ff;
-		TEX[1] &= 0x1ff;
-		TEX[2] &= 0x1ff;
-		TEX[3] &= 0x1ff;
-#endif
-		tex_v = _mm_and_si128(tex_v, _mm_set1_epi32(0x1ff));
-		_mm_storel_epi64(TEX, _mm_packs_epi32(tex_v, tex_v));
+    uint64_t tex_mask;
+    memcpy(&tex_mask, TEX, sizeof(tex_mask));
+    tex_mask &= 0x01FF01FF01FF01FFULL;
+    memcpy(TEX, &tex_mask, sizeof(tex_mask));
 	}
 	else																								
-	{																										
+	{
 		
 		
 		
@@ -4162,10 +4110,11 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 			TEX[1] = t0123[0][2] + ((k1_tf * t0123[0][0] + k2_tf * t0123[0][1] + 0x80) >> 8);
 			TEX[2] = t0123[0][2] + ((k3_tf * t0123[0][0] + 0x80) >> 8);
 			TEX[3] = t0123[0][2];
-			TEX[0] &= 0x1ff;
-			TEX[1] &= 0x1ff;
-			TEX[2] &= 0x1ff;
-			TEX[3] &= 0x1ff;
+
+      uint64_t tex_mask;
+      memcpy(&tex_mask, TEX, sizeof(tex_mask));
+      tex_mask &= 0x01FF01FF01FF01FFULL;
+      memcpy(TEX, &tex_mask, sizeof(tex_mask));
 		}
 	}
 																									
