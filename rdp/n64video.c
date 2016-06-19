@@ -503,9 +503,9 @@ typedef struct{
 static void rdp_set_other_modes(uint32_t w1, uint32_t w2);
 static void fetch_texel(COLOR color, int s, int t, uint32_t tilenum);
 static void fetch_texel_entlut(COLOR color, int s, int t, uint32_t tilenum);
-static void fetch_texel_quadro_rgba16(COLOR color0, COLOR color1, COLOR color2, COLOR color3, const int16_t colors[4]);
-static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
-static void fetch_texel_entlut_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum);
+static void fetch_texel_quadro_rgba16(COLOR color0123[4], const int16_t colors[4]);
+static void fetch_texel_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum);
+static void fetch_texel_entlut_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
 static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut, int dsinc, int dtinc);
 static void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
@@ -2425,7 +2425,7 @@ static void fetch_texel_entlut(COLOR color, int s, int t, uint32_t tilenum)
 
 }
 
-static void fetch_texel_quadro_rgba16(COLOR color0, COLOR color1, COLOR color2, COLOR color3, const int16_t colors[4]) {
+static void fetch_texel_quadro_rgba16(COLOR color0123[4], const int16_t colors[4]) {
   __m128i al_v, hi_v, md_v, lo_v;
   __m128i hi_md_unpack, lo_al_unpack;
   __m128i color_01, color_23;
@@ -2449,13 +2449,11 @@ static void fetch_texel_quadro_rgba16(COLOR color0, COLOR color1, COLOR color2, 
   color_01 = _mm_unpacklo_epi32(hi_md_unpack, lo_al_unpack);
   color_23 = _mm_unpackhi_epi32(hi_md_unpack, lo_al_unpack);
 
-  _mm_storel_epi64(color0, color_01);
-  _mm_storel_epi64(color1, _mm_srli_si128(color_01, 8));
-  _mm_storel_epi64(color2, color_23);
-  _mm_storel_epi64(color3, _mm_srli_si128(color_23, 8));
+  _mm_store_si128(color0123[0], color_01);
+  _mm_store_si128(color0123[2], color_23);
 }
 
-static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum)
+static void fetch_texel_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum)
 {
 
 	uint32_t tbase0 = tile[tilenum].line * t0 + tile[tilenum].tmem;
@@ -2495,33 +2493,33 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			byteval = TMEM[taddr0];
 			c = (ands) ? (byteval & 0xf) : (byteval >> 4);
 			c |= (c << 4);
-			color0[0] = c;
-			color0[1] = c;
-			color0[2] = c;
-			color0[3] = c;
+			color0123[0][0] = c;
+			color0123[0][1] = c;
+			color0123[0][2] = c;
+			color0123[0][3] = c;
 			byteval = TMEM[taddr2];
 			c = (ands) ? (byteval & 0xf) : (byteval >> 4);
 			c |= (c << 4);
-			color2[0] = c;
-			color2[1] = c;
-			color2[2] = c;
-			color2[3] = c;
+			color0123[2][0] = c;
+			color0123[2][1] = c;
+			color0123[2][2] = c;
+			color0123[2][3] = c;
 
 			ands = s1 & 1;
 			byteval = TMEM[taddr1];
 			c = (ands) ? (byteval & 0xf) : (byteval >> 4);
 			c |= (c << 4);
-			color1[0] = c;
-			color1[1] = c;
-			color1[2] = c;
-			color1[3] = c;
+			color0123[1][0] = c;
+			color0123[1][1] = c;
+			color0123[1][2] = c;
+			color0123[1][3] = c;
 			byteval = TMEM[taddr3];
 			c = (ands) ? (byteval & 0xf) : (byteval >> 4);
 			c |= (c << 4);
-			color3[0] = c;
-			color3[1] = c;
-			color3[2] = c;
-			color3[3] = c;
+			color0123[3][0] = c;
+			color0123[3][1] = c;
+			color0123[3][2] = c;
+			color0123[3][3] = c;
 		}
 		break;
 	case TEXEL_RGBA8:
@@ -2544,25 +2542,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0xfff;
 			taddr3 &= 0xfff;
 			p = TMEM[taddr0];
-			color0[0] = p;
-			color0[1] = p;
-			color0[2] = p;
-			color0[3] = p;
+			color0123[0][0] = p;
+			color0123[0][1] = p;
+			color0123[0][2] = p;
+			color0123[0][3] = p;
 			p = TMEM[taddr2];
-			color2[0] = p;
-			color2[1] = p;
-			color2[2] = p;
-			color2[3] = p;
+			color0123[2][0] = p;
+			color0123[2][1] = p;
+			color0123[2][2] = p;
+			color0123[2][3] = p;
 			p = TMEM[taddr1];
-			color1[0] = p;
-			color1[1] = p;
-			color1[2] = p;
-			color1[3] = p;
+			color0123[1][0] = p;
+			color0123[1][1] = p;
+			color0123[1][2] = p;
+			color0123[1][3] = p;
 			p = TMEM[taddr3];
-			color3[0] = p;
-			color3[1] = p;
-			color3[2] = p;
-			color3[3] = p;
+			color0123[3][0] = p;
+			color0123[3][1] = p;
+			color0123[3][2] = p;
+			color0123[3][3] = p;
 		}
 		break;
 	case TEXEL_RGBA16:
@@ -2591,7 +2589,7 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			colors[1] = tc16[taddr1];
 			colors[2] = tc16[taddr2];
 			colors[3] = tc16[taddr3];
-      fetch_texel_quadro_rgba16(color0, color1, color2, color3, colors);
+      fetch_texel_quadro_rgba16(color0123, colors);
     }
 		break;
 	case TEXEL_RGBA32:
@@ -2614,29 +2612,29 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0x3ff;
 			taddr3 &= 0x3ff;
 			c0 = tc16[taddr0];
-			color0[0] = c0 >> 8;
-			color0[1] = c0 & 0xff;
+			color0123[0][0] = c0 >> 8;
+			color0123[0][1] = c0 & 0xff;
 			c0 = tc16[taddr0 | 0x400];
-			color0[2] = c0 >>  8;
-			color0[3] = c0 & 0xff;
+			color0123[0][2] = c0 >>  8;
+			color0123[0][3] = c0 & 0xff;
 			c1 = tc16[taddr1];
-			color1[0] = c1 >> 8;
-			color1[1] = c1 & 0xff;
+			color0123[1][0] = c1 >> 8;
+			color0123[1][1] = c1 & 0xff;
 			c1 = tc16[taddr1 | 0x400];
-			color1[2] = c1 >>  8;
-			color1[3] = c1 & 0xff;
+			color0123[1][2] = c1 >>  8;
+			color0123[1][3] = c1 & 0xff;
 			c2 = tc16[taddr2];
-			color2[0] = c2 >> 8;
-			color2[1] = c2 & 0xff;
+			color0123[2][0] = c2 >> 8;
+			color0123[2][1] = c2 & 0xff;
 			c2 = tc16[taddr2 | 0x400];
-			color2[2] = c2 >>  8;
-			color2[3] = c2 & 0xff;
+			color0123[2][2] = c2 >>  8;
+			color0123[2][3] = c2 & 0xff;
 			c3 = tc16[taddr3];
-			color3[0] = c3 >> 8;
-			color3[1] = c3 & 0xff;
+			color0123[3][0] = c3 >> 8;
+			color0123[3][1] = c3 & 0xff;
 			c3 = tc16[taddr3 | 0x400];
-			color3[2] = c3 >>  8;
-			color3[3] = c3 & 0xff;
+			color0123[3][2] = c3 >>  8;
+			color0123[3][3] = c3 & 0xff;
 		}
 		break;
 	case TEXEL_YUV4:
@@ -2665,22 +2663,22 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			save3 = u3 = TMEM[taddr3 & 0x7ff];
 			u3 = (u3 - 0x80) & 0x1ff;
 
-			color0[0] = u0;
-			color0[1] = u0;
-			color0[2] = save0;
-			color0[3] = save0;
-			color1[0] = u1;
-			color1[1] = u1;
-			color1[2] = save1;
-			color1[3] = save1;
-			color2[0] = u2;
-			color2[1] = u2;
-			color2[2] = save2;
-			color2[3] = save2;
-			color3[0] = u3;
-			color3[1] = u3;
-			color3[2] = save3;
-			color3[3] = save3;
+			color0123[0][0] = u0;
+			color0123[0][1] = u0;
+			color0123[0][2] = save0;
+			color0123[0][3] = save0;
+			color0123[1][0] = u1;
+			color0123[1][1] = u1;
+			color0123[1][2] = save1;
+			color0123[1][3] = save1;
+			color0123[2][0] = u2;
+			color0123[2][1] = u2;
+			color0123[2][2] = save2;
+			color0123[2][3] = save2;
+			color0123[3][0] = u3;
+			color0123[3][1] = u3;
+			color0123[3][2] = save3;
+			color0123[3][3] = save3;
 		}
 		break;
 	case TEXEL_YUV16:
@@ -2747,22 +2745,22 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			u3 = (u3 - 0x80) & 0x1ff;
 			v3 = (v3 - 0x80) & 0x1ff;
 
-			color0[0] = u0;
-			color0[1] = v0;
-			color0[2] = y0;
-			color0[3] = y0;
-			color1[0] = u1;
-			color1[1] = v1;
-			color1[2] = y1;
-			color1[3] = y1;
-			color2[0] = u2;
-			color2[1] = v2;
-			color2[2] = y2;
-			color2[3] = y2;
-			color3[0] = u3;
-			color3[1] = v3;
-			color3[2] = y3;
-			color3[3] = y3;
+			color0123[0][0] = u0;
+			color0123[0][1] = v0;
+			color0123[0][2] = y0;
+			color0123[0][3] = y0;
+			color0123[1][0] = u1;
+			color0123[1][1] = v1;
+			color0123[1][2] = y1;
+			color0123[1][3] = y1;
+			color0123[2][0] = u2;
+			color0123[2][1] = v2;
+			color0123[2][2] = y2;
+			color0123[2][3] = y2;
+			color0123[3][0] = u3;
+			color0123[3][1] = v3;
+			color0123[3][2] = y3;
+			color0123[3][3] = y3;
 		}
 		break;
 	case TEXEL_CI4:
@@ -2788,21 +2786,21 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			p = TMEM[taddr0];
 			p = (ands) ? (p & 0xf) : (p >> 4);
 			p = (tpal << 4) | p;
-			color0[0] = color0[1] = color0[2] = color0[3] = p;
+			color0123[0][0] = color0123[0][1] = color0123[0][2] = color0123[0][3] = p;
 			p = TMEM[taddr2];
 			p = (ands) ? (p & 0xf) : (p >> 4);
 			p = (tpal << 4) | p;
-			color2[0] = color2[1] = color2[2] = color2[3] = p;
+			color0123[2][0] = color0123[2][1] = color0123[2][2] = color0123[2][3] = p;
 
 			ands = s1 & 1;
 			p = TMEM[taddr1];
 			p = (ands) ? (p & 0xf) : (p >> 4);
 			p = (tpal << 4) | p;
-			color1[0] = color1[1] = color1[2] = color1[3] = p;
+			color0123[1][0] = color0123[1][1] = color0123[1][2] = color0123[1][3] = p;
 			p = TMEM[taddr3];
 			p = (ands) ? (p & 0xf) : (p >> 4);
 			p = (tpal << 4) | p;
-			color3[0] = color3[1] = color3[2] = color3[3] = p;
+			color0123[3][0] = color0123[3][1] = color0123[3][2] = color0123[3][3] = p;
 		}
 		break;
 	case TEXEL_CI8:
@@ -2825,25 +2823,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0xfff;
 			taddr3 &= 0xfff;
 			p = TMEM[taddr0];
-			color0[0] = p;
-			color0[1] = p;
-			color0[2] = p;
-			color0[3] = p;
+			color0123[0][0] = p;
+			color0123[0][1] = p;
+			color0123[0][2] = p;
+			color0123[0][3] = p;
 			p = TMEM[taddr2];
-			color2[0] = p;
-			color2[1] = p;
-			color2[2] = p;
-			color2[3] = p;
+			color0123[2][0] = p;
+			color0123[2][1] = p;
+			color0123[2][2] = p;
+			color0123[2][3] = p;
 			p = TMEM[taddr1];
-			color1[0] = p;
-			color1[1] = p;
-			color1[2] = p;
-			color1[3] = p;
+			color0123[1][0] = p;
+			color0123[1][1] = p;
+			color0123[1][2] = p;
+			color0123[1][3] = p;
 			p = TMEM[taddr3];
-			color3[0] = p;
-			color3[1] = p;
-			color3[2] = p;
-			color3[3] = p;
+			color0123[3][0] = p;
+			color0123[3][1] = p;
+			color0123[3][2] = p;
+			color0123[3][3] = p;
 		}
 		break;
 	case TEXEL_CI16:
@@ -2866,25 +2864,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0x7ff;
 			taddr3 &= 0x7ff;
 			c0 = tc16[taddr0];
-			color0[0] = c0 >> 8;
-			color0[1] = c0 & 0xff;
-			color0[2] = c0 >> 8;
-			color0[3] = (c0 & 1) ? 0xff : 0;
+			color0123[0][0] = c0 >> 8;
+			color0123[0][1] = c0 & 0xff;
+			color0123[0][2] = c0 >> 8;
+			color0123[0][3] = (c0 & 1) ? 0xff : 0;
 			c1 = tc16[taddr1];
-			color1[0] = c1 >> 8;
-			color1[1] = c1 & 0xff;
-			color1[2] = c1 >> 8;
-			color1[3] = (c1 & 1) ? 0xff : 0;
+			color0123[1][0] = c1 >> 8;
+			color0123[1][1] = c1 & 0xff;
+			color0123[1][2] = c1 >> 8;
+			color0123[1][3] = (c1 & 1) ? 0xff : 0;
 			c2 = tc16[taddr2];
-			color2[0] = c2 >> 8;
-			color2[1] = c2 & 0xff;
-			color2[2] = c2 >> 8;
-			color2[3] = (c2 & 1) ? 0xff : 0;
+			color0123[2][0] = c2 >> 8;
+			color0123[2][1] = c2 & 0xff;
+			color0123[2][2] = c2 >> 8;
+			color0123[2][3] = (c2 & 1) ? 0xff : 0;
 			c3 = tc16[taddr3];
-			color3[0] = c3 >> 8;
-			color3[1] = c3 & 0xff;
-			color3[2] = c3 >> 8;
-			color3[3] = (c3 & 1) ? 0xff : 0;
+			color0123[3][0] = c3 >> 8;
+			color0123[3][1] = c3 & 0xff;
+			color0123[3][2] = c3 >> 8;
+			color0123[3][3] = (c3 & 1) ? 0xff : 0;
 			
 		}
 		break;
@@ -2908,25 +2906,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0x7ff;
 			taddr3 &= 0x7ff;
 			c0 = tc16[taddr0];
-			color0[0] = c0 >> 8;
-			color0[1] = c0 & 0xff;
-			color0[2] = c0 >> 8;
-			color0[3] = (c0 & 1) ? 0xff : 0;
+			color0123[0][0] = c0 >> 8;
+			color0123[0][1] = c0 & 0xff;
+			color0123[0][2] = c0 >> 8;
+			color0123[0][3] = (c0 & 1) ? 0xff : 0;
 			c1 = tc16[taddr1];
-			color1[0] = c1 >> 8;
-			color1[1] = c1 & 0xff;
-			color1[2] = c1 >> 8;
-			color1[3] = (c1 & 1) ? 0xff : 0;
+			color0123[1][0] = c1 >> 8;
+			color0123[1][1] = c1 & 0xff;
+			color0123[1][2] = c1 >> 8;
+			color0123[1][3] = (c1 & 1) ? 0xff : 0;
 			c2 = tc16[taddr2];
-			color2[0] = c2 >> 8;
-			color2[1] = c2 & 0xff;
-			color2[2] = c2 >> 8;
-			color2[3] = (c2 & 1) ? 0xff : 0;
+			color0123[2][0] = c2 >> 8;
+			color0123[2][1] = c2 & 0xff;
+			color0123[2][2] = c2 >> 8;
+			color0123[2][3] = (c2 & 1) ? 0xff : 0;
 			c3 = tc16[taddr3];
-			color3[0] = c3 >> 8;
-			color3[1] = c3 & 0xff;
-			color3[2] = c3 >> 8;
-			color3[3] = (c3 & 1) ? 0xff : 0;
+			color0123[3][0] = c3 >> 8;
+			color0123[3][1] = c3 & 0xff;
+			color0123[3][2] = c3 >> 8;
+			color0123[3][3] = (c3 & 1) ? 0xff : 0;
 			
 		}
         break;
@@ -2954,36 +2952,36 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			p = ands ? (p & 0xf) : (p >> 4);
 			i = p & 0xe;
 			i = (i << 4) | (i << 1) | (i >> 2);
-			color0[0] = i;
-			color0[1] = i;
-			color0[2] = i;
-			color0[3] = (p & 0x1) ? 0xff : 0;
+			color0123[0][0] = i;
+			color0123[0][1] = i;
+			color0123[0][2] = i;
+			color0123[0][3] = (p & 0x1) ? 0xff : 0;
 			p = TMEM[taddr2];
 			p = ands ? (p & 0xf) : (p >> 4);
 			i = p & 0xe;
 			i = (i << 4) | (i << 1) | (i >> 2);
-			color2[0] = i;
-			color2[1] = i;
-			color2[2] = i;
-			color2[3] = (p & 0x1) ? 0xff : 0;
+			color0123[2][0] = i;
+			color0123[2][1] = i;
+			color0123[2][2] = i;
+			color0123[2][3] = (p & 0x1) ? 0xff : 0;
 
 			ands = s1 & 1;
 			p = TMEM[taddr1];
 			p = ands ? (p & 0xf) : (p >> 4);
 			i = p & 0xe;
 			i = (i << 4) | (i << 1) | (i >> 2);
-			color1[0] = i;
-			color1[1] = i;
-			color1[2] = i;
-			color1[3] = (p & 0x1) ? 0xff : 0;
+			color0123[1][0] = i;
+			color0123[1][1] = i;
+			color0123[1][2] = i;
+			color0123[1][3] = (p & 0x1) ? 0xff : 0;
 			p = TMEM[taddr3];
 			p = ands ? (p & 0xf) : (p >> 4);
 			i = p & 0xe;
 			i = (i << 4) | (i << 1) | (i >> 2);
-			color3[0] = i;
-			color3[1] = i;
-			color3[2] = i;
-			color3[3] = (p & 0x1) ? 0xff : 0;
+			color0123[3][0] = i;
+			color0123[3][1] = i;
+			color0123[3][2] = i;
+			color0123[3][3] = (p & 0x1) ? 0xff : 0;
 			
 		}
 		break;
@@ -3009,31 +3007,31 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			p = TMEM[taddr0];
 			i = p & 0xf0;
 			i |= (i >> 4);
-			color0[0] = i;
-			color0[1] = i;
-			color0[2] = i;
-			color0[3] = ((p & 0xf) << 4) | (p & 0xf);
+			color0123[0][0] = i;
+			color0123[0][1] = i;
+			color0123[0][2] = i;
+			color0123[0][3] = ((p & 0xf) << 4) | (p & 0xf);
 			p = TMEM[taddr1];
 			i = p & 0xf0;
 			i |= (i >> 4);
-			color1[0] = i;
-			color1[1] = i;
-			color1[2] = i;
-			color1[3] = ((p & 0xf) << 4) | (p & 0xf);
+			color0123[1][0] = i;
+			color0123[1][1] = i;
+			color0123[1][2] = i;
+			color0123[1][3] = ((p & 0xf) << 4) | (p & 0xf);
 			p = TMEM[taddr2];
 			i = p & 0xf0;
 			i |= (i >> 4);
-			color2[0] = i;
-			color2[1] = i;
-			color2[2] = i;
-			color2[3] = ((p & 0xf) << 4) | (p & 0xf);
+			color0123[2][0] = i;
+			color0123[2][1] = i;
+			color0123[2][2] = i;
+			color0123[2][3] = ((p & 0xf) << 4) | (p & 0xf);
 			p = TMEM[taddr3];
 			i = p & 0xf0;
 			i |= (i >> 4);
-			color3[0] = i;
-			color3[1] = i;
-			color3[2] = i;
-			color3[3] = ((p & 0xf) << 4) | (p & 0xf);
+			color0123[3][0] = i;
+			color0123[3][1] = i;
+			color0123[3][2] = i;
+			color0123[3][3] = ((p & 0xf) << 4) | (p & 0xf);
 			
 			
 		}
@@ -3058,17 +3056,17 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0x7ff;
 			taddr3 &= 0x7ff;
 			c0 = tc16[taddr0];
-			color0[0] = color0[1] = color0[2] = c0 >> 8;
-			color0[3] = c0 & 0xff;
+			color0123[0][0] = color0123[0][1] = color0123[0][2] = c0 >> 8;
+			color0123[0][3] = c0 & 0xff;
 			c1 = tc16[taddr1];
-			color1[0] = color1[1] = color1[2] = c1 >> 8;
-			color1[3] = c1 & 0xff;
+			color0123[1][0] = color0123[1][1] = color0123[1][2] = c1 >> 8;
+			color0123[1][3] = c1 & 0xff;
 			c2 = tc16[taddr2];
-			color2[0] = color2[1] = color2[2] = c2 >> 8;
-			color2[3] = c2 & 0xff;
+			color0123[2][0] = color0123[2][1] = color0123[2][2] = c2 >> 8;
+			color0123[2][3] = c2 & 0xff;
 			c3 = tc16[taddr3];
-			color3[0] = color3[1] = color3[2] = c3 >> 8;
-			color3[3] = c3 & 0xff;
+			color0123[3][0] = color0123[3][1] = color0123[3][2] = c3 >> 8;
+			color0123[3][3] = c3 & 0xff;
 				
 		}
 		break;
@@ -3092,25 +3090,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0x7ff;
 			taddr3 &= 0x7ff;
 			c0 = tc16[taddr0];
-			color0[0] = c0 >> 8;
-			color0[1] = c0 & 0xff;
-			color0[2] = c0 >> 8;
-			color0[3] = (c0 & 1) ? 0xff : 0;
+			color0123[0][0] = c0 >> 8;
+			color0123[0][1] = c0 & 0xff;
+			color0123[0][2] = c0 >> 8;
+			color0123[0][3] = (c0 & 1) ? 0xff : 0;
 			c1 = tc16[taddr1];
-			color1[0] = c1 >> 8;
-			color1[1] = c1 & 0xff;
-			color1[2] = c1 >> 8;
-			color1[3] = (c1 & 1) ? 0xff : 0;
+			color0123[1][0] = c1 >> 8;
+			color0123[1][1] = c1 & 0xff;
+			color0123[1][2] = c1 >> 8;
+			color0123[1][3] = (c1 & 1) ? 0xff : 0;
 			c2 = tc16[taddr2];
-			color2[0] = c2 >> 8;
-			color2[1] = c2 & 0xff;
-			color2[2] = c2 >> 8;
-			color2[3] = (c2 & 1) ? 0xff : 0;
+			color0123[2][0] = c2 >> 8;
+			color0123[2][1] = c2 & 0xff;
+			color0123[2][2] = c2 >> 8;
+			color0123[2][3] = (c2 & 1) ? 0xff : 0;
 			c3 = tc16[taddr3];
-			color3[0] = c3 >> 8;
-			color3[1] = c3 & 0xff;
-			color3[2] = c3 >> 8;
-			color3[3] = (c3 & 1) ? 0xff : 0;
+			color0123[3][0] = c3 >> 8;
+			color0123[3][1] = c3 & 0xff;
+			color0123[3][2] = c3 >> 8;
+			color0123[3][3] = (c3 & 1) ? 0xff : 0;
 						
 		}
 		break;
@@ -3137,21 +3135,21 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			p = TMEM[taddr0];
 			c0 = ands ? (p & 0xf) : (p >> 4);
 			c0 |= (c0 << 4);
-			color0[0] = color0[1] = color0[2] = color0[3] = c0;
+			color0123[0][0] = color0123[0][1] = color0123[0][2] = color0123[0][3] = c0;
 			p = TMEM[taddr2];
 			c2 = ands ? (p & 0xf) : (p >> 4);
 			c2 |= (c2 << 4);
-			color2[0] = color2[1] = color2[2] = color2[3] = c2;
+			color0123[2][0] = color0123[2][1] = color0123[2][2] = color0123[2][3] = c2;
 
 			ands = s1 & 1;
 			p = TMEM[taddr1];
 			c1 = ands ? (p & 0xf) : (p >> 4);
 			c1 |= (c1 << 4);
-			color1[0] = color1[1] = color1[2] = color1[3] = c1;
+			color0123[1][0] = color0123[1][1] = color0123[1][2] = color0123[1][3] = c1;
 			p = TMEM[taddr3];
 			c3 = ands ? (p & 0xf) : (p >> 4);
 			c3 |= (c3 << 4);
-			color3[0] = color3[1] = color3[2] = color3[3] = c3;
+			color0123[3][0] = color0123[3][1] = color0123[3][2] = color0123[3][3] = c3;
 				
 		}
 		break;
@@ -3175,25 +3173,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0xfff;
 			taddr3 &= 0xfff;
 			p = TMEM[taddr0];
-			color0[0] = p;
-			color0[1] = p;
-			color0[2] = p;
-			color0[3] = p;
+			color0123[0][0] = p;
+			color0123[0][1] = p;
+			color0123[0][2] = p;
+			color0123[0][3] = p;
 			p = TMEM[taddr1];
-			color1[0] = p;
-			color1[1] = p;
-			color1[2] = p;
-			color1[3] = p;
+			color0123[1][0] = p;
+			color0123[1][1] = p;
+			color0123[1][2] = p;
+			color0123[1][3] = p;
 			p = TMEM[taddr2];
-			color2[0] = p;
-			color2[1] = p;
-			color2[2] = p;
-			color2[3] = p;
+			color0123[2][0] = p;
+			color0123[2][1] = p;
+			color0123[2][2] = p;
+			color0123[2][3] = p;
 			p = TMEM[taddr3];
-			color3[0] = p;
-			color3[1] = p;
-			color3[2] = p;
-			color3[3] = p;
+			color0123[3][0] = p;
+			color0123[3][1] = p;
+			color0123[3][2] = p;
+			color0123[3][3] = p;
 		}
 		break;
 	case TEXEL_I16:
@@ -3216,25 +3214,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0x7ff;
 			taddr3 &= 0x7ff;
 			c0 = tc16[taddr0];
-			color0[0] = c0 >> 8;
-			color0[1] = c0 & 0xff;
-			color0[2] = c0 >> 8;
-			color0[3] = (c0 & 1) ? 0xff : 0;
+			color0123[0][0] = c0 >> 8;
+			color0123[0][1] = c0 & 0xff;
+			color0123[0][2] = c0 >> 8;
+			color0123[0][3] = (c0 & 1) ? 0xff : 0;
 			c1 = tc16[taddr1];
-			color1[0] = c1 >> 8;
-			color1[1] = c1 & 0xff;
-			color1[2] = c1 >> 8;
-			color1[3] = (c1 & 1) ? 0xff : 0;
+			color0123[1][0] = c1 >> 8;
+			color0123[1][1] = c1 & 0xff;
+			color0123[1][2] = c1 >> 8;
+			color0123[1][3] = (c1 & 1) ? 0xff : 0;
 			c2 = tc16[taddr2];
-			color2[0] = c2 >> 8;
-			color2[1] = c2 & 0xff;
-			color2[2] = c2 >> 8;
-			color2[3] = (c2 & 1) ? 0xff : 0;
+			color0123[2][0] = c2 >> 8;
+			color0123[2][1] = c2 & 0xff;
+			color0123[2][2] = c2 >> 8;
+			color0123[2][3] = (c2 & 1) ? 0xff : 0;
 			c3 = tc16[taddr3];
-			color3[0] = c3 >> 8;
-			color3[1] = c3 & 0xff;
-			color3[2] = c3 >> 8;
-			color3[3] = (c3 & 1) ? 0xff : 0;
+			color0123[3][0] = c3 >> 8;
+			color0123[3][1] = c3 & 0xff;
+			color0123[3][2] = c3 >> 8;
+			color0123[3][3] = (c3 & 1) ? 0xff : 0;
 		}
 		break;
 	case TEXEL_I32:
@@ -3257,25 +3255,25 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 			taddr2 &= 0x7ff;
 			taddr3 &= 0x7ff;
 			c0 = tc16[taddr0];
-			color0[0] = c0 >> 8;
-			color0[1] = c0 & 0xff;
-			color0[2] = c0 >> 8;
-			color0[3] = (c0 & 1) ? 0xff : 0;
+			color0123[0][0] = c0 >> 8;
+			color0123[0][1] = c0 & 0xff;
+			color0123[0][2] = c0 >> 8;
+			color0123[0][3] = (c0 & 1) ? 0xff : 0;
 			c1 = tc16[taddr1];
-			color1[0] = c1 >> 8;
-			color1[1] = c1 & 0xff;
-			color1[2] = c1 >> 8;
-			color1[3] = (c1 & 1) ? 0xff : 0;
+			color0123[1][0] = c1 >> 8;
+			color0123[1][1] = c1 & 0xff;
+			color0123[1][2] = c1 >> 8;
+			color0123[1][3] = (c1 & 1) ? 0xff : 0;
 			c2 = tc16[taddr2];
-			color2[0] = c2 >> 8;
-			color2[1] = c2 & 0xff;
-			color2[2] = c2 >> 8;
-			color2[3] = (c2 & 1) ? 0xff : 0;
+			color0123[2][0] = c2 >> 8;
+			color0123[2][1] = c2 & 0xff;
+			color0123[2][2] = c2 >> 8;
+			color0123[2][3] = (c2 & 1) ? 0xff : 0;
 			c3 = tc16[taddr3];
-			color3[0] = c3 >> 8;
-			color3[1] = c3 & 0xff;
-			color3[2] = c3 >> 8;
-			color3[3] = (c3 & 1) ? 0xff : 0;
+			color0123[3][0] = c3 >> 8;
+			color0123[3][1] = c3 & 0xff;
+			color0123[3][2] = c3 >> 8;
+			color0123[3][3] = (c3 & 1) ? 0xff : 0;
 		}
 		break;
 	default:
@@ -3284,7 +3282,7 @@ static void fetch_texel_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR c
 	}
 }
 
-static void fetch_texel_entlut_quadro(COLOR color0, COLOR color1, COLOR color2, COLOR color3, int s0, int s1, int t0, int t1, uint32_t tilenum)
+static void fetch_texel_entlut_quadro(COLOR color0123[4], int s0, int s1, int t0, int t1, uint32_t tilenum)
 {
 	uint32_t tbase0 = tile[tilenum].line * t0 + tile[tilenum].tmem;
 	uint32_t tbase2 = tile[tilenum].line * t1 + tile[tilenum].tmem;
@@ -3506,18 +3504,18 @@ static void fetch_texel_entlut_quadro(COLOR color0, COLOR color1, COLOR color2, 
 		color3[2] = GET_LOW_RGBA16_TMEM(c3);
 		color3[3] = (c3 & 1) ? 0xff : 0;
 #endif
-    fetch_texel_quadro_rgba16(color0, color1, color2, color3, colors);
+    fetch_texel_quadro_rgba16(color0123, colors);
 	}
 	else
 	{
-		color0[0] = color0[1] = color0[2] = colors[0] >> 8;
-		color0[3] = colors[0] & 0xff;
-		color1[0] = color1[1] = color1[2] = colors[1] >> 8;
-		color1[3] = colors[1] & 0xff;
-		color2[0] = color2[1] = color2[2] = colors[2] >> 8;
-		color2[3] = colors[2] & 0xff;
-		color3[0] = color3[1] = color3[2] = colors[3] >> 8;
-		color3[3] = colors[3] & 0xff;
+		color0123[0][0] = color0123[0][1] = color0123[0][2] = colors[0] >> 8;
+		color0123[0][3] = colors[0] & 0xff;
+		color0123[1][0] = color0123[1][1] = color0123[1][2] = colors[1] >> 8;
+		color0123[1][3] = colors[1] & 0xff;
+		color0123[2][0] = color0123[2][1] = color0123[2][2] = colors[2] >> 8;
+		color0123[2][3] = colors[2] & 0xff;
+		color0123[3][0] = color0123[3][1] = color0123[3][2] = colors[3] >> 8;
+		color0123[3][3] = colors[3] & 0xff;
 	}
 }
 
@@ -3897,7 +3895,7 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 	int upper = 0;
 	int bilerp = cycle ? other_modes.bi_lerp1 : other_modes.bi_lerp0;
 	int convert = other_modes.convert_one && cycle;
-	COLOR t0, t1, t2, t3;
+  COLOR t0123[4] __attribute__((aligned(16)));
 	int sss1, sst1, sss2, sst2;
 
 	sss1 = SSS;
@@ -3942,26 +3940,26 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 		if (bilerp)
 		{			
 			if (!other_modes.en_tlut)
-				fetch_texel_quadro(t0, t1, t2, t3, sss1, sss2, sst1, sst2, tilenum);
+				fetch_texel_quadro(t0123, sss1, sss2, sst1, sst2, tilenum);
 			else
-				fetch_texel_entlut_quadro(t0, t1, t2, t3, sss1, sss2, sst1, sst2, tilenum);
+				fetch_texel_entlut_quadro(t0123, sss1, sss2, sst1, sst2, tilenum);
 
 			if (tile[tilenum].format == FORMAT_YUV)
 			{
-				t0[0] = SIGN(t0[0], 9);
-				t0[1] = SIGN(t0[1], 9);
-				t1[0] = SIGN(t1[0], 9);
-				t1[1] = SIGN(t1[1], 9);
-				t2[0] = SIGN(t2[0], 9);
-				t2[1] = SIGN(t2[1], 9);
-				t3[0] = SIGN(t3[0], 9);
-				t3[1] = SIGN(t3[1], 9);
+				t0123[0][0] = SIGN(t0123[0][0], 9);
+				t0123[0][1] = SIGN(t0123[0][1], 9);
+				t0123[1][0] = SIGN(t0123[1][0], 9);
+				t0123[1][1] = SIGN(t0123[1][1], 9);
+				t0123[2][0] = SIGN(t0123[2][0], 9);
+				t0123[2][1] = SIGN(t0123[2][1], 9);
+				t0123[3][0] = SIGN(t0123[3][0], 9);
+				t0123[3][1] = SIGN(t0123[3][1], 9);
 			}
 
-      __m128i t0_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0));
-      __m128i t1_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t1));
-      __m128i t2_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t2));
-      __m128i t3_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t3));
+      __m128i t0_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[0]));
+      __m128i t1_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[1]));
+      __m128i t2_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[2]));
+      __m128i t3_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(t0123[3]));
 
 			if (!other_modes.mid_texel || sfrac != 0x10 || tfrac != 0x10)
 			{
@@ -3976,10 +3974,10 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 						invsf = 0x20 - sfrac;
 						invtf = 0x20 - tfrac;
 #if 0
-						TEX[0] = t3[0] + ((((invsf * (t2[0] - t3[0])) + (invtf * (t1[0] - t3[0]))) + 0x10) >> 5);	
-						TEX[1] = t3[1] + ((((invsf * (t2[1] - t3[1])) + (invtf * (t1[1] - t3[1]))) + 0x10) >> 5);																		
-						TEX[2] = t3[2] + ((((invsf * (t2[2] - t3[2])) + (invtf * (t1[2] - t3[2]))) + 0x10) >> 5);																
-						TEX[3] = t3[3] + ((((invsf * (t2[3] - t3[3])) + (invtf * (t1[3] - t3[3]))) + 0x10) >> 5);
+						TEX[0] = t0123[3][0] + ((((invsf * (t0123[2][0] - t0123[3][0])) + (invtf * (t0123[1][0] - t0123[3][0]))) + 0x10) >> 5);	
+						TEX[1] = t0123[3][1] + ((((invsf * (t0123[2][1] - t0123[3][1])) + (invtf * (t0123[1][1] - t0123[3][1]))) + 0x10) >> 5);																		
+						TEX[2] = t0123[3][2] + ((((invsf * (t0123[2][2] - t0123[3][2])) + (invtf * (t0123[1][2] - t0123[3][2]))) + 0x10) >> 5);																
+						TEX[3] = t0123[3][3] + ((((invsf * (t0123[2][3] - t0123[3][3])) + (invtf * (t0123[1][3] - t0123[3][3]))) + 0x10) >> 5);
 #endif
             __m128i invsf_v = _mm_set1_epi32(invsf);
             __m128i invtf_v = _mm_set1_epi32(invtf);
@@ -3991,10 +3989,10 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 					else
 					{
 #if 0
-						TEX[0] = t0[0] + ((((sfrac * (t1[0] - t0[0])) + (tfrac * (t2[0] - t0[0]))) + 0x10) >> 5);											
-						TEX[1] = t0[1] + ((((sfrac * (t1[1] - t0[1])) + (tfrac * (t2[1] - t0[1]))) + 0x10) >> 5);											
-						TEX[2] = t0[2] + ((((sfrac * (t1[2] - t0[2])) + (tfrac * (t2[2] - t0[2]))) + 0x10) >> 5);									
-						TEX[3] = t0[3] + ((((sfrac * (t1[3] - t0[3])) + (tfrac * (t2[3] - t0[3]))) + 0x10) >> 5);
+						TEX[0] = t0123[0][0] + ((((sfrac * (t0123[1][0] - t0123[0][0])) + (tfrac * (t0123[2][0] - t0123[0][0]))) + 0x10) >> 5);											
+						TEX[1] = t0123[0][1] + ((((sfrac * (t0123[1][1] - t0123[0][1])) + (tfrac * (t0123[2][1] - t0123[0][1]))) + 0x10) >> 5);											
+						TEX[2] = t0123[0][2] + ((((sfrac * (t0123[1][2] - t0123[0][2])) + (tfrac * (t0123[2][2] - t0123[0][2]))) + 0x10) >> 5);									
+						TEX[3] = t0123[0][3] + ((((sfrac * (t0123[1][3] - t0123[0][3])) + (tfrac * (t0123[2][3] - t0123[0][3]))) + 0x10) >> 5);
 #endif
             __m128i sfrac_v = _mm_set1_epi32(sfrac);
             __m128i tfrac_v = _mm_set1_epi32(tfrac);
@@ -4019,10 +4017,10 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 					if (UPPER)
 					{
 #if 0
-						TEX[0] = prev[2] + ((((prev[0] * (t2[0] - t3[0])) + (prev[1] * (t1[0] - t3[0]))) + 0x80) >> 8);	
-						TEX[1] = prev[2] + ((((prev[0] * (t2[1] - t3[1])) + (prev[1] * (t1[1] - t3[1]))) + 0x80) >> 8);																		
-						TEX[2] = prev[2] + ((((prev[0] * (t2[2] - t3[2])) + (prev[1] * (t1[2] - t3[2]))) + 0x80) >> 8);																
-						TEX[3] = prev[2] + ((((prev[0] * (t2[3] - t3[3])) + (prev[1] * (t1[3] - t3[3]))) + 0x80) >> 8);
+						TEX[0] = prev[2] + ((((prev[0] * (t0123[2][0] - t0123[3][0])) + (prev[1] * (t0123[1][0] - t0123[3][0]))) + 0x80) >> 8);	
+						TEX[1] = prev[2] + ((((prev[0] * (t0123[2][1] - t0123[3][1])) + (prev[1] * (t0123[1][1] - t0123[3][1]))) + 0x80) >> 8);																		
+						TEX[2] = prev[2] + ((((prev[0] * (t0123[2][2] - t0123[3][2])) + (prev[1] * (t0123[1][2] - t0123[3][2]))) + 0x80) >> 8);																
+						TEX[3] = prev[2] + ((((prev[0] * (t0123[2][3] - t0123[3][3])) + (prev[1] * (t0123[1][3] - t0123[3][3]))) + 0x80) >> 8);
 #endif
             prev0_prod = _mm_mullo_epi32(prev0_v, _mm_sub_epi32(t2_v, t3_v));
             prev1_prod = _mm_mullo_epi32(prev1_v, _mm_sub_epi32(t1_v, t3_v));
@@ -4030,13 +4028,13 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 					else
 					{
 #if 0
-						TEX[0] = prev[2] + ((((prev[0] * (t1[0] - t0[0])) + (prev[1] * (t2[0] - t0[0]))) + 0x80) >> 8);											
-						TEX[1] = prev[2] + ((((prev[0] * (t1[1] - t0[1])) + (prev[1] * (t2[1] - t0[1]))) + 0x80) >> 8);											
-						TEX[2] = prev[2] + ((((prev[0] * (t1[2] - t0[2])) + (prev[1] * (t2[2] - t0[2]))) + 0x80) >> 8);									
-						TEX[3] = prev[2] + ((((prev[0] * (t1[3] - t0[3])) + (prev[1] * (t2[3] - t0[3]))) + 0x80) >> 8);
+						TEX[0] = prev[2] + ((((prev[0] * (t0123[1][0] - t0123[0][0])) + (prev[1] * (t0123[2][0] - t0123[0][0]))) + 0x80) >> 8);											
+						TEX[1] = prev[2] + ((((prev[0] * (t0123[1][1] - t0123[0][1])) + (prev[1] * (t0123[2][1] - t0123[0][1]))) + 0x80) >> 8);											
+						TEX[2] = prev[2] + ((((prev[0] * (t0123[1][2] - t0123[0][2])) + (prev[1] * (t0123[2][2] - t0123[0][2]))) + 0x80) >> 8);									
+						TEX[3] = prev[2] + ((((prev[0] * (t0123[1][3] - t0123[0][3])) + (prev[1] * (t0123[2][3] - t0123[0][3]))) + 0x80) >> 8);
 #endif
-            prev0_prod = _mm_mullo_epi32(prev0_v, _mm_sub_epi32(t2_v, t3_v));
-            prev1_prod = _mm_mullo_epi32(prev1_v, _mm_sub_epi32(t1_v, t3_v));
+            prev0_prod = _mm_mullo_epi32(prev0_v, _mm_sub_epi32(t1_v, t0_v));
+            prev1_prod = _mm_mullo_epi32(prev1_v, _mm_sub_epi32(t2_v, t0_v));
 					}	
 
           __m128i sum = _mm_add_epi32(_mm_add_epi32(prev0_prod, prev1_prod), cv_v);
@@ -4047,7 +4045,7 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 			else
 			{
 #if 0
-				invt0r  = ~t0[0]; invt0g = ~t0[1]; invt0b = ~t0[2]; invt0a = ~t0[3];
+				invt0r  = ~t0123[0][0]; invt0g = ~t0123[0][1]; invt0b = ~t0123[0][2]; invt0a = ~t0123[0][3];
 #endif
         __m128i invt0r_v = _mm_xor_si128(t0_v, _mm_cmpeq_epi32(_mm_setzero_si128(), _mm_setzero_si128()));
         __m128i invt0r_shiftsum = _mm_slli_epi32(_mm_add_epi32(invt0r_v, t3_v), 6);
@@ -4062,10 +4060,10 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
           __m128i sfrac_v = _mm_set1_epi32(sfrac);
           __m128i tfrac_v = _mm_set1_epi32(tfrac);
 #if 0
-					TEX[0] = t0[0] + ((((sfrac * (t1[0] - t0[0])) + (tfrac * (t2[0] - t0[0]))) + ((invt0r + t3[0]) << 6) + 0xc0) >> 8);											
-					TEX[1] = t0[1] + ((((sfrac * (t1[1] - t0[1])) + (tfrac * (t2[1] - t0[1]))) + ((invt0g + t3[1]) << 6) + 0xc0) >> 8);											
-					TEX[2] = t0[2] + ((((sfrac * (t1[2] - t0[2])) + (tfrac * (t2[2] - t0[2]))) + ((invt0b + t3[2]) << 6) + 0xc0) >> 8);									
-					TEX[3] = t0[3] + ((((sfrac * (t1[3] - t0[3])) + (tfrac * (t2[3] - t0[3]))) + ((invt0a + t3[3]) << 6) + 0xc0) >> 8);
+					TEX[0] = t0123[0][0] + ((((sfrac * (t0123[1][0] - t0123[0][0])) + (tfrac * (t0123[2][0] - t0123[0][0]))) + ((invt0r + t0123[3][0]) << 6) + 0xc0) >> 8);											
+					TEX[1] = t0123[0][1] + ((((sfrac * (t0123[1][1] - t0123[0][1])) + (tfrac * (t0123[2][1] - t0123[0][1]))) + ((invt0g + t0123[3][1]) << 6) + 0xc0) >> 8);											
+					TEX[2] = t0123[0][2] + ((((sfrac * (t0123[1][2] - t0123[0][2])) + (tfrac * (t0123[2][2] - t0123[0][2]))) + ((invt0b + t0123[3][2]) << 6) + 0xc0) >> 8);									
+					TEX[3] = t0123[0][3] + ((((sfrac * (t0123[1][3] - t0123[0][3])) + (tfrac * (t0123[2][3] - t0123[0][3]))) + ((invt0a + t0123[3][3]) << 6) + 0xc0) >> 8);
 #endif
           prod_a = _mm_mullo_epi32(sfrac_v, _mm_sub_epi32(t1_v, t0_v));
           prod_b = _mm_mullo_epi32(tfrac_v, _mm_sub_epi32(t2_v, t0_v));
@@ -4073,10 +4071,10 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 				else
 				{
 #if 0
-					TEX[0] = prev[2] + ((((prev[0] * (t1[0] - t0[0])) + (prev[1] * (t2[0] - t0[0]))) + ((invt0r + t3[0]) << 6) + 0xc0) >> 8);											
-					TEX[1] = prev[2] + ((((prev[0] * (t1[1] - t0[1])) + (prev[1] * (t2[1] - t0[1]))) + ((invt0g + t3[1]) << 6) + 0xc0) >> 8);											
-					TEX[2] = prev[2] + ((((prev[0] * (t1[2] - t0[2])) + (prev[1] * (t2[2] - t0[2]))) + ((invt0b + t3[2]) << 6) + 0xc0) >> 8);									
-					TEX[3] = prev[2] + ((((prev[0] * (t1[3] - t0[3])) + (prev[1] * (t2[3] - t0[3]))) + ((invt0a + t3[3]) << 6) + 0xc0) >> 8);
+					TEX[0] = prev[2] + ((((prev[0] * (t0123[1][0] - t0123[0][0])) + (prev[1] * (t0123[2][0] - t0123[0][0]))) + ((invt0r + t0123[3][0]) << 6) + 0xc0) >> 8);											
+					TEX[1] = prev[2] + ((((prev[0] * (t0123[1][1] - t0123[0][1])) + (prev[1] * (t0123[2][1] - t0123[0][1]))) + ((invt0g + t0123[3][1]) << 6) + 0xc0) >> 8);											
+					TEX[2] = prev[2] + ((((prev[0] * (t0123[1][2] - t0123[0][2])) + (prev[1] * (t0123[2][2] - t0123[0][2]))) + ((invt0b + t0123[3][2]) << 6) + 0xc0) >> 8);									
+					TEX[3] = prev[2] + ((((prev[0] * (t0123[1][3] - t0123[0][3])) + (prev[1] * (t0123[2][3] - t0123[0][3]))) + ((invt0a + t0123[3][3]) << 6) + 0xc0) >> 8);
 #endif
 
           __m128i prev0_v = _mm_set1_epi32(prev[0]);
@@ -4095,23 +4093,23 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 		else
 		{
 			if (!other_modes.en_tlut)
-				fetch_texel(t0, sss1, sst1, tilenum);
+				fetch_texel(t0123[0], sss1, sst1, tilenum);
 			else
-				fetch_texel_entlut(t0, sss1, sst1, tilenum);
+				fetch_texel_entlut(t0123[0], sss1, sst1, tilenum);
 			if (convert)
-        memcpy(t0, prev, sizeof(COLOR));
+        memcpy(t0123[0], prev, sizeof(COLOR));
 
 			if (tile[tilenum].format == FORMAT_YUV)
 			{
-				t0[0] = SIGN(t0[0], 9);
-				t0[1] = SIGN(t0[1], 9);
+				t0123[0][0] = SIGN(t0123[0][0], 9);
+				t0123[0][1] = SIGN(t0123[0][1], 9);
 			}
 
 
-			TEX[0] = t0[2] + ((k0_tf * t0[1] + 0x80) >> 8);
-			TEX[1] = t0[2] + ((k1_tf * t0[0] + k2_tf * t0[1] + 0x80) >> 8);
-			TEX[2] = t0[2] + ((k3_tf * t0[0] + 0x80) >> 8);
-			TEX[3] = t0[2];
+			TEX[0] = t0123[0][2] + ((k0_tf * t0123[0][1] + 0x80) >> 8);
+			TEX[1] = t0123[0][2] + ((k1_tf * t0123[0][0] + k2_tf * t0123[0][1] + 0x80) >> 8);
+			TEX[2] = t0123[0][2] + ((k3_tf * t0123[0][0] + 0x80) >> 8);
+			TEX[3] = t0123[0][2];
       tex_v = _mm_cvtepi16_epi32(_mm_loadl_epi64(TEX));
 		}
 
@@ -4136,34 +4134,34 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 																										
 			
 		if (!other_modes.en_tlut)
-			fetch_texel(t0, sss1, sst1, tilenum);
+			fetch_texel(t0123[0], sss1, sst1, tilenum);
 		else
-			fetch_texel_entlut(t0, sss1, sst1, tilenum);
+			fetch_texel_entlut(t0123[0], sss1, sst1, tilenum);
 		
 		if (bilerp)
 		{
 			if (!convert)
-        memcpy(TEX, t0, sizeof(COLOR));
+        memcpy(TEX, t0123[0], sizeof(COLOR));
 			else
 				TEX[0] = TEX[1] = TEX[2] = TEX[3] = prev[2];
 		}
 		else
 		{
 			if (convert)
-        memcpy(t0, prev, sizeof(COLOR));
-			t0[0] = SIGN(t0[0], 9);
-			t0[1] = SIGN(t0[1], 9); 
-			t0[2] = SIGN(t0[2], 9);
+        memcpy(t0123[0], prev, sizeof(COLOR));
+			t0123[0][0] = SIGN(t0123[0][0], 9);
+			t0123[0][1] = SIGN(t0123[0][1], 9); 
+			t0123[0][2] = SIGN(t0123[0][2], 9);
 			if (tile[tilenum].format == FORMAT_YUV)
 			{
-				t0[0] = SIGN(t0[0], 9);
-				t0[1] = SIGN(t0[1], 9);
+				t0123[0][0] = SIGN(t0123[0][0], 9);
+				t0123[0][1] = SIGN(t0123[0][1], 9);
 			}
 
-			TEX[0] = t0[2] + ((k0_tf * t0[1] + 0x80) >> 8);
-			TEX[1] = t0[2] + ((k1_tf * t0[0] + k2_tf * t0[1] + 0x80) >> 8);
-			TEX[2] = t0[2] + ((k3_tf * t0[0] + 0x80) >> 8);
-			TEX[3] = t0[2];
+			TEX[0] = t0123[0][2] + ((k0_tf * t0123[0][1] + 0x80) >> 8);
+			TEX[1] = t0123[0][2] + ((k1_tf * t0123[0][0] + k2_tf * t0123[0][1] + 0x80) >> 8);
+			TEX[2] = t0123[0][2] + ((k3_tf * t0123[0][0] + 0x80) >> 8);
+			TEX[3] = t0123[0][2];
 			TEX[0] &= 0x1ff;
 			TEX[1] &= 0x1ff;
 			TEX[2] &= 0x1ff;
