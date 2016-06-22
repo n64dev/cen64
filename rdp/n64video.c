@@ -193,7 +193,7 @@ static struct cen64_device *cen64;
 
 FILE *rdp_exec;
 
-uint32_t rdp_cmd_data[0x10000];
+uint32_t rdp_cmd_data[0x10000] __attribute__((aligned(16)));
 uint32_t rdp_cmd_ptr = 0;
 uint32_t rdp_cmd_cur = 0;
 uint32_t ptr_onstart = 0;
@@ -5551,9 +5551,7 @@ void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut
 	}
 }
 
-static void edgewalker_for_prims_unpack(const int32_t* ewdata, __m128i *out1, __m128i *out2) {
-  __m128i v1 = _mm_load_si128(ewdata + 8);
-  __m128i v2 = _mm_load_si128(ewdata + 12);
+static void edgewalker_for_prims_unpack_from_xmm(__m128i v1, __m128i v2, __m128i *out1, __m128i *out2) {
   __m128i lshift, rshift;
 
   lshift = _mm_slli_epi32(v1, 16);
@@ -5568,7 +5566,8 @@ static void edgewalker_for_prims_unpack(const int32_t* ewdata, __m128i *out1, __
   *out2 = _mm_unpackhi_epi16(v2, v1);
 }
 
-static void edgewalker_for_prims(int32_t* ewdata)
+static void edgewalker_for_prims(int32_t* ewdata, __m128i ewdata_8_11, __m128i ewdata_12_15, __m128i ewdata_16_19, __m128i ewdata_20_23,
+                                                  __m128i ewdata_24_27, __m128i ewdata_28_31, __m128i ewdata_32_35, __m128i ewdata_36_39)
 {
   __m128i rgba_v, drgbadx_v, drgbade_v, drgbady_v;
   __m128i stwz_v, dstwzdx_v, dstwzde_v, dstwzdy_v;
@@ -5607,10 +5606,10 @@ static void edgewalker_for_prims(int32_t* ewdata)
 	dxhdy = SIGN(ewdata[5], 30);
 	dxmdy = SIGN(ewdata[7], 30);
 
-  edgewalker_for_prims_unpack(ewdata, &rgba_v, &drgbadx_v);
-  edgewalker_for_prims_unpack(ewdata + 8, &drgbade_v, &drgbady_v);
-  edgewalker_for_prims_unpack(ewdata + 16, &stwz_v, &dstwzdx_v);
-  edgewalker_for_prims_unpack(ewdata + 24, &dstwzde_v, &dstwzdy_v);
+  edgewalker_for_prims_unpack_from_xmm(ewdata_8_11, ewdata_12_15, &rgba_v, &drgbadx_v);
+  edgewalker_for_prims_unpack_from_xmm(ewdata_16_19, ewdata_20_23, &drgbade_v, &drgbady_v);
+  edgewalker_for_prims_unpack_from_xmm(ewdata_24_27, ewdata_28_31, &stwz_v, &dstwzdx_v);
+  edgewalker_for_prims_unpack_from_xmm(ewdata_32_35, ewdata_36_39, &dstwzde_v, &dstwzdy_v);
 
   // TODO: Get rid of these by adjusting the decoder.
   stwz_v    = _mm_insert_epi32(stwz_v, ewdata[40], 3);
@@ -6513,69 +6512,80 @@ static void rdp_tri_noshade(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
-	memset(&ewdata[8], 0, 36 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
+	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
+                               _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128());
 }
 
 static void rdp_tri_noshade_z(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
-	memset(&ewdata[8], 0, 32 * sizeof(int32_t));
 	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 8], 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
+                               _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128());
 }
 
 static void rdp_tri_tex(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
-	memset(&ewdata[8], 0, 16 * sizeof(int32_t));
-	memcpy(&ewdata[24], &rdp_cmd_data[rdp_cmd_cur + 8], 16 * sizeof(int32_t));
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20));
 }
 
 static void rdp_tri_tex_z(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
-	memset(&ewdata[8], 0, 16 * sizeof(int32_t));
-	memcpy(&ewdata[24], &rdp_cmd_data[rdp_cmd_cur + 8], 16 * sizeof(int32_t));
 	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 24], 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20));
 }
 
 static void rdp_tri_shade(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 24 * sizeof(int32_t));
-	memset(&ewdata[24], 0, 20 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
+	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
+	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+    _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20), _mm_setzero_si128(),
+    _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128());
 }
 
 static void rdp_tri_shade_z(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 24 * sizeof(int32_t));
-	memset(&ewdata[24], 0, 16 * sizeof(int32_t));
+	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
 	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 24], 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+    _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20), _mm_setzero_si128(),
+    _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128());
 }
 
 static void rdp_tri_texshade(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 40 * sizeof(int32_t));
+	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 24), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 28),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 32), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 36));
 }
 
 static void rdp_tri_texshade_z(uint32_t w1, uint32_t w2)
 {
 	int32_t ewdata[44];
-	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 44 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata);
+	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
+  memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 40], 4 * sizeof(int32_t));
+	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 24), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 28),
+                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 32), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 36));
 }
 
 static void rdp_tex_rect(uint32_t w1, uint32_t w2)
@@ -6605,7 +6615,7 @@ static void rdp_tex_rect(uint32_t w1, uint32_t w2)
 	xlint = (xl >> 2) & 0x3ff;
 	xhint = (xh >> 2) & 0x3ff;
 
-	int32_t ewdata[44];
+	int32_t ewdata[44] __attribute__((aligned(16)));
 	ewdata[0] = (0x24 << 24) | ((0x80 | tilenum) << 16) | yl;
 	ewdata[1] = (yl << 16) | yh;
 	ewdata[2] = (xlint << 16) | ((xl & 3) << 14);
@@ -6614,7 +6624,6 @@ static void rdp_tex_rect(uint32_t w1, uint32_t w2)
 	ewdata[5] = 0;
 	ewdata[6] = (xlint << 16) | ((xl & 3) << 14);
 	ewdata[7] = 0;
-	memset(&ewdata[8], 0, 16 * sizeof(uint32_t));
 	ewdata[24] = (s << 16) | t;
 	ewdata[25] = 0;
 	ewdata[26] = ((dsdx >> 5) << 16);
@@ -6635,7 +6644,9 @@ static void rdp_tex_rect(uint32_t w1, uint32_t w2)
 
 	
 
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
+                               _mm_load_si128(ewdata + 24), _mm_load_si128(ewdata + 28), _mm_load_si128(ewdata + 32),
+                               _mm_load_si128(ewdata + 36));
 }
 
 static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
@@ -6665,7 +6676,7 @@ static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
 	xlint = (xl >> 2) & 0x3ff;
 	xhint = (xh >> 2) & 0x3ff;
 
-	int32_t ewdata[44];
+	int32_t ewdata[44] __attribute__((aligned(16)));
 	ewdata[0] = (0x25 << 24) | ((0x80 | tilenum) << 16) | yl;
 	ewdata[1] = (yl << 16) | yh;
 	ewdata[2] = (xlint << 16) | ((xl & 3) << 14);
@@ -6674,7 +6685,6 @@ static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
 	ewdata[5] = 0;
 	ewdata[6] = (xlint << 16) | ((xl & 3) << 14);
 	ewdata[7] = 0;
-	memset(&ewdata[8], 0, 16 * sizeof(int32_t));
 	ewdata[24] = (s << 16) | t;
 	ewdata[25] = 0;
 	
@@ -6694,7 +6704,9 @@ static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
 	ewdata[39] = 0;
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
 
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
+                               _mm_load_si128(ewdata + 24), _mm_load_si128(ewdata + 28), _mm_load_si128(ewdata + 32),
+                               _mm_load_si128(ewdata + 36));
 }
 
 static void rdp_sync_load(uint32_t w1, uint32_t w2)
@@ -7070,9 +7082,10 @@ static void rdp_fill_rect(uint32_t w1, uint32_t w2)
 	ewdata[5] = 0;
 	ewdata[6] = (xlint << 16) | ((xl & 3) << 14);
 	ewdata[7] = 0;
-	memset(&ewdata[8], 0, 36 * sizeof(int32_t));
+	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
 
-	edgewalker_for_prims(ewdata);
+	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
+                               _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128());
 }
 
 static void rdp_set_fill_color(uint32_t w1, uint32_t w2)
