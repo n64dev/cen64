@@ -56,11 +56,6 @@ if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
 
     set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
-
-    if (NOT APPLE)
-      set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
-    endif ()
-#    file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/gcc/*.s)
   endif (${GCC_MACHINE} MATCHES "x86.*" OR ${GCC_MACHINE} MATCHES "i.86.*")
 
   if (${GCC_MACHINE} STREQUAL "arm")
@@ -139,11 +134,6 @@ if (${CMAKE_C_COMPILER_ID} MATCHES Clang)
 
     set(CEN64_ARCH_DIR "x86_64")
     include_directories(${PROJECT_SOURCE_DIR}/os/unix/x86_64)
-
-    if (NOT APPLE)
-      set(ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
-    endif ()
-#    file(GLOB ASM_SOURCES ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/gcc/*.s)
   endif (${CLANG_MACHINE} MATCHES "x86.*" OR ${CLANG_MACHINE} MATCHES "i.86.*")
 
   if (${CLANG_MACHINE} STREQUAL "arm")
@@ -253,11 +243,6 @@ set(ARCH_X86_64_SOURCES
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/rsp.c
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vrsq.c
 )
-
-if (NOT APPLE)
-  list(APPEND ARCH_X86_64_SOURCES
-    ${PROJECT_SOURCE_DIR}/arch/x86_64/gcc/context.s)
-endif ()
 
 set(BUS_SOURCES
   ${PROJECT_SOURCE_DIR}/bus/controller.c
