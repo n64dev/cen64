@@ -3877,7 +3877,7 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 
 
 
-
+  __m128i prev_v = _mm_loadl_epi64(prev);
 	int32_t maxs, maxt, invt0r, invt0g, invt0b, invt0a;
 	int32_t sfrac, tfrac, invsf, invtf;
 	int upper = 0;
@@ -3970,8 +3970,8 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
           __m128i prod_b, sub_a, sub_b;
           __m128i cv_v = _mm_set1_epi32(0x80);
 
-          __m128i prod_a = _mm_set1_epi32(prev[0] | (prev[1] << 16));
-          summand = _mm_set1_epi16(prev[2]);
+          __m128i prod_a = _mm_shuffle_epi32(prev_v, _MM_SHUFFLE(0, 0, 0, 0));
+          summand = _mm_shufflelo_epi16(prev_v, _MM_SHUFFLE(2, 2, 2, 2));
 
 					if (UPPER)
 					{
@@ -4009,8 +4009,8 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 				}
 				else
 				{
-          prod_a = _mm_set1_epi32(prev[0] | (prev[1] << 16));
-          summand = _mm_set1_epi16(prev[2]);
+          prod_a = _mm_shuffle_epi32(prev_v, _MM_SHUFFLE(0, 0, 0, 0));
+          summand = _mm_shufflelo_epi16(prev_v, _MM_SHUFFLE(2, 2, 2, 2));
 				}
 
         invt0r_v = _mm_slli_epi32(_mm_add_epi32(invt0r_v, _mm_unpacklo_epi16(t3_v, _mm_setzero_si128())), 6);
@@ -4028,7 +4028,7 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 			else
 				fetch_texel_entlut(t0123[0], sss1, sst1, tilenum);
 			if (convert)
-        memcpy(t0123[0], prev, sizeof(COLOR));
+        _mm_storel_epi64(t0123, prev_v);
 
 			if (tile[tilenum].format == FORMAT_YUV)
 			{
@@ -4066,13 +4066,15 @@ static rdp_inline void texture_pipeline_cycle(COLOR TEX, COLOR prev, int32_t SSS
 		{
 			if (!convert)
         memcpy(TEX, t0123[0], sizeof(COLOR));
-			else
-				TEX[0] = TEX[1] = TEX[2] = TEX[3] = prev[2];
+			else {
+        __m128i tex_v = _mm_shufflelo_epi16(prev_v, _MM_SHUFFLE(2, 2, 2, 2));
+        _mm_storel_epi64(TEX, tex_v);
+      }
 		}
 		else
 		{
 			if (convert)
-        memcpy(t0123[0], prev, sizeof(COLOR));
+        _mm_storel_epi64(t0123, prev_v);
 			t0123[0][0] = SIGN(t0123[0][0], 9);
 			t0123[0][1] = SIGN(t0123[0][1], 9); 
 			t0123[0][2] = SIGN(t0123[0][2], 9);
