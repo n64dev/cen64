@@ -9145,11 +9145,18 @@ static rdp_inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int 
 
 	switch(zanded)
 	{
-		case 0: *z = sz & 0x3ffff;						break;
-		case 1:	*z = sz & 0x3ffff;						break;
-		case 2: *z = 0x3ffff;							break;
-		case 3: *z = 0;									break;
+    case 0:
+    case 1:
+      *z = sz;
+      break;
+
+    case 2:
+    case 3:
+      *z = (0x3FFFD + zanded);
+      break;
 	}
+
+  *z &= 0x3FFFF;
 }
 
 uint32_t vi_integer_sqrt(uint32_t a)
