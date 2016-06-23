@@ -6494,19 +6494,7 @@ static int rdp_dasm(char *buffer)
 	return rdp_command_length[command];
 }
 
-
-
-
-
-
-
-static void rdp_invalid(uint32_t w1, uint32_t w2)
-{
-}
-
-static void rdp_noop(uint32_t w1, uint32_t w2)
-{
-}
+static void rdp_donothing(uint32_t w1, uint32_t w2) {}
 
 static void rdp_tri_noshade(uint32_t w1, uint32_t w2)
 {
@@ -6707,22 +6695,6 @@ static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)
 	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
                                _mm_load_si128(ewdata + 24), _mm_load_si128(ewdata + 28), _mm_load_si128(ewdata + 32),
                                _mm_load_si128(ewdata + 36));
-}
-
-static void rdp_sync_load(uint32_t w1, uint32_t w2)
-{
-	
-}
-
-static void rdp_sync_pipe(uint32_t w1, uint32_t w2)
-{
-	
-	
-}
-
-static void rdp_sync_tile(uint32_t w1, uint32_t w2)
-{
-	
 }
 
 static void rdp_sync_full(uint32_t w1, uint32_t w2)
@@ -6996,18 +6968,6 @@ static void rdp_load_block(uint32_t w1, uint32_t w2)
 
 }
 
-static void rdp_load_tlut(uint32_t w1, uint32_t w2)
-{
-	
-
-	tile_tlut_common_cs_decoder(w1, w2);
-}
-
-static void rdp_load_tile(uint32_t w1, uint32_t w2)
-{
-	tile_tlut_common_cs_decoder(w1, w2);
-}
-
 void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2)
 {
 	int tilenum = (w2 >> 24) & 0x7;
@@ -7204,23 +7164,23 @@ static void rdp_set_color_image(uint32_t w1, uint32_t w2)
 static void (*const rdp_command_table[64])(uint32_t w1, uint32_t w2) =
 {
 	
-	rdp_noop,			rdp_invalid,			rdp_invalid,			rdp_invalid,
-	rdp_invalid,		rdp_invalid,			rdp_invalid,			rdp_invalid,
+	rdp_donothing,			rdp_donothing,			rdp_donothing,			rdp_donothing,
+	rdp_donothing,		rdp_donothing,			rdp_donothing,			rdp_donothing,
 	rdp_tri_noshade,	rdp_tri_noshade_z,		rdp_tri_tex,			rdp_tri_tex_z,
 	rdp_tri_shade,		rdp_tri_shade_z,		rdp_tri_texshade,		rdp_tri_texshade_z,
 	
-	rdp_invalid,		rdp_invalid,			rdp_invalid,			rdp_invalid,
-	rdp_invalid,		rdp_invalid,			rdp_invalid,			rdp_invalid,
-	rdp_invalid,		rdp_invalid,			rdp_invalid,			rdp_invalid,
-	rdp_invalid,		rdp_invalid,			rdp_invalid,			rdp_invalid,
+	rdp_donothing,		rdp_donothing,			rdp_donothing,			rdp_donothing,
+	rdp_donothing,		rdp_donothing,			rdp_donothing,			rdp_donothing,
+	rdp_donothing,		rdp_donothing,			rdp_donothing,			rdp_donothing,
+	rdp_donothing,		rdp_donothing,			rdp_donothing,			rdp_donothing,
 	
-	rdp_invalid,		rdp_invalid,			rdp_invalid,			rdp_invalid,
-	rdp_tex_rect,		rdp_tex_rect_flip,		rdp_sync_load,			rdp_sync_pipe,
-	rdp_sync_tile,		rdp_sync_full,			rdp_set_key_gb,			rdp_set_key_r,
+	rdp_donothing,		rdp_donothing,			rdp_donothing,			rdp_donothing,
+	rdp_tex_rect,		rdp_tex_rect_flip,		rdp_donothing,			rdp_donothing,
+	rdp_donothing,		rdp_sync_full,			rdp_set_key_gb,			rdp_set_key_r,
 	rdp_set_convert,	rdp_set_scissor,		rdp_set_prim_depth,		rdp_set_other_modes,
 	
-	rdp_load_tlut,		rdp_invalid,			rdp_set_tile_size,		rdp_load_block,
-	rdp_load_tile,		rdp_set_tile,			rdp_fill_rect,			rdp_set_fill_color,
+	tile_tlut_common_cs_decoder,		rdp_donothing,			rdp_set_tile_size,		rdp_load_block,
+	tile_tlut_common_cs_decoder,		rdp_set_tile,			rdp_fill_rect,			rdp_set_fill_color,
 	rdp_set_fog_color,	rdp_set_blend_color,	rdp_set_prim_color,		rdp_set_env_color,
 	rdp_set_combine,	rdp_set_texture_image,	rdp_set_mask_image,		rdp_set_color_image
 };
