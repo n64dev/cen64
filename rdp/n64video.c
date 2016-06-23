@@ -504,8 +504,8 @@ static void rdp_set_other_modes(uint32_t w1, uint32_t w2);
 static void fetch_texel(COLOR color, int s, int t, uint32_t tilenum);
 static void fetch_texel_entlut(COLOR color, int s, int t, uint32_t tilenum);
 static void fetch_texel_quadro_rgba16(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, const int16_t colors[4]);
-static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum);
-static void fetch_texel_entlut_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum);
+static rdp_inline void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum);
+static void rdp_inline fetch_texel_entlut_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c3, int s0, int s1, int t0, int t1, uint32_t tilenum);
 static void tile_tlut_common_cs_decoder(uint32_t w1, uint32_t w2);
 static void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut, int dsinc, int dtinc);
 static void get_tmem_idx(int s, int t, uint32_t tilenum, uint32_t* idx0, uint32_t* idx1, uint32_t* idx2, uint32_t* idx3, uint32_t* bit3flipped, uint32_t* hibit);
@@ -2941,6 +2941,8 @@ static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c
 			taddr3 ^= xort;
 			
 			uint32_t p, i; 
+      int16_t colors[4];
+      __m128i temp_v;
 					
 			taddr0 &= 0xfff;
 			taddr1 &= 0xfff;
@@ -2949,39 +2951,34 @@ static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c
 			ands = s0 & 1;
 			p = TMEM[taddr0];
 			p = ands ? (p & 0xf) : (p >> 4);
-			i = p & 0xe;
-			i = (i << 4) | (i << 1) | (i >> 2);
-			color0123[0][0] = i;
-			color0123[0][1] = i;
-			color0123[0][2] = i;
+			colors[0] = p & 0xe;
 			color0123[0][3] = (p & 0x1) ? 0xff : 0;
 			p = TMEM[taddr2];
 			p = ands ? (p & 0xf) : (p >> 4);
-			i = p & 0xe;
-			i = (i << 4) | (i << 1) | (i >> 2);
-			color0123[2][0] = i;
-			color0123[2][1] = i;
-			color0123[2][2] = i;
+			colors[2] = p & 0xe;
 			color0123[2][3] = (p & 0x1) ? 0xff : 0;
 
 			ands = s1 & 1;
 			p = TMEM[taddr1];
 			p = ands ? (p & 0xf) : (p >> 4);
-			i = p & 0xe;
-			i = (i << 4) | (i << 1) | (i >> 2);
-			color0123[1][0] = i;
-			color0123[1][1] = i;
-			color0123[1][2] = i;
+			colors[1] = p & 0xe;
 			color0123[1][3] = (p & 0x1) ? 0xff : 0;
 			p = TMEM[taddr3];
 			p = ands ? (p & 0xf) : (p >> 4);
-			i = p & 0xe;
-			i = (i << 4) | (i << 1) | (i >> 2);
-			color0123[3][0] = i;
-			color0123[3][1] = i;
-			color0123[3][2] = i;
+			colors[3] = p & 0xe;
 			color0123[3][3] = (p & 0x1) ? 0xff : 0;
 			
+      temp_v = _mm_loadl_epi64(colors);
+      temp_v = _mm_or_si128(_mm_or_si128(_mm_slli_epi16(temp_v, 4), _mm_slli_epi16(temp_v, 1)), _mm_srli_epi16(temp_v, 2));
+      *c0 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(0,0,0,0));
+      *c1 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(1,1,1,1));
+      *c2 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(2,2,2,2));
+      *c3 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(3,3,3,3));
+      *c0 = _mm_insert_epi16(*c0, color0123[0][3], 3);
+      *c1 = _mm_insert_epi16(*c1, color0123[1][3], 3);
+      *c2 = _mm_insert_epi16(*c2, color0123[2][3], 3);
+      *c3 = _mm_insert_epi16(*c3, color0123[3][3], 3);
+      return;
 		}
 		break;
 	case TEXEL_IA8:
@@ -2998,41 +2995,37 @@ static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c
 			taddr3 ^= xort;
 			
 			uint32_t p, i;
+      int16_t colors[4];
+      __m128i temp_v;
 
 			taddr0 &= 0xfff;
 			taddr1 &= 0xfff;
 			taddr2 &= 0xfff;
 			taddr3 &= 0xfff;
 			p = TMEM[taddr0];
-			i = p & 0xf0;
-			i |= (i >> 4);
-			color0123[0][0] = i;
-			color0123[0][1] = i;
-			color0123[0][2] = i;
+			colors[0] = p & 0xf0;
 			color0123[0][3] = ((p & 0xf) << 4) | (p & 0xf);
 			p = TMEM[taddr1];
-			i = p & 0xf0;
-			i |= (i >> 4);
-			color0123[1][0] = i;
-			color0123[1][1] = i;
-			color0123[1][2] = i;
+			colors[1] = p & 0xf0;
 			color0123[1][3] = ((p & 0xf) << 4) | (p & 0xf);
 			p = TMEM[taddr2];
-			i = p & 0xf0;
-			i |= (i >> 4);
-			color0123[2][0] = i;
-			color0123[2][1] = i;
-			color0123[2][2] = i;
+			colors[2] = p & 0xf0;
 			color0123[2][3] = ((p & 0xf) << 4) | (p & 0xf);
 			p = TMEM[taddr3];
-			i = p & 0xf0;
-			i |= (i >> 4);
-			color0123[3][0] = i;
-			color0123[3][1] = i;
-			color0123[3][2] = i;
+			colors[3] = p & 0xf0;
 			color0123[3][3] = ((p & 0xf) << 4) | (p & 0xf);
-			
-			
+
+      temp_v = _mm_loadl_epi64(colors);
+      temp_v = _mm_or_si128(_mm_srli_epi16(temp_v, 4), temp_v);
+      *c0 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(0,0,0,0));
+      *c1 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(1,1,1,1));
+      *c2 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(2,2,2,2));
+      *c3 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(3,3,3,3));
+      *c0 = _mm_insert_epi16(*c0, color0123[0][3], 3);
+      *c1 = _mm_insert_epi16(*c1, color0123[1][3], 3);
+      *c2 = _mm_insert_epi16(*c2, color0123[2][3], 3);
+      *c3 = _mm_insert_epi16(*c3, color0123[3][3], 3);
+      return;
 		}
 		break;
 	case TEXEL_IA16:
@@ -3124,32 +3117,33 @@ static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c
 			taddr2 ^= xort;
 			taddr3 ^= xort;
 			
-			uint32_t p, c0, c1, c2, c3; 
+			uint32_t p;
 			
 			taddr0 &= 0xfff;
 			taddr1 &= 0xfff;
 			taddr2 &= 0xfff;
 			taddr3 &= 0xfff;
+      int16_t colors[4];
+      __m128i temp_v;
 			ands = s0 & 1;
 			p = TMEM[taddr0];
-			c0 = ands ? (p & 0xf) : (p >> 4);
-			c0 |= (c0 << 4);
-			color0123[0][0] = color0123[0][1] = color0123[0][2] = color0123[0][3] = c0;
+			colors[0] = ands ? (p & 0xf) : (p >> 4);
 			p = TMEM[taddr2];
-			c2 = ands ? (p & 0xf) : (p >> 4);
-			c2 |= (c2 << 4);
-			color0123[2][0] = color0123[2][1] = color0123[2][2] = color0123[2][3] = c2;
+			colors[2] = ands ? (p & 0xf) : (p >> 4);
 
 			ands = s1 & 1;
 			p = TMEM[taddr1];
-			c1 = ands ? (p & 0xf) : (p >> 4);
-			c1 |= (c1 << 4);
-			color0123[1][0] = color0123[1][1] = color0123[1][2] = color0123[1][3] = c1;
+			colors[1] = ands ? (p & 0xf) : (p >> 4);
 			p = TMEM[taddr3];
-			c3 = ands ? (p & 0xf) : (p >> 4);
-			c3 |= (c3 << 4);
-			color0123[3][0] = color0123[3][1] = color0123[3][2] = color0123[3][3] = c3;
-				
+			colors[3] = ands ? (p & 0xf) : (p >> 4);
+
+      temp_v = _mm_loadl_epi64(colors);
+      temp_v = _mm_or_si128(_mm_slli_epi16(temp_v, 4), temp_v);
+      *c0 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(0,0,0,0));
+      *c1 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(1,1,1,1));
+      *c2 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(2,2,2,2));
+      *c3 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(3,3,3,3));
+      return;
 		}
 		break;
 	case TEXEL_I8:
@@ -3171,26 +3165,21 @@ static void fetch_texel_quadro(__m128i *c0, __m128i *c1, __m128i *c2, __m128i *c
 			taddr1 &= 0xfff;
 			taddr2 &= 0xfff;
 			taddr3 &= 0xfff;
-			p = TMEM[taddr0];
-			color0123[0][0] = p;
-			color0123[0][1] = p;
-			color0123[0][2] = p;
-			color0123[0][3] = p;
-			p = TMEM[taddr1];
-			color0123[1][0] = p;
-			color0123[1][1] = p;
-			color0123[1][2] = p;
-			color0123[1][3] = p;
-			p = TMEM[taddr2];
-			color0123[2][0] = p;
-			color0123[2][1] = p;
-			color0123[2][2] = p;
-			color0123[2][3] = p;
-			p = TMEM[taddr3];
-			color0123[3][0] = p;
-			color0123[3][1] = p;
-			color0123[3][2] = p;
-			color0123[3][3] = p;
+
+      int16_t colors[4];
+      __m128i temp_v;
+
+			colors[0] = TMEM[taddr0];
+			colors[1] = TMEM[taddr1];
+			colors[2] = TMEM[taddr2];
+			colors[3] = TMEM[taddr3];
+
+      temp_v = _mm_loadl_epi64(colors);
+      *c0 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(0,0,0,0));
+      *c1 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(1,1,1,1));
+      *c2 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(2,2,2,2));
+      *c3 = _mm_shufflelo_epi16(temp_v, _MM_SHUFFLE(3,3,3,3));
+      return;
 		}
 		break;
 	case TEXEL_I16:
