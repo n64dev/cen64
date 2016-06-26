@@ -21,7 +21,7 @@ void transfer_pak_read(struct controller *controller,
     uint8_t *recv_buf, uint8_t recv_bytes) {
 
   uint16_t address = send_buf[1] << 8 | send_buf[2];
-  address &= ~0b11111; // lower 5 bits are address CRC
+  address &= ~0x1F; // lower 5 bits are address CRC
   // printf("read from %04x\n", address);
 
   // get enable/disable state
@@ -34,7 +34,7 @@ void transfer_pak_read(struct controller *controller,
       // cart inserted, return mode and mode changed
       if (controller->tpak_rom.ptr != NULL) {
         memset(recv_buf, controller->tpak_mode == 1 ? 0x89 : 0x80, 0x20);
-        recv_buf[0] |= controller->tpak_mode_changed ? 0b100 : 0;
+        recv_buf[0] |= controller->tpak_mode_changed ? 0x4 : 0;
       }
 
       // cart not inserted
@@ -60,7 +60,7 @@ void transfer_pak_write(struct controller *controller,
     uint8_t *recv_buf, uint8_t recv_bytes) {
 
   uint16_t address = send_buf[1] << 8 | send_buf[2];
-  address &= ~0b11111; // lower 5 bits are address CRC
+  address &= ~0x1F; // lower 5 bits are address CRC
   // printf("write to %04x\n", address);
 
   // set bank

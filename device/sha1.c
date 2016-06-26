@@ -35,10 +35,14 @@
  * implemented by Jun-ichiro itojun Itoh <itojun@itojun.org>
  */
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <string.h>
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/time.h>
+#endif
 
 #include "sha1.h"
 

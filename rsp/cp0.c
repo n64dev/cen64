@@ -57,8 +57,13 @@ uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
       return *((volatile uint32_t *) &rsp->regs[RSP_CP0_REGISTER_SP_STATUS]);
 
     case RSP_CP0_REGISTER_SP_RESERVED:
+#ifdef _WIN32
+      return _InterlockedCompareExchange((volatile long *)
+          (&rsp->regs[RSP_CP0_REGISTER_SP_RESERVED]), 1, 0) == 0;
+#else
       return !__sync_bool_compare_and_swap(
           &rsp->regs[RSP_CP0_REGISTER_SP_RESERVED], 0, 1);
+#endif
 
     case RSP_CP0_REGISTER_DMA_FULL:
     case RSP_CP0_REGISTER_DMA_BUSY:
@@ -158,9 +163,15 @@ void rsp_status_write(struct rsp *rsp, uint32_t rt) {
       status &= ~SP_STATUS_SIG7;
     else if (rt & SP_SET_SIG7)
       status |= SP_STATUS_SIG7;
+#ifdef _WIN32
+  } while (!(_InterlockedCompareExchange((volatile long *)
+    (&rsp->regs[RSP_CP0_REGISTER_SP_STATUS]),
+    status, prev_status) == prev_status));
+#else
   } while (!__sync_bool_compare_and_swap(
     &rsp->regs[RSP_CP0_REGISTER_SP_STATUS],
     prev_status, status));
+#endif
 }
 
 // Writes a value to the control processor.
@@ -193,7 +204,11 @@ void rsp_write_cp0_reg(struct rsp *rsp, unsigned dest, uint32_t rt) {
     case RSP_CP0_REGISTER_SP_RESERVED:
       if (rt == 0) {
         *((volatile uint32_t *) &rsp->regs[RSP_CP0_REGISTER_SP_RESERVED]) = 0;
+#ifdef _MSC_VER
+        _ReadWriteBarrier();
+#else
         __asm__ __volatile__("" ::: "memory");
+#endif
       }
 
       break;

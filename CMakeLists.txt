@@ -360,7 +360,11 @@ set(VR4300_SOURCES
 if (DEFINED WIN32)
   include_directories(${PROJECT_SOURCE_DIR}/os/winapi)
   set(EXTRA_OS_EXE WIN32)
-  set(EXTRA_OS_LIBS mingw32 opengl32 winmm ws2_32)
+  if (NOT MSVC)
+    set(EXTRA_OS_LIBS mingw32 opengl32 winmm ws2_32)
+  else ()
+    set(EXTRA_OS_LIBS opengl32 winmm ws2_32)
+  endif ()
 
   list(APPEND OS_SOURCES
     ${OS_COMMON_SOURCES}
@@ -406,6 +410,7 @@ endif (NOT MSVC)
 
 add_executable(cen64
   ${EXTRA_OS_EXE}
+  ${ASM_SOURCES}
   ${AI_SOURCES}
   ${ARCH_X86_64_SOURCES}
   ${BUS_SOURCES}

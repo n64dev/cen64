@@ -220,7 +220,7 @@ typedef struct
 	int32_t invalyscan[4];
 } SPAN;
 
-static SPAN span[1024];
+cen64_align(static SPAN span[1024], 16);
 uint8_t cvgbuf[1024];
 
 
@@ -6983,7 +6983,6 @@ static void rdp_tex_rect(uint32_t w1, uint32_t w2)
 	
 
 	edgewalker_for_prims(ewdata);
-
 }
 
 static void rdp_tex_rect_flip(uint32_t w1, uint32_t w2)

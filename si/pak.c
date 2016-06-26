@@ -8,6 +8,9 @@
 // 'LICENSE', which is part of this source code package.
 //
 
+#ifdef _WIN32
+#include <wchar.h>
+#endif
 #include "pak.h"
 #include "pak_transfer.h"
 
@@ -18,12 +21,12 @@ int controller_pak_read(struct controller *controller,
     uint8_t *recv_buf, uint8_t recv_bytes) {
 
   uint16_t address = send_buf[1] << 8 | send_buf[2];
-  address &= ~0b11111; // lower 5 bits are address CRC
+  address &= ~0x1F; // lower 5 bits are address CRC
   // printf("read from %04x\n", address);
 
   if (controller->pak == PAK_MEM) {
     if (address <= MEMPAK_SIZE - 0x20)
-      memcpy(recv_buf, controller->mempak_save.ptr + address, 0x20);
+      memcpy(recv_buf, (uint8_t *) (controller->mempak_save.ptr) + address, 0x20);
     else
       assert(0 && "invalid mempak address");
   }
@@ -48,7 +51,7 @@ int controller_pak_write(struct controller *controller,
     uint8_t *recv_buf, uint8_t recv_bytes) {
 
   uint16_t address = send_buf[1] << 8 | send_buf[2];
-  address &= ~0b11111; // lower 5 bits are a checksum
+  address &= ~0x1F; // lower 5 bits are a checksum
   // printf("write to %04x\n", address);
 
   if (address == 0x8000) {
@@ -61,7 +64,7 @@ int controller_pak_write(struct controller *controller,
 
   else if (controller->pak == PAK_MEM) {
     if (address <= MEMPAK_SIZE - 0x20)
-      memcpy(controller->mempak_save.ptr + address, send_buf + 3, 0x20);
+      memcpy((uint8_t *) (controller->mempak_save.ptr) + address, send_buf + 3, 0x20);
     else
       assert(0 && "Attempt to write past end of mempak");
   }
