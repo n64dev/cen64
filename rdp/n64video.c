@@ -193,7 +193,7 @@ static struct cen64_device *cen64;
 
 FILE *rdp_exec;
 
-uint32_t rdp_cmd_data[0x10000] __attribute__((aligned(16)));
+uint32_t rdp_cmd_data[0x10000];
 uint32_t rdp_cmd_ptr = 0;
 uint32_t rdp_cmd_cur = 0;
 uint32_t ptr_onstart = 0;
@@ -6511,8 +6511,8 @@ static void rdp_tri_tex(uint32_t w1, uint32_t w2)
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20));
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 20));
 }
 
 static void rdp_tri_tex_z(uint32_t w1, uint32_t w2)
@@ -6521,8 +6521,8 @@ static void rdp_tri_tex_z(uint32_t w1, uint32_t w2)
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
 	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 24], 4 * sizeof(int32_t));
 	edgewalker_for_prims(ewdata, _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128(),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20));
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 20));
 }
 
 static void rdp_tri_shade(uint32_t w1, uint32_t w2)
@@ -6530,8 +6530,8 @@ static void rdp_tri_shade(uint32_t w1, uint32_t w2)
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
-    _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20), _mm_setzero_si128(),
+	edgewalker_for_prims(ewdata, _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+    _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 20), _mm_setzero_si128(),
     _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128());
 }
 
@@ -6540,8 +6540,8 @@ static void rdp_tri_shade_z(uint32_t w1, uint32_t w2)
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
 	memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 24], 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
-    _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20), _mm_setzero_si128(),
+	edgewalker_for_prims(ewdata, _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+    _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 20), _mm_setzero_si128(),
     _mm_setzero_si128(), _mm_setzero_si128(), _mm_setzero_si128());
 }
 
@@ -6550,10 +6550,10 @@ static void rdp_tri_texshade(uint32_t w1, uint32_t w2)
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
 	memset(&ewdata[40], 0, 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 24), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 28),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 32), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 36));
+	edgewalker_for_prims(ewdata, _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 20),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 24), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 28),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 32), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 36));
 }
 
 static void rdp_tri_texshade_z(uint32_t w1, uint32_t w2)
@@ -6561,10 +6561,10 @@ static void rdp_tri_texshade_z(uint32_t w1, uint32_t w2)
 	int32_t ewdata[44];
 	memcpy(&ewdata[0], &rdp_cmd_data[rdp_cmd_cur], 8 * sizeof(int32_t));
   memcpy(&ewdata[40], &rdp_cmd_data[rdp_cmd_cur + 40], 4 * sizeof(int32_t));
-	edgewalker_for_prims(ewdata, _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 12),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 20),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 24), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 28),
-                               _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 32), _mm_load_si128(rdp_cmd_data + rdp_cmd_cur + 36));
+	edgewalker_for_prims(ewdata, _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 8), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 12),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 16), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 20),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 24), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 28),
+                               _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 32), _mm_loadu_si128(rdp_cmd_data + rdp_cmd_cur + 36));
 }
 
 static void rdp_tex_rect(uint32_t w1, uint32_t w2)
