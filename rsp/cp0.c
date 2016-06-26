@@ -59,7 +59,7 @@ uint32_t rsp_read_cp0_reg(struct rsp *rsp, unsigned src) {
     case RSP_CP0_REGISTER_SP_RESERVED:
 #ifdef _WIN32
       return _InterlockedCompareExchange((volatile long *)
-          (&rsp->regs[RSP_CP0_REGISTER_SP_RESERVED]), 1, 0) == 0;
+          (&rsp->regs[RSP_CP0_REGISTER_SP_RESERVED]), 1, 0) != 0;
 #else
       return !__sync_bool_compare_and_swap(
           &rsp->regs[RSP_CP0_REGISTER_SP_RESERVED], 0, 1);
