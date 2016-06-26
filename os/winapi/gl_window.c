@@ -181,6 +181,7 @@ cen64_gl_window cen64_gl_window_create(
 
   SetPixelFormat(window->hdc, window->pixel_format, &config->pfd);
 
+  window->exit_requested = false;
   cen64_mutex_create(&window->event_mutex);
   cen64_mutex_create(&window->render_mutex);
   window->thread_id = GetCurrentThreadId();
