@@ -12,7 +12,9 @@
 #include "bus/address.h"
 #include "vr4300/cpu.h"
 #include "vr4300/interface.h"
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #define MI_EBUS_TEST_MODE 0x0080
 #define MI_INIT_MODE      0x0100
