@@ -250,8 +250,11 @@ void rsp_set_flags(uint16_t *flags, uint16_t rt) {
     {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF},
   };
 
-  for (i = 0; i < 4; i++, rt >>= 4)
-    memcpy(flags + i * 4, array[rt & 0xF], sizeof(array[0]));
+  for (i = 0; i < 2; i++, rt >>= 4)
+    memcpy(flags + 8 + i * 4, array[rt & 0xF], sizeof(array[0]));
+
+  for (i = 0; i < 2; i++, rt >>= 4)
+    memcpy(flags + 0 + i * 4, array[rt & 0xF], sizeof(array[0]));
 }
 
 // Allocates dynarec buffers for SSE2.
