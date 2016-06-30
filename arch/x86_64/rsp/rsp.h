@@ -182,6 +182,8 @@ static inline int16_t rsp_get_flags(const uint16_t *flags) {
   );
 }
 
+void rsp_set_flags(uint16_t *flags, uint16_t rt);
+
 // Zeroes out a vector register.
 static inline __m128i rsp_vzero(void) {
   return _mm_setzero_si128();

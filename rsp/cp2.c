@@ -24,11 +24,31 @@ void RSP_CFC2(struct rsp *rsp,
   dest = GET_RT(iw);
   rd = GET_RD(iw);
 
+  // TODO: verify on hardware
   if ((src = rd & 0x3) == 0x3)
     src = 2;
 
   exdf_latch->result.result = rsp_get_flags(cp2->flags[src].e);
   exdf_latch->result.dest = dest;
+}
+
+//
+// CTC2
+//
+void RSP_CTC2(struct rsp *rsp,
+  uint32_t iw, uint32_t rs, uint32_t rt) {
+  struct rsp_cp2 *cp2 = &rsp->cp2;
+  unsigned rd, dest;
+
+  rd = GET_RD(iw);
+
+  // TODO: verify on hardware
+  if ((dest = rd & 0x3) >= 0x2) {
+    rt &= 0xFF;
+    dest = 2;
+  }
+
+  rsp_set_flags(cp2->flags[dest].e, rt);
 }
 
 //

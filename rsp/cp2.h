@@ -51,6 +51,7 @@ struct rsp_cp2 {
 };
 
 void RSP_CFC2(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
+void RSP_CTC2(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
 void RSP_MFC2(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
 void RSP_MTC2(struct rsp *rsp, uint32_t iw, uint32_t rs, uint32_t rt);
 
