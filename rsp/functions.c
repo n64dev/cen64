@@ -238,7 +238,7 @@ void RSP_BGEZAL_BLTZAL(
   bool is_ge = iw >> 16 & 0x1;
   bool cmp = (int32_t) rs < 0;
 
-  exdf_latch->result.result = 0x1000 | (rdex_latch->common.pc + 8);
+  exdf_latch->result.result = rdex_latch->common.pc + 8;
   exdf_latch->result.dest = RSP_REGISTER_RA;
 
   if (cmp == is_ge)
@@ -344,7 +344,7 @@ void RSP_J_JAL(struct rsp *rsp,
   uint32_t target = iw << 2 & 0xFFC;
   uint32_t mask = rsp_branch_mask(iw, 26); //is_jal
 
-  exdf_latch->result.result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
+  exdf_latch->result.result = (rdex_latch->common.pc + 8) & 0xFFC;
   exdf_latch->result.dest = RSP_REGISTER_RA & ~mask;
 
   ifrd_latch->pc = target;
@@ -363,7 +363,7 @@ void RSP_JALR_JR(struct rsp *rsp,
   uint32_t mask = rsp_branch_mask(iw, 0); // is_jalr
   unsigned rd = GET_RD(iw);
 
-  exdf_latch->result.result = 0x1000 | ((rdex_latch->common.pc + 8) & 0xFFC);
+  exdf_latch->result.result = (rdex_latch->common.pc + 8) & 0xFFC;
   exdf_latch->result.dest = rd & ~mask;
 
   ifrd_latch->pc = rs & 0xFFC;
