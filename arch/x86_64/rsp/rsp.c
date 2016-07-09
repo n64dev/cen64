@@ -56,7 +56,7 @@ cen64_align(const uint16_t shuffle_keys[16][8], CACHE_LINE_SIZE)  = {
 //
 
 // Shift left LUT; shifts in zeros from the right, one byte at a time.
-cen64_align(const uint16_t sll_b2l_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(static const uint16_t sll_b2l_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x8000, 0x0102, 0x0304, 0x0506, 0x0708, 0x090A, 0x0B0C, 0x0D0E},
   {0x8080, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D},
@@ -79,7 +79,7 @@ cen64_align(const uint16_t sll_b2l_keys[16][8], CACHE_LINE_SIZE) = {
 };
 
 // Shift left LUT; shirts low order to high order, inserting 0x00s.
-cen64_align(const uint16_t sll_l2b_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(static const uint16_t sll_l2b_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x0180, 0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0E0C},
   {0x8080, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D},
@@ -102,7 +102,7 @@ cen64_align(const uint16_t sll_l2b_keys[16][8], CACHE_LINE_SIZE) = {
 };
 
 // Shift right LUT; shifts in zeros from the left, one byte at a time.
-cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(static const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x0102, 0x0304, 0x0506, 0x0708, 0x090A, 0x0B0C, 0x0D0E, 0x0F80},
   {0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x8080},
@@ -124,7 +124,7 @@ cen64_align(const uint16_t srl_b2l_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0F80, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080, 0x8080},
 };
 
-cen64_align(const uint16_t ror_b2l_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(static const uint16_t ror_b2l_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x0102, 0x0304, 0x0506, 0x0708, 0x090A, 0x0B0C, 0x0D0E, 0x0F00},
   {0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x0001},
@@ -147,7 +147,7 @@ cen64_align(const uint16_t ror_b2l_keys[16][8], CACHE_LINE_SIZE) = {
 };
 
 // Rotate left LUT; rotates high order bytes back to low order.
-cen64_align(const uint16_t rol_l2b_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(static const uint16_t rol_l2b_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x010E, 0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0F0C},
   {0x0E0F, 0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D},
@@ -170,7 +170,7 @@ cen64_align(const uint16_t rol_l2b_keys[16][8], CACHE_LINE_SIZE) = {
 };
 
 // Rotate right LUT; rotates high order bytes back to low order.
-cen64_align(const uint16_t ror_l2b_keys[16][8], CACHE_LINE_SIZE) = {
+cen64_align(static const uint16_t ror_l2b_keys[16][8], CACHE_LINE_SIZE) = {
   {0x0001, 0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F},
   {0x0300, 0x0502, 0x0704, 0x0906, 0x0B08, 0x0D0A, 0x0F0C, 0x010E},
   {0x0203, 0x0405, 0x0607, 0x0809, 0x0A0B, 0x0C0D, 0x0E0F, 0x0001},
