@@ -402,10 +402,13 @@ void rsp_vload_group2(struct rsp *rsp, uint32_t addr, unsigned element,
     memcpy(&datalow, rsp->mem + aligned_addr_lo, sizeof(datalow));
     memcpy(&datahigh, rsp->mem + aligned_addr_hi, sizeof(datahigh));
 
-    // TODO: Test for endian issues?
+    // TODO: Get rid of GNU extensions.
+    datalow = __builtin_bswap64(datalow);
+    datahigh = __builtin_bswap64(datahigh);
     datahigh >>= ((8 - offset) << 3);
     datalow <<= (offset << 3);
     datalow = datahigh | datalow;
+    datalow = __builtin_bswap64(datalow);
 
     data = _mm_loadl_epi64((__m128i *) &datalow);
   }
