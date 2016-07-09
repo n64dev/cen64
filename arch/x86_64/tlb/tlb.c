@@ -35,7 +35,7 @@ unsigned tlb_probe(const struct cen64_tlb *tlb,
   __m128i asid = _mm_set1_epi8(vasid);
 
   // Scan 8 entries in parallel.
-  for (i = 0; i < 32 / 8; i += 8) {
+  for (i = 0; i < 32; i += 8) {
     __m128i check_l, check_h, vpn_check;
     __m128i check_a, check_g, asid_check;
     __m128i check;
