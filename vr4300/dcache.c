@@ -76,7 +76,7 @@ void vr4300_dcache_create_dirty_exclusive(
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
   set_tag(line, paddr & ~0xFFFU);
-  set_dirty(line);
+  line->metadata |= 0x3;
 }
 
 // Fills an instruction cache line with data.

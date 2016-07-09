@@ -465,14 +465,19 @@ cen64_cold static int vr4300_cacheop_dc_wb_invalidate(
   if (!(line = vr4300_dcache_wb_invalidate(&vr4300->dcache, vaddr)))
     return 0;
 
-  bus_address = vr4300_dcache_get_tag(line, vaddr);
-  memcpy(data, line->data, sizeof(data));
+  if (line->metadata & 0x2) {
+    bus_address = vr4300_dcache_get_tag(line, vaddr);
+    memcpy(data, line->data, sizeof(data));
 
-  for (i = 0; i < 4; i++)
-    bus_write_word(vr4300, bus_address + i * 4,
-      data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
+    for (i = 0; i < 4; i++)
+      bus_write_word(vr4300, bus_address + i * 4,
+        data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
 
-  return DCACHE_ACCESS_DELAY;
+    line->metadata &= ~0x2;
+    return DCACHE_ACCESS_DELAY;
+  }
+
+  return 0;
 }
 
 cen64_cold static int vr4300_cacheop_dc_create_dirty_ex(
