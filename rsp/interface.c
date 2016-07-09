@@ -55,8 +55,8 @@ void rsp_dma_read(struct rsp *rsp) {
       j += 4;
     } while (j < length);
 
-    rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] += length;
-    rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] += length + skip;
+    rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] += length + skip;
+    rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] += length;
   } while(++i <= count);
 }
 
