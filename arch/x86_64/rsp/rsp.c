@@ -443,14 +443,11 @@ void rsp_vload_group4(struct rsp *rsp, uint32_t addr, unsigned element,
   __m128i data = _mm_load_si128((__m128i *) (rsp->mem + aligned_addr));
   __m128i dkey;
 
-  if (rsp->pipeline.exdf_latch.request.type == RSP_MEM_REQUEST_QUAD)
-    ror = 16 - element + offset;
+  // TODO: Use of element is almost certainly wrong...
+  ror = 16 - element + offset;
 
-  // TODO: How is this adjusted for LRV when e != 0?
-  else {
+  if (rsp->pipeline.exdf_latch.request.type != RSP_MEM_REQUEST_QUAD)
     dqm = _mm_cmpeq_epi8(_mm_setzero_si128(), dqm);
-    ror = 16 - offset;
-  }
 
 #ifndef __SSSE3__
   data = sse2_pshufb(data, ror_b2l_keys[ror & 0xF]);
