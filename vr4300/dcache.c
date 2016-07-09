@@ -98,7 +98,7 @@ uint32_t vr4300_dcache_get_taglo(struct vr4300_dcache *dcache, uint64_t vaddr) {
   struct vr4300_dcache_line *line = get_line(dcache, vaddr);
 
   uint32_t taglo = ((line->metadata & 0x1) << 1) | ((line->metadata & 0x2) >> 1);
-  return taglo | (line->metadata >> 4 & 0x0FFFFF00U);
+  return (taglo << 6) | (line->metadata >> 4 & 0x0FFFFF00U);
 }
 
 // Initializes the instruction cache.
