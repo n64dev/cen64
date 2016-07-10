@@ -15,11 +15,11 @@
 #include <AL/alc.h>
 
 struct cen64_ai_context {
-  ALuint buffers[2];
+  ALuint buffers[3];
+  ALuint unqueued_buffers;
   ALuint cur_frequency;
   ALuint frequency;
   ALuint source;
-  ALuint unqueued_buffers;
 
   ALCdevice *dev;
   ALCcontext *ctx;
