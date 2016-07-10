@@ -131,10 +131,12 @@ void ai_dma(struct ai_controller *ai) {
 
       alBufferData(buffer, AL_FORMAT_STEREO16, buf_ptr, length, freq);
       alSourceQueueBuffers(ai->ctx.source, 1, &buffer);
-
-      if (ai->ctx.unqueued_buffers == 2)
-        alSourcePlay(ai->ctx.source);
     }
+
+    alGetSourcei(ai->ctx.source, AL_SOURCE_STATE, &val);
+
+    if (val != AL_PLAYING)
+      alSourcePlay(ai->ctx.source);
   }
 
   // If the length was zero, just interrupt now?
