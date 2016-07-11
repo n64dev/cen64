@@ -12,7 +12,7 @@
 #define __ri_controller_h__
 #include "common.h"
 
-#define MAX_RDRAM_SIZE 0x800000U
+#define MAX_RDRAM_SIZE (0x800000U + 0x400000U)
 
 struct bus_controller *bus;
 

@@ -613,7 +613,6 @@ static int16_t k4 = 0, k5 = 0;
 static int16_t lod_frac = 0;
 uint32_t DebugMode = 0, DebugMode2 = 0; int32_t DebugMode3 = 0;
 int debugcolor = 0;
-uint8_t hidden_bits[0x400000];
 struct {uint32_t shift; uint32_t add;} z_dec_table[8] = {
      {6, 0x00000},
      {5, 0x20000},
@@ -706,26 +705,26 @@ CVtcmaskDERIVATIVE cvarray[0x100];
 #define PAIRREAD16(rdst, hdst, in)		\
 {										\
 	(in) &= (RDRAM_MASK >> 1);			\
-	if (likely((in) <= idxlim16)) {(rdst) = byteswap_16(rdram_16[(in)]); (hdst) = hidden_bits[(in)];}	\
+	if (likely((in) <= idxlim16)) {(rdst) = byteswap_16(rdram_16[(in)]); (hdst) = rdram8[0x800000 + (in)];}	\
 	else {(rdst) = (hdst) = 0;}			\
 }
 
 #define PAIRWRITE16(in, rval, hval)		\
 {										\
 	(in) &= (RDRAM_MASK >> 1);			\
-	if (likely((in) <= idxlim16)) {rdram_16[(in)] = byteswap_16(rval); hidden_bits[(in)] = (hval);}	\
+	if (likely((in) <= idxlim16)) {rdram_16[(in)] = byteswap_16(rval); rdram8[0x800000 + (in)] = (hval);}	\
 }
 
 #define PAIRWRITE32(in, rval, hval0, hval1)	\
 {											\
 	(in) &= (RDRAM_MASK >> 2);				\
-	if (likely((in) <= idxlim32)) {rdram[(in)] = byteswap_32(rval); hidden_bits[(in) << 1] = (hval0); hidden_bits[((in) << 1) + 1] = (hval1);}	\
+	if (likely((in) <= idxlim32)) {rdram[(in)] = byteswap_32(rval); rdram8[0x800000 + ((in) << 1)] = (hval0); rdram8[0x800000 + (((in) << 1) + 1)] = (hval1);}	\
 }
 
 #define PAIRWRITE8(in, rval, hval)	\
 {									\
 	(in) &= RDRAM_MASK;				\
-	if (likely((in) <= plim)) {rdram_8[(in)] = (rval); if ((in) & 1) hidden_bits[(in) >> 1] = (hval);}	\
+	if (likely((in) <= plim)) {rdram_8[(in)] = (rval); if ((in) & 1) rdram8[0x800000 + ((in) >> 1)] = (hval);}	\
 }
 
 struct onetime
@@ -1060,7 +1059,7 @@ cen64_cold int angrylion_rdp_init(struct cen64_device *device)
 	
 	memset(TMEM, 0, 0x1000);
 
-	memset(hidden_bits, 3, sizeof(hidden_bits));
+  memset(device->ri.ram + 0x800000, 3, 0x400000);
 	
 	
 
