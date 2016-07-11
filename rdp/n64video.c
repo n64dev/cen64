@@ -706,26 +706,26 @@ CVtcmaskDERIVATIVE cvarray[0x100];
 #define PAIRREAD16(rdst, hdst, in)		\
 {										\
 	(in) &= (RDRAM_MASK >> 1);			\
-	if ((in) <= idxlim16) {(rdst) = byteswap_16(rdram_16[(in)]); (hdst) = hidden_bits[(in)];}	\
+	if (likely((in) <= idxlim16)) {(rdst) = byteswap_16(rdram_16[(in)]); (hdst) = hidden_bits[(in)];}	\
 	else {(rdst) = (hdst) = 0;}			\
 }
 
 #define PAIRWRITE16(in, rval, hval)		\
 {										\
 	(in) &= (RDRAM_MASK >> 1);			\
-	if ((in) <= idxlim16) {rdram_16[(in)] = byteswap_16(rval); hidden_bits[(in)] = (hval);}	\
+	if (likely((in) <= idxlim16)) {rdram_16[(in)] = byteswap_16(rval); hidden_bits[(in)] = (hval);}	\
 }
 
 #define PAIRWRITE32(in, rval, hval0, hval1)	\
 {											\
 	(in) &= (RDRAM_MASK >> 2);				\
-	if ((in) <= idxlim32) {rdram[(in)] = byteswap_32(rval); hidden_bits[(in) << 1] = (hval0); hidden_bits[((in) << 1) + 1] = (hval1);}	\
+	if (likely((in) <= idxlim32)) {rdram[(in)] = byteswap_32(rval); hidden_bits[(in) << 1] = (hval0); hidden_bits[((in) << 1) + 1] = (hval1);}	\
 }
 
 #define PAIRWRITE8(in, rval, hval)	\
 {									\
 	(in) &= RDRAM_MASK;				\
-	if ((in) <= plim) {rdram_8[(in)] = (rval); if ((in) & 1) hidden_bits[(in) >> 1] = (hval);}	\
+	if (likely((in) <= plim)) {rdram_8[(in)] = (rval); if ((in) & 1) hidden_bits[(in) >> 1] = (hval);}	\
 }
 
 struct onetime
