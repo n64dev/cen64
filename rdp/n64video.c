@@ -602,8 +602,7 @@ static rdp_inline void get_nexttexel0_2cycle(int32_t st[2], __m128i stwz, __m128
 static rdp_inline void video_max_optimized(uint32_t* Pixels, uint32_t* penumin, uint32_t* penumax, int numofels);
 static void calculate_clamp_diffs(uint32_t tile);
 static void calculate_tile_derivs(uint32_t tile);
-static void rgb_dither_complete(int* r, int* g, int* b, int dith);
-static void rgb_dither_nothing(int* r, int* g, int* b, int dith);
+static rdp_inline void rgb_dither_complete(int* r, int* g, int* b, int dith);
 static void get_dither_noise_complete(int x, int y, int* cdith, int* adith);
 static void get_dither_only(int x, int y, int* cdith, int* adith);
 static void get_dither_nothing(int x, int y, int* cdith, int* adith);
@@ -663,11 +662,6 @@ static void (*get_dither_noise_func[3])(int, int, int*, int*) =
 	get_dither_noise_complete, get_dither_only, get_dither_nothing
 };
 
-static void (*rgb_dither_func[2])(int*, int*, int*, int) =
-{
-	rgb_dither_complete, rgb_dither_nothing
-};
-
 static void (*render_spans_1cycle_func[3])(int, int, int, int, __m128i, __m128i, __m128i, __m128i) =
 {
 	render_spans_1cycle_notex, render_spans_1cycle_notexel1, render_spans_1cycle_complete
@@ -683,7 +677,6 @@ void (*fbread2_ptr)(uint32_t, uint32_t*) = fbread2_4;
 void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) = fbwrite_4;
 void (*fbfill_ptr)(uint32_t) = fbfill_4;
 void (*get_dither_noise_ptr)(int, int, int*, int*) = get_dither_noise_complete;
-void (*rgb_dither_ptr)(int*, int*, int*, int) = rgb_dither_complete;
 void (*render_spans_1cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_1cycle_complete;
 void (*render_spans_2cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_2cycle_notexel1;
 
@@ -1919,7 +1912,10 @@ static rdp_inline int blender_1cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, i
 				b = *blender2a_b[0];
 			}
 
-			rgb_dither_ptr(&r, &g, &b, dith);
+
+	    if (other_modes.rgb_dither_sel != 3)
+			  rgb_dither_complete(&r, &g, &b, dith);
+
 			*fr = r;
 			*fg = g;
 			*fb = b;
@@ -1977,7 +1973,9 @@ static rdp_inline int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, i
 			}
 
 			
-			rgb_dither_ptr(&r, &g, &b, dith);
+	    if (other_modes.rgb_dither_sel != 3)
+			  rgb_dither_complete(&r, &g, &b, dith);
+
 			*fr = r;
 			*fg = g;
 			*fb = b;
@@ -6826,11 +6824,6 @@ void deduce_derivatives()
 
 	other_modes.f.rgb_alpha_dither = (other_modes.rgb_dither_sel << 2) | other_modes.alpha_dither_sel;
 
-	if (other_modes.rgb_dither_sel == 3)
-		rgb_dither_ptr = rgb_dither_func[1];
-	else
-		rgb_dither_ptr = rgb_dither_func[0];
-
 	int texel1_used_in_cc1 = 0, texel0_used_in_cc1 = 0, texel0_used_in_cc0 = 0, texel1_used_in_cc0 = 0;
 	int texels_in_cc0 = 0, texels_in_cc1 = 0;
 	int lod_frac_used_in_cc1 = 0, lod_frac_used_in_cc0 = 0;
@@ -8854,11 +8847,6 @@ static void rgb_dither_complete(int* r, int* g, int* b, int dith)
 	*b = *b + (ditherdiff & replacesign);
 
 }
-
-static void rgb_dither_nothing(int* r, int* g, int* b, int dith)
-{
-}
-
 
 static void get_dither_noise_complete(int x, int y, int* cdith, int* adith)
 {
