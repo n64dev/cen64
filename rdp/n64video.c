@@ -520,7 +520,10 @@ static void render_spans_2cycle_complete(int start, int end, int tilenum, int fl
 static void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
 static void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
 static void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128i spans_drgba_v, __m128i spans_dstwz_v, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v);
-static void render_spans_fill(int start, int end, int flip);
+static void render_spans_fill_4(int start, int end, int flip);
+static void render_spans_fill_8(int start, int end, int flip);
+static void render_spans_fill_16(int start, int end, int flip);
+static void render_spans_fill_32(int start, int end, int flip);
 static void render_spans_copy(int start, int end, int tilenum, int flip, __m128i spans_dstwz_v);
 static rdp_inline void combiner_1cycle(int adseed, uint32_t* curpixel_cvg);
 static rdp_inline void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* acalpha);
@@ -550,10 +553,6 @@ static void fbwrite_8(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uin
 static void fbwrite_rgba_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
 static void fbwrite_non_rgba_16(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
 static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, uint32_t blend_en, uint32_t curpixel_cvg, uint32_t curpixel_memcvg);
-static void fbfill_4(uint32_t curpixel);
-static void fbfill_8(uint32_t curpixel);
-static void fbfill_16(uint32_t curpixel);
-static void fbfill_32(uint32_t curpixel);
 static __m128i fbread_4(uint32_t num, uint32_t* curpixel_memcvg, __m128i memory_color);
 static __m128i fbread_8(uint32_t num, uint32_t* curpixel_memcvg, __m128i memory_color);
 static __m128i fbread_rgba_16(uint32_t curpixel, uint32_t* curpixel_memcvg, __m128i memory_color);
@@ -642,9 +641,9 @@ static void (*fbwrite_func[2][4])(uint32_t, uint32_t, uint32_t, uint32_t, uint32
 	{fbwrite_4, fbwrite_8, fbwrite_rgba_16, fbwrite_32}
 };
 
-static void (*fbfill_func[4])(uint32_t) =
+static int32_t (*render_spans_fill_func[4])(uint32_t, uint32_t, int32_t) =
 {
-	fbfill_4, fbfill_8, fbfill_16, fbfill_32
+	render_spans_fill_4, render_spans_fill_8, render_spans_fill_16, render_spans_fill_32
 };
 
 static void (*render_spans_1cycle_func[3])(int, int, int, int, __m128i, __m128i, __m128i, __m128i) =
@@ -659,9 +658,9 @@ static void (*render_spans_2cycle_func[4])(int, int, int, int, __m128i, __m128i,
 
 __m128i (*fbread_ptr)(uint32_t, uint32_t*, __m128i) = fbread_4;
 void (*fbwrite_ptr)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) = fbwrite_4;
-void (*fbfill_ptr)(uint32_t) = fbfill_4;
 void (*render_spans_1cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_1cycle_complete;
 void (*render_spans_2cycle_ptr)(int, int, int, int, __m128i, __m128i, __m128i, __m128i) = render_spans_2cycle_notexel1;
+void (*render_spans_fill_ptr)(int, int, int) = render_spans_fill_4;
 
 typedef struct{
 	uint8_t cvg;
@@ -5069,14 +5068,14 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip, __m128
 	}
 }
 
-void render_spans_fill(int start, int end, int flip)
+void render_spans_fill_4(int start, int end, int flip)
 {
-	if (unlikely(fb_size == PIXEL_SIZE_4BIT))
-	{
-		rdp_pipeline_crashed = 1;
-		return;
-	}
+  rdp_pipeline_crashed = 1;
+	return;
+}
 
+void render_spans_fill_8(int start, int end, int flip)
+{
 	int i, j;
 	
 	int fastkillbits = other_modes.image_read_en || other_modes.z_compare_en;
@@ -5088,6 +5087,7 @@ void render_spans_fill(int start, int end, int flip)
 	int prevxstart;
 	int curpixel = 0;
 	int x, length;
+  uint32_t fb;
 				
 	for (i = start; i <= end; i++)
 	{
@@ -5111,16 +5111,124 @@ void render_spans_fill(int start, int end, int flip)
 				return;
 			}
 
-			
-			
-			
-			
-			for (j = 0; j <= length; j++)
+      for (j = 0, fb = fb_address + curpixel; j <= length; j++, fb += xinc) {
+	      uint32_t val = (fill_color >> (((fb & 3) ^ 3) << 3)) & 0xff;
+	      uint8_t hval = ((val & 1) << 1) | (val & 1);
+	      PAIRWRITE8(fb, val, hval);
+      }
+
+			if (unlikely(slowkillbits && length >= 0))
 			{
-				fbfill_ptr(curpixel);
-				x += xinc;
-				curpixel += xinc;
+				if (!onetimewarnings.fillmbitcrashes)
+					debug("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x z_source_sel %x. RDP crashed",
+					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en, other_modes.z_source_sel);
+				onetimewarnings.fillmbitcrashes = 1;
+				rdp_pipeline_crashed = 1;
+				return;
 			}
+		}
+	}
+}
+
+void render_spans_fill_16(int start, int end, int flip)
+{
+	int i, j;
+	
+	int fastkillbits = other_modes.image_read_en || other_modes.z_compare_en;
+	int slowkillbits = other_modes.z_update_en && !other_modes.z_source_sel && !fastkillbits;
+
+	int xinc = flip ? 1 : -1;
+
+	int xstart = 0, xendsc;
+	int prevxstart;
+	int curpixel = 0;
+	int x, length;
+  uint32_t fb;
+				
+	for (i = start; i <= end; i++)
+	{
+		prevxstart = xstart;
+		xstart = span[i].lx;
+		xendsc = span[i].rx;
+
+		x = xendsc;
+		curpixel = fb_width * i + x;
+		length = flip ? (xstart - xendsc) : (xendsc - xstart);
+
+		if (span[i].validline)
+		{
+			if (unlikely(fastkillbits && length >= 0))
+			{
+				if (!onetimewarnings.fillmbitcrashes)
+					debug("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x. RDP crashed",
+					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en);
+				onetimewarnings.fillmbitcrashes = 1;
+				rdp_pipeline_crashed = 1;
+				return;
+			}
+
+	    uint16_t val;
+	    uint8_t hval;
+
+      for (j = 0, fb = (fb_address >> 1) + curpixel; j <= length; j++, fb += xinc) {
+        val = (fb & 1 ? fill_color : fill_color >> 16) & 0xffff;
+	      hval = ((val & 1) << 1) | (val & 1);
+	      PAIRWRITE16(fb, val, hval);
+      }
+
+			if (unlikely(slowkillbits && length >= 0))
+			{
+				if (!onetimewarnings.fillmbitcrashes)
+					debug("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x z_source_sel %x. RDP crashed",
+					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en, other_modes.z_source_sel);
+				onetimewarnings.fillmbitcrashes = 1;
+				rdp_pipeline_crashed = 1;
+				return;
+			}
+		}
+	}
+}
+
+void render_spans_fill_32(int start, int end, int flip)
+{
+	int i, j;
+	
+	int fastkillbits = other_modes.image_read_en || other_modes.z_compare_en;
+	int slowkillbits = other_modes.z_update_en && !other_modes.z_source_sel && !fastkillbits;
+
+	int xinc = flip ? 1 : -1;
+
+	int xstart = 0, xendsc;
+	int prevxstart;
+	int curpixel = 0;
+	int x, length;
+  uint32_t fb;
+				
+	for (i = start; i <= end; i++)
+	{
+		prevxstart = xstart;
+		xstart = span[i].lx;
+		xendsc = span[i].rx;
+
+		x = xendsc;
+		curpixel = fb_width * i + x;
+		length = flip ? (xstart - xendsc) : (xendsc - xstart);
+
+		if (span[i].validline)
+		{
+			if (unlikely(fastkillbits && length >= 0))
+			{
+				if (!onetimewarnings.fillmbitcrashes)
+					debug("render_spans_fill: image_read_en %x z_update_en %x z_compare_en %x. RDP crashed",
+					other_modes.image_read_en, other_modes.z_update_en, other_modes.z_compare_en);
+				onetimewarnings.fillmbitcrashes = 1;
+				rdp_pipeline_crashed = 1;
+				return;
+			}
+
+      for (j = 0, fb = (fb_address >> 2) + curpixel; j <= length; j++, fb += xinc) {
+	      PAIRWRITE32(fb, fill_color, (fill_color & 0x10000) ? 3 : 0, (fill_color & 0x1) ? 3 : 0);
+      }
 
 			if (unlikely(slowkillbits && length >= 0))
 			{
@@ -5903,7 +6011,7 @@ static void edgewalker_for_prims(int32_t* ewdata, __m128i ewdata_8_11, __m128i e
 		case CYCLE_TYPE_1: render_spans_1cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_dstwzdy_v, spans_cdrgba_drgbady_v); break;
 		case CYCLE_TYPE_2: render_spans_2cycle_ptr(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_drgba_v, spans_dstwz_v, spans_dstwzdy_v, spans_cdrgba_drgbady_v); break;
 		case CYCLE_TYPE_COPY: render_spans_copy(yhlimit >> 2, yllimit >> 2, tilenum, flip, spans_dstwz_v); break;
-		case CYCLE_TYPE_FILL: render_spans_fill(yhlimit >> 2, yllimit >> 2, flip); break;
+		case CYCLE_TYPE_FILL: render_spans_fill_ptr(yhlimit >> 2, yllimit >> 2, flip); break;
 		default: debug("cycle_type %d", other_modes.cycle_type); break;
 	}
 	
@@ -7116,7 +7224,7 @@ static void rdp_set_color_image(uint32_t w1, uint32_t w2)
 	
 	fbread_ptr = fbread_func[fb_format == FORMAT_RGBA][fb_size];
 	fbwrite_ptr = fbwrite_func[fb_format == FORMAT_RGBA][fb_size];
-	fbfill_ptr = fbfill_func[fb_size];
+	render_spans_fill_ptr = render_spans_fill_func[fb_size];
 }
 
 
@@ -7612,38 +7720,6 @@ static void fbwrite_32(uint32_t curpixel, uint32_t r, uint32_t g, uint32_t b, ui
 	finalcolor |= (finalcvg << 5);
 
 	PAIRWRITE32(fb, finalcolor, (g & 1) ? 3 : 0, 0);
-}
-
-static void fbfill_4(uint32_t curpixel)
-{
-	rdp_pipeline_crashed = 1;
-}
-
-static void fbfill_8(uint32_t curpixel)
-{
-	uint32_t fb = fb_address + curpixel;
-	uint32_t val = (fill_color >> (((fb & 3) ^ 3) << 3)) & 0xff;
-	uint8_t hval = ((val & 1) << 1) | (val & 1);
-	PAIRWRITE8(fb, val, hval);
-}
-
-static void fbfill_16(uint32_t curpixel)
-{
-	uint16_t val;
-	uint8_t hval;
-	uint32_t fb = (fb_address >> 1) + curpixel;
-	if (fb & 1)
-		val = fill_color & 0xffff;
-	else
-		val = (fill_color >> 16) & 0xffff;
-	hval = ((val & 1) << 1) | (val & 1);
-	PAIRWRITE16(fb, val, hval);
-}
-
-static void fbfill_32(uint32_t curpixel)
-{
-	uint32_t fb = (fb_address >> 2) + curpixel;
-	PAIRWRITE32(fb, fill_color, (fill_color & 0x10000) ? 3 : 0, (fill_color & 0x1) ? 3 : 0);
 }
 
 static __m128i fbread_4(uint32_t curpixel, uint32_t* curpixel_memcvg, __m128i memory_color)
