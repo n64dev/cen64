@@ -15,6 +15,7 @@
 #include "gl_window.h"
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
+#include "os/cpuid.h"
 
 #include "bus/controller.h"
 #include "ai/controller.h"
@@ -31,6 +32,7 @@
 
 cen64_cold int angrylion_rdp_init(struct cen64_device *device);
 cen64_cold static int device_debug_spin(struct cen64_device *device);
+cen64_cold static void device_schedule_threads(unsigned num_threads, cen64_thread **threads);
 cen64_flatten cen64_hot static int device_multithread_spin(struct cen64_device *device);
 cen64_flatten cen64_hot static int device_spin(struct cen64_device *device);
 
@@ -138,11 +140,15 @@ void device_exit(struct bus_controller *bus) {
 // Create a device and proceed to the main loop.
 void device_run(struct cen64_device *device) {
   fpu_state_t saved_fpu_state;
+  char vendor[13];
 
   // TODO: Preserve host registers pinned to the device.
   saved_fpu_state = fpu_get_state();
   vr4300_cp1_init(&device->vr4300);
   rsp_late_init(&device->rsp);
+
+  // Set thread affinities for Intel CPUs.
+  cen64_cpuid_get_vendor(vendor);
 
   // Spin the device until we return (from setjmp).
   if (unlikely(device->debug_sfd > 0))
@@ -226,10 +232,29 @@ CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *opaque) {
   return CEN64_THREAD_RETURN_VAL;
 }
 
+//
+// Set affinity of threads to maximize performance.
+// There should be at least 3 threads, possibly 4:
+//
+// 0: device/vr4300 thread
+// 1: os thread
+// 2: rdp thread
+// 3: (if present) rcp thread
+//
+cen64_cold static void device_schedule_threads(
+    unsigned num_threads, cen64_thread **threads) {
+
+  cen64_thread_setaffinity(threads[0], 1 << 0);
+  cen64_thread_setaffinity(threads[1], 1 << 1);
+  cen64_thread_setaffinity(threads[2], 1 << 2);
+
+  if (num_threads > 3)
+    cen64_thread_setaffinity(threads[3], 1 << 3);
+}
+
 // Continually cycles the device until setjmp returns.
 int device_multithread_spin(struct cen64_device *device) {
-  cen64_thread vr4300_thread;
-
+  cen64_thread *device_threads[4];
   device->other_thread_is_waiting = false;
 
   if (cen64_mutex_create(&device->sync_mutex)) {
@@ -243,16 +268,23 @@ int device_multithread_spin(struct cen64_device *device) {
     return 1;
   }
 
-  if (cen64_thread_create(&vr4300_thread, run_vr4300_thread, device)) {
+  if (cen64_thread_create(&device->vr4300_thread, run_vr4300_thread, device)) {
     printf("Failed to create the VR4300 thread.\n");
     cen64_cv_destroy(&device->sync_cv);
     cen64_mutex_destroy(&device->sync_mutex);
     return 1;
   }
 
+  device_threads[0] = &device->vr4300_thread;
+  device_threads[1] = &device->os_thread;
+  device_threads[2] = &device->rdp.rdp_thread;
+  device_threads[3] = &device->device_thread;
+
+  device_schedule_threads(4, device_threads);
+
   run_rcp_thread(device);
 
-  cen64_thread_join(&vr4300_thread);
+  cen64_thread_join(&device->vr4300_thread);
   cen64_cv_destroy(&device->sync_cv);
   cen64_mutex_destroy(&device->sync_mutex);
   return 0;
@@ -260,8 +292,16 @@ int device_multithread_spin(struct cen64_device *device) {
 
 // Continually cycles the device until setjmp returns.
 int device_spin(struct cen64_device *device) {
+  cen64_thread *device_threads[3];
+
   if (setjmp(device->bus.unwind_data))
     return 1;
+
+  device_threads[0] = &device->device_thread;
+  device_threads[1] = &device->os_thread;
+  device_threads[2] = &device->rdp.rdp_thread;
+
+  device_schedule_threads(3, device_threads);
 
   while (likely(device->running)) {
     unsigned i;

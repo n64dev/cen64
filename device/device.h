@@ -48,6 +48,11 @@ struct cen64_device {
 
   bool multithread;
   bool other_thread_is_waiting;
+
+  cen64_thread device_thread;
+  cen64_thread os_thread;
+  cen64_thread vr4300_thread;
+
   cen64_mutex sync_mutex;
   cen64_cv sync_cv;
 

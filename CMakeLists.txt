@@ -275,6 +275,7 @@ set(OS_SOURCES
 
 set(OS_POSIX_SOURCES
   ${PROJECT_SOURCE_DIR}/os/posix/alloc.c
+  ${PROJECT_SOURCE_DIR}/os/posix/cpuid.c
   ${PROJECT_SOURCE_DIR}/os/posix/local_time.c
   ${PROJECT_SOURCE_DIR}/os/posix/main.c
   ${PROJECT_SOURCE_DIR}/os/posix/rom_file.c
@@ -284,6 +285,7 @@ set(OS_POSIX_SOURCES
 
 set(OS_WINAPI_SOURCES
   ${PROJECT_SOURCE_DIR}/os/winapi/alloc.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/cpuid.c
   ${PROJECT_SOURCE_DIR}/os/winapi/gl_config.c
   ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c
   ${PROJECT_SOURCE_DIR}/os/winapi/local_time.c
@@ -389,7 +391,7 @@ if (DEFINED UNIX)
   find_package(X11 REQUIRED)
 
   if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_GNU_SOURCE")
   endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
 endif (DEFINED UNIX)
 

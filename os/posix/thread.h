@@ -12,6 +12,7 @@
 #define CEN64_OS_POSIX_THREAD
 #include "common.h"
 #include <pthread.h>
+#include <sched.h>
 
 #define CEN64_THREAD_RETURN_TYPE void*
 #define CEN64_THREAD_RETURN_VAL NULL
@@ -34,11 +35,37 @@ static inline int cen64_thread_create(cen64_thread *t,
 }
 
 //
+// Returns a pointer to the currently executing thread.
+//
+static inline int cen64_thread_get_current(cen64_thread *t) {
+  *t = pthread_self();
+  return 0;
+}
+
+//
 // Join a thread created with cen64_thread_create. Use this to
 // effectively "free" the resources acquired for the thread.
 //
 static inline int cen64_thread_join(cen64_thread *t) {
   return pthread_join(*t, NULL);
+}
+
+//
+// Set the affinity of a thread to the CPU mask given by mask.
+// Assumes the host system has <= 32 CPUs, but good enough for now.
+//
+static inline int cen64_thread_setaffinity(cen64_thread *t, uint32_t mask) {
+  cpu_set_t cpuset;
+  unsigned i;
+
+  CPU_ZERO(&cpuset);
+
+  for (i = 0; mask; i++, mask >>= 1) {
+    if (mask & 0x1)
+      CPU_SET(i, &cpuset);
+  }
+
+  return pthread_setaffinity_np(*t, sizeof(cpuset), &cpuset);
 }
 
 //

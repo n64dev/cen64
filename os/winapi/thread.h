@@ -37,6 +37,14 @@ static inline int cen64_thread_create(cen64_thread *t,
 }
 
 //
+// Returns a pointer to the currently executing thread.
+//
+static inline int cen64_thread_get_current(cen64_thread *t) {
+  *t = GetCurrentThread();
+  return 0;
+}
+
+//
 // Join a thread created with cen64_thread_create. Use this to
 // effectively "free" the resources acquired for the thread.
 //
@@ -45,6 +53,15 @@ static inline int cen64_thread_join(cen64_thread *t) {
     return 1;
 
   return !CloseHandle(*t);
+}
+
+//
+// Set the affinity of a thread to the CPU mask given by mask.
+// Assumes the host system has <= 32 CPUs, but good enough for now.
+//
+static inline int cen64_thread_setaffinity(cen64_thread *t, uint32_t mask) {
+  DWORD winapi_mask = mask;
+  return !SetThreadAffinityMask(*t, &winapi_mask);
 }
 
 //
