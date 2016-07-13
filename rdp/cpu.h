@@ -11,6 +11,7 @@
 #ifndef __rdp_cpu_h__
 #define __rdp_cpu_h__
 #include "common.h"
+#include "thread.h"
 
 enum dp_register {
 #define X(reg) reg,
@@ -26,6 +27,10 @@ extern const char *dp_register_mnemonics[NUM_DP_REGISTERS];
 struct rdp {
   uint32_t regs[NUM_DP_REGISTERS];
   struct bus_controller *bus;
+
+  cen64_thread rdp_thread;
+  cen64_mutex rdp_mutex;
+  cen64_cv rdp_signal;
 };
 
 cen64_cold int rdp_init(struct rdp *rdp, struct bus_controller *bus);

@@ -178,6 +178,7 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
     if (!device->other_thread_is_waiting) {
       device->other_thread_is_waiting = true;
       cen64_cv_wait(&device->sync_cv, &device->sync_mutex);
+      cen64_mutex_unlock(&device->sync_mutex);
     }
 
     else {
@@ -212,6 +213,7 @@ CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *opaque) {
     if (!device->other_thread_is_waiting) {
       device->other_thread_is_waiting = true;
       cen64_cv_wait(&device->sync_cv, &device->sync_mutex);
+      cen64_mutex_unlock(&device->sync_mutex);
     }
 
     else {

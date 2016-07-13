@@ -20,8 +20,8 @@
 typedef HANDLE cen64_thread;
 typedef DWORD (*cen64_thread_func)(LPVOID arg);
 
-typedef HANDLE cen64_mutex;
-typedef HANDLE cen64_cv;
+typedef CRITICAL_SECTION cen64_mutex;
+typedef CONDITION_VARIABLE cen64_cv;
 
 //
 // Threads.
@@ -53,28 +53,26 @@ static inline int cen64_thread_join(cen64_thread *t) {
 
 // Allocates resources for/initializes a mutex.
 static inline int cen64_mutex_create(cen64_mutex *m) {
-  if (unlikely((*m = CreateMutex(NULL, FALSE, NULL)) == NULL))
-    return 1;
-
+  InitializeCriticalSection(m);
   return 0;
 }
 
 // Releases resources acquired by cen64_mutex_create.
 static inline int cen64_mutex_destroy(cen64_mutex *m) {
-  return !CloseHandle(*m);
+  // ???
+  return 0;
 }
 
 // Locks the mutex passed as an argument.
 static inline int cen64_mutex_lock(cen64_mutex *m) {
-  if (likely(WaitForSingleObject(*m, INFINITE) == WAIT_OBJECT_0))
-    return 0;
-
-  return 1;
+  EnterCriticalSection(m);
+  return 0;
 }
 
 // Unlocks the mutex passed as an argument.
 static inline int cen64_mutex_unlock(cen64_mutex *m) {
-  return !ReleaseMutex(*m);
+  LeaveCriticalSection(m);
+  return 0;
 }
 
 //
@@ -83,28 +81,25 @@ static inline int cen64_mutex_unlock(cen64_mutex *m) {
 
 // Allocates resources for/initializes a CV.
 static inline int cen64_cv_create(cen64_cv *cv) {
-  if (unlikely((*cv = CreateSemaphore(NULL, 0, 1, NULL)) == NULL))
-    return 1;
-
+  InitializeConditionVariable(cv);
   return 0;
 }
 
 // Releases resources acquired by cen64_cv_create.
 static inline int cen64_cv_destroy(cen64_cv *cv) {
-  return !CloseHandle(*cv);
+  // ???
+  return 0;
 }
 
 // Releases the mutex and waits until cen64_cv_signal is called.
 static inline int cen64_cv_wait(cen64_cv *cv, cen64_mutex *m) {
-  if (likely(SignalObjectAndWait(*m, *cv, INFINITE, FALSE) == WAIT_OBJECT_0))
-    return 0;
-
-  return 1;
+  return !SleepConditionVariableCS(cv, m, INFINITE);
 }
 
 // Signals the condition variable.
 static inline int cen64_cv_signal(cen64_cv *cv) {
-  return !ReleaseSemaphore(*cv, 1, 0);
+  WakeConditionVariable(cv);
+  return 0;
 }
 
 #endif

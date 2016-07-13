@@ -77,6 +77,7 @@ MarathonMan
 #include "device/device.h"
 #include "ri/controller.h"
 #include "tctables.h"
+#include "thread.h"
 #include "vr4300/interface.h"
 #include <stdint.h>
 #include <string.h>
@@ -196,7 +197,6 @@ FILE *rdp_exec;
 uint32_t rdp_cmd_data[0x10000];
 uint32_t rdp_cmd_ptr = 0;
 uint32_t rdp_cmd_cur = 0;
-uint32_t ptr_onstart = 0;
 
 extern FILE* zeldainfo;
 
@@ -7253,12 +7253,19 @@ static void (*const rdp_command_table[64])(uint32_t w1, uint32_t w2) =
 	rdp_set_combine,	rdp_set_texture_image,	rdp_set_mask_image,		rdp_set_color_image
 };
 
-void rdp_process_list(void)
-{
-	int i, length;
-	uint32_t cmd, cmd_length;
-	uint32_t dp_current_al = dp_current & ~7, dp_end_al = dp_end & ~7; 
+void rdp_thread(void *opaque);
 
+int i, length;
+uint32_t cmd, cmd_length;
+uint32_t dp_current_al, dp_end_al;
+uint32_t remaining_length;
+
+int rdp_process_list(struct rdp *rdp)
+{
+  //if (!(dp_status & DP_STATUS_START_VALID))
+    //dp_current_al = dp_current & ~7;
+  //if (!(dp_status & DP_STATUS_END_VALID))
+    dp_end_al = dp_end & ~7;
 	dp_status &= ~DP_STATUS_FREEZE;
 	
 	
@@ -7267,28 +7274,34 @@ void rdp_process_list(void)
 
 	
 
-	if (dp_end_al <= dp_current_al)
+	if (dp_end_al <= dp_current)
 	{
 		
 		
 		
 		
 		
-		
-		return;
+		return 1;
 	}
 
-	length = (dp_end_al - dp_current_al) >> 2;
-
-	ptr_onstart = rdp_cmd_ptr;
-
+	length = (dp_end_al - dp_current) >> 2;
+	remaining_length = length;
 
 
-	uint32_t remaining_length = length;
+	//dp_current_al >>= 2;
+  dp_status |= (DP_STATUS_START_VALID | DP_STATUS_END_VALID | DP_STATUS_CMD_BUSY | DP_STATUS_DMA_BUSY | DP_STATUS_PIPE_BUSY);
+  dp_status &= ~DP_STATUS_CBUF_READY;
+  return 0;
+}
 
-
-	dp_current_al >>= 2;
-
+void rdp_thread(void *opaque) {
+  struct rdp *rdp = (struct rdp *) opaque;
+  cen64_mutex_lock(&rdp->rdp_mutex);
+  while (1) {
+  dp_status &= ~(DP_STATUS_CMD_BUSY | DP_STATUS_DMA_BUSY | DP_STATUS_START_VALID | DP_STATUS_END_VALID | DP_STATUS_PIPE_BUSY);
+  dp_status |= DP_STATUS_CBUF_READY;
+  cen64_cv_wait(&rdp->rdp_signal, &rdp->rdp_mutex);
+  again:
 	while (remaining_length)
 	{
 
@@ -7299,22 +7312,24 @@ void rdp_process_list(void)
 	{
 		for (i = 0; i < toload; i ++)
 		{
-			rdp_cmd_data[rdp_cmd_ptr] = byteswap_32(rsp_dmem[dp_current_al & 0x3ff]);
+			rdp_cmd_data[rdp_cmd_ptr] = byteswap_32(rsp_dmem[(dp_current >> 2) & 0x3ff]);
 			rdp_cmd_ptr++;
-			dp_current_al++;
+			dp_current+=4;
 		}
 	}
 	else
 	{
 		for (i = 0; i < toload; i ++)
 		{
-			RREADIDX32(rdp_cmd_data[rdp_cmd_ptr], dp_current_al);
+      uint32_t macros_are_bad = dp_current >> 2;
+			RREADIDX32(rdp_cmd_data[rdp_cmd_ptr], macros_are_bad);
 			rdp_cmd_ptr++;
-			dp_current_al++;
+			dp_current+=4;
 		}
 	}
 
 	remaining_length -= toload;
+  cen64_mutex_unlock(&rdp->rdp_mutex);
 
 	while (rdp_cmd_cur < rdp_cmd_ptr && !rdp_pipeline_crashed)
 	{
@@ -7326,18 +7341,21 @@ void rdp_process_list(void)
 		if ((rdp_cmd_ptr - rdp_cmd_cur) < cmd_length)
 		{
 
+        cen64_mutex_lock(&rdp->rdp_mutex);
 			if (!remaining_length)
 			{
 
 				dp_start = dp_current = dp_end;
-				return;
+				goto again;
 			}
 			else
 			{
-				dp_current_al -= (rdp_cmd_ptr - rdp_cmd_cur);
+				dp_current -= (rdp_cmd_ptr - rdp_cmd_cur) << 2;
 				remaining_length += (rdp_cmd_ptr - rdp_cmd_cur);
+        cen64_mutex_unlock(&rdp->rdp_mutex);
 				break;
 			}
+      cen64_mutex_unlock(&rdp->rdp_mutex);
 		}
 		
 		if (LOG_RDP_EXECUTION)
@@ -7365,11 +7383,11 @@ void rdp_process_list(void)
 	};
 	rdp_cmd_ptr = 0;
 	rdp_cmd_cur = 0;
+  cen64_mutex_lock(&rdp->rdp_mutex);
 	};
 
 	dp_start = dp_current = dp_end;
-
-
+  }
 }
 
 static rdp_inline int alpha_compare(int32_t comb_alpha)

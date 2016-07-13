@@ -81,7 +81,7 @@ static inline int cen64_cv_destroy(cen64_cv *cv) {
 
 // Releases the mutex and waits until cen64_cv_signal is called.
 static inline int cen64_cv_wait(cen64_cv *cv, cen64_mutex *m) {
-  return pthread_cond_wait(cv, m) || pthread_mutex_unlock(m);
+  return pthread_cond_wait(cv, m);
 }
 
 // Signals the condition variable.
