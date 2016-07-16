@@ -5113,8 +5113,9 @@ void render_spans_fill_8(int start, int end, int flip)
 
       for (j = 0, fb = fb_address + curpixel; j <= length; j++, fb += xinc) {
 	      uint32_t val = (fill_color >> (((fb & 3) ^ 3) << 3)) & 0xff;
-	      uint8_t hval = ((val & 1) << 1) | (val & 1);
-	      PAIRWRITE8(fb, val, hval);
+        uint8_t hval;
+        hval = (val & 1);
+        hval += hval << 1; // hval = (val & 1) * 3; # lea(%hval, %hval, 2), %hval
       }
 
 			if (unlikely(slowkillbits && length >= 0))
@@ -5172,7 +5173,8 @@ void render_spans_fill_16(int start, int end, int flip)
 
       for (j = 0, fb = (fb_address >> 1) + curpixel; j <= length; j++, fb += xinc) {
         val = (fb & 1 ? fill_color : fill_color >> 16) & 0xffff;
-	      hval = ((val & 1) << 1) | (val & 1);
+        hval = (val & 1);
+        hval += hval << 1; // hval = (val & 1) * 3; # lea(%hval, %hval, 2), %hval
 	      PAIRWRITE16(fb, val, hval);
       }
 
@@ -7994,8 +7996,8 @@ static void precalc_cvmask_derivatives(void)
 	int i = 0, k = 0;
 	uint16_t mask = 0, maskx = 0, masky = 0;
 	uint8_t offx = 0, offy = 0;
-	const uint8_t yarray[16] = {0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
-	const uint8_t xarray[16] = {0, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+	static const uint8_t yarray[16] = {0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
+	static const uint8_t xarray[16] = {0, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	
 	for (; i < 0x100; i++)
@@ -8956,7 +8958,6 @@ static rdp_inline void vi_vl_lerp(CCVG up, CCVG down, uint32_t frac)
 static rdp_inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int *z, uint32_t curpixel_cvg, __m128i spans_dstwzdy_v, __m128i spans_cdrgba_drgbady_v) {
   __m128i rgba2;
   int sz = *z;
-  int zanded;
 
   if (curpixel_cvg == 8) {
     rgba = _mm_slli_epi32(rgba, 21);
@@ -8981,6 +8982,8 @@ static rdp_inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int 
   rgba = _mm_srli_epi32(rgba, 24);
   _mm_storel_epi64(shade_color, _mm_packs_epi32(rgba, rgba));
 
+#if 0
+  int zanded;
 	zanded = (sz & 0x60000) >> 17;	
 
 	switch(zanded)
@@ -8995,8 +8998,24 @@ static rdp_inline void rgbaz_correct_clip(int offx, int offy, __m128i rgba, int 
       *z = (0x3FFFD + zanded);
       break;
 	}
-
   *z &= 0x3FFFF;
+#elif defined(__GNUC__)
+   int mask, tmp = sz;
+   __asm__ __volatile__(
+       "shr    $18,        %[tmp];" // Get sz >> 18 and populate the CF
+       "sbb    %[msk],     %[msk];" // Get either 0 or -1
+       "not    %[msk]            ;" // Toggle all bits
+       : [tmp] "+&r" (tmp), [msk] "=&r" (mask) : : "cc");
+   if(tmp & 1)     // test   $1, %[tmp]
+       sz = mask; // cmovnz %[msk], %[sz] # if CMOVcc is supported
+   *z = sz & 0x3ffff;
+#else
+   int zanded;
+   zanded = sz >> 17;
+   if(zanded & 2)
+       sz = (zanded & 1) - 1;
+   *z = sz & 0x3ffff;
+#endif
 }
 
 uint32_t vi_integer_sqrt(uint32_t a)
