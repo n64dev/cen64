@@ -5116,6 +5116,7 @@ void render_spans_fill_8(int start, int end, int flip)
         uint8_t hval;
         hval = (val & 1);
         hval += hval << 1; // hval = (val & 1) * 3; # lea(%hval, %hval, 2), %hval
+        PAIRWRITE8(fb, val, hval);
       }
 
 			if (unlikely(slowkillbits && length >= 0))
