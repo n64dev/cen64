@@ -25,6 +25,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
     return status;
   }
 
+  MessageBox(NULL, "There are performance issues and bugs in this release.\n"
+                   "Please adjust the affinity of the CEN64.exe in the task\n"
+                   "manager to achieve optimal settings. Most quad core CPU\n"
+                   "users will likely find that 0/2/4/6 works best.",
+
+                   "CEN64 Notice", MB_OK | MB_ICONEXCLAMATION);
+
   status = cen64_main(__argc, (const char **) __argv);
   WSACleanup();
 
