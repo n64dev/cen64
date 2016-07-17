@@ -171,11 +171,15 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
     return CEN64_THREAD_RETURN_VAL;
 
   while (likely(device->running)) {
-    unsigned i;
+    unsigned i, j;
 
-    for (i = 0; i < 6250; i++) {
+    for (i = 0; i < 6250 / 5; i++) {
+      for (j = 0; j < 5; j++) {
+        rsp_cycle(&device->rsp);
+        vi_cycle(&device->vi);
+      }
+
       rsp_cycle(&device->rsp);
-      vi_cycle(&device->vi);
     }
 
     // Sync up with the VR4300 thread.
@@ -306,16 +310,19 @@ int device_spin(struct cen64_device *device) {
   while (likely(device->running)) {
     unsigned i;
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 10; i++) {
       vr4300_cycle(&device->vr4300);
       rsp_cycle(&device->rsp);
       ai_cycle(&device->ai);
       pi_cycle(&device->pi);
       vi_cycle(&device->vi);
-
     }
 
-    vr4300_cycle(&device->vr4300);
+    for (i = 0; i < 2; i++)
+      rsp_cycle(&device->rsp);
+
+    for (i = 0; i < 5; i++)
+      vr4300_cycle(&device->vr4300);
   }
 
   return 0;
@@ -335,7 +342,7 @@ int device_debug_spin(struct cen64_device *device) {
   while (likely(device->running)) {
     unsigned i;
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 10; i++) {
       vr4300_cycle(&device->vr4300);
       rsp_cycle(&device->rsp);
       ai_cycle(&device->ai);
@@ -346,8 +353,13 @@ int device_debug_spin(struct cen64_device *device) {
 
     }
 
-    vr4300_cycle(&device->vr4300);
-    vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+    for (i = 0; i < 2; i++)
+      rsp_cycle(&device->rsp);
+
+    for (i = 0; i < 5; i++) {
+      vr4300_cycle(&device->vr4300);
+      vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+    }
   }
 
   return 0;

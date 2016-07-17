@@ -64,6 +64,7 @@ struct vi_controller {
   float quad[8];
 
   cen64_time last_update_time;
+  uint32_t latched_origin;
   unsigned intr_counter;
   unsigned frame_count;
   unsigned field;
