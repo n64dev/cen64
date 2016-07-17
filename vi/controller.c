@@ -21,7 +21,8 @@
 #include "vi/window.h"
 #include "vr4300/interface.h"
 
-#define VI_COUNTER_START (62500000.0 / 60.0) + 1;
+#define VI_COUNTER_START ((62500000.0 / 60.0) + 1)
+#define VI_BLANKING_DONE (unsigned) ((VI_COUNTER_START - VI_COUNTER_START / 525.0 * 39))
 
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 const char *vi_register_mnemonics[NUM_VI_REGISTERS] = {
@@ -37,17 +38,23 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
   unsigned offset = address - VI_REGS_BASE_ADDRESS;
   enum vi_register reg = (offset >> 2);
 
-  // TODO: Possibly a giant hack.
-  if (vi->regs[VI_V_SYNC_REG] > 0) {
+  vi->regs[VI_CURRENT_REG] = 0;
+
+  // Prevent division by zero (field number doesn't count).
+  if (vi->regs[VI_V_SYNC_REG] >= 0x2) {
     vi->regs[VI_CURRENT_REG] =
-      (((62500000.0f / 60.0f) + 1) - (vi->counter)) /
-      (((62500000.0f / 60.0f) + 1) / vi->regs[VI_V_SYNC_REG]);
+      (VI_COUNTER_START - (vi->counter)) /
+      (VI_COUNTER_START / (vi->regs[VI_V_SYNC_REG] >> 1));
 
-    vi->regs[VI_CURRENT_REG] &= ~0x1;
+    vi->regs[VI_CURRENT_REG] = (vi->regs[VI_CURRENT_REG] << 1);
+
+    // Interlaced fields should get the current field number.
+    // Non-interlaced modes should always get a constant field.
+    if (vi->regs[VI_V_SYNC_REG] & 0x1)
+      vi->regs[VI_CURRENT_REG] |= vi->field;
+    else
+      vi->regs[VI_CURRENT_REG] |= 1;
   }
-
-  else
-    vi->regs[VI_CURRENT_REG] = 0;
 
   *word = vi->regs[reg];
   debug_mmio_read(vi, vi_register_mnemonics[reg], *word);
@@ -59,13 +66,31 @@ void vi_cycle(struct vi_controller *vi) {
   cen64_gl_window window;
   size_t copy_size;
 
+  unsigned counter;
   struct render_area *ra = &vi->render_area;
   struct bus_controller *bus;
   float hcoeff, vcoeff;
 
-  if (likely(vi->counter-- != 0))
+  counter = --(vi->counter);
+
+  // Wrap the counter around when it hits zero.
+  if (unlikely(counter == 0))
+    vi->counter = VI_COUNTER_START;
+
+  // Throw an interrupt when VI_INTR_REG == VI_CURRENT_REG.
+  // We use a counter so we don't have to recalc each cycle.
+  if (unlikely(counter == vi->intr_counter))
+    signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
+
+  // NTSC reserves the first 39 lines for vertical blanking
+  // according to the literature I've read. Normally after this
+  // time, the VI would slowly push out the analog signal. For
+  // now, let's just toss the GPU the framebuffer the moment
+  // we step out of the vertical blanking interval.
+  if (likely(counter != VI_BLANKING_DONE))
     return;
 
+  vi->field = !vi->field;
   window = vi->window;
 
   // Calculate the bounding positions.
@@ -124,10 +149,6 @@ void vi_cycle(struct vi_controller *vi) {
 
     printf("VI/s: %.2f\n", (60 / (ns / NS_PER_SEC)));
   }
-
-  // Raise an interrupt to indicate refresh.
-  signal_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
-  vi->counter = VI_COUNTER_START;
 }
 
 // Initializes the VI.
@@ -156,6 +177,17 @@ int write_vi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
   if (reg == VI_CURRENT_REG)
     clear_rcp_interrupt(vi->bus->vr4300, MI_INTR_VI);
+
+  else if (reg == VI_INTR_REG) {
+
+    // TODO: This seems... all kinds of wrong for interlaced modes.
+    // Do we fire two interrupts in interlaced modes? Have to test.
+    // I'm not an NTSC signal expert, so this'll have to do for now.
+    vi->intr_counter = VI_COUNTER_START - VI_COUNTER_START / 525 * (word >> 1);
+
+    vi->regs[reg] &= ~dqm;
+    vi->regs[reg] |= word;
+  }
 
   else {
     vi->regs[reg] &= ~dqm;

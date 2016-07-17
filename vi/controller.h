@@ -64,7 +64,9 @@ struct vi_controller {
   float quad[8];
 
   cen64_time last_update_time;
+  unsigned intr_counter;
   unsigned frame_count;
+  unsigned field;
 };
 
 cen64_cold int vi_init(struct vi_controller *vi, struct bus_controller *bus,
