@@ -34,6 +34,7 @@ int rdp_init(struct rdp *rdp, struct bus_controller *bus) {
   rdp->regs[DPC_STATUS_REG] = 0x80;
   cen64_mutex_create(&rdp->rdp_mutex);
   cen64_cv_create(&rdp->rdp_signal);
+  cen64_cv_create(&rdp->rdp_sync_signal);
 
   return cen64_thread_create(&rdp->rdp_thread, rdp_thread, rdp);
 }

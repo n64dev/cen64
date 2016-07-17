@@ -31,6 +31,9 @@ struct rdp {
   cen64_thread rdp_thread;
   cen64_mutex rdp_mutex;
   cen64_cv rdp_signal;
+  cen64_cv rdp_sync_signal;
+
+  uint32_t remaining_length;
 };
 
 cen64_cold int rdp_init(struct rdp *rdp, struct bus_controller *bus);

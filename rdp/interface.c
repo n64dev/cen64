@@ -10,8 +10,10 @@
 
 #include "common.h"
 #include "bus/address.h"
+#include "bus/controller.h"
 #include "rdp/cpu.h"
 #include "rdp/interface.h"
+#include "rsp/cpu.h"
 #include "thread.h"
 
 #define DP_XBUS_DMEM_DMA          0x00000001
@@ -25,7 +27,7 @@
 #define DP_CLEAR_FLUSH            0x00000010
 #define DP_SET_FLUSH              0x00000020
 
-int rdp_process_list(struct rdp *rdp);
+unsigned rdp_process_list(struct rdp *rdp);
 
 // Reads a word from the DP MMIO register space.
 int read_dp_regs(void *opaque, uint32_t address, uint32_t *word) {
@@ -46,6 +48,7 @@ int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct rdp *rdp = (struct rdp *) opaque;
   uint32_t offset = address - DP_REGS_BASE_ADDRESS;
   enum dp_register reg = (offset >> 2);
+  unsigned dl_length;
 
   debug_mmio_write(dp, dp_register_mnemonics[reg], word, dqm);
 
@@ -60,9 +63,11 @@ int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
     case DPC_END_REG:
       rdp->regs[DPC_END_REG] = word & ~0x7;
 
-      if (!rdp_process_list(rdp)) {
+      if ((dl_length = rdp_process_list(rdp))) {
         cen64_cv_signal(&rdp->rdp_signal);
         cen64_mutex_unlock(&rdp->rdp_mutex);
+
+        rdp->bus->rsp->rdp_has_pending_dl = 1;
         return 0;
       }
 

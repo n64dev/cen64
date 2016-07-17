@@ -63,10 +63,7 @@ struct rsp {
   // Instead of redecoding the instructions (there's only 256 words)
   // every cycle, we maintain a 256-word decoded instruction cache.
   struct rsp_opcode opcode_cache[0x1000 / 4];
-
-  // TODO: Only for IA32/x86_64 SSE2; sloppy?
-  struct dynarec_slab vload_dynarec;
-  struct dynarec_slab vstore_dynarec;
+  unsigned rdp_has_pending_dl;
 };
 
 cen64_cold int rsp_init(struct rsp *rsp, struct bus_controller *bus);

@@ -7225,7 +7225,6 @@ static void (*const rdp_command_table[64])(const uint32_t *rdp_cmd_data, uint32_
 cen64_flatten cen64_hot void rdp_thread(void *opaque);
 
 uint32_t dp_end_al;
-uint32_t remaining_length;
 
 int rdp_process_list(struct rdp *rdp)
 {
@@ -7233,16 +7232,16 @@ int rdp_process_list(struct rdp *rdp)
 
 	if (dp_end <= dp_current) {
 		dp_status &= ~(DP_STATUS_START_VALID | DP_STATUS_END_VALID | DP_STATUS_DMA_BUSY);
-		remaining_length = 0;
-		return 1;
+		rdp->remaining_length = 0;
+		return 0;
 	}
 
-	remaining_length = (dp_end - dp_current) >> 2;
+	rdp->remaining_length = (dp_end - dp_current) >> 2;
   dp_end_al = dp_end;
 
   dp_status |= (DP_STATUS_START_VALID | DP_STATUS_END_VALID | DP_STATUS_CMD_BUSY | DP_STATUS_DMA_BUSY | DP_STATUS_PIPE_BUSY);
   dp_status &= ~DP_STATUS_CBUF_READY;
-  return 0;
+  return rdp->remaining_length;
 }
 
 void rdp_thread(void *opaque) {
@@ -7261,16 +7260,16 @@ void rdp_thread(void *opaque) {
   while (1) {
   cen64_cv_wait(&rdp->rdp_signal, &rdp->rdp_mutex);
   again:
-	while (remaining_length)
+	while (rdp->remaining_length)
 	{
 
-	size_t toload = remaining_length > sizeof(rdp_cmd_data) / sizeof(*rdp_cmd_data)
+	size_t toload = rdp->remaining_length > sizeof(rdp_cmd_data) / sizeof(*rdp_cmd_data)
     ? sizeof(rdp_cmd_data) / sizeof(*rdp_cmd_data)
-    : remaining_length;
+    : rdp->remaining_length;
 
-	remaining_length -= toload;
+	rdp->remaining_length -= toload;
 
-  if (remaining_length == 0)
+  if (rdp->remaining_length == 0)
     dp_status &= ~DP_STATUS_DMA_BUSY;
 
   dp_current_temp = dp_current >> 2;
@@ -7293,6 +7292,7 @@ void rdp_thread(void *opaque) {
 
   dp_current += i << 2;
   cen64_mutex_unlock(&rdp->rdp_mutex);
+  cen64_cv_signal(&rdp->rdp_sync_signal);
   rdp_cmd_ptr += i;
 
 	while (rdp_cmd_cur < rdp_cmd_ptr && !rdp_pipeline_crashed)
@@ -7302,15 +7302,14 @@ void rdp_thread(void *opaque) {
 
 		if ((rdp_cmd_ptr - rdp_cmd_cur) < cmd_length)
 		{
-
       cen64_mutex_lock(&rdp->rdp_mutex);
 
-			if (!remaining_length)
+			if (!rdp->remaining_length)
 				dp_start = dp_current = dp_end_al;
 
       else {
 				dp_current -= (rdp_cmd_ptr - rdp_cmd_cur) << 2;
-				remaining_length += (rdp_cmd_ptr - rdp_cmd_cur);
+				rdp->remaining_length += (rdp_cmd_ptr - rdp_cmd_cur);
         rdp_cmd_ptr = rdp_cmd_cur = 0;
 			}
 

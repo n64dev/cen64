@@ -182,10 +182,20 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
       rsp_cycle(&device->rsp);
     }
 
-    // Sync up with the VR4300 thread.
+    // Sync up with the VR4300 and RDP threads.
     cen64_mutex_lock(&device->sync_mutex);
 
     if (!device->other_thread_is_waiting) {
+      if (!device->rsp.rdp_has_pending_dl) {
+        cen64_mutex_lock(&device->rdp.rdp_mutex);
+
+        while (device->rdp.remaining_length)
+          cen64_cv_wait(&device->rdp.rdp_sync_signal, &device->rdp.rdp_mutex);
+
+        cen64_mutex_unlock(&device->rdp.rdp_mutex);
+      }
+
+      device->rsp.rdp_has_pending_dl--;
       device->other_thread_is_waiting = true;
       cen64_cv_wait(&device->sync_cv, &device->sync_mutex);
       cen64_mutex_unlock(&device->sync_mutex);
@@ -195,6 +205,17 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
       device->other_thread_is_waiting = false;
       cen64_mutex_unlock(&device->sync_mutex);
       cen64_cv_signal(&device->sync_cv);
+
+      if (!device->rsp.rdp_has_pending_dl) {
+        cen64_mutex_lock(&device->rdp.rdp_mutex);
+
+        while (device->rdp.remaining_length)
+          cen64_cv_wait(&device->rdp.rdp_sync_signal, &device->rdp.rdp_mutex);
+
+        cen64_mutex_unlock(&device->rdp.rdp_mutex);
+      }
+
+      device->rsp.rdp_has_pending_dl--;
     }
   }
 
@@ -308,21 +329,35 @@ int device_spin(struct cen64_device *device) {
   device_schedule_threads(3, device_threads);
 
   while (likely(device->running)) {
-    unsigned i;
+    unsigned i, j;
 
-    for (i = 0; i < 10; i++) {
-      vr4300_cycle(&device->vr4300);
-      rsp_cycle(&device->rsp);
-      ai_cycle(&device->ai);
-      pi_cycle(&device->pi);
-      vi_cycle(&device->vi);
+    for (i = 0; i < 6250 / 10; i++) {
+      for (j = 0; j < 10; j++) {
+        vr4300_cycle(&device->vr4300);
+        rsp_cycle(&device->rsp);
+        ai_cycle(&device->ai);
+        pi_cycle(&device->pi);
+        vi_cycle(&device->vi);
+      }
+
+      for (j = 0; j < 2; j++)
+        rsp_cycle(&device->rsp);
+
+      for (j = 0; j < 5; j++)
+        vr4300_cycle(&device->vr4300);
     }
 
-    for (i = 0; i < 2; i++)
-      rsp_cycle(&device->rsp);
+    // Sync up with the RDP thread.
+    if (!device->rsp.rdp_has_pending_dl) {
+      cen64_mutex_lock(&device->rdp.rdp_mutex);
 
-    for (i = 0; i < 5; i++)
-      vr4300_cycle(&device->vr4300);
+      while (device->rdp.remaining_length)
+        cen64_cv_wait(&device->rdp.rdp_sync_signal, &device->rdp.rdp_mutex);
+
+      cen64_mutex_unlock(&device->rdp.rdp_mutex);
+    }
+
+    device->rsp.rdp_has_pending_dl--;
   }
 
   return 0;
