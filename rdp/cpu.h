@@ -25,8 +25,8 @@ extern const char *dp_register_mnemonics[NUM_DP_REGISTERS];
 #endif
 
 struct rdp {
-  uint32_t regs[NUM_DP_REGISTERS];
   struct bus_controller *bus;
+  uint32_t regs[NUM_DP_REGISTERS];
 
   cen64_thread rdp_thread;
   cen64_mutex rdp_mutex;

@@ -33,7 +33,10 @@ int read_dp_regs(void *opaque, uint32_t address, uint32_t *word) {
   uint32_t offset = address - DP_REGS_BASE_ADDRESS;
   enum dp_register reg = (offset >> 2);
 
+  cen64_mutex_lock(&rdp->rdp_mutex);
   *word = rdp->regs[reg];
+  cen64_mutex_unlock(&rdp->rdp_mutex);
+
   debug_mmio_read(dp, dp_register_mnemonics[reg], *word);
   return 0;
 }
@@ -43,7 +46,6 @@ int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct rdp *rdp = (struct rdp *) opaque;
   uint32_t offset = address - DP_REGS_BASE_ADDRESS;
   enum dp_register reg = (offset >> 2);
-  int gordp;
 
   debug_mmio_write(dp, dp_register_mnemonics[reg], word, dqm);
 
@@ -51,16 +53,19 @@ int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
   switch (reg) {
     case DPC_START_REG:
-      if (!(rdp->regs[DPC_STATUS_REG] & 0x400)) {
-        rdp->regs[DPC_CURRENT_REG] = word;
-        rdp->regs[DPC_START_REG] = word;
-      }
-
+      rdp->regs[DPC_CURRENT_REG] = word & ~0x7;
+      rdp->regs[DPC_START_REG] = word & ~0x7;
       break;
 
     case DPC_END_REG:
-      rdp->regs[DPC_END_REG] = word;
-      gordp = rdp_process_list(rdp);
+      rdp->regs[DPC_END_REG] = word & ~0x7;
+
+      if (!rdp_process_list(rdp)) {
+        cen64_cv_signal(&rdp->rdp_signal);
+        cen64_mutex_unlock(&rdp->rdp_mutex);
+        return 0;
+      }
+
       break;
 
     case DPC_STATUS_REG:
@@ -87,10 +92,6 @@ int write_dp_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   }
 
   cen64_mutex_unlock(&rdp->rdp_mutex);
-
-  if (reg == DPC_END_REG && !gordp)
-    cen64_cv_signal(&rdp->rdp_signal);
-
   return 0;
 }
 
