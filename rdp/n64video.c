@@ -247,25 +247,27 @@ typedef struct
 
 typedef struct
 {
-	int clampdiffs, clampdifft;
-	int clampens, clampent;
-	int masksclamped, masktclamped;
-	int notlutswitch, tlutswitch;
+	short clampdiffs, clampdifft;
+	unsigned char clampens, clampent;
+	char masksclamped, masktclamped;
+	char notlutswitch, tlutswitch;
 } FAKETILE;
 
 typedef struct
 {
-	int format;
-	int size;
-	int line;
+	int line; //12
 	int tmem;
 	int palette;
-	int ct, mt, cs, ms;
-	int mask_t, shift_t, mask_s, shift_s;
+	int mask_t, shift_t, mask_s, shift_s; // 16
+  int32_t mask_t_maskbits, mask_s_maskbits; // 8
 	
-	uint16_t sl, tl, sh, th;		
-	
-	FAKETILE f;
+	uint16_t sl, tl, sh, th; // 8
+
+  FAKETILE f; // 10
+
+	char ct, mt, cs, ms; // 6
+	unsigned char format;
+	unsigned char size;
 } TILE;
 
 typedef struct
@@ -468,7 +470,7 @@ static uint32_t ti_address = 0;
 
 static uint32_t zb_address = 0;
 
-static TILE tile[8];
+cen64_align(static TILE tile[8], CACHE_LINE_SIZE);
 
 static RECTANGLE clip = {0,0,0x2000,0x2000};
 static int scfield = 0;
@@ -670,16 +672,12 @@ uint16_t z_com_table[0x40000];
 uint32_t z_complete_dec_table[0x4000];
 uint8_t replicated_rgba[32];
 int vi_restore_table[0x400];
-int32_t maskbits_table[16];
 uint8_t special_9bit_clamptable[512];
 int16_t special_9bit_exttable[512];
-int32_t ge_two_table[128];
-int32_t log2table[256];
+int8_t log2table[256];
 int32_t tcdiv_table[0x8000];
 uint8_t bldiv_hwaccurate_table[0x8000];
 uint16_t deltaz_comparator_lut[0x10000];
-int32_t clamp_t_diff[8];
-int32_t clamp_s_diff[8];
 CVtcmaskDERIVATIVE cvarray[0x100];
 
 #define RDRAM_MASK 0x007fffff
@@ -748,7 +746,7 @@ static rdp_inline void tcmask(int32_t* S, int32_t* T, int32_t num)
 			wrap &= 1;
 			*S ^= (-wrap);
 		}
-		*S &= maskbits_table[tile[num].mask_s];
+		*S &= tile[num].mask_s_maskbits;
 	}
 
 	if (tile[num].mask_t)
@@ -760,7 +758,7 @@ static rdp_inline void tcmask(int32_t* S, int32_t* T, int32_t num)
 			*T ^= (-wrap);
 		}
 		
-		*T &= maskbits_table[tile[num].mask_t];
+		*T &= tile[num].mask_s_maskbits;
 	}
 }
 
@@ -786,7 +784,7 @@ static rdp_inline void tcmask_coupled(int32_t* S, int32_t* S1, int32_t* T, int32
 			*S1 ^= (-wrap);
 		}
 
-		maskbits = maskbits_table[tile[num].mask_s];
+		maskbits = tile[num].mask_s_maskbits;
 		*S &= maskbits;
 		*S1 &= maskbits;
 	}
@@ -803,7 +801,7 @@ static rdp_inline void tcmask_coupled(int32_t* S, int32_t* S1, int32_t* T, int32
 			wrap = (*T1 >> wrapthreshold) & 1;
 			*T1 ^= (-wrap);
 		}
-		maskbits = maskbits_table[tile[num].mask_t];
+		maskbits = tile[num].mask_t_maskbits;
 		*T &= maskbits;
 		*T1 &= maskbits;
 	}
@@ -836,7 +834,7 @@ static rdp_inline void tcmask_copy(int32_t* S, int32_t* S1, int32_t* S2, int32_t
 			*S3 ^= (-wrap);
 		}
 
-		maskbits_s = maskbits_table[tile[num].mask_s];
+		maskbits_s = tile[num].mask_s_maskbits;
 		*S &= maskbits_s;
 		*S1 &= maskbits_s;
 		*S2 &= maskbits_s;
@@ -852,7 +850,7 @@ static rdp_inline void tcmask_copy(int32_t* S, int32_t* S1, int32_t* S2, int32_t
 			*T ^= (-wrap);
 		}
 
-		*T &= maskbits_table[tile[num].mask_t];
+		*T &= tile[num].mask_t_maskbits;
 	}
 }
 
@@ -1650,15 +1648,6 @@ static void precalculate_everything(void)
 	
 	for (i = 0; i < 32; i++)
 		replicated_rgba[i] = (i << 3) | ((i >> 2) & 7); 
-
-	
-	
-	maskbits_table[0] = 0x3ff;
-	for (i = 1; i < 16; i++)
-		maskbits_table[i] = ((uint16_t)(0xffff) >> (16 - i)) & 0x3ff;
-	
-
-	
 	
 	for(i = 0; i < 0x200; i++)
 	{
@@ -7053,6 +7042,14 @@ static void rdp_set_tile(const uint32_t *rdp_cmd_data, uint32_t rdp_cmd_cur, uin
 	tile[tilenum].ms		= (w2 >>  8) & 0x1;
 	tile[tilenum].mask_s	= (w2 >>  4) & 0xf;
 	tile[tilenum].shift_s	= (w2 >>  0) & 0xf;
+
+  tile[tilenum].mask_s_maskbits = tile[tilenum].mask_s != 0
+    ? ((uint16_t)(0xffff) >> (16 - tile[tilenum].mask_s)) & 0x3ff
+    : 0x3ff;
+
+  tile[tilenum].mask_t_maskbits = tile[tilenum].mask_t != 0
+    ? ((uint16_t)(0xffff) >> (16 - tile[tilenum].mask_t)) & 0x3ff
+    : 0x3ff;
 
 	calculate_tile_derivs(tilenum);
 }
