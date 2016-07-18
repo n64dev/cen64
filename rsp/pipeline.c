@@ -8,9 +8,7 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-#include "bus/controller.h"
 #include "common.h"
-#include "rdp/cpu.h"
 #include "rsp/cp0.h"
 #include "rsp/cp2.h"
 #include "rsp/cpu.h"
@@ -208,12 +206,6 @@ static inline void rsp_wb_stage(struct rsp *rsp) {
 
 // Advances the processor pipeline by one clock.
 void rsp_cycle_(struct rsp *rsp) {
-
-  // DPC clock stepping is done here until we have a cycle-accurate RDP.
-  // This will need to be adjusted once the DP_FREEZE issue is fixed!
-  uint32_t *clock_reg = &rsp->bus->rdp->regs[DPC_CLOCK_REG];
-  *clock_reg = (*clock_reg + 1) & 0xFFFFFF;
-
   rsp_wb_stage(rsp);
   rsp_df_stage(rsp);
 

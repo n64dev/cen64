@@ -10,8 +10,10 @@
 
 #ifndef __rsp_cpu_h__
 #define __rsp_cpu_h__
+#include "bus/controller.h"
 #include "common.h"
 #include "os/dynarec.h"
+#include "rdp/cpu.h"
 #include "rsp/cp0.h"
 #include "rsp/cp2.h"
 #include "rsp/pipeline.h"
@@ -74,6 +76,12 @@ cen64_cold void rsp_destroy(struct rsp *rsp);
 cen64_flatten cen64_hot void rsp_cycle_(struct rsp *rsp);
 
 cen64_flatten cen64_hot static inline void rsp_cycle(struct rsp *rsp) {
+
+  // DPC clock stepping is done here until we have a cycle-accurate RDP.
+  // This will need to be adjusted once the DP_FREEZE issue is fixed!
+  uint32_t *clock_reg = &rsp->bus->rdp->regs[DPC_CLOCK_REG];
+  *clock_reg = (*clock_reg + 1) & 0xFFFFFF;
+
   if (unlikely(rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_HALT))
     return;
 
