@@ -130,8 +130,17 @@ static int pi_dma_write(struct pi_controller *pi) {
 
   else if (pi->rom) {
     if (source + length > pi->rom_size) {
+      unsigned i;
+
+      // TODO: Check for correctness against hardware.
+      // Is this the right address to use for open bus?
+      for (i = (pi->regs[PI_CART_ADDR_REG] + pi->rom_size + 3) & ~0x3;
+          i < pi->regs[PI_CART_ADDR_REG] + length; i += 4) {
+        uint32_t word = (i >> 16) | (i & 0xFFFF0000);
+        memcpy(pi->bus->ri->ram + dest + i, &word, sizeof(word));
+      }
+
       length = pi->rom_size - source;
-      //assert(0);
     }
 
     // TODO: Very hacky.
@@ -164,8 +173,8 @@ int read_cart_rom(void *opaque, uint32_t address, uint32_t *word) {
 
   // TODO: Need to figure out correct behaviour.
   // Should this even happen to begin with?
-  if (pi->rom == NULL || offset > pi->rom_size - sizeof(*word)) {
-    *word = 0;
+  if (pi->rom == NULL || offset > (pi->rom_size - sizeof(*word))) {
+    *word = (address >> 16) | (address & 0xFFFF0000);
     return 0;
   }
 
