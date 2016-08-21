@@ -250,6 +250,7 @@ void print_command_line_usage(const char *invokation_string) {
 #endif
       "  -debug [addr][:port]       : Starts the debugger on interface:port.\n"
       "                               By default, CEN64 uses localhost:64646.\n"
+      "                               NOTE: the debugger is not implemented yet.\n"
       "  -multithread               : Run in a threaded (but quasi-accurate) mode.\n"
       "                             : This mode cannot be run with the debugger.\n"
       "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"
