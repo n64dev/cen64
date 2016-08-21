@@ -51,7 +51,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       options->enable_debugger = true;
 
       // Check for optional host:port pair.
-      if ((i + 1) >= (argc - 1) && argv[i + 1][0] != '-')
+      if ((i + 1) <= (argc - 1) && argv[i + 1][0] != '-')
         options->debugger_addr = argv[++i];
 
       else
