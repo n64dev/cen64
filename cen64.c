@@ -24,6 +24,7 @@
 
 cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
   const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
+  const struct dd_variant **dd_variant,
   struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart);
 cen64_cold static int load_paks(struct controller *controller);
 cen64_cold static int validate_sha(struct rom_file *rom, const uint8_t *good_sum);
@@ -37,6 +38,7 @@ int cen64_main(int argc, const char **argv) {
 	struct cen64_options options = default_cen64_options;
   options.controller = controller;
   struct rom_file ddipl, ddrom, pifrom, cart;
+  const struct dd_variant *dd_variant;
   struct cen64_mem cen64_device_mem;
   struct cen64_device *device;
   int status;
@@ -76,9 +78,10 @@ int cen64_main(int argc, const char **argv) {
   memset(&eeprom, 0, sizeof(eeprom));
   memset(&sram,  0, sizeof(sram));
   memset(&flashram, 0, sizeof(flashram));
+  dd_variant = NULL;
 
   if (load_roms(options.ddipl_path, options.ddrom_path, options.pifrom_path,
-    options.cart_path, &ddipl, &ddrom, &pifrom, &cart)) {
+    options.cart_path, &ddipl, &dd_variant, &ddrom, &pifrom, &cart)) {
     cen64_alloc_cleanup();
     return EXIT_FAILURE;
   }
@@ -122,7 +125,8 @@ int cen64_main(int argc, const char **argv) {
   else {
     device = (struct cen64_device *) cen64_device_mem.ptr;
 
-    if (device_create(device, &ddipl, &ddrom, &pifrom, &cart, &eeprom, &sram,
+    if (device_create(device, &ddipl, dd_variant, &ddrom,
+      &pifrom, &cart, &eeprom, &sram,
       &flashram, controller, options.no_audio, options.no_video) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;
@@ -155,6 +159,7 @@ int cen64_main(int argc, const char **argv) {
 // Load any ROM images required for simulation.
 int load_roms(const char *ddipl_path, const char *ddrom_path,
   const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
+  const struct dd_variant **dd_variant,
   struct rom_file *ddrom, struct rom_file *pifrom, struct rom_file *cart) {
   memset(ddipl, 0, sizeof(*ddipl));
 
@@ -164,13 +169,11 @@ int load_roms(const char *ddipl_path, const char *ddrom_path,
     return 1;
   }
 
-  if (ddipl_path != NULL && !validate_sha(ddipl, sha1_dd_ipl)) {
-    printf("Invalid SHA1 on DD IPL.\n");
-
-#if 0
-    close_rom_file(ddipl);
-    return 6;
-#endif
+  *dd_variant = NULL;
+  if (ddipl_path != NULL) {
+    *dd_variant = dd_identify_variant(ddipl);
+    if (*dd_variant != NULL)
+      printf("DD variant: %s\n", (*dd_variant)->description);
   }
 
   if (ddrom_path && open_rom_file(ddrom_path, ddrom)) {

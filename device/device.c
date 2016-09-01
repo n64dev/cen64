@@ -39,7 +39,8 @@ cen64_flatten cen64_hot static CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *
 
 // Creates and initializes a device.
 struct cen64_device *device_create(struct cen64_device *device,
-  const struct rom_file *ddipl, const struct rom_file *ddrom,
+  const struct rom_file *ddipl, const struct dd_variant *dd_variant,
+  const struct rom_file *ddrom,
   const struct rom_file *pifrom, const struct rom_file *cart,
   const struct save_file *eeprom, const struct save_file *sram,
   const struct save_file *flashram, const struct controller *controller,
@@ -58,7 +59,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   device->bus.vr4300 = &device->vr4300;
 
   // Initialize the bus.
-  if (bus_init(&device->bus)) {
+  if (bus_init(&device->bus, dd_variant != NULL)) {
     debug("create_device: Failed to initialize the bus.\n");
     return NULL;
   }
@@ -90,7 +91,7 @@ struct cen64_device *device_create(struct cen64_device *device,
 
   // Initialize the SI.
   if (si_init(&device->si, &device->bus, pifrom->ptr,
-    cart->ptr, ddipl->ptr != NULL, eeprom->ptr, eeprom->size,
+    cart->ptr, dd_variant, eeprom->ptr, eeprom->size,
     controller)) {
     debug("create_device: Failed to initialize the SI.\n");
     return NULL;
