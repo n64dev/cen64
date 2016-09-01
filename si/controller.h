@@ -12,6 +12,7 @@
 #define __si_controller_h__
 #include "common.h"
 #include "si/pak.h"
+#include "dd/controller.h"
 
 struct bus_controller *bus;
 
@@ -45,7 +46,8 @@ struct si_controller {
 };
 
 cen64_cold int si_init(struct si_controller *si, struct bus_controller *bus,
-  const uint8_t *pif_rom, const uint8_t *cart_rom, bool dd_present,
+  const uint8_t *pif_rom, const uint8_t *cart_rom,
+  const struct dd_variant *dd_variant,
   uint8_t *eeprom, size_t eeprom_size,
   const struct controller *controller);
 

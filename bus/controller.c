@@ -39,7 +39,7 @@ static int bus_dead_write(void *opaque, uint32_t address, uint32_t word,
   uint32_t dqm);
 
 // Initializes the bus component.
-int bus_init(struct bus_controller *bus) {
+int bus_init(struct bus_controller *bus, int dd_present) {
   unsigned i;
 
   static const struct bus_controller_mapping mappings[NUM_MAPPINGS] = {
@@ -91,7 +91,7 @@ int bus_init(struct bus_controller *bus) {
     memory_wr_function wr = mappings[i].write;
     void *instance = instances[i];
 
-    if (instance == bus->dd && bus->dd->ipl_rom == NULL) {
+    if (instance == bus->dd && !dd_present) {
       rd = bus_open_read;
       wr = bus_dead_write;
       instance = NULL;

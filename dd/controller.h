@@ -12,6 +12,8 @@
 #define __dd_controller_h__
 #include "common.h"
 #include "bus/address.h"
+#include "device/sha1.h"
+#include "os/common/rom_file.h"
 
 struct bus_controller *bus;
 
@@ -25,6 +27,14 @@ enum dd_register {
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 extern const char *dd_register_mnemonics[NUM_DD_REGISTERS];
 #endif
+
+struct dd_variant {
+  const char *description;
+  uint8_t seed;
+  const uint8_t sha1[SHA1_SIZE];
+};
+
+const struct dd_variant *dd_identify_variant(struct rom_file *ipl);
 
 struct dd_controller {
   struct bus_controller *bus;
