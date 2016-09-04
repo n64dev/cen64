@@ -11,6 +11,7 @@
 #include "cen64.h"
 
 // Unix application entry point.
+__attribute__((visibility("default")))
 int posix_main(int argc, const char *argv[]) {
   return cen64_main(argc, argv);
 }
