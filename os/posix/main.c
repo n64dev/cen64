@@ -11,7 +11,7 @@
 #include "cen64.h"
 
 // Unix application entry point.
-int main(int argc, const char *argv[]) {
+int posix_main(int argc, const char *argv[]) {
   return cen64_main(argc, argv);
 }
 

@@ -13,7 +13,7 @@
 #include <windows.h>
 
 // Windows application entry point.
-int WINAPI WinMain(HINSTANCE hInstance,
+int WINAPI winapi_main(HINSTANCE hInstance,
   HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
   WSADATA wsa_data = {0};
   WPARAM status = 255;

@@ -408,7 +408,7 @@ if (NOT MSVC)
   set_source_files_properties(${PROJECT_SOURCE_DIR}/rdp/n64video.c PROPERTIES COMPILE_FLAGS -fno-strict-aliasing)
 endif (NOT MSVC)
 
-add_executable(cen64
+add_library(cen64 SHARED
   ${EXTRA_OS_EXE}
   ${ASM_SOURCES}
   ${AI_SOURCES}
@@ -433,5 +433,13 @@ target_link_libraries(cen64
   ${OPENGL_gl_LIBRARY}
   ${X11_X11_LIB}
   ${CMAKE_THREAD_LIBS_INIT}
+)
+
+add_executable(launcher
+  launcher.c
+)
+
+target_link_libraries(launcher
+  cen64
 )
 
