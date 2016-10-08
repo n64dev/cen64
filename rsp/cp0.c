@@ -29,7 +29,7 @@ void RSP_MFC0(struct rsp *rsp,
   unsigned dest;
 
   dest = GET_RT(iw);
-  rt = rsp_read_cp0_reg(rsp, GET_RD(iw));
+  rt = rsp_read_cp0_reg(rsp, GET_RD(iw) & 0x0f);
 
   exdf_latch->result.result = rt;
   exdf_latch->result.dest = dest;
@@ -43,7 +43,7 @@ void RSP_MTC0(struct rsp *rsp,
   unsigned dest;
 
   dest = GET_RD(iw);
-  rsp_write_cp0_reg(rsp, dest, rt);
+  rsp_write_cp0_reg(rsp, dest & 0x0f, rt);
 }
 
 // Reads a value from the control coprocessor.
