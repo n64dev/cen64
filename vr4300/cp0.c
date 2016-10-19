@@ -21,7 +21,7 @@ static const uint64_t vr4300_cp0_reg_masks[32] = {
   0xFFFFFFFFFFFFFFF0ULL, //  4: VR4300_CP0_REGISTER_CONTEXT
   0x0000000001FFE000ULL, //  5: VR4300_CP0_REGISTER_PAGEMASK
   0xFFFFFFFFFFFFFFFFULL, //  6: VR4300_CP0_REGISTER_WIRED
-  0x000000000000003FULL, //  7:
+  0x0000000000000BADULL, //  7:
   0xFFFFFFFFFFFFFFFFULL, //  8: VR4300_CP0_REGISTER_BADVADDR
   0x00000000FFFFFFFFULL, //  9: VR4300_CP0_REGISTER_COUNT
   0xC00000FFFFFFE0FFULL, // 10: VR4300_CP0_REGISTER_ENTRYHI
@@ -35,17 +35,17 @@ static const uint64_t vr4300_cp0_reg_masks[32] = {
   0x00000000FFFFFFFBULL, // 18: VR4300_CP0_REGISTER_WATCHLO
   0x000000000000000FULL, // 19: VR4300_CP0_REGISTER_WATCHHI
   0xFFFFFFFFFFFFFFFFULL, // 20: VR4300_CP0_REGISTER_XCONTEXT
-  0xFFFFFFFFFFFFFFFFULL, // 21:
-  0xFFFFFFFFFFFFFFFFULL, // 22:
-  0xFFFFFFFFFFFFFFFFULL, // 23:
-  0xFFFFFFFFFFFFFFFFULL, // 24:
-  0xFFFFFFFFFFFFFFFFULL, // 25:
+  0x0000000000000BADULL, // 21:
+  0x0000000000000BADULL, // 22:
+  0x0000000000000BADULL, // 23:
+  0x0000000000000BADULL, // 24:
+  0x0000000000000BADULL, // 25:
   0x0000000000000000ULL, // 26: VR4300_CP0_REGISTER_PARITYERROR
   0x0000000000000000ULL, // 27: VR4300_CP0_REGISTER_CACHEERR
   0x000000000FFFFFC0ULL, // 28: VR4300_CP0_REGISTER_TAGLO
   0x0000000000000000ULL, // 29: VR4300_CP0_REGISTER_TAGHI
   0xFFFFFFFFFFFFFFFFULL, // 30: VR4300_CP0_REGISTER_ERROREPC
-  0xFFFFFFFFFFFFFFFFULL, // 31
+  0x0000000000000BADULL, // 31
 };
 
 static inline uint64_t mask_reg(unsigned reg, uint64_t data) {
@@ -61,13 +61,18 @@ int VR4300_DMFC0(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
   unsigned src = GET_RD(iw);
 
-  if (src == (VR4300_CP0_REGISTER_COUNT - 32)) {
+  if (src == (VR4300_CP0_REGISTER_COUNT - VR4300_REGISTER_CP0_0)) {
     exdc_latch->result = (uint32_t)
       (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1);
   }
 
-  else
-    exdc_latch->result = mask_reg(src, vr4300->regs[32 + src]);
+  else if (vr4300_cp0_reg_masks[src] == 0x0000000000000BADULL)
+    exdc_latch->result = vr4300->regs[VR4300_REGISTER_CP0_0 + 7];
+
+  else {
+    exdc_latch->result = mask_reg(src,
+      vr4300->regs[VR4300_REGISTER_CP0_0 + src]);
+  }
 
   exdc_latch->dest = dest;
   return 0;
@@ -78,12 +83,17 @@ int VR4300_DMFC0(struct vr4300 *vr4300,
 //
 int VR4300_DMTC0(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
-  unsigned dest = 32 + GET_RD(iw);
+  unsigned dest = GET_RD(iw);
 
-  if (dest == VR4300_CP0_REGISTER_COMPARE)
+  if ((dest + VR4300_REGISTER_CP0_0) == VR4300_CP0_REGISTER_COMPARE)
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
 
-  vr4300->regs[dest] = rt;
+  if (vr4300_cp0_reg_masks[dest] == 0x0000000000000BADULL)
+    vr4300->regs[VR4300_REGISTER_CP0_0 + 7] = rt;
+
+  else
+    vr4300->regs[VR4300_REGISTER_CP0_0 + dest] = rt;
+
   return 0;
 }
 
@@ -135,13 +145,18 @@ int VR4300_MFC0(struct vr4300 *vr4300,
   unsigned dest = GET_RT(iw);
   unsigned src = GET_RD(iw);
 
-  if (src == (VR4300_CP0_REGISTER_COUNT - 32)) {
+  if (src == (VR4300_CP0_REGISTER_COUNT - VR4300_REGISTER_CP0_0)) {
     exdc_latch->result = (int32_t)
       (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1);
   }
 
-  else
-    exdc_latch->result = (int32_t) mask_reg(src, vr4300->regs[32 + src]);
+  else if (vr4300_cp0_reg_masks[src] == 0x0000000000000BADULL)
+    exdc_latch->result = (int32_t) vr4300->regs[VR4300_REGISTER_CP0_0 + 7];
+
+  else {
+    exdc_latch->result = (int32_t) mask_reg(src,
+      vr4300->regs[VR4300_REGISTER_CP0_0 + src]);
+  }
 
   exdc_latch->dest = (int32_t) dest;
   return 0;
@@ -154,17 +169,22 @@ int VR4300_MTC0(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
-  unsigned dest = 32 + GET_RD(iw);
+  unsigned dest = GET_RD(iw);
 
-  if (dest == VR4300_CP0_REGISTER_COMPARE)
+  if ((dest + VR4300_REGISTER_CP0_0) == VR4300_CP0_REGISTER_COMPARE)
     vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
 
-  else if (dest == VR4300_CP0_REGISTER_STATUS) {
+  else if ((dest + VR4300_REGISTER_CP0_0) == VR4300_CP0_REGISTER_STATUS) {
     icrf_latch->segment = get_segment(icrf_latch->common.pc, rt);
     exdc_latch->segment = get_default_segment();
   }
 
-  vr4300->regs[dest] = (int32_t) rt;
+  if (vr4300_cp0_reg_masks[dest] == 0x0000000000000BADULL)
+    vr4300->regs[VR4300_REGISTER_CP0_0 + 7] = (int32_t) rt;
+
+  else
+    vr4300->regs[VR4300_REGISTER_CP0_0 + dest] = (int32_t) rt;
+
   return 0;
 }
 
