@@ -50,10 +50,8 @@ int read_vi_regs(void *opaque, uint32_t address, uint32_t *word) {
 
     // Interlaced fields should get the current field number.
     // Non-interlaced modes should always get a constant field.
-    if (vi->regs[VI_V_SYNC_REG] & 0x1)
+    if (!(vi->regs[VI_V_SYNC_REG] & 0x1))
       vi->regs[VI_CURRENT_REG] |= vi->field;
-    else
-      vi->regs[VI_CURRENT_REG] |= 1;
   }
 
   *word = vi->regs[reg];
