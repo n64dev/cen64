@@ -21,6 +21,7 @@
 
 #define CRC_NUS_5101 0x587BD543U
 #define CRC_NUS_6101 0x6170A4A1U
+#define CRC_NUS_7102 0x009E9EA3U
 #define CRC_NUS_6102 0x90BB6CB5U
 #define CRC_NUS_6103 0x0B050EE0U
 #define CRC_NUS_6105 0x98BC2C86U
@@ -37,6 +38,7 @@ int get_cic_seed(const uint8_t *rom_data, uint32_t *cic_seed) {
   if (aleck64crc == CRC_NUS_5101) *cic_seed = CIC_SEED_NUS_5101;
   else switch (crc) {
     case CRC_NUS_6101:
+    case CRC_NUS_7102:
       *cic_seed = CIC_SEED_NUS_6101;
       break;
 
