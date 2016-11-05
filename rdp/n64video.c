@@ -758,7 +758,7 @@ static rdp_inline void tcmask(int32_t* S, int32_t* T, int32_t num)
 			*T ^= (-wrap);
 		}
 		
-		*T &= tile[num].mask_s_maskbits;
+		*T &= tile[num].mask_t_maskbits;
 	}
 }
 
