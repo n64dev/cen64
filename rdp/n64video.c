@@ -67,7 +67,7 @@ angrylion
 
 /*
 I tried to keep angrylion's plugin as unmodified as possible while making it compatible with CEN64.
-This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r105.
+This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r106.
 
 MarathonMan
 */
@@ -9634,10 +9634,11 @@ static inline void tclod_2cycle_current(int32_t* sss, int32_t* sst, int32_t next
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 		
 		
-
-		
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		if (!lodclamp)
+		{
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		}
 
 		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 
@@ -9697,8 +9698,11 @@ static inline void tclod_2cycle_current_simple(int32_t* sss, int32_t* sst, int32
 
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		if (!lodclamp)
+		{
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		}
 
 		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
@@ -9757,8 +9761,11 @@ static inline void tclod_2cycle_current_notexel1(int32_t* sss, int32_t* sst, int
 
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		if (!lodclamp)
+		{
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		}
 
 		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
@@ -9801,8 +9808,11 @@ static inline void tclod_2cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 	
 		lodclamp = (initt & 0x60000) || (nextt & 0x60000) || (inits & 0x60000) || (nexts & 0x60000) || (nextys & 0x60000) || (nextyt & 0x60000);
 
-		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
-		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		if (!lodclamp)
+		{
+			tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
+			tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
+		}
 
 		
 		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
@@ -9896,7 +9906,8 @@ static inline void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t next
 		
 
 		
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
 		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
@@ -9976,7 +9987,8 @@ static inline void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32
 
 		lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
 		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
@@ -10044,19 +10056,25 @@ static inline void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 			}
 			else
 			{
-				if (!sigs->onelessthanmid)
+				if (sigs->longspan)
 				{
-					nextt = span[nextscan].t + dtinc;
-					nexts = span[nextscan].s + dsinc;
-					nextsw = span[nextscan].w + dwinc;
-					fart = (nextt + dtinc) >> 16; 
-					fars = (nexts + dsinc) >> 16; 
-					farsw = (nextsw + dwinc) >> 16;
-					nextt >>= 16;
-					nexts >>= 16;
-					nextsw >>= 16;
+					nextt = (span[nextscan].t + dtinc) >> 16;
+					nexts = (span[nextscan].s + dsinc) >> 16;
+					nextsw = (span[nextscan].w + dwinc) >> 16;
+					fart = (span[nextscan].t + (dtinc << 1)) >> 16;
+					fars = (span[nextscan].s + (dsinc << 1)) >> 16;
+					farsw = (span[nextscan].w  + (dwinc << 1)) >> 16;
 				}
-				else
+				else if (sigs->midspan)
+				{
+					nextt = span[nextscan].t >> 16;
+					nexts = span[nextscan].s >> 16;
+					nextsw = span[nextscan].w >> 16;
+					fart = (span[nextscan].t + dtinc) >> 16;
+					fars = (span[nextscan].s + dsinc) >> 16;
+					farsw = (span[nextscan].w  + dwinc) >> 16;
+				}
+				else if (sigs->onelessthanmid)
 				{
 					nextsw = (w + dwinc) >> 16;
 					nexts = (s + dsinc) >> 16;
@@ -10064,6 +10082,15 @@ static inline void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 					farsw = (w - dwinc) >> 16;
 					fars = (s - dsinc) >> 16;
 					fart = (t - dtinc) >> 16;
+				}
+				else
+				{
+					nextt = (t + dtinc) >> 16;
+					nexts = (s + dsinc) >> 16;
+					nextsw = (w + dwinc) >> 16;
+					fart = (t + (dtinc << 1)) >> 16;
+					fars = (s + (dsinc << 1)) >> 16;
+					farsw = (w + (dwinc << 1)) >> 16;
 				}
 			}
 		}
@@ -10083,7 +10110,8 @@ static inline void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 		lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 		
 		
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 		
 		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
 
@@ -10129,22 +10157,32 @@ static inline void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32_t t, 
 
 		lodclamp = (fart & 0x60000) || (nextt & 0x60000) || (fars & 0x60000) || (nexts & 0x60000);
 
-		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
+		if (!lodclamp)
+			tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
 		if ((lod & 0x4000) || lodclamp)
-			lod = 0x7fff;
-		else if (lod < min_level)
-			lod = min_level;
-						
-		magnify = (lod < 32) ? 1: 0;
-		l_tile =  log2table[(lod >> 5) & 0xff];
-		if (max_level)
-			distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
-		else
-			distant = 1;
-
-		if (distant)
+		{
+			magnify = 0;
 			l_tile = max_level;
+		}
+		else if (lod < 32)
+		{
+			magnify = 1;
+			l_tile = 0;
+		}
+		else
+		{
+			magnify = 0;
+			l_tile =  log2table[(lod >> 5) & 0xff];
+
+			if (max_level)
+				distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
+			else
+				distant = 1;
+
+			if (distant)
+				l_tile = max_level;
+		}
 	
 		if (!other_modes.detail_tex_en || magnify)
 			*t1 = (prim_tile + l_tile) & 7;
@@ -10269,36 +10307,71 @@ static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* 
 
 	
 	if ((lod & 0x4000) || lodclamp)
-		lod = 0x7fff;
-	else if (lod < min_level)
-		lod = min_level;
-						
-	mag = (lod < 32) ? 1: 0;
-	ltil = log2table[(lod >> 5) & 0xff];
-
-	if (max_level)
-		dis = ((lod & 0x6000) || (ltil >= max_level)) ? 1 : 0;
-	else
-		dis = 1;
-
-	
-	if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
 	{
-		if (dis)
+
+
+		mag = 0;
+		ltil = 7;
+		dis = 1;
+		lf = 0xff;
+	}
+	else if (lod < min_level)
+	{
+
+		mag = 1;
+		ltil = 0;
+		dis = max_level ? 0 : 1;
+
+
+		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
+		{
+			if (dis)
+				lf = 0xff;
+			else
+				lf = 0;
+		}
+		else
+		{
+			lf = min_level << 3;
+			if (other_modes.sharpen_tex_en)
+				lf |= 0x100;
+		}
+	}
+	else if (lod < 32)
+	{
+		mag = 1;
+		ltil = 0;
+		dis = max_level ? 0 : 1;
+
+		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
+		{
+			if (dis)
+				lf = 0xff;
+			else
+				lf = 0;
+		}
+		else
+		{
+			lf = lod << 3;
+			if (other_modes.sharpen_tex_en)
+				lf |= 0x100;
+		}
+	}
+	else
+	{
+		mag = 0;
+		ltil =  log2table[(lod >> 5) & 0xff];
+		if (max_level)
+			dis = ((lod & 0x6000) || (ltil >= max_level)) ? 1 : 0;
+		else
+			dis = 1;
+
+
+		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en && dis)
 			lf = 0xff;
-		else if (mag)
-			lf = 0;
 		else
 			lf = ((lod << 3) >> ltil) & 0xff;
 	}
-	else
-		lf = ((lod << 3) >> ltil) & 0xff;
-
-	
-	
-
-	if(other_modes.sharpen_tex_en && mag)
-		lf |= 0x100;
 
 	*distant = dis;
 	*l_tile = ltil;
