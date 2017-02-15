@@ -67,7 +67,7 @@ angrylion
 
 /*
 I tried to keep angrylion's plugin as unmodified as possible while making it compatible with CEN64.
-This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r100.
+This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r102.
 
 MarathonMan
 */
@@ -4247,6 +4247,8 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -4447,6 +4449,8 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -4597,6 +4601,8 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -4758,6 +4764,8 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -4957,6 +4965,8 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -5123,6 +5133,8 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -5274,6 +5286,8 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 
 		if (scdiff)
 		{
+
+			scdiff &= 0xfff;
 			r += (drinc * scdiff);
 			g += (dginc * scdiff);
 			b += (dbinc * scdiff);
@@ -6137,7 +6151,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
 			
 			if (spix == ldflag)
 			{
-				span[j].unscrx = xright >> 16;
+				span[j].unscrx = SIGN(xright >> 16, 12);
 				xfrac = (xright >> 8) & 0xff;
 				ADJUST_ATTR_PRIM();
 			}
@@ -6222,7 +6236,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 			if (spix == ldflag)
 			{
-				span[j].unscrx  = xright >> 16;
+				span[j].unscrx  = SIGN(xright >> 16, 12);
 				xfrac = (xright >> 8) & 0xff;
 				ADJUST_ATTR_PRIM();
 			}
