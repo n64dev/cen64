@@ -26,6 +26,7 @@ void cen64_cpuid_get_vendor(char vendor[13]) {
   memcpy(vendor + 0, &my_cpuid.ebx, sizeof(my_cpuid.ebx));
   memcpy(vendor + 4, &my_cpuid.edx, sizeof(my_cpuid.edx));
   memcpy(vendor + 8, &my_cpuid.ecx, sizeof(my_cpuid.ecx));
-  vendor[sizeof(vendor) - 1] = '\0';
+
+  vendor[12] = '\0';
 }
 
