@@ -220,7 +220,7 @@ endif (MSVC)
 option(DEBUG_MMIO_REGISTER_ACCESS "Print message on each MMIO register access?" OFF)
 
 # Use VR4300's busy-wait-detection feature?
-option(VR4300_BUSY_WAIT_DETECTION "Detect and special case VR4300 busy wait loops?" OFF)
+option(VR4300_BUSY_WAIT_DETECTION "Detect and special case VR4300 busy wait loops?" ON)
 
 # Glob all the files together.
 include_directories(${PROJECT_BINARY_DIR})
