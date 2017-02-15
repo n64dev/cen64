@@ -222,6 +222,12 @@ option(DEBUG_MMIO_REGISTER_ACCESS "Print message on each MMIO register access?" 
 # Use VR4300's busy-wait-detection feature?
 option(VR4300_BUSY_WAIT_DETECTION "Detect and special case VR4300 busy wait loops?" ON)
 
+# Build RelWithDebInfo by default so builds are fast out of the box
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+      "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 # Glob all the files together.
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
