@@ -67,7 +67,7 @@ angrylion
 
 /*
 I tried to keep angrylion's plugin as unmodified as possible while making it compatible with CEN64.
-This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r103.
+This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r104.
 
 MarathonMan
 */
@@ -1000,16 +1000,14 @@ static inline void tcclamp_cycle(int32_t* S, int32_t* T, int32_t* SFRAC, int32_t
 	int32_t locs = *S, loct = *T;
 	if (tile[num].f.clampens)
 	{
-		if (!(locs & 0x10000))
+
+		if (maxs)
 		{
-			if (!maxs)
-				*S = (locs >> 5);
-			else
-			{
-				*S = tile[num].f.clampdiffs;
-				*SFRAC = 0;
-			}
+			*S = tile[num].f.clampdiffs;
+			*SFRAC = 0;
 		}
+		else if (!(locs & 0x10000))
+			*S = locs >> 5;
 		else
 		{
 			*S = 0;
@@ -1021,16 +1019,13 @@ static inline void tcclamp_cycle(int32_t* S, int32_t* T, int32_t* SFRAC, int32_t
 
 	if (tile[num].f.clampent)
 	{
-		if (!(loct & 0x10000))
+		if (maxt)
 		{
-			if (!maxt)
-				*T = (loct >> 5);
-			else
-			{
-				*T = tile[num].f.clampdifft;
-				*TFRAC = 0;
-			}
+			*T = tile[num].f.clampdifft;
+			*TFRAC = 0;
 		}
+		else if (!(loct & 0x10000))
+			*T = loct >> 5;
 		else
 		{
 			*T = 0;
@@ -1047,13 +1042,10 @@ static inline void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t maxs, int
 	int32_t locs = *S, loct = *T;
 	if (tile[num].f.clampens)
 	{
-		if (!(locs & 0x10000))
-		{
-			if (!maxs)
-				*S = (locs >> 5);
-			else
-				*S = tile[num].f.clampdiffs;
-		}
+		if (maxs)
+			*S = tile[num].f.clampdiffs;
+		else if (!(locs & 0x10000))
+			*S = locs >> 5;
 		else
 			*S = 0;
 	}
@@ -1062,13 +1054,10 @@ static inline void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t maxs, int
 
 	if (tile[num].f.clampent)
 	{
-		if (!(loct & 0x10000))
-		{
-			if (!maxt)
-				*T = (loct >> 5);
-			else
-				*T = tile[num].f.clampdifft;
-		}
+		if (maxt)
+			*T = tile[num].f.clampdifft;
+		else if (!(loct & 0x10000))
+			*T = loct >> 5;
 		else
 			*T = 0;
 	}
@@ -3886,7 +3875,7 @@ void fetch_qword_copy(uint32_t* hidword, uint32_t* lowdword, int32_t ssss, int32
 
 static inline void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle)
 {
-#define TRELATIVE(x, y) 	((x) - ((y) << 3));
+#define TRELATIVE(x, y) 	((x) - ((y) << 3))
 
 
 #define UPPER ((sfrac + tfrac) & 0x20)
