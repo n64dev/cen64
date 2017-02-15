@@ -67,7 +67,7 @@ angrylion
 
 /*
 I tried to keep angrylion's plugin as unmodified as possible while making it compatible with CEN64.
-This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r99.
+This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r100.
 
 MarathonMan
 */
@@ -4054,7 +4054,12 @@ static inline void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, 
 		if (bilerp)
 		{
 			if (!convert)
-				*TEX = t0;
+			{
+				TEX->r = t0.r & 0x1ff;
+				TEX->g = t0.g & 0x1ff;
+				TEX->b = t0.b;
+				TEX->a = t0.a;
+			}
 			else
 				TEX->r = TEX->g = TEX->b = TEX->a = prev->b;
 		}
