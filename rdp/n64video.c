@@ -67,7 +67,7 @@ angrylion
 
 /*
 I tried to keep angrylion's plugin as unmodified as possible while making it compatible with CEN64.
-This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r96.
+This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r99.
 
 MarathonMan
 */
@@ -607,7 +607,7 @@ static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_
 static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
 static inline void tclod_4x17_to_15(int32_t scurr, int32_t snext, int32_t tcurr, int32_t tnext, int32_t previous, int32_t* lod);
 static inline void tclod_tcclamp(int32_t* sss, int32_t* sst);
-static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* l_tile, uint32_t* magnify, uint32_t* distant);
+static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* l_tile, uint32_t* magnify, uint32_t* distant, int32_t* lfdst);
 static inline void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t nexts, int32_t nextt, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs);
 static inline void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs);
 static inline void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int32_t t, int32_t w, int32_t dsinc, int32_t dtinc, int32_t dwinc, int32_t scanline, int32_t prim_tile, int32_t* t1, SPANSIGS* sigs, int32_t* prelodfrac);
@@ -717,7 +717,7 @@ typedef struct{
 	uint8_t cvbit;
 	uint8_t xoff;
 	uint8_t yoff;
-}CVtcmaskDERIVATIVE;
+} CVtcmaskDERIVATIVE;
 
 uint32_t gamma_table[0x100];
 uint32_t gamma_dither_table[0x4000];
@@ -2120,7 +2120,7 @@ static void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum)
 
 			save = u = TMEM[taddr & 0x7ff];
 			
-			u = (u - 0x80) & 0x1ff;
+			u = u - 0x80;
 
 			color->r = u;
 			color->g = u;
@@ -2147,8 +2147,8 @@ static void fetch_texel(COLOR *color, int s, int t, uint32_t tilenum)
 			u = c >> 8;
 			v = c & 0xff;
 
-			u = (u - 0x80) & 0x1ff;
-			v = (v - 0x80) & 0x1ff;
+			u = u - 0x80;
+			v = v - 0x80;
 
 
 
@@ -2660,13 +2660,13 @@ static void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLO
 			int32_t u0, u1, u2, u3, save0, save1, save2, save3;
 
 			save0 = u0 = TMEM[taddr0 & 0x7ff];
-			u0 = (u0 - 0x80) & 0x1ff;
+			u0 = u0 - 0x80;
 			save1 = u1 = TMEM[taddr1 & 0x7ff];
-			u1 = (u1 - 0x80) & 0x1ff;
+			u1 = u1 - 0x80;
 			save2 = u2 = TMEM[taddr2 & 0x7ff];
-			u2 = (u2 - 0x80) & 0x1ff;
+			u2 = u2 - 0x80;
 			save3 = u3 = TMEM[taddr3 & 0x7ff];
-			u3 = (u3 - 0x80) & 0x1ff;
+			u3 = u3 - 0x80;
 
 			color0->r = u0;
 			color0->g = u0;
@@ -2741,14 +2741,14 @@ static void fetch_texel_quadro(COLOR *color0, COLOR *color1, COLOR *color2, COLO
 			u3 = c3 >> 8;
 			v3 = c3 & 0xff;
 
-			u0 = (u0 - 0x80) & 0x1ff;
-			v0 = (v0 - 0x80) & 0x1ff;
-			u1 = (u1 - 0x80) & 0x1ff;
-			v1 = (v1 - 0x80) & 0x1ff;
-			u2 = (u2 - 0x80) & 0x1ff;
-			v2 = (v2 - 0x80) & 0x1ff;
-			u3 = (u3 - 0x80) & 0x1ff;
-			v3 = (v3 - 0x80) & 0x1ff;
+			u0 = u0 - 0x80;
+			v0 = v0 - 0x80;
+			u1 = u1 - 0x80;
+			v1 = v1 - 0x80;
+			u2 = u2 - 0x80;
+			v2 = v2 - 0x80;
+			u3 = u3 - 0x80;
+			v3 = v3 - 0x80;
 
 			color0->r = u0;
 			color0->g = v0;
@@ -3948,18 +3948,6 @@ static inline void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, 
 			else
 				fetch_texel_entlut_quadro(&t0, &t1, &t2, &t3, sss1, sss2, sst1, sst2, tilenum);
 
-			if (tile[tilenum].format == FORMAT_YUV)
-			{
-				t0.r = SIGN(t0.r, 9);
-				t0.g = SIGN(t0.g, 9);
-				t1.r = SIGN(t1.r, 9);
-				t1.g = SIGN(t1.g, 9);
-				t2.r = SIGN(t2.r, 9);
-				t2.g = SIGN(t2.g, 9);
-				t3.r = SIGN(t3.r, 9);
-				t3.g = SIGN(t3.g, 9);
-			}
-
 
 			if (!other_modes.mid_texel || sfrac != 0x10 || tfrac != 0x10)
 			{
@@ -4033,12 +4021,6 @@ static inline void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, 
 			if (convert)
 				t0 = *prev;
 
-			if (tile[tilenum].format == FORMAT_YUV)
-			{
-				t0.r = SIGN(t0.r, 9);
-				t0.g = SIGN(t0.g, 9);
-			}
-
 
 			TEX->r = t0.b + ((k0_tf * t0.g + 0x80) >> 8);
 			TEX->g = t0.b + ((k1_tf * t0.r + k2_tf * t0.g + 0x80) >> 8);
@@ -4083,11 +4065,6 @@ static inline void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, 
 			t0.r = SIGN(t0.r, 9);
 			t0.g = SIGN(t0.g, 9); 
 			t0.b = SIGN(t0.b, 9);
-			if (tile[tilenum].format == FORMAT_YUV)
-			{
-				t0.r = SIGN(t0.r, 9);
-				t0.g = SIGN(t0.g, 9);
-			}
 
 			TEX->r = t0.b + ((k0_tf * t0.g + 0x80) >> 8);
 			TEX->g = t0.b + ((k1_tf * t0.r + k2_tf * t0.g + 0x80) >> 8);
@@ -8658,8 +8635,8 @@ static inline int32_t normalize_dzpix(int32_t sum)
 		return 3;
 	for(int count = 0x2000; count > 0; count >>= 1)
     {
-      if (sum & count)
-        return(count << 1);
+		if (sum & count)
+		return(count << 1);
     }
 	debug("normalize_dzpix: invalid codepath taken");
 	return 0;
@@ -9662,7 +9639,7 @@ static inline void tclod_2cycle_current(int32_t* sss, int32_t* sst, int32_t next
 		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
 		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 
 		
 		if (other_modes.tex_lod_en)
@@ -9723,7 +9700,7 @@ static inline void tclod_2cycle_current_simple(int32_t* sss, int32_t* sst, int32
 		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
 		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -9783,7 +9760,7 @@ static inline void tclod_2cycle_current_notexel1(int32_t* sss, int32_t* sst, int
 		tclod_4x17_to_15(inits, nexts, initt, nextt, 0, &lod);
 		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -9828,31 +9805,7 @@ static inline void tclod_2cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 		tclod_4x17_to_15(inits, nextys, initt, nextyt, lod, &lod);
 
 		
-		if ((lod & 0x4000) || lodclamp)
-			lod = 0x7fff;
-		else if (lod < min_level)
-			lod = min_level;
-						
-		magnify = (lod < 32) ? 1: 0;
-		l_tile =  log2table[(lod >> 5) & 0xff];
-		distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
-
-		*prelodfrac = ((lod << 3) >> l_tile) & 0xff;
-
-		
-		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
-		{
-			if (distant)
-				*prelodfrac = 0xff;
-			else if (magnify)
-				*prelodfrac = 0;
-		}
-
-		
-		
-
-		if(other_modes.sharpen_tex_en && magnify)
-			*prelodfrac |= 0x100;
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
 
 		if (other_modes.tex_lod_en)
 		{
@@ -9945,7 +9898,7 @@ static inline void tclod_1cycle_current(int32_t* sss, int32_t* sst, int32_t next
 		
 		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -10025,7 +9978,7 @@ static inline void tclod_1cycle_current_simple(int32_t* sss, int32_t* sst, int32
 
 		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
 
-		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant);
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, &lod_frac);
 	
 		if (other_modes.tex_lod_en)
 		{
@@ -10131,30 +10084,8 @@ static inline void tclod_1cycle_next(int32_t* sss, int32_t* sst, int32_t s, int3
 		
 		
 		tclod_4x17_to_15(nexts, fars, nextt, fart, 0, &lod);
-
 		
-		if ((lod & 0x4000) || lodclamp)
-			lod = 0x7fff;
-		else if (lod < min_level)
-			lod = min_level;
-					
-		magnify = (lod < 32) ? 1: 0;
-		l_tile =  log2table[(lod >> 5) & 0xff];
-		distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
-
-		*prelodfrac = ((lod << 3) >> l_tile) & 0xff;
-
-		
-		if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
-		{
-			if (distant)
-				*prelodfrac = 0xff;
-			else if (magnify)
-				*prelodfrac = 0;
-		}
-
-		if(other_modes.sharpen_tex_en && magnify)
-			*prelodfrac |= 0x100;
+		lodfrac_lodtile_signals(lodclamp, lod, &l_tile, &magnify, &distant, prelodfrac);
 
 		if (other_modes.tex_lod_en)
 		{
@@ -10207,7 +10138,10 @@ static inline void tclod_copy(int32_t* sss, int32_t* sst, int32_t s, int32_t t, 
 						
 		magnify = (lod < 32) ? 1: 0;
 		l_tile =  log2table[(lod >> 5) & 0xff];
-		distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
+		if (max_level)
+			distant = ((lod & 0x6000) || (l_tile >= max_level)) ? 1 : 0;
+		else
+			distant = 1;
 
 		if (distant)
 			l_tile = max_level;
@@ -10328,7 +10262,7 @@ static inline void tclod_tcclamp(int32_t* sss, int32_t* sst)
 }
 
 
-static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* l_tile, uint32_t* magnify, uint32_t* distant)
+static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* l_tile, uint32_t* magnify, uint32_t* distant, int32_t* lfdst)
 {
 	uint32_t ltil, dis, mag;
 	int32_t lf;
@@ -10340,10 +10274,12 @@ static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* 
 		lod = min_level;
 						
 	mag = (lod < 32) ? 1: 0;
-	ltil=  log2table[(lod >> 5) & 0xff];
-	dis = ((lod & 0x6000) || (ltil >= max_level)) ? 1 : 0;
-						
-	lf = ((lod << 3) >> ltil) & 0xff;
+	ltil = log2table[(lod >> 5) & 0xff];
+
+	if (max_level)
+		dis = ((lod & 0x6000) || (ltil >= max_level)) ? 1 : 0;
+	else
+		dis = 1;
 
 	
 	if(!other_modes.sharpen_tex_en && !other_modes.detail_tex_en)
@@ -10352,7 +10288,11 @@ static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* 
 			lf = 0xff;
 		else if (mag)
 			lf = 0;
+		else
+			lf = ((lod << 3) >> ltil) & 0xff;
 	}
+	else
+		lf = ((lod << 3) >> ltil) & 0xff;
 
 	
 	
@@ -10363,6 +10303,6 @@ static inline void lodfrac_lodtile_signals(int lodclamp, int32_t lod, uint32_t* 
 	*distant = dis;
 	*l_tile = ltil;
 	*magnify = mag;
-	lod_frac = lf;
+	*lfdst = lf;
 }
 
