@@ -19,9 +19,11 @@
 #include "os/common/alloc.h"
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
+#include "os/cpuid.h"
 #include "thread.h"
 #include <stdlib.h>
 
+cen64_cold static int check_extensions(void);
 cen64_cold static int load_roms(const char *ddipl_path, const char *ddrom_path,
   const char *pifrom_path, const char *cart_path, struct rom_file *ddipl,
   const struct dd_variant **dd_variant,
@@ -56,6 +58,10 @@ int cen64_main(int argc, const char **argv) {
   if (cen64_alloc_init()) {
     printf("Failed to initialize the low-level allocators.\n");
     return EXIT_FAILURE;
+  }
+
+  if (check_extensions()) {
+      return EXIT_FAILURE;
   }
 
   if (argc < 3) {
@@ -154,6 +160,87 @@ int cen64_main(int argc, const char **argv) {
   close_rom_file(&pifrom);
   cen64_alloc_cleanup();
   return status;
+}
+
+
+enum cpu_extensions {
+    EXT_NONE = 0, EXT_SSE2, EXT_SSE3, EXT_SSSE3, EXT_SSE41, EXT_AVX
+};
+
+static const char *_cpu_extensions_str(enum cpu_extensions ext) {
+    switch (ext) {
+        case EXT_NONE:
+            return "None";
+        case EXT_SSE2:
+            return "SSE2";
+        case EXT_SSE3:
+            return "SSE3";
+        case EXT_SSSE3:
+            return "SSSE3";
+        case EXT_SSE41:
+            return "SSE4.1";
+        case EXT_AVX:
+            return "AVX";
+    }
+    return "Unknown";
+}
+
+// check compiled CPU extensions vs what's supported by running CPU
+// returns 0 if the CPU supports the compiled extensions, 1 if not
+int check_extensions(void) {
+    struct cen64_cpuid_t cpuid;
+    enum cpu_extensions max_supported = EXT_NONE, compiled = EXT_NONE;
+
+    // get feature bits
+    cen64_cpuid(1, 0, &cpuid);
+
+    if (cpuid.edx & (1 << 26))
+        max_supported = EXT_SSE2;
+    if (cpuid.ecx & (1 << 0))
+        max_supported = EXT_SSE3;
+    if (cpuid.ecx & (1 << 9))
+        max_supported = EXT_SSSE3;
+    if (cpuid.ecx & (1 << 19))
+        max_supported = EXT_SSE41;
+    if (cpuid.ecx & (1 << 28))
+        max_supported = EXT_AVX;
+
+#ifdef __SSE2__
+    compiled = EXT_SSE2;
+#endif
+#ifdef __SSE3__
+    compiled = EXT_SSE3;
+#endif
+#ifdef __SSSE3__
+    compiled = EXT_SSSE3;
+#endif
+#ifdef __SSE41__
+    compiled = EXT_SSE41;
+#endif
+#ifdef __AVX__
+    compiled = EXT_AVX;
+#endif
+
+    if (compiled > max_supported) {
+        printf("Error: cen64 is compiled with extensions not supported by your CPU.\n");
+        printf("cen64 will not run until you recompile using older extensions.\n");
+
+        printf("\n");
+        printf("cen64 compiled with:  %s\n", _cpu_extensions_str(compiled));
+        printf("Your CPU supports:    %s\n", _cpu_extensions_str(max_supported));
+
+        return 1;
+    }
+
+    if (compiled < max_supported) {
+        printf("Warning: cen64 is not using the fastest extensions supported by your CPU.\n");
+        printf("cen64 will run, but you can get better performance by recompiling.\n");
+        printf("\n");
+        printf("cen64 compiled with:  %s\n", _cpu_extensions_str(compiled));
+        printf("Your CPU supports:    %s\n", _cpu_extensions_str(max_supported));
+    }
+
+    return 0;
 }
 
 // Load any ROM images required for simulation.
