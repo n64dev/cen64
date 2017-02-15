@@ -67,7 +67,7 @@ angrylion
 
 /*
 I tried to keep angrylion's plugin as unmodified as possible while making it compatible with CEN64.
-This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r106.
+This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r107.
 
 MarathonMan
 */
@@ -4191,7 +4191,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 	int sss = 0, sst = 0;
 	int32_t prelodfrac;
 	int curpixel = 0;
-	int x, length, scdiff;
+	int x, length, scdiff, lodlength;
 	uint32_t fir, fig, fib;
 					
 	for (i = start; i <= end; i++)
@@ -4228,9 +4228,6 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 			compute_cvg_flip(i);
 		}
 
-		sigs.longspan = (length > 7);
-		sigs.midspan = (length == 7);
-		sigs.onelessthanmid = (length == 6);
 
 
 
@@ -4247,6 +4244,13 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 			t += (dtinc * scdiff);
 			w += (dwinc * scdiff);
 		}
+
+		lodlength = length + scdiff;
+
+		sigs.longspan = (lodlength > 7);
+		sigs.midspan = (lodlength == 7);
+		sigs.onelessthanmid = (lodlength == 6);
+
 		sigs.startspan = 1;
 
 		for (j = 0; j <= length; j++)
@@ -4396,7 +4400,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 	int xstart, xend, xendsc;
 	int sss = 0, sst = 0;
 	int curpixel = 0;
-	int x, length, scdiff;
+	int x, length, scdiff, lodlength;
 	uint32_t fir, fig, fib;
 					
 	for (i = start; i <= end; i++)
@@ -4433,8 +4437,6 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 			compute_cvg_flip(i);
 		}
 
-		sigs.longspan = (length > 7);
-		sigs.midspan = (length == 7);
 
 		if (scdiff)
 		{
@@ -4449,6 +4451,11 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 			t += (dtinc * scdiff);
 			w += (dwinc * scdiff);
 		}
+
+		lodlength = length + scdiff;
+
+		sigs.longspan = (lodlength > 7);
+		sigs.midspan = (lodlength == 7);
 
 		for (j = 0; j <= length; j++)
 		{
@@ -6097,7 +6104,9 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 			stickybit = ((xright >> 1) & 0x1fff) > 0;
 			xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xright & 0x8000000) || xrsc < clipxhshift); 
+
+			curunder = ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000)));
+
 			xrsc = curunder ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
 			curover = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
 			xrsc = curover ? clipxlshift : xrsc;
@@ -6107,7 +6116,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 			stickybit = ((xleft >> 1) & 0x1fff) > 0;
 			xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xleft & 0x8000000) || xlsc < clipxhshift);
+			curunder = ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
 			xlsc = curunder ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
 			curover = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
 			xlsc = curover ? clipxlshift : xlsc;
@@ -6185,7 +6194,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 			stickybit = ((xright >> 1) & 0x1fff) > 0;
 			xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xright & 0x8000000) || xrsc < clipxhshift); 
+			curunder = ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000)));
 			xrsc = curunder ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
 			curover = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
 			xrsc = curover ? clipxlshift : xrsc;
@@ -6195,7 +6204,7 @@ static void edgewalker_for_prims(int32_t* ewdata)
 
 			stickybit = ((xleft >> 1) & 0x1fff) > 0;
 			xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-			curunder = ((xleft & 0x8000000) || xlsc < clipxhshift);
+			curunder = ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
 			xlsc = curunder ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
 			curover = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
 			xlsc = curover ? clipxlshift : xlsc;
