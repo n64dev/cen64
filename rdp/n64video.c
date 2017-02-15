@@ -67,7 +67,7 @@ angrylion
 
 /*
 I tried to keep angrylion's plugin as unmodified as possible while making it compatible with CEN64.
-This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r102.
+This version of n64video was forked from angrylion's googlecode repository (r83) and aligned to r103.
 
 MarathonMan
 */
@@ -5978,23 +5978,15 @@ static void edgewalker_for_prims(int32_t* ewdata)
 		dzdyh = dzdy & ~0x1ff;
 
 
-		
-		dsdiff = dsdeh - dsdyh;
-		dsdiff -= (dsdiff >> 2);
-		dtdiff = dtdeh - dtdyh;
-		dtdiff -= (dtdiff >> 2);
-		dwdiff = dwdeh - dwdyh;
-		dwdiff -= (dwdiff >> 2);
-		drdiff = drdeh - drdyh;
-		drdiff -= (drdiff >> 2);
-		dgdiff = dgdeh - dgdyh;
-		dgdiff -= (dgdiff >> 2);
-		dbdiff = dbdeh - dbdyh;
-		dbdiff -= (dbdiff >> 2);
-		dadiff = dadeh - dadyh;
-		dadiff -= (dadiff >> 2);
-		dzdiff = dzdeh - dzdyh;
-		dzdiff -= (dzdiff >> 2);
+		dsdiff = dsdeh - (dsdeh >> 2) - dsdyh + (dsdyh >> 2);
+		dtdiff = dtdeh - (dtdeh >> 2) - dtdyh + (dtdyh >> 2);
+		dwdiff = dwdeh - (dwdeh >> 2) - dwdyh + (dwdyh >> 2);
+		drdiff = drdeh - (drdeh >> 2) - drdyh + (drdyh >> 2);
+		dgdiff = dgdeh - (dgdeh >> 2) - dgdyh + (dgdyh >> 2);
+		dbdiff = dbdeh - (dbdeh >> 2) - dbdyh + (dbdyh >> 2);
+		dadiff = dadeh - (dadeh >> 2) - dadyh + (dadyh >> 2);
+		dzdiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
+
 	}
 	else
 		dsdiff = dtdiff = dwdiff = drdiff = dgdiff = dbdiff = dadiff = dzdiff = 0;
