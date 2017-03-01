@@ -13,6 +13,7 @@
 #include "bus/controller.h"
 #include "dd/controller.h"
 #include "pi/controller.h"
+#include "pi/is_viewer.h"
 #include "ri/controller.h"
 #include "vr4300/interface.h"
 #include <assert.h>
@@ -154,13 +155,14 @@ static int pi_dma_write(struct pi_controller *pi) {
 // Initializes the PI.
 int pi_init(struct pi_controller *pi, struct bus_controller *bus,
   const uint8_t *rom, size_t rom_size, const struct save_file *sram,
-  const struct save_file *flashram) {
+  const struct save_file *flashram, struct is_viewer *is_viewer) {
   pi->bus = bus;
   pi->rom = rom;
   pi->rom_size = rom_size;
   pi->sram = sram;
   pi->flashram_file = flashram;
   pi->flashram.data = flashram->ptr;
+  pi->is_viewer = is_viewer;
 
   pi->bytes_to_copy = 0;
   return 0;
@@ -170,6 +172,9 @@ int pi_init(struct pi_controller *pi, struct bus_controller *bus,
 int read_cart_rom(void *opaque, uint32_t address, uint32_t *word) {
   struct pi_controller *pi = (struct pi_controller *) opaque;
   unsigned offset = (address - ROM_CART_BASE_ADDRESS) & ~0x3;
+
+  if (pi->is_viewer && is_viewer_map(pi->is_viewer, address))
+    return read_is_viewer(pi->is_viewer, address, word);
 
   // TODO: Need to figure out correct behaviour.
   // Should this even happen to begin with?
@@ -197,7 +202,11 @@ int read_pi_regs(void *opaque, uint32_t address, uint32_t *word) {
 
 // Writes a word to cartridge ROM.
 int write_cart_rom(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
-  //assert(0 && "Attempt to write to cart ROM.");
+  struct pi_controller *pi = (struct pi_controller *) opaque;
+
+  if (pi->is_viewer && is_viewer_map(pi->is_viewer, address))
+    return write_is_viewer(pi->is_viewer, address, word, dqm);
+
   return 0;
 }
 

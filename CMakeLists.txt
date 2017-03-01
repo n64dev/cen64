@@ -20,6 +20,7 @@ endif(APPLE)
 
 find_package(OpenAL REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Iconv REQUIRED)
 
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
@@ -310,6 +311,7 @@ set(OS_X11_SOURCES
 
 set(PI_SOURCES
   ${PROJECT_SOURCE_DIR}/pi/controller.c
+  ${PROJECT_SOURCE_DIR}/pi/is_viewer.c
 )
 
 set(RDP_SOURCES
@@ -441,6 +443,7 @@ target_link_libraries(cen64
 	${EXTRA_OS_LIBS}
   ${OPENAL_LIBRARY}
   ${OPENGL_gl_LIBRARY}
+  ${ICONV_LIBRARIES}
   ${X11_X11_LIB}
   ${CMAKE_THREAD_LIBS_INIT}
 )

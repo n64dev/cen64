@@ -20,6 +20,7 @@
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
 #include "os/cpuid.h"
+#include "pi/is_viewer.h"
 #include "thread.h"
 #include <stdlib.h>
 
@@ -49,6 +50,7 @@ int cen64_main(int argc, const char **argv) {
   struct save_file eeprom;
   struct save_file sram;
   struct save_file flashram;
+  struct is_viewer is, *is_in = NULL;
 
   if (!cart_db_is_well_formed()) {
     printf("Internal cart detection database is not well-formed.\n");
@@ -84,6 +86,7 @@ int cen64_main(int argc, const char **argv) {
   memset(&eeprom, 0, sizeof(eeprom));
   memset(&sram,  0, sizeof(sram));
   memset(&flashram, 0, sizeof(flashram));
+  memset(&is, 0, sizeof(is));
   dd_variant = NULL;
 
   if (load_roms(options.ddipl_path, options.ddrom_path, options.pifrom_path,
@@ -122,6 +125,15 @@ int cen64_main(int argc, const char **argv) {
       memset(flashram.ptr, 0xFF, FLASHRAM_SIZE);
   }
 
+  if (options.is_viewer_present) {
+    if (!is_viewer_init(&is)) {
+      cen64_alloc_cleanup();
+      return EXIT_FAILURE;
+    } else {
+      is_in = &is;
+    }
+  }
+
   // Allocate memory for and create the device.
   if (cen64_alloc(&cen64_device_mem, sizeof(*device), false) == NULL) {
     printf("Failed to allocate enough memory for a device.\n");
@@ -133,7 +145,7 @@ int cen64_main(int argc, const char **argv) {
 
     if (device_create(device, &ddipl, dd_variant, &ddrom,
       &pifrom, &cart, &eeprom, &sram,
-      &flashram, controller, options.no_audio, options.no_video) == NULL) {
+      &flashram, is_in, controller, options.no_audio, options.no_video) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;
     }

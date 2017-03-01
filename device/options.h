@@ -23,6 +23,7 @@ struct cen64_options {
   size_t eeprom_size;
   const char *sram_path;
   const char *flashram_path;
+  int is_viewer_present;
 
   struct controller *controller;
 
