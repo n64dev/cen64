@@ -9,8 +9,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(cen64 C)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
+
 if(APPLE)
-  set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
   find_package(OpenGLXQuartz REQUIRED)
   # Needed for signal.h on OS X.
   add_definitions(-D_DARWIN_C_SOURCE)
