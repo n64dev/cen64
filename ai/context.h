@@ -11,8 +11,8 @@
 #ifndef CEN64_AI_CONTEXT_H
 #define CEN64_AI_CONTEXT_H
 #include "common.h"
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <al.h>
+#include <alc.h>
 
 struct cen64_ai_context {
   ALuint buffers[3];
