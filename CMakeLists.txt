@@ -21,7 +21,9 @@ endif(APPLE)
 
 find_package(OpenAL REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Iconv REQUIRED)
+if (NOT WIN32)
+  find_package(Iconv REQUIRED)
+endif ()
 
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
