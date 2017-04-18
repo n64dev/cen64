@@ -1448,6 +1448,15 @@ int VR4300_SWL_SWR(struct vr4300 *vr4300,
   return 0;
 }
 
+//
+// SYSCALL
+//
+int VR4300_SYSCALL(struct vr4300 *vr4300,
+  uint32_t unused(iw), uint64_t unused(rs), uint64_t unused(rt)) {
+  VR4300_SYSC(vr4300);
+  return 1;
+}
+
 // Function lookup table.
 cen64_align(const vr4300_function
   vr4300_function_table[NUM_VR4300_OPCODES], CACHE_LINE_SIZE) = {
