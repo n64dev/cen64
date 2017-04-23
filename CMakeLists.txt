@@ -238,6 +238,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/arch/${CEN64_ARCH_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/os/common)
 include_directories(${OPENAL_INCLUDE_DIR})
+include_directories(${OPENGL_INCLUDE_DIR})
 
 #
 # Create lists of files.
