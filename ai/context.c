@@ -39,6 +39,7 @@ int ai_context_create(struct cen64_ai_context *context) {
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context->ctx);
     alcCloseDevice(context->dev);
+    return 1;
   }
 
   alGenSources(1, &context->source);
@@ -50,6 +51,7 @@ int ai_context_create(struct cen64_ai_context *context) {
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context->ctx);
     alcCloseDevice(context->dev);
+    return 1;
   }
 
   // Queue/prime buffers, clear them to prevent pops.
