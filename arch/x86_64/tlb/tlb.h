@@ -23,6 +23,7 @@ struct cen64_tlb {
   union aligned_tlb_data vpn2;
   uint8_t global[32];
   uint8_t asid[32];
+  uint8_t valid[32];
 };
 
 cen64_cold void tlb_init(struct cen64_tlb *tlb);

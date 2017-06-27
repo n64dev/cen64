@@ -191,9 +191,17 @@ void vr4300_exception_epilogue(struct vr4300 *vr4300,
   pipeline->cycles_to_stall = 2;
 
   // Set CP0 registers in accordance with the exception.
-  vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
+  if (vr4300->regs[VR4300_CP0_REGISTER_STATUS] & 0x2) {
+    vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x4;
+    vr4300->regs[VR4300_CP0_REGISTER_ERROREPC] = epc;
+  }
+
+  else {
+    vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status | 0x2;
+    vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
+  }
+
   vr4300->regs[VR4300_CP0_REGISTER_CAUSE] = cause;
-  vr4300->regs[VR4300_CP0_REGISTER_EPC] = epc;
 
   vr4300->pipeline.icrf_latch.pc = ((status & 0x400000)
     ? (0xFFFFFFFFBFC00200ULL + offs)
@@ -332,7 +340,7 @@ void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss, unsigned inv, unsigned mo
 
   // We calculated the vector offset for TLB miss exceptions.
   // TLB invalid and modification exceptions always use the GPE.
-  if (!miss)
+  if (!miss && !mod)
     offs = 0x180;
 
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (type << 2),

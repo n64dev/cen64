@@ -16,8 +16,10 @@
 void tlb_init(struct cen64_tlb *tlb) {
   unsigned i;
 
-  for (i = 0; i < 32; i++)
+  for (i = 0; i < 32; i++) {
     tlb->vpn2.data[i] = ~0;
+    tlb->valid[i] = 0;
+  }
 }
 
 // Probes the TLB for matching entry. Returns the index or -1.
@@ -38,7 +40,7 @@ unsigned tlb_probe(const struct cen64_tlb *tlb,
   for (i = 0; i < 32; i += 8) {
     __m128i check_l, check_h, vpn_check;
     __m128i check_a, check_g, asid_check;
-    __m128i check;
+    __m128i check, check_v;
 
     __m128i page_mask_l = _mm_load_si128((__m128i*) (tlb->page_mask.data + i + 0));
     __m128i page_mask_h = _mm_load_si128((__m128i*) (tlb->page_mask.data + i + 4));
@@ -61,6 +63,11 @@ unsigned tlb_probe(const struct cen64_tlb *tlb,
 
     // Match only on VPN match && (asid match || global)
     check = _mm_and_si128(vpn_check, asid_check);
+
+    // Match only on all of the above >= 1 valid bit set.
+    check_v = _mm_loadl_epi64((__m128i*) (tlb->valid + i));
+    check = _mm_and_si128(check, check_v);
+
     if ((one_hot_idx = _mm_movemask_epi8(check)) != 0) {
       *index = i + cen64_one_hot_lut[one_hot_idx & 0xFF];
       return 0;
@@ -92,7 +99,9 @@ int tlb_write(struct cen64_tlb *tlb, unsigned index, uint64_t entry_hi,
     (entry_hi >> 13 & 0x7FFFFFF);
 
   tlb->global[index] = (entry_lo_0 & 0x1) && (entry_lo_1 & 0x1) ? 0xFF : 0x00;
+  tlb->valid[index] = (entry_lo_0 & 0x2) || (entry_lo_1 & 0x2) ? 0xFF : 0x00;
   tlb->asid[index] = entry_hi & 0xFF;
+
   return 0;
 }
 

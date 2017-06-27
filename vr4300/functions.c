@@ -1042,7 +1042,7 @@ int VR4300_LD_SD(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint64_t sel_mask = (int64_t) (int32_t) (iw << 2) >> 32;
 
-  exdc_latch->request.vaddr = rs + (int16_t) iw;
+  exdc_latch->request.vaddr = rs + (int64_t) (int16_t) iw;
   exdc_latch->request.data = ~sel_mask | (sel_mask & rt);
   exdc_latch->request.wdqm = sel_mask;
   exdc_latch->request.postshift = 0;
@@ -1073,7 +1073,7 @@ cen64_hot int VR4300_LOAD_STORE(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   uint64_t sel_mask = (int64_t) (int32_t) (iw << 2) >> 32;
 
-  uint64_t address = rs + (int16_t) iw;
+  uint64_t address = rs + (int64_t) (int16_t) iw;
   unsigned request_index = (iw >> 26 & 0x7);
   uint64_t dqm = vr4300_load_sex_mask[request_index] & ~sel_mask;
   unsigned request_size = request_index & 0x3;
@@ -1101,7 +1101,7 @@ int VR4300_LDL_LDR(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint64_t address = rs + (int16_t) iw;
+  uint64_t address = rs + (int64_t) (int16_t) iw;
   unsigned offset = address & 0x7;
   unsigned dest = GET_RT(iw);
   uint64_t dqm;
@@ -1141,7 +1141,7 @@ int VR4300_LWL_LWR(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint64_t address = rs + (int16_t) iw;
+  uint64_t address = rs + (int64_t) (int16_t) iw;
   unsigned offset = address & 0x3;
   unsigned dest = GET_RT(iw);
   uint64_t dqm;
@@ -1378,7 +1378,7 @@ int VR4300_SDL_SDR(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint64_t address = rs + (int16_t) iw;
+  uint64_t address = rs + (int64_t) (int16_t) iw;
   unsigned offset = address & 0x7;
   uint64_t mask = ~0ULL;
 
@@ -1417,7 +1417,7 @@ int VR4300_SWL_SWR(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
 
-  uint64_t address = rs + (int16_t) iw;
+  uint64_t address = rs + (int64_t) (int16_t) iw;
   unsigned offset = address & 0x3;
   uint32_t mask = ~0U;
 
