@@ -19,11 +19,9 @@ else(APPLE)
   find_package(OpenGL REQUIRED)
 endif(APPLE)
 
+find_package(Iconv REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(Threads REQUIRED)
-if (NOT WIN32)
-  find_package(Iconv REQUIRED)
-endif ()
 
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
@@ -237,6 +235,7 @@ include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/arch/${CEN64_ARCH_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/os/common)
+include_directories(${ICONV_INCLUDE_DIR})
 include_directories(${OPENAL_INCLUDE_DIR})
 include_directories(${OPENGL_INCLUDE_DIR})
 

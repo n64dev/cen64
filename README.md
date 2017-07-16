@@ -40,3 +40,9 @@ welcome. Feel free to add yourself to the CONTRIBUTORS file as well.
 * C-pad:          TFGH
 * D-pad:          IJKL
 
+# Build requirements
+
+* iconv
+* OpenAL
+* OpenGL
+
