@@ -2,6 +2,13 @@
   <img src="/assets/logo.png" />
 </p>
 
+# Just give me a copy!
+* Windows: https://www.cen64.com/uploads/stable/cen64-windows-x86_64.exe
+* Linux: https://www.cen64.com/uploads/stable/cen64-debian9-x86_64
+* Mac: It works, but unfortunately you have to build it yourself for now.
+
+Buildbot: https://github-buildbot.cen64.com/builders
+
 # About
 
 Yes, _another_ Nintendo 64 emulator. This one, however, aims for _perfect_
