@@ -711,14 +711,20 @@ int VR4300_DIV_DIVU(struct vr4300 *vr4300,
   int64_t rs_sex = (int32_t) rs & sex_mask;
   int64_t rt_sex = (int32_t) rt & sex_mask;
 
+  int32_t div;
+  int32_t mod;
   if (likely(rt_sex != 0)) {
-    int32_t div = rs_sex / rt_sex;
-    int32_t mod = rs_sex % rt_sex;
-
-    // TODO: Delay the output a few cycles.
-    vr4300->regs[VR4300_REGISTER_LO] = div;
-    vr4300->regs[VR4300_REGISTER_HI] = mod;
+    div = rs_sex / rt_sex;
+    mod = rs_sex % rt_sex;
   }
+  else {
+    div = rs_sex < 0 ? 1 : -1;
+    mod = rs_sex;
+  }
+
+  // TODO: Delay the output a few cycles.
+  vr4300->regs[VR4300_REGISTER_LO] = div;
+  vr4300->regs[VR4300_REGISTER_HI] = mod;
 
   return vr4300_do_mci(vr4300, 37);
 }
@@ -728,18 +734,27 @@ int VR4300_DIV_DIVU(struct vr4300 *vr4300,
 //
 int VR4300_DDIV(struct vr4300 *vr4300,
   uint32_t iw, uint64_t _rs, uint64_t _rt) {
-  if (likely(_rt != 0)) {
-    int64_t rs = _rs;
-    int64_t rt = _rt;
 
-    uint64_t div = rs / rt;
-    uint64_t mod = rs % rt;
-
-    // TODO: Delay the output a few cycles.
-    vr4300->regs[VR4300_REGISTER_LO] = div;
-    vr4300->regs[VR4300_REGISTER_HI] = mod;
+  int64_t rs = _rs;
+  int64_t rt = _rt;
+  uint64_t div;
+  uint64_t mod;
+  if (unlikely(rs == INT64_MIN && rt == -1)) {
+    div = INT64_MIN;
+	mod = 0;
+  }
+  else if (likely(rt != 0)) {
+    div = rs / rt;
+    mod = rs % rt;
+  }
+  else {
+    div = rs < 0 ? 1 : -1;
+    mod = rs;
   }
 
+  // TODO: Delay the output a few cycles.
+  vr4300->regs[VR4300_REGISTER_LO] = div;
+  vr4300->regs[VR4300_REGISTER_HI] = mod;
   return vr4300_do_mci(vr4300, 69);
 }
 
@@ -748,14 +763,22 @@ int VR4300_DDIV(struct vr4300 *vr4300,
 //
 int VR4300_DDIVU(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
-  if (likely(rt != 0)) {
-    uint64_t div = rs / rt;
-    uint64_t mod = rs % rt;
 
-    // TODO: Delay the output a few cycles.
-    vr4300->regs[VR4300_REGISTER_LO] = div;
-    vr4300->regs[VR4300_REGISTER_HI] = mod;
+  uint64_t div;
+  uint64_t mod;
+
+  if (likely(rt != 0)) {
+    div = rs / rt;
+    mod = rs % rt;
   }
+  else {
+    div = -1;
+    mod = rs;
+  }
+
+  // TODO: Delay the output a few cycles.
+  vr4300->regs[VR4300_REGISTER_LO] = div;
+  vr4300->regs[VR4300_REGISTER_HI] = mod;
 
   return vr4300_do_mci(vr4300, 69);
 }
