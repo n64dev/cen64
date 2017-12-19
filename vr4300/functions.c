@@ -741,7 +741,7 @@ int VR4300_DDIV(struct vr4300 *vr4300,
   uint64_t mod;
   if (unlikely(rs == INT64_MIN && rt == -1)) {
     div = INT64_MIN;
-	mod = 0;
+    mod = 0;
   }
   else if (likely(rt != 0)) {
     div = rs / rt;
