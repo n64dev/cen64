@@ -183,20 +183,20 @@ void mbc_mbc3_write_ram_bank_select( struct controller *controller, uint16_t add
         controller->gb_writemem[i] = mbc_mbc3_write_dummy;
       }
       break;
-    case 0x08:	// seconds
-    case 0x09:	// minutes
-    case 0x0A:	// hours
-    case 0x0B:	// day bits 0-7
-    case 0x0C:	// day bit 8, carry bit, halt flag
+    case 0x08:        // seconds
+    case 0x09:        // minutes
+    case 0x0A:        // hours
+    case 0x0B:        // day bits 0-7
+    case 0x0C:        // day bit 8, carry bit, halt flag
 //       printf("Switching to RTC bank %02X \n", data );
       cart->extram_bank_num = data;
       // read A000-BFFF: read rtc
       for( i=0xA0; i<=0xBF; ++i ) {
-	controller->gb_readmem[i] = mbc_mbc3_read_rtc;
+        controller->gb_readmem[i] = mbc_mbc3_read_rtc;
       }
       // write A000-BFFF: write rtc
       for( i=0xA0; i<=0xBF; ++i ) {
-	controller->gb_writemem[i] = mbc_mbc3_write_rtc;
+        controller->gb_writemem[i] = mbc_mbc3_write_rtc;
       }
       break;
     default:
