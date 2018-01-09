@@ -85,6 +85,6 @@ cen64 -flash flash.bin pifdata.bin ROM.z64<br />
 SRAM:<br />
 cen64 -sram sram.bin pifdata.bin ROM.z64<br />
 
-* The game runs, but I get strange errors, like multiple ocarinas in Majoras Mask.<br />
+* The game runs, but I get strange errors, like multiple ocarinas in Majora's Mask.<br />
 You can fix the issue by using the -flash option on the command line:<br />
 cen64 -flash flash.bin pifdata.bin majora.z64
