@@ -79,7 +79,7 @@ cen64 -eep4k eep4k.bin pifdata.bin ROM.z64<br />
 EEP16K:<br />
 cen64 -eep16k eep16k.bin pifdata.bin ROM.z64<br />
 <br />
-Flash:<br />
+FLASH:<br />
 cen64 -flash flash.bin pifdata.bin ROM.z64<br />
 <br />
 SRAM:<br />
