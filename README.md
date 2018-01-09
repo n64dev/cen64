@@ -57,7 +57,7 @@ welcome. Feel free to add yourself to the CONTRIBUTORS file as well.
 
 * How do I run cen64?<br />
 You will need a valid pifdata.bin file (NTSC or PAL), & a ROM in .z64 format (in big-endian format).<br />
-<br />
+
 To run cen64 without multithreading (slower):<br />
 cen64 pifdata.bin ROM.z64<br />
 <br />
