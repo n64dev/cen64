@@ -68,11 +68,11 @@ cen64 -multithread pifdata.bin ROM.z64<br />
 You will need a valid 64ddipl.bin file (NTSC JPN or USA), & a 64DD disk image file in .ndd format.<br />
 
 cen64 -ddipl 64ddipl.bin -ddrom DISK.ndd pifdata.bin<br />
-<br />
+
 * How do I setup save files for games?<br />
 N64 has various types of save formats used in games...<br />
 You will need to specify the save type yourself, cen64 will create the file if it does not exist.<br />
-<br />
+
 EEP4K:<br />
 cen64 -eep4k eep4k.bin pifdata.bin ROM.z64<br />
 <br />
