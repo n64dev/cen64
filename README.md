@@ -63,10 +63,10 @@ cen64 pifdata.bin ROM.z64<br />
 <br />
 To run cen64 with multithreading (faster):<br />
 cen64 -multithread pifdata.bin ROM.z64<br />
-<br />
+
 * How do I run 64DD games?<br />
 You will need a valid 64ddipl.bin file (NTSC JPN or USA), & a 64DD disk image file in .ndd format.<br />
-<br />
+
 cen64 -ddipl 64ddipl.bin -ddrom DISK.ndd pifdata.bin<br />
 <br />
 * How do I setup save files for games?<br />
