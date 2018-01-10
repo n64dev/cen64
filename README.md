@@ -53,7 +53,7 @@ welcome. Feel free to add yourself to the CONTRIBUTORS file as well.
 * OpenAL
 * OpenGL
 
-# FAQ
+# Usage
 
 * How do I run cen64?<br />
 You will need a valid pifdata.bin file (NTSC or PAL), & a ROM in .z64 format (in big-endian format).<br />
