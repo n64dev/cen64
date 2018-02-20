@@ -95,8 +95,45 @@ int cen64_main(int argc, const char **argv) {
     return EXIT_FAILURE;
   }
 
-  if (cart.size >= 0x40 && (cart_info = cart_db_get_entry(cart.ptr)) != NULL)
+  if (cart.size >= 0x40 && (cart_info = cart_db_get_entry(cart.ptr)) != NULL) {
     printf("Detected cart: %s[%s] - %s\n", cart_info->rom_id, cart_info->regions, cart_info->description);
+    switch (cart_info->save_type) {
+      case CART_DB_SAVE_TYPE_EEPROM_4KBIT:
+        if (options.eeprom_path == NULL) {
+          printf("Warning: cart expects 4kbit EEPROM, but none specified (see -eep4k)\n");
+          open_save_file(NULL, 0x200, &eeprom, NULL);
+        } else {
+          if (options.eeprom_size != 0x200)
+             printf("Warning: cart saves to 4kbit EEPROM, but different size specified (see -eep4k)\n");
+        }
+        break;
+      case CART_DB_SAVE_TYPE_EEPROM_16KBIT:
+        if (options.eeprom_path == NULL) {
+          printf("Warning: cart expects 16kbit EEPROM, but none specified (see -eep16k)\n");
+          open_save_file(NULL, 0x800, &eeprom, NULL);
+        } else {
+          if (options.eeprom_size != 0x800)
+             printf("Warning: cart saves to 16kbit EEPROM, but different size specified (see -eep16k)\n");
+        }
+        break;
+      case CART_DB_SAVE_TYPE_FLASH_1MBIT:
+        if (options.flashram_path == NULL) {
+          int created;
+          printf("Warning: cart saves to Flash, but none specified (see -flash)\n");
+          open_save_file(NULL, FLASHRAM_SIZE, &flashram, &created);
+          if (created) {
+            memset(flashram.ptr, 0xFF, FLASHRAM_SIZE);
+          }
+        }
+        break;
+      case CART_DB_SAVE_TYPE_SRAM_256KBIT:
+        if (options.sram_path == NULL) {
+          printf("Warning: cart saves to SRAM, but none specified (see -sram)\n");
+          open_save_file(NULL, 0x8000, &sram, NULL);
+        }
+        break;
+    }
+  }
 
   if (load_paks(controller)) {
     cen64_alloc_cleanup();
