@@ -34,7 +34,8 @@ int open_save_file(const char *path, size_t size,
   int my_created;
 
   if (path == NULL) {
-    ptr = calloc(size, 1);
+    if ((ptr = calloc(size, 1)) == NULL)
+      return -1;
     mapping = NULL;
     hfile = NULL;
     if (created != NULL)
