@@ -100,7 +100,7 @@ int cen64_main(int argc, const char **argv) {
     switch (cart_info->save_type) {
       case CART_DB_SAVE_TYPE_EEPROM_4KBIT:
         if (options.eeprom_path == NULL) {
-          printf("Warning: cart expects 4kbit EEPROM, but none specified (see -eep4k)\n");
+          printf("Warning: cart saves to 4kbit EEPROM, but none specified (see -eep4k)\n");
           open_save_file(NULL, 0x200, &eeprom, NULL);
         } else {
           if (options.eeprom_size != 0x200)
@@ -109,7 +109,7 @@ int cen64_main(int argc, const char **argv) {
         break;
       case CART_DB_SAVE_TYPE_EEPROM_16KBIT:
         if (options.eeprom_path == NULL) {
-          printf("Warning: cart expects 16kbit EEPROM, but none specified (see -eep16k)\n");
+          printf("Warning: cart saves to 16kbit EEPROM, but none specified (see -eep16k)\n");
           open_save_file(NULL, 0x800, &eeprom, NULL);
         } else {
           if (options.eeprom_size != 0x800)
