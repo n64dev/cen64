@@ -13,9 +13,13 @@
 
 // Unmaps a save image from the host address space.
 int close_save_file(const struct save_file *file) {
-  UnmapViewOfFile(file->ptr);
-  CloseHandle(file->mapping);
-  CloseHandle(file->file);
+  if (file->file != NULL) {
+    UnmapViewOfFile(file->ptr);
+    CloseHandle(file->mapping);
+    CloseHandle(file->file);
+  } else {
+    free(file->ptr);
+  }
 
   return 0;
 }
@@ -29,49 +33,58 @@ int open_save_file(const char *path, size_t size,
   LARGE_INTEGER sz;
   int my_created;
 
-  // Open the file, get its size.
-  if ((hfile = CreateFile(path, GENERIC_READ | GENERIC_WRITE,
-    0, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL))
-    != INVALID_HANDLE_VALUE)
-    my_created = 0;
-
-  else {
-    if ((hfile = CreateFile(path, GENERIC_READ | GENERIC_WRITE,
-      0, NULL, CREATE_NEW, FILE_FLAG_RANDOM_ACCESS, NULL))
-      == INVALID_HANDLE_VALUE)
+  if (path == NULL) {
+    if ((ptr = calloc(size, 1)) == NULL)
       return -1;
-    my_created = 1;
-  }
+    mapping = NULL;
+    hfile = NULL;
+    if (created != NULL)
+      *created = 1;
+  } else {
+    // Open the file, get its size.
+    if ((hfile = CreateFile(path, GENERIC_READ | GENERIC_WRITE,
+      0, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL))
+      != INVALID_HANDLE_VALUE)
+      my_created = 0;
 
-  if (created != NULL)
-    *created = my_created;
+    else {
+      if ((hfile = CreateFile(path, GENERIC_READ | GENERIC_WRITE,
+        0, NULL, CREATE_NEW, FILE_FLAG_RANDOM_ACCESS, NULL))
+        == INVALID_HANDLE_VALUE)
+        return -1;
+      my_created = 1;
+    }
 
-  sz.QuadPart = size;
-  if(SetFilePointerEx(hfile, sz, NULL, FILE_BEGIN) == FALSE) {
-    CloseHandle(hfile);
+    if (created != NULL)
+      *created = my_created;
 
-    return -4;
-  }
-  if(SetEndOfFile(hfile) == FALSE) {
-    CloseHandle(hfile);
+    sz.QuadPart = size;
+    if(SetFilePointerEx(hfile, sz, NULL, FILE_BEGIN) == FALSE) {
+      CloseHandle(hfile);
 
-    return -5;
-  }
+      return -4;
+    }
+    if(SetEndOfFile(hfile) == FALSE) {
+      CloseHandle(hfile);
 
-  // Create a mapping and effectively enable it.
-  if ((mapping = CreateFileMapping(hfile, NULL,
-    PAGE_READWRITE, 0, 0, NULL)) == NULL) {
-    CloseHandle(hfile);
+      return -5;
+    }
 
-    return -2;
-  }
+    // Create a mapping and effectively enable it.
+    if ((mapping = CreateFileMapping(hfile, NULL,
+      PAGE_READWRITE, 0, 0, NULL)) == NULL) {
+      CloseHandle(hfile);
 
-  if ((ptr = MapViewOfFile(mapping, FILE_MAP_READ | FILE_MAP_WRITE,
-    0, 0, 0)) == NULL) {
-    CloseHandle(mapping);
-    CloseHandle(hfile);
+      return -2;
+    }
 
-    return -3;
+    if ((ptr = MapViewOfFile(mapping, FILE_MAP_READ | FILE_MAP_WRITE,
+      0, 0, 0)) == NULL) {
+      CloseHandle(mapping);
+      CloseHandle(hfile);
+
+      return -3;
+    }
   }
 
   file->ptr = ptr;
