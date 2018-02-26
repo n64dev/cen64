@@ -263,7 +263,7 @@ int check_extensions(void) {
 #ifdef __SSSE3__
     compiled = EXT_SSSE3;
 #endif
-#ifdef __SSE41__
+#ifdef __SSE4_1__
     compiled = EXT_SSE41;
 #endif
 #ifdef __AVX__
