@@ -33,6 +33,7 @@
 #define CRC_NUS_6103 0x0B050EE0U
 #define CRC_NUS_6105 0x98BC2C86U
 #define CRC_NUS_6106 0xACC8580AU
+#define CRC_NUS_6107 0xCD19FEF1U
 #define CRC_NUS_8303 0x0E018159U
 
 cen64_cold static uint32_t si_crc32(const uint8_t *data, size_t size);
@@ -46,6 +47,7 @@ int get_cic_seed(const uint8_t *rom_data, uint32_t *cic_seed) {
   else switch (crc) {
     case CRC_NUS_6101:
     case CRC_NUS_7102:
+    case CRC_NUS_6107:
       *cic_seed = CIC_SEED_NUS_6101;
       break;
 
