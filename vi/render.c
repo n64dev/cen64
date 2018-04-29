@@ -70,6 +70,17 @@ void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
       break;
   }
 
+  // AA Mode 3 (Replicate Pixels & No Interpolation)
+  if ((vi->regs[VI_STATUS_REG] & 0x300) == 0x300) {
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
+  // AA Mode 0..2 (Antialias & Resample)
+  else {
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  }
+
   aspect = (float) hres / (hres + hskip);
   vi->viuv[2] = vi->viuv[4] = aspect;
 
