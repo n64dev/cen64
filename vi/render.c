@@ -16,7 +16,9 @@
 void gl_window_init(struct vi_controller *vi) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
+  glDisable(GL_BLEND);
   glDisable(GL_DITHER);
+  glEnable(GL_TEXTURE_2D);
 
   // Initialize gamma boost blend function.
   glBlendFunc(GL_ONE, GL_ONE);
@@ -71,13 +73,9 @@ void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
   aspect = (float) hres / (hres + hskip);
   vi->viuv[2] = vi->viuv[4] = aspect;
 
-  // N64 texture quad.
-  glDisable(GL_BLEND);
-  glEnable(GL_TEXTURE_2D);
-  glColor3f(1.0f, 1.0f, 1.0f);
   glDrawArrays(GL_QUADS, 0, 4);
 
-  // Gamma boost blend quad.
+  // Gamma boost blend.
   if (vi->regs[VI_STATUS_REG] & 0x8) {
     glEnable(GL_BLEND);
     glColor3f(0.15f, 0.15f, 0.15f);
@@ -86,6 +84,10 @@ void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
     glDisable(GL_TEXTURE_2D);
     glColor3f(0.1f, 0.1f, 0.1f);
     glDrawArrays(GL_QUADS, 0, 4); // White quad blend
+
+    glDisable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
+    glColor3f(1.0f, 1.0f, 1.0f);
   }
 
   cen64_gl_window_swap_buffers(vi->window);
