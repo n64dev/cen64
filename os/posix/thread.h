@@ -11,6 +11,7 @@
 #ifndef CEN64_OS_POSIX_THREAD
 #define CEN64_OS_POSIX_THREAD
 #include "common.h"
+#include <errno.h>
 #include <pthread.h>
 
 #define CEN64_THREAD_RETURN_TYPE void*
@@ -42,8 +43,23 @@ static inline int cen64_thread_join(cen64_thread *t) {
 }
 
 // Sets the name of the thread to a specific value
+// This function is os dependent and must be called either
+// before starting the thread or on macOS directly after the creation.
+// If you call it at the wrong time or your OS doesn't support custom thread names
+// the return value will be non-zero.
 static inline int cen64_thread_setname(cen64_thread *t, const char *name) {
-  return pthread_setname_np(t, name);
+  #ifdef __APPLE__
+    if (t == NULL)
+      return pthread_setname_np(name);
+  #elif __NETBSD__
+    if (t != NULL)
+      return pthread_setname_np(t, "%s", name);
+  #else
+    if (t != NULL)
+      return pthread_setname_np(t, name);
+  #endif
+
+  return ENOSYS;
 }
 
 //
