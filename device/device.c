@@ -250,6 +250,11 @@ int device_multithread_spin(struct cen64_device *device) {
     return 1;
   }
 
+  // Silently ignoring when the thread name can't be set.
+  // This can happen on older linux kernels  (<=2.6)
+  // or with a write-protected /proc/self
+  cen64_thread_setname(vr4300_thread, "vr4300");
+
   run_rcp_thread(device);
 
   cen64_thread_join(&vr4300_thread);

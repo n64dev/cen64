@@ -428,6 +428,11 @@ int run_device(struct cen64_device *device, bool no_video) {
     return 1;
   }
 
+  // Silently ignoring when the thread name can't be set.
+  // This can happen on older linux kernels  (<=2.6)
+  // or with a write-protected /proc/self
+  cen64_thread_setname(thread, "device");
+
   if (!no_video)
     cen64_gl_window_thread(device);
 

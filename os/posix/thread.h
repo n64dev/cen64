@@ -41,6 +41,11 @@ static inline int cen64_thread_join(cen64_thread *t) {
   return pthread_join(*t, NULL);
 }
 
+// Sets the name of the thread to a specific value
+static inline int cen64_thread_setname(cen64_thread *t, const char *name) {
+  return pthread_setname_np(t, name);
+}
+
 //
 // Mutexes.
 //
