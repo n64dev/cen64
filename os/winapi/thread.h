@@ -53,13 +53,18 @@ static inline int cen64_thread_join(cen64_thread *t) {
 // before starting the thread or with older Windows APIs directly after the creation.
 // If you call it at the wrong time or your OS doesn't support custom thread names
 // the return value will be non-zero.
+// If cen64_thread is not set the name of the current thread will be changed.
 static inline int cen64_thread_setname(cen64_thread *t, const char *name) {
-  #ifdef HAVE_WINDOWS_GETTHREADID
-    SetThreadName(GetThreadId(t), name);
-    return 0;
-  #elif HAVE_WINDOWS_GETCURRENTTHREADID
-    SetThreadName(GetCurrentThreadId(), name);
-    return 0;
+  #ifdef defined (HAVE_WINDOWS_SETTHREADNAME) && defined (HAVE_WINDOWS_GETTHREADID)
+    if (t != NULL) {
+      SetThreadName(GetThreadId(t), name);
+      return 0;
+    }
+  #elif defined (HAVE_WINDOWS_SETTHREADNAME) && defined (HAVE_WINDOWS_GETCURRENTTHREADID)
+    if (t == NULL) {
+      SetThreadName(GetCurrentThreadId(), name);
+      return 0;
+    }
   #endif
 
   return ENOSYS;
