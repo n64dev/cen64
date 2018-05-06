@@ -171,9 +171,6 @@ struct bus_controller;
 void cen64_return(struct bus_controller *bus)
 ;
 
-#cmakedefine HAVE_WINDOWS_GETTHREADID ${HAVE_WINDOWS_GETTHREADID}
-#cmakedefine HAVE_WINDOWS_GETCURRENTTHREADID ${HAVE_WINDOWS_GETCURRENTTHREADID}
-
 #cmakedefine DEBUG_MMIO_REGISTER_ACCESS
 #ifdef DEBUG_MMIO_REGISTER_ACCESS
 #ifndef __cplusplus

@@ -373,8 +373,6 @@ set(VR4300_SOURCES
 # Build OS_SOURCES list.
 #
 if (DEFINED WIN32)
-  check_symbol_exists(GetThreadId windows.h HAVE_WINDOWS_GETTHREADID)
-  check_symbol_exists(GetCurrentThreadId windows.h HAVE_WINDOWS_GETCURRENTTHREADID)
   include_directories(${PROJECT_SOURCE_DIR}/os/winapi)
   set(EXTRA_OS_EXE WIN32)
   if (NOT MSVC)

@@ -47,6 +47,7 @@ static inline int cen64_thread_join(cen64_thread *t) {
 // before starting the thread or on macOS directly after the creation.
 // If you call it at the wrong time or your OS doesn't support custom thread names
 // the return value will be non-zero.
+// If cen64_thread is not set the name of the current thread will be changed.
 static inline int cen64_thread_setname(cen64_thread *t, const char *name) {
   #ifdef __APPLE__
     if (t == NULL)
