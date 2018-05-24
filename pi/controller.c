@@ -138,7 +138,7 @@ static int pi_dma_write(struct pi_controller *pi) {
       for (i = (pi->regs[PI_CART_ADDR_REG] + pi->rom_size + 3) & ~0x3;
           i < pi->regs[PI_CART_ADDR_REG] + length; i += 4) {
         uint32_t word = (i >> 16) | (i & 0xFFFF0000);
-        memcpy(pi->bus->ri->ram + dest + i, &word, sizeof(word));
+        memcpy(pi->bus->ri->ram + dest, &word, sizeof(word));
       }
 
       length = pi->rom_size - source;
