@@ -293,15 +293,14 @@ rsp_vect_t RSP_VMADN_VMUDN(struct rsp *rsp, uint32_t iw,
 rsp_vect_t RSP_VMOV(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
   uint16_t *acc = rsp->cp2.acc.e;
-  unsigned de = GET_DE(iw) & 0x7;
-  unsigned e = GET_E(iw) & 0x7;
+  unsigned e = GET_DE(iw) & 0x7;
 
   unsigned dest = GET_VD(iw);
   unsigned src = GET_VT(iw);
 
   write_acc_lo(acc, vt_shuffle);
 
-  return rsp_vmov(rsp, src, e, dest, de);
+  return rsp_vmov(rsp, src, e, dest, vt_shuffle);
 }
 
 //
