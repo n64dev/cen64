@@ -10,14 +10,17 @@
 #include "rsp/rsp.h"
 
 __m128i rsp_vmov(struct rsp *rsp,
-  unsigned src, unsigned e, unsigned dest, unsigned de) {
+  unsigned src, unsigned e, unsigned dest, rsp_vect_t vt_shuffle) {
   uint16_t data;
 
-  // Get the element from VT.
-  data = rsp->cp2.regs[src].e[e & 0x7];
+  // Copy element into data
+  memcpy(&data, (e & 0x7) + (uint16_t *)&vt_shuffle, sizeof(uint16_t));
+
+  printf("src %d dest %d el %x data %x\n", src, dest, e, data);
+  fflush(stdout);
 
   // Write out the upper part of the result.
-  rsp->cp2.regs[dest].e[de & 0x7] = data;
+  rsp->cp2.regs[dest].e[e & 0x7] = data;
   return rsp_vect_load_unshuffled_operand(rsp->cp2.regs[dest].e);
 }
 

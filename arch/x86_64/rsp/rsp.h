@@ -235,7 +235,7 @@ __m128i rsp_vdivh(struct rsp *rsp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
 
 __m128i rsp_vmov(struct rsp *rsp,
-  unsigned src, unsigned e, unsigned dest, unsigned de);
+  unsigned src, unsigned e, unsigned dest, rsp_vect_t vt_shuffle);
 
 __m128i rsp_vrcp_vrsq(struct rsp *rsp, uint32_t iw, int dp,
   unsigned src, unsigned e, unsigned dest, unsigned de);
