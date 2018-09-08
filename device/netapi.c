@@ -23,8 +23,7 @@
 
 #include "device/device.h"
 #include "device/netapi.h"
-#include "vr4300/cpu.h"
-#include "vr4300/pipeline.h"
+#include "vr4300/interface.h"
 
 // TODO: Really sloppy.
 #ifdef __WIN32__
@@ -178,11 +177,11 @@ int netapi_debug_handle_request(int sfd, struct cen64_device *device,
       length = sizeof(uint64_t) * 33;
 
       for (i = 0; i < 32; i++) {
-        u64 = htonll(device->vr4300.regs[i]);
+        u64 = htonll(vr4300_get_register(device->vr4300, i));
         memcpy(data + i * sizeof(u64), &u64, sizeof(u64));
       }
 
-      u64 = htonll(device->vr4300.pipeline.dcwb_latch.common.pc);
+      u64 = htonll(vr4300_get_pc(device->vr4300));
       memcpy(data + 32 * sizeof(u64), &u64, sizeof(u64));
       break;
 

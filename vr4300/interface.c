@@ -182,3 +182,13 @@ int write_mi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   return 0;
 }
 
+int has_profile_samples(struct vr4300 const *vr4300)
+{
+    return vr4300->profile_samples != NULL;
+}
+
+uint64_t get_profile_sample(struct vr4300 const *vr4300, size_t i)
+{
+    return vr4300->profile_samples[i];
+}
+

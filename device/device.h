@@ -25,14 +25,14 @@
 #include "rsp/cpu.h"
 #include "thread.h"
 #include "vi/controller.h"
-#include "vr4300/cpu.h"
+#include "vr4300/interface.h"
 
 // Only used when passed -nointerface.
 extern bool device_exit_requested;
 
 struct cen64_device {
   struct bus_controller bus;
-  struct vr4300 vr4300;
+  struct vr4300* vr4300;
 
   struct ai_controller ai;
   struct dd_controller dd;
