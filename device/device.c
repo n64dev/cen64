@@ -25,8 +25,7 @@
 #include "rsp/cpu.h"
 #include "thread.h"
 #include "vi/controller.h"
-#include "vr4300/cpu.h"
-#include "vr4300/cp1.h"
+#include "vr4300/interface.h"
 #include <setjmp.h>
 
 cen64_cold int angrylion_rdp_init(struct cen64_device *device);
@@ -47,6 +46,12 @@ struct cen64_device *device_create(struct cen64_device *device,
   const struct controller *controller,
   bool no_audio, bool no_video) {
 
+  // Allocate memory for VR4300
+  if ((device->vr4300 = vr4300_alloc()) == NULL) {
+    debug("create_device: Failed to allocate memory for the VR4300.\n");
+    return NULL;
+  }
+
   // Initialize the bus.
   device->bus.ai = &device->ai;
   device->bus.dd = &device->dd;
@@ -57,7 +62,7 @@ struct cen64_device *device_create(struct cen64_device *device,
 
   device->bus.rdp = &device->rdp;
   device->bus.rsp = &device->rsp;
-  device->bus.vr4300 = &device->vr4300;
+  device->bus.vr4300 = device->vr4300;
 
   // Initialize the bus.
   if (bus_init(&device->bus, dd_variant != NULL)) {
@@ -117,7 +122,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the VR4300.
-  if (vr4300_init(&device->vr4300, &device->bus)) {
+  if (vr4300_init(device->vr4300, &device->bus)) {
     debug("create_device: Failed to initialize the VR4300.\n");
     return NULL;
   }
@@ -128,6 +133,7 @@ struct cen64_device *device_create(struct cen64_device *device,
 
 // Cleans up memory allocated for the device.
 void device_destroy(struct cen64_device *device) {
+  vr4300_free(device->vr4300);
   rsp_destroy(&device->rsp);
 }
 
@@ -143,7 +149,7 @@ void device_run(struct cen64_device *device) {
 
   // TODO: Preserve host registers pinned to the device.
   saved_fpu_state = fpu_get_state();
-  vr4300_cp1_init(&device->vr4300);
+  vr4300_cp1_init(device->vr4300);
   rsp_late_init(&device->rsp);
 
   // Spin the device until we return (from setjmp).
@@ -206,7 +212,7 @@ CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *opaque) {
       }
 
       for (j = 0; j < 3; j++)
-        vr4300_cycle(&device->vr4300);
+        vr4300_cycle(device->vr4300);
     }
 
     // Sync up with the RCP thread.
@@ -271,7 +277,7 @@ int device_spin(struct cen64_device *device) {
     unsigned i;
 
     for (i = 0; i < 2; i++) {
-      vr4300_cycle(&device->vr4300);
+      vr4300_cycle(device->vr4300);
       rsp_cycle(&device->rsp);
       ai_cycle(&device->ai);
       pi_cycle(&device->pi);
@@ -279,7 +285,7 @@ int device_spin(struct cen64_device *device) {
 
     }
 
-    vr4300_cycle(&device->vr4300);
+    vr4300_cycle(device->vr4300);
   }
 
   return 0;
@@ -287,10 +293,10 @@ int device_spin(struct cen64_device *device) {
 
 // Continually cycles the device until setjmp returns.
 int device_debug_spin(struct cen64_device *device) {
-  struct vr4300_stats vr4300_stats;
+  struct vr4300_stats* vr4300_stats = vr4300_stats_alloc();
 
   // Prepare stats, set a breakpoint @ VR4300 IPL vector.
-  memset(&vr4300_stats, 0, sizeof(vr4300_stats));
+
   netapi_debug_wait(device->debug_sfd, device);
 
   if (setjmp(device->bus.unwind_data))
@@ -300,20 +306,21 @@ int device_debug_spin(struct cen64_device *device) {
     unsigned i;
 
     for (i = 0; i < 2; i++) {
-      vr4300_cycle(&device->vr4300);
+      vr4300_cycle(device->vr4300);
       rsp_cycle(&device->rsp);
       ai_cycle(&device->ai);
       pi_cycle(&device->pi);
       vi_cycle(&device->vi);
 
-      vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+      vr4300_cycle_extra(device->vr4300, vr4300_stats);
 
     }
 
-    vr4300_cycle(&device->vr4300);
-    vr4300_cycle_extra(&device->vr4300, &vr4300_stats);
+    vr4300_cycle(device->vr4300);
+    vr4300_cycle_extra(device->vr4300, vr4300_stats);
   }
 
+  vr4300_stats_free(vr4300_stats);
   return 0;
 }
 

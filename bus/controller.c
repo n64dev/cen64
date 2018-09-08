@@ -22,7 +22,6 @@
 #include "rsp/cpu.h"
 #include "rsp/interface.h"
 #include "vi/controller.h"
-#include "vr4300/cpu.h"
 #include "vr4300/interface.h"
 
 #define NUM_MAPPINGS 17
