@@ -63,7 +63,7 @@ struct pi_controller {
 
 cen64_cold int pi_init(struct pi_controller *pi, struct bus_controller *bus,
   const uint8_t *rom, size_t rom_size, const struct save_file *sram,
-  const struct save_file *flashram, struct is_viewer *is);
+  const struct save_file *flashram, const struct is_viewer *is);
 
 // Only invoke pi_cycle_ when the counter has expired (timeout).
 void pi_cycle_(struct pi_controller *pi);
