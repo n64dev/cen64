@@ -25,7 +25,7 @@ find_package(Threads REQUIRED)
 
 # If using GCC, configure it accordingly.
 if (${CMAKE_C_COMPILER_ID} MATCHES GNU)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99 -Werror=discarded-qualifiers")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -std=c99")
 
   # Include architecture-specify machinery.
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine

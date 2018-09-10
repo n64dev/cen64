@@ -43,8 +43,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddrom,
   const struct rom_file *pifrom, const struct rom_file *cart,
   const struct save_file *eeprom, const struct save_file *sram,
-  const struct save_file *flashram,
-  struct is_viewer *is,
+  const struct save_file *flashram, const struct is_viewer *is,
   const struct controller *controller,
   bool no_audio, bool no_video) {
 
