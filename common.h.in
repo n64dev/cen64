@@ -48,11 +48,11 @@ typedef char bool;
 #endif
 
 #ifdef __llvm__
-#define CEN64_COMPILER "llvm-"stringify(__clang_major__)"." \
-  stringify(__clang_minor__)"."stringify(__clang_patchlevel__)
+#define CEN64_COMPILER "llvm-" stringify(__clang_major__)"." \
+  stringify(__clang_minor__)"." stringify(__clang_patchlevel__)
 #elif defined(__GNUC__)
-#define CEN64_COMPILER "gcc-"stringify(__GNUC__)"." \
-  stringify(__GNUC_MINOR__)"."stringify(__GNUC_PATCHLEVEL__)
+#define CEN64_COMPILER "gcc-" stringify(__GNUC__)"." \
+  stringify(__GNUC_MINOR__)"." stringify(__GNUC_PATCHLEVEL__)
 #elif defined(_MSC_VER)
 #if _MSC_VER < 1300
 #define CEN64_COMPILER "MSVC 6.0"
