@@ -17,7 +17,9 @@
 #include "rsp/decoder.h"
 #include "rsp/interface.h"
 #include "vr4300/interface.h"
-#include <windows.h>
+#ifdef _WIN32
+  #include <windows.h>
+#endif
 
 static void rsp_status_write(struct rsp *rsp, uint32_t rt);
 
