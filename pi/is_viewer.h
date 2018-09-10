@@ -19,9 +19,9 @@ struct is_viewer {
   iconv_t cd;
 };
 
-int is_viewer_init(struct is_viewer *is);
-int is_viewer_map(struct is_viewer *is, uint32_t address);
-int read_is_viewer(struct is_viewer *is, uint32_t address, uint32_t *word);
-int write_is_viewer(struct is_viewer *is, uint32_t address, uint32_t word, uint32_t dqm);
+int is_viewer_init(const struct is_viewer *is);
+int is_viewer_map(const struct is_viewer *is, uint32_t address);
+int read_is_viewer(const struct is_viewer *is, uint32_t address, uint32_t *word);
+int write_is_viewer(const struct is_viewer *is, uint32_t address, uint32_t word, uint32_t dqm);
 
 #endif /* __IS_VIEWER_H__ */
