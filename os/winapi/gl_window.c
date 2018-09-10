@@ -14,6 +14,7 @@
 #include "gl_window.h"
 #include "thread.h"
 #include "timer.h"
+#include "os/common/input.h"
 #include "vi/controller.h"
 #include "vi/render.h"
 #include <windows.h>
