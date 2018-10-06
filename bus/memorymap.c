@@ -17,6 +17,7 @@ static void rotate_right(struct memory_map *, struct memory_map_node *);
 
 // Creates a new memory map.
 void create_memory_map(struct memory_map *map) {
+  memset(map->mappings, 0, sizeof(struct memory_map_node) * 19);
   map->next_map_index = 1;
   map->nil = map->mappings;
   map->root = map->nil;
