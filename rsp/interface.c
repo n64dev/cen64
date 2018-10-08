@@ -41,7 +41,7 @@ void rsp_dma_read(struct rsp *rsp) {
       uint32_t dest_addr = (dest + j) & 0x1FFC;
       uint32_t word;
 
-      bus_read_word(rsp, source_addr, &word);
+      bus_read_word(rsp->bus, source_addr, &word);
 
       // Update opcode cache.
       if (dest_addr & 0x1000) {
@@ -91,7 +91,7 @@ void rsp_dma_write(struct rsp *rsp) {
       if (!(source_addr & 0x1000))
         word = byteswap_32(word);
 
-      bus_write_word(rsp, dest_addr, word, ~0U);
+      bus_write_word(rsp->bus, dest_addr, word, ~0U);
       j += 4;
     } while (j < length);
 

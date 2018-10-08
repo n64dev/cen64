@@ -256,13 +256,13 @@ void VR4300_DCM(struct vr4300 *vr4300) {
       int64_t sdata;
 
       paddr &= ~mask;
-      bus_read_word(vr4300, paddr, &hiword);
+      bus_read_word(vr4300->bus, paddr, &hiword);
 
       if (request->access_type != VR4300_ACCESS_DWORD)
         sdata = (uint64_t) hiword << (lshiftamt + 32);
 
       else {
-        bus_read_word(vr4300, paddr + 4, &loword);
+        bus_read_word(vr4300->bus, paddr + 4, &loword);
         sdata = ((uint64_t) hiword << 32) | loword;
         sdata = sdata << lshiftamt;
       }
@@ -280,11 +280,11 @@ void VR4300_DCM(struct vr4300 *vr4300) {
       paddr &= ~mask;
 
       if (request->access_type == VR4300_ACCESS_DWORD) {
-        bus_write_word(vr4300, paddr, data >> 32, dqm >> 32);
+        bus_write_word(vr4300->bus, paddr, data >> 32, dqm >> 32);
         paddr += 4;
       }
  
-      bus_write_word(vr4300, paddr, data, dqm);
+      bus_write_word(vr4300->bus, paddr, data, dqm);
     }
 
     vr4300_common_interlocks(vr4300, MEMORY_WORD_DELAY, 2);
@@ -301,7 +301,7 @@ void VR4300_DCM(struct vr4300 *vr4300) {
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
-      bus_write_word(vr4300, bus_address + i * 4,
+      bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
   }
 
@@ -311,7 +311,7 @@ void VR4300_DCM(struct vr4300 *vr4300) {
 
   // Fill the cache line.
   for (i = 0; i < 4; i++)
-    bus_read_word(vr4300, paddr + i * 4,
+    bus_read_word(vr4300->bus, paddr + i * 4,
       data + (i ^ (WORD_ADDR_XOR >> 2)));
 
   vr4300_dcache_fill(&vr4300->dcache, vaddr, paddr, data);
@@ -361,7 +361,7 @@ void VR4300_ICB(struct vr4300 *vr4300) {
   unsigned delay;
 
   if (!rfex_latch->cached) {
-    bus_read_word(vr4300, paddr, &rfex_latch->iw);
+    bus_read_word(vr4300->bus, paddr, &rfex_latch->iw);
     delay = MEMORY_WORD_DELAY;
   }
 
@@ -373,7 +373,7 @@ void VR4300_ICB(struct vr4300 *vr4300) {
 
     // Fill the cache line.
     for (i = 0; i < 8; i ++)
-      bus_read_word(vr4300, paddr + i * 4, line + i);
+      bus_read_word(vr4300->bus, paddr + i * 4, line + i);
 
     memcpy(&rfex_latch->iw, line + (vaddr >> 2 & 0x7), sizeof(rfex_latch->iw));
     vr4300_icache_fill(&vr4300->icache, icrf_latch->common.pc, paddr, line);

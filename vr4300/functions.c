@@ -470,7 +470,7 @@ cen64_cold static int vr4300_cacheop_dc_wb_invalidate(
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
-      bus_write_word(vr4300, bus_address + i * 4,
+      bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
 
     line->metadata &= ~0x2;
@@ -495,7 +495,7 @@ cen64_cold static int vr4300_cacheop_dc_create_dirty_ex(
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
-      bus_write_word(vr4300, bus_address + i * 4,
+      bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
 
     delay = DCACHE_ACCESS_DELAY;
@@ -531,7 +531,7 @@ cen64_cold static int vr4300_cacheop_dc_hit_wb_invalidate(
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
-      bus_write_word(vr4300, bus_address + i * 4,
+      bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
 
     line->metadata &= ~0x1;
@@ -558,7 +558,7 @@ cen64_cold static int vr4300_cacheop_dc_hit_wb(
     memcpy(data, line->data, sizeof(data));
 
     for (i = 0; i < 4; i++)
-      bus_write_word(vr4300, bus_address + i * 4,
+      bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
 
     // TODO: Technically, it's clean now...
