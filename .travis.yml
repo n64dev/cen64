@@ -1,0 +1,41 @@
+notifications:
+  email: false
+
+language: c
+
+branches:
+  only:
+  - master
+
+compiler:
+  - gcc
+  - clang
+os:
+  - linux
+  - osx
+
+matrix:
+  exclude:
+    - os: osx
+      compiler: gcc
+
+addons:
+  apt:
+    packages:
+    - freeglut3
+    - freeglut3-dev
+    - libglew1.5
+    - libglew1.5-dev
+    - libglu1-mesa
+    - libglu1-mesa-dev
+    - libgl1-mesa-glx
+    - libgl1-mesa-dev
+    - libpulse-dev
+    - libalut-dev
+
+before_script:
+  - mkdir release && cd release
+
+script:
+  - cmake ..
+  - make

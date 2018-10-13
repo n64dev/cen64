@@ -1,0 +1,40 @@
+version: "{branch}-ci-{build}"
+image: Visual Studio 2015
+
+branches:
+  only:
+  - master
+
+environment:
+  matrix:
+  - build: msvc
+    platform: x64
+    CMAKEFILE: "Visual Studio 14 Win64"
+  - build: mingw-w64
+    platform: x64
+    CMAKEFILE: "MSYS Makefiles"
+
+install:
+- appveyor DownloadFile https://cfhcable.dl.sourceforge.net/project/gnuwin32/libiconv/1.9.2-1/libiconv-1.9.2-1.exe
+- libiconv-1.9.2-1.exe /SILENT /SUPPRESSMSGBOXES
+- appveyor DownloadFile http://openal-soft.org/openal-binaries/openal-soft-1.17.2-bin.zip
+- 7z x openal-soft-1.17.2-bin.zip
+
+before_build:
+- set PATH=%PATH%;C:\projects\cen64\openal-soft-1.17.2-bin
+- set PATH=%PATH:C:\Program Files\Git\bin;=%
+- set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+- if "%build%"=="msvc" set PATH=%PATH%;C:\Program Files (x86)\GnuWin32\bin
+- if "%build%"=="mingw-w64" set PATH=%PATH%;C:\msys64\mingw64;C:\msys64\mingw64\bin;C:\msys64\mingw64\lib;C:\msys64\mingw64\include;C:\msys64\usr\bin\;
+- call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %platform%
+- if "%platform%"=="X64" set platform=x64
+
+build_script:
+- mkdir build
+- cd build
+- cmake .. -G "%CMAKEFILE%"
+- if "%build%"=="msvc" MSBuild .\cen64.sln /p:Configuration=Release /p:Platform=%platform%
+- if "%build%"=="mingw-w64" bash -lc "cd /c/projects/cen64/build; make all"
+
+test_script:
+- ctest -C Release --verbose
