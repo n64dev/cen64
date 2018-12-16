@@ -8,7 +8,8 @@
 // 'LICENSE', which is part of this source code package.
 //
 
-
+#define PACKAGE "" // work around bfd.h requirement
+#include <bfd.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -29,6 +30,35 @@ static void die(const char fmt[], ...) {
 	exit(1);
 }
 
+static asymbol **syms = NULL;
+static uint32_t num_syms = 0;
+
+static bool found;
+static const char *filename, *funcname;
+static unsigned lineno, discriminator;
+
+static void findsym(bfd *bin, asection *section, void *addrv) {
+	bfd_vma vma;
+	bfd_size_type size;
+
+	if (found)
+		return;
+	if ((bfd_get_section_flags(bin, section) & SEC_ALLOC) == 0)
+		return;
+	vma = bfd_get_section_vma(bin, section);
+	const uint32_t addr = *(uint32_t *) addrv;
+
+	if (addr < vma)
+		return;
+	size = bfd_get_section_size(section);
+	if (addr >= vma + size)
+		return;
+
+	found = bfd_find_nearest_line_discriminator(bin, section, syms, addr - vma,
+							&filename, &funcname,
+							&lineno, &discriminator);
+}
+
 int main(int argc, char **argv) {
 
 	string s;
@@ -37,6 +67,23 @@ int main(int argc, char **argv) {
 
 	if (argc != 3) {
 		die("Usage: %s my.z64.profile my.elf\n", argv[0]);
+	}
+
+	bfd_init();
+	//bfd_set_default_target("elf32-big");
+	bfd *bin = bfd_openr(argv[2], NULL);
+	if (!bin) die("Failed to open elf file\n");
+
+	bin->flags |= BFD_DECOMPRESS;
+
+	if (bfd_check_format(bin, bfd_archive) ||
+		!bfd_check_format_matches(bin, bfd_object, NULL))
+		die("Unable to get addresses from elf file\n");
+
+	const uint32_t storage = bfd_get_symtab_upper_bound(bin);
+	if (storage) {
+		syms = (asymbol **) malloc(storage);
+		num_syms = bfd_canonicalize_symtab(bin, syms);
 	}
 
 	s = "nm ";
@@ -101,41 +148,37 @@ int main(int argc, char **argv) {
 
 		summary += num;
 
-		char *ptr = strchr(buf, ' ');
-		*ptr = '\0';
+		found = false;
+		bfd_map_over_sections(bin, findsym, &addr);
 
-		s = "addr2line -s -e ";
-		s += argv[2];
-		s += " ";
-		s += buf;
+		if (found) {
+			const char *ptr = filename ? strrchr(filename, '/') : NULL;
+			if (ptr) {
+				ptr++;
+				fprintf(out, "fl=%s\n", ptr);
+			} else {
+				fprintf(out, "fl=??\n");
+			}
 
-		char linebuf[PATH_MAX];
-		FILE *p = popen(s.c_str(), "r");
-		if (!fgets(linebuf, PATH_MAX, p))
-			die("Failed getting addr\n");
-		pclose(p);
+			fprintf(out, "fn=%s\n", funcname);
+			fprintf(out, "%u %lu\n\n", lineno, num);
+		} else {
+			fprintf(out, "fl=??\n");
+			map<uint32_t, string>::const_iterator it = funcs.lower_bound(addr);
+			it--;
+			fprintf(out, "fn=%s\n", it->second.c_str());
 
-		ptr = strchr(linebuf, ':');
-		*ptr = '\0';
-		ptr++;
-
-		uint32_t line = 0;
-		if (*ptr != '?' && sscanf(ptr, "%u", &line) != 1)
-			die("Failed getting addr\n");
-
-		// Okay, we have everything for this sample. Put it out
-		fprintf(out, "fl=%s\n", linebuf);
-		map<uint32_t, string>::const_iterator it = funcs.lower_bound(addr);
-		it--;
-		fprintf(out, "fn=%s\n", it->second.c_str());
-
-		fprintf(out, "%u %lu\n\n", line, num);
+			fprintf(out, "0 %lu\n\n", num);
+		}
 	}
+
+	bfd_close(bin);
 
 	fprintf(out, "totals: %lu\n", summary);
 
 	fclose(f);
 	fclose(out);
+	free(syms);
 
 	return 0;
 }
