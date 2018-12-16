@@ -182,7 +182,8 @@ int cen64_main(int argc, const char **argv) {
 
     if (device_create(device, &ddipl, dd_variant, &ddrom,
       &pifrom, &cart, &eeprom, &sram,
-      &flashram, is_in, controller, options.no_audio, options.no_video) == NULL) {
+      &flashram, is_in, controller,
+      options.no_audio, options.no_video, options.enable_profiling) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;
     }
@@ -190,7 +191,7 @@ int cen64_main(int argc, const char **argv) {
     else {
       device->multithread = options.multithread;
       status = run_device(device, options.no_video);
-      device_destroy(device);
+      device_destroy(device, options.cart_path);
     }
 
     cen64_free(&cen64_device_mem);
@@ -424,7 +425,7 @@ int run_device(struct cen64_device *device, bool no_video) {
 
   if (cen64_thread_create(&thread, run_device_thread, device)) {
     printf("Failed to create the main emulation thread.\n");
-    device_destroy(device);
+    device_destroy(device, NULL);
     return 1;
   }
 

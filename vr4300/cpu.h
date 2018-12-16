@@ -102,6 +102,7 @@ struct vr4300 {
   struct vr4300_dcache dcache;
   struct vr4300_icache icache;
 
+  uint64_t *profile_samples;
 };
 
 struct vr4300_stats {
@@ -111,7 +112,7 @@ struct vr4300_stats {
   unsigned long opcode_counts[NUM_VR4300_OPCODES];
 };
 
-cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus);
+cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus, bool profiling);
 cen64_cold void vr4300_print_summary(struct vr4300_stats *stats);
 
 cen64_flatten cen64_hot void vr4300_cycle_(struct vr4300 *vr4300);

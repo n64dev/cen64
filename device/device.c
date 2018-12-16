@@ -28,6 +28,7 @@
 #include "vr4300/cpu.h"
 #include "vr4300/cp1.h"
 #include <setjmp.h>
+#include <limits.h>
 
 cen64_cold int angrylion_rdp_init(struct cen64_device *device);
 cen64_cold static int device_debug_spin(struct cen64_device *device);
@@ -45,7 +46,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   const struct save_file *eeprom, const struct save_file *sram,
   const struct save_file *flashram, struct is_viewer *is,
   const struct controller *controller,
-  bool no_audio, bool no_video) {
+  bool no_audio, bool no_video, bool profiling) {
 
   // Initialize the bus.
   device->bus.ai = &device->ai;
@@ -117,7 +118,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   }
 
   // Initialize the VR4300.
-  if (vr4300_init(&device->vr4300, &device->bus)) {
+  if (vr4300_init(&device->vr4300, &device->bus, profiling)) {
     debug("create_device: Failed to initialize the VR4300.\n");
     return NULL;
   }
@@ -127,8 +128,30 @@ struct cen64_device *device_create(struct cen64_device *device,
 }
 
 // Cleans up memory allocated for the device.
-void device_destroy(struct cen64_device *device) {
+void device_destroy(struct cen64_device *device, const char *cart_path) {
   rsp_destroy(&device->rsp);
+
+  // Save profiling data, if any
+  if (cart_path && device->vr4300.profile_samples) {
+    char path[PATH_MAX];
+    snprintf(path, PATH_MAX, "%s.profile", cart_path);
+    path[PATH_MAX - 1] = '\0';
+
+    FILE *f = fopen(path, "w");
+    if (!f) {
+      printf("Can't open %s\n", path);
+      return;
+    }
+
+    uint32_t i;
+    for (i = 0; i < 8 * 1024 * 1024; i++) {
+      if (device->vr4300.profile_samples[i] < 10)
+        continue;
+      fprintf(f, "%x %lu\n", i + 0x80000000, device->vr4300.profile_samples[i]);
+    }
+
+    fclose(f);
+  }
 }
 
 // Called when we should (probably?) leave simulation.
