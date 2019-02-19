@@ -53,6 +53,10 @@ welcome. Feel free to add yourself to the CONTRIBUTORS file as well.
 * OpenAL
 * OpenGL
 
+To build on Fedora 29, do: `sudo dnf install cmake make mesa-libGL-devel openal-soft-devel`
+
+To build for Windows on Fedora 29, do: `sudo dnf install cmake make mingw64-{gcc,iconv,openal}`
+
 # Usage
 
 * How do I run cen64?<br />
