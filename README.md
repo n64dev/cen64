@@ -38,7 +38,7 @@ welcome. Feel free to add yourself to the CONTRIBUTORS file as well.
 
 # Keyboard controls
 
-* 3D stick:       arrow keys
+* 3D stick:       arrow keys (hold shift to "walk")
 * A button:       X
 * B button:       C
 * Z button:       Z
