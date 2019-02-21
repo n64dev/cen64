@@ -60,6 +60,9 @@ To build for Windows on Fedora 29, do: `sudo dnf install cmake make mingw64-{gcc
 
 To build for Windows on Windows XP..10, do:
 1. Install MSYS 1.0.11: https://sourceforge.net/projects/mingw/files/MSYS/Base/msys-core/msys-1.0.11/MSYS-1.0.11.exe/download
+* Say yes to post install
+* Say no to mingw is installed
+* Press enter a few times to finish the install
 2. Extract contents of "mingw64" directory to "MSYS\mingw" directory: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
 3. Copy "MSYS\mingw\bin\mingw32-make.exe" to "MSYS\mingw\bin\make.exe"
 4. Extract OpenAL "bin, libs, include" directories to "MSYS\mingw\x86_64-w64-mingw32\": https://kcat.strangesoft.net/openal-binaries/openal-soft-1.19.1-bin.zip
