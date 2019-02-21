@@ -69,10 +69,10 @@ To build for Windows on Windows XP..10, do:
 8. Extract CEN64 source to "MSYS\home\yourname\cen64": https://github.com/n64dev/cen64
 9. Run MSYS & type "cd cen64" Enter, followed by "cmake-gui" Enter
 10. Add the "MSYS\home\yourname\cen64" directory to "Browse Source..." & "Browse Build...", then Generate MSYS compatible files:
-a. Add OpenAL "MSYS/mingw/x86_64-w64-mingw32/include/AL" as "OPENAL/OPENAL_INCLUDE_DIR" & "MSYS/mingw/x86_64-w64-mingw32/lib/libOpenAL32.dll.a" as "OPENAL/OPENAL_LIBRARY" (if they are not found)
-b. Make sure to use libiconv static lib (Not DLL) "MSYS/local/lib/libiconv.a" as "ICONV/ICONV_LIBRARIES"
-c. Select "SSE4.1" or "AVX" as "Ungrouped Entries/CEN64_ARCH_SUPPORT" & make sure VR4300_BUSY_WAIT_DETECTION is ticked
-d. Click "Configure" then click "Generate" to get the makefiles, quit cmake-gui, & type "make" Enter
+* Add OpenAL "MSYS/mingw/x86_64-w64-mingw32/include/AL" as "OPENAL/OPENAL_INCLUDE_DIR" & "MSYS/mingw/x86_64-w64-mingw32/lib/libOpenAL32.dll.a" as "OPENAL/OPENAL_LIBRARY" (if they are not found)
+* Make sure to use libiconv static lib (Not DLL) "MSYS/local/lib/libiconv.a" as "ICONV/ICONV_LIBRARIES"
+* Select "SSE4.1" or "AVX" as "Ungrouped Entries/CEN64_ARCH_SUPPORT" & make sure VR4300_BUSY_WAIT_DETECTION is ticked
+* Click "Configure" then click "Generate" to get the makefiles, quit cmake-gui, & type "make" Enter
 
 # Usage
 
