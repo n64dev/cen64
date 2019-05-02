@@ -1,4 +1,4 @@
-/*
+﻿/*
 
 MAME Legal Information
 License
@@ -7620,8 +7620,9 @@ void rdp_process_list(void)
 
 			if (!remaining_length)
 			{
-
-				dp_start = dp_current = dp_end;
+				dp_start &= 0x00FFFFFF;
+				dp_end &= 0x00FFFFFF;
+				dp_current = dp_end;
 				return;
 			}
 			else
@@ -7659,7 +7660,10 @@ void rdp_process_list(void)
 	rdp_cmd_cur = 0;
 	};
 
-	dp_start = dp_current = dp_end;
+	dp_start &= 0x00FFFFFF;
+	dp_end &= 0x00FFFFFF;
+	dp_current = dp_end;
+	dp_status = 0x00000080;
 
 
 }
