@@ -7663,7 +7663,7 @@ void rdp_process_list(void)
 	dp_start &= 0x00FFFFFF;
 	dp_end &= 0x00FFFFFF;
 	dp_current = dp_end;
-	dp_status = 0x00000080;
+	dp_status |= DP_STATUS_CBUF_READY;
 
 
 }
