@@ -54,7 +54,7 @@ struct cen64_device {
   bool running;
 };
 
-cen64_cold void device_destroy(struct cen64_device *device);
+cen64_cold void device_destroy(struct cen64_device *device, const char *cart_path);
 cen64_cold struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *ddipl, const struct dd_variant *dd_variant,
   const struct rom_file *ddrom,
@@ -62,7 +62,7 @@ cen64_cold struct cen64_device *device_create(struct cen64_device *device,
   const struct save_file *eeprom, const struct save_file *sram,
   const struct save_file *flashram, struct is_viewer *is,
   const struct controller *controller,
-  bool no_audio, bool no_video);
+  bool no_audio, bool no_video, bool profiling);
 
 cen64_cold void device_exit(struct bus_controller *bus);
 cen64_cold void device_run(struct cen64_device *device);

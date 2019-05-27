@@ -22,7 +22,7 @@ static const struct cart_db_entry cart_db_table[] = {
   {"CLB", "EJ",       CART_DB_SAVE_TYPE_EEPROM_4KBIT,  "Mario Party (NTSC)"},
   {"CP2", "J",        CART_DB_SAVE_TYPE_FLASH_1MBIT,   "Pokemon Stadium 2 (Japan)"},
   {"CPS", "J",        CART_DB_SAVE_TYPE_SRAM_256KBIT,  "Pokemon Stadium (Japan)"},
-  {"CZL", "EJ",       CART_DB_SAVE_TYPE_EEPROM_4KBIT,  "Legend of Zelda: Ocarina of Time (NTSC)"},
+  {"CZL", "EJ",       CART_DB_SAVE_TYPE_SRAM_256KBIT,  "Legend of Zelda: Ocarina of Time (NTSC)"},
   {"N3D", "J",        CART_DB_SAVE_TYPE_EEPROM_16KBIT, "Doraemon 3: Nobita no Machi SOS!"},
   {"NA2", "J",        CART_DB_SAVE_TYPE_SRAM_256KBIT,  "Virtual Pro Wrestling 2"},
   {"NAB", "JP",       CART_DB_SAVE_TYPE_EEPROM_4KBIT,  "Air Boarder 64"},

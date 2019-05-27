@@ -56,7 +56,7 @@ void pi_cycle_(struct pi_controller *pi) {
 
 // Copies data from RDRAM to the PI
 static int pi_dma_read(struct pi_controller *pi) {
-  uint32_t dest = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFF;
+  uint32_t dest = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFE;
   uint32_t source = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
   uint32_t length = (pi->regs[PI_RD_LEN_REG] & 0xFFFFFF) + 1;
 
@@ -87,7 +87,7 @@ static int pi_dma_read(struct pi_controller *pi) {
 // Copies data from the the PI into RDRAM.
 static int pi_dma_write(struct pi_controller *pi) {
   uint32_t dest = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
-  uint32_t source = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFF;
+  uint32_t source = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFE;
   uint32_t length = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF) + 1;
 
   if (length & 7)
@@ -351,4 +351,3 @@ int write_sram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   fprintf(stderr, "SRAM write\n");
   return 0;
 }
-

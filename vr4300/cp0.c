@@ -85,8 +85,16 @@ int VR4300_DMTC0(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
   unsigned dest = GET_RD(iw);
 
-  if ((dest + VR4300_REGISTER_CP0_0) == VR4300_CP0_REGISTER_COMPARE)
-    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
+  switch (dest + VR4300_REGISTER_CP0_0)
+  {
+    case VR4300_CP0_REGISTER_CAUSE:
+      vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x0300;
+      vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= rt & 0x0300;
+      return 0;
+    case VR4300_CP0_REGISTER_COMPARE:
+      vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
+      break;
+  }
 
   if (vr4300_cp0_reg_masks[dest] == 0x0000000000000BADULL)
     vr4300->regs[VR4300_REGISTER_CP0_0 + 7] = rt;
@@ -171,12 +179,19 @@ int VR4300_MTC0(struct vr4300 *vr4300,
   struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_RD(iw);
 
-  if ((dest + VR4300_REGISTER_CP0_0) == VR4300_CP0_REGISTER_COMPARE)
-    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
-
-  else if ((dest + VR4300_REGISTER_CP0_0) == VR4300_CP0_REGISTER_STATUS) {
-    icrf_latch->segment = get_segment(icrf_latch->common.pc, rt);
-    exdc_latch->segment = get_default_segment();
+  switch (dest + VR4300_REGISTER_CP0_0)
+  {
+    case VR4300_CP0_REGISTER_CAUSE:
+      vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x0300;
+      vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= (int32_t)rt & 0x0300;
+      return 0;
+    case VR4300_CP0_REGISTER_COMPARE:
+      vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
+      break;
+    case VR4300_CP0_REGISTER_STATUS:
+      icrf_latch->segment = get_segment(icrf_latch->common.pc, rt);
+      exdc_latch->segment = get_default_segment();
+      break;
   }
 
   if (vr4300_cp0_reg_masks[dest] == 0x0000000000000BADULL)

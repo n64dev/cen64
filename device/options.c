@@ -30,6 +30,7 @@ const struct cen64_options default_cen64_options = {
   false, // console
 #endif
   false, // enable_debugger
+  false, // enable_profiling
   false, // multithread
   false, // no_audio
   false, // no_video
@@ -58,6 +59,9 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       else
         options->debugger_addr = "localhost:64646";
     }
+
+    else if (!strcmp(argv[i], "-profile"))
+      options->enable_profiling = true;
 
     else if (!strcmp(argv[i], "-multithread"))
       options->multithread = true;
@@ -255,6 +259,7 @@ void print_command_line_usage(const char *invokation_string) {
       "  -debug [addr][:port]       : Starts the debugger on interface:port.\n"
       "                               By default, CEN64 uses localhost:64646.\n"
       "                               NOTE: the debugger is not implemented yet.\n"
+      "  -profile                   : Profile the ROM (cpu-side).\n"
       "  -multithread               : Run in a threaded (but quasi-accurate) mode.\n"
       "                             : This mode cannot be run with the debugger.\n"
       "  -ddipl <path>              : Path to the 64DD IPL ROM (enables 64DD mode).\n"

@@ -185,6 +185,12 @@ static int vr4300_ex_stage(struct vr4300 *vr4300) {
     vr4300_opcode_mnemonics[rfex_latch->opcode.id]);
 #endif
 
+  if (vr4300->profile_samples) {
+    uint32_t idx = rfex_latch->common.pc - 0x80000000;
+    idx &= (8 * 1024 * 1024) - 1;
+    vr4300->profile_samples[idx]++;
+  }
+
   exdc_latch->dest = VR4300_REGISTER_R0;
   exdc_latch->request.type = VR4300_BUS_REQUEST_NONE;
   return vr4300_function_table[rfex_latch->opcode.id](

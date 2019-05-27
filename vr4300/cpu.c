@@ -49,7 +49,7 @@ static void vr4300_connect_bus(struct vr4300 *vr4300,
 }
 
 // Initializes the VR4300 component.
-int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus) {
+int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus, bool profiling) {
   vr4300_connect_bus(vr4300, bus);
 
   vr4300_cp0_init(vr4300);
@@ -64,6 +64,12 @@ int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus) {
   // MESS uses this version, so we will too?
   vr4300->mi_regs[MI_VERSION_REG] = 0x01010101;
   vr4300->mi_regs[MI_INIT_MODE_REG] = 0x80;
+
+  if (profiling)
+    vr4300->profile_samples = calloc(8 * 1024 * 1024, sizeof(uint64_t));
+  else
+    vr4300->profile_samples = NULL;
+
   return 0;
 }
 
