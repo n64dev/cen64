@@ -33,7 +33,8 @@ struct gb_cart {
   uint8_t* extram_bank_validRead;
   uint8_t* extram_bank_validWrite;
   uint8_t extram_bank_num;
-  int extramEnabled;
+  int extram_enabled;
+  int mbc1_mode;
   size_t extram_size;
   int extram_num_banks;
   int battery_backed;
@@ -50,6 +51,7 @@ void gb_write(struct controller *controller, uint16_t address, uint8_t data);
 void gb_init(struct controller *controller);
 
 extern void mbc_mbc3_install( struct controller *controller );
+extern void mbc_mbc1_install( struct controller *controller );
 uint8_t mbc_mbc3_read_ff( struct controller *controller, uint16_t address );
 void mbc_mbc3_write_dummy( struct controller *controller, uint16_t address, uint8_t data );
 uint8_t mbc_mbc3_read_bank_0( struct controller *controller, uint16_t address );
