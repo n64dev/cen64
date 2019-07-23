@@ -13,11 +13,11 @@
 #include "gb.h"
 
 
-static const uint8_t CARTRIDGE_TYPE_ADDRESS = 0x0147;
-static const uint8_t ROM_SIZE_CODE_ADDRESS = 0x0148;
-static const uint8_t EXTRAM_SIZE_CODE_ADDRESS = 0x0149;
+static const uint16_t CARTRIDGE_TYPE_ADDRESS = 0x0147;
+static const uint16_t ROM_SIZE_CODE_ADDRESS = 0x0148;
+static const uint16_t EXTRAM_SIZE_CODE_ADDRESS = 0x0149;
 
-static uintmax_t pow(unsigned x, unsigned y) {
+static uintmax_t power(unsigned x, unsigned y) {
   uintmax_t z = 1;
   uintmax_t base = x;
   while (y) {
@@ -85,6 +85,11 @@ void gb_write(struct controller *controller, uint16_t address, uint8_t data) {
 //   printf("gb_write: %04X:%02X\n", address, data);
 }
 
+void mbc_unsupported_install(struct controller *controller) {
+  printf("Transfer Pak ROM type not fully supported. Defaulting to MBC3 behaviour\n");
+  mbc_mbc3_install(controller);
+}
+
 void gb_init(struct controller *controller) {
   for(int i=0;i<0x100;i++) {
     controller->gb_readmem [i] = NULL;
@@ -111,7 +116,7 @@ void gb_init(struct controller *controller) {
 
   uint8_t rom_size_code = cart->cartrom_bank_zero[ROM_SIZE_CODE_ADDRESS];
   if (rom_size_code <= 8) {
-    cart->cartrom_num_banks = pow(2, rom_size_code + 1);
+    cart->cartrom_num_banks = power(2, rom_size_code + 1);
   } else {
     switch(rom_size_code) {
       case 0x52: 
@@ -164,7 +169,7 @@ void gb_init(struct controller *controller) {
       mbc_mbc3_install(controller);
       break;
     default:
-      mbc_mbc3_install(controller);
+      mbc_unsupported_install(controller);
       break;
   }
 }
@@ -178,7 +183,7 @@ uint8_t mbc_mbc1_read_bank_n(struct controller *controller, uint16_t address) {
 }
 
 // write 0000 - 1FFF
-uint8_t mbc_mbc1_write_ram_enable(struct controller *controller, uint16_t address, uint8_t data) {
+void mbc_mbc1_write_ram_enable(struct controller *controller, uint16_t address, uint8_t data) {
   mbc_write_ram_enable(controller, address, data);
 }
 
@@ -186,7 +191,6 @@ uint8_t mbc_mbc1_write_ram_enable(struct controller *controller, uint16_t addres
 void mbc_mbc1_write_rom_bank_select( struct controller *controller, uint16_t address, uint8_t data ) {
   struct gb_cart *cart = &controller->cart;
   
-  size_t offset;
   // Only first 5 bits of this register count.
   data &= 0x1F;
 
@@ -283,7 +287,6 @@ void mbc_mbc1_write_bank_mode_select(struct controller *controller, uint16_t add
 
 void mbc_mbc1_install(struct controller *controller) {
   int i;
-
   controller->cart.mbc1_mode = 0;
 
   // cart bank zero
@@ -309,7 +312,7 @@ void mbc_mbc1_install(struct controller *controller) {
   }
 
   // write 6000-7FFF: bank mode select
-  for( i=0x40; i<=0x5F; ++i ) {
+  for( i=0x60; i<=0x7F; ++i ) {
     controller->gb_writemem[i] = mbc_mbc1_write_bank_mode_select;
   }  
   
@@ -317,7 +320,6 @@ void mbc_mbc1_install(struct controller *controller) {
   // calculate the last address where extram is installed
   int extram_end = 0xA0 + (controller->cart.extram_size>8192?8192:controller->cart.extram_size)/256;
   for( i=0xA0; i<extram_end; ++i ) {
-    //controller->gb_readmem[i] = mbc_mbc1_read_extram;
     controller->gb_readmem[i] = mbc_mbc1_read_extram;
   }
   for( i=extram_end; i<=0xBF; ++i ) {
