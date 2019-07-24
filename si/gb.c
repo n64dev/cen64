@@ -355,7 +355,30 @@ void mbc_mbc3_install(struct controller *controller)
 }
 
 static void mbc_rom_only_install(struct controller *controller) {
-  mbc_mbc3_install(controller);
+  int i;
+  // cart bank zero
+  for( i=0x00; i<=0x3F; ++i ) {
+    controller->gb_readmem[i] = mbc_read_bank_0;
+  }
+  // cart bank n
+  for( i=0x40; i<=0x7F; ++i ) {
+    controller->gb_readmem[i] = mbc_read_bank_n;
+  }
+  
+  // write 0000-1FFF: ram enable
+  for( i=0x00; i<=0x7F; ++i ) {
+    controller->gb_writemem[i] = mbc_write_dummy;
+  }
+  
+  // read A000-BFFF: read extram
+  for( i=0xA0; i<0xBF; ++i ) {
+    controller->gb_readmem[i] = mbc_read_ff;
+  }
+  
+  // write A000-BFFF: write extram
+  for( i=0xA0; i<0xBF; ++i ) {
+    controller->gb_writemem[i] = mbc_write_dummy;
+  }
 }
 
 static void mbc_mbc5_write_ram_enable(struct controller *controller, uint16_t address, uint8_t data) {
@@ -390,6 +413,7 @@ static void mbc_mbc5_write_rom_bank_select_lower(struct controller *controller, 
 static void mbc_mbc5_write_rom_bank_select_upper(struct controller *controller, uint16_t address, uint8_t data) {
   struct gb_cart *cart = &controller->cart;
 
+  // only lower bit matters.
   data &= 1;
   
   // And then we shift the 2 bits from the high register on top of it.
