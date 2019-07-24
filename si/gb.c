@@ -52,27 +52,33 @@ static void mbc_write_ram_enable( struct controller *controller, uint16_t addres
   }
 }
 
-uint8_t mbc_read_bank_0( struct controller *controller, uint16_t address )
+static uint8_t mbc_read_bank_0( struct controller *controller, uint16_t address )
 {
   return controller->cart.cartrom_bank_zero[address];
 }
 
-uint8_t mbc_read_bank_n( struct controller *controller, uint16_t address )
+static uint8_t mbc_read_bank_n( struct controller *controller, uint16_t address )
 {
   return controller->cart.cartrom_bank_n[address&0x3fff];
 }
 
 // read A000-BFFF (extram)
-uint8_t mbc_read_extram( struct controller *controller, uint16_t address ) {
-  return controller->cart.extram_bank[address&0x1fff];
+static uint8_t mbc_read_extram( struct controller *controller, uint16_t address ) {
+  if (controller->cart.extram_enabled) {
+    return controller->cart.extram_bank[address&0x1fff];
+  } else {
+    return 0xFF;
+  }
 }
 
-void mbc_write_extram( struct controller *controller, uint16_t address, uint8_t data ) {
-  controller->cart.extram_bank[address&0x1fff] = data;
+static void mbc_write_extram( struct controller *controller, uint16_t address, uint8_t data ) {
+  if (controller->cart.extram_enabled) {
+    controller->cart.extram_bank[address&0x1fff] = data;
+  }
 }
 
 // write 2000-3FFF
-void mbc_mbc1_write_rom_bank_select( struct controller *controller, uint16_t address, uint8_t data ) {
+static void mbc_mbc1_write_rom_bank_select( struct controller *controller, uint16_t address, uint8_t data ) {
   struct gb_cart *cart = &controller->cart;
   
   // Only first 5 bits of this register count.
@@ -97,7 +103,7 @@ void mbc_mbc1_write_rom_bank_select( struct controller *controller, uint16_t add
 }
 
 // write 4000-5FFF
-void mbc_mbc1_write_rom_ram_bank_select( struct controller *controller, uint16_t address, uint8_t data ) {
+static void mbc_mbc1_write_rom_ram_bank_select( struct controller *controller, uint16_t address, uint8_t data ) {
   // this is where MBC1 gets stupidly complicated.
   // we only care abotu the first two bits.
   data &= 3;
@@ -155,7 +161,7 @@ void mbc_mbc1_write_rom_ram_bank_select( struct controller *controller, uint16_t
 }
 
 // 6000 - 7FFF
-void mbc_mbc1_write_bank_mode_select(struct controller *controller, uint16_t address, uint8_t data ) {
+static void mbc_mbc1_write_bank_mode_select(struct controller *controller, uint16_t address, uint8_t data ) {
   struct gb_cart *cart = &controller->cart;    
   cart->mbc1_mode = data & 0x1;
   if (cart->mbc1_mode == 0) {
@@ -169,7 +175,7 @@ void mbc_mbc1_write_bank_mode_select(struct controller *controller, uint16_t add
   }
 }
 
-void mbc_mbc1_install(struct controller *controller) {
+static void mbc_mbc1_install(struct controller *controller) {
   int i;
   controller->cart.mbc1_mode = 0;
 
@@ -219,6 +225,77 @@ void mbc_mbc1_install(struct controller *controller) {
   }  
 }
 
+static void mbc_mbc2_write_rom_bank_select(struct controller *controller, uint16_t address, uint8_t data) {
+  struct gb_cart *cart = &controller->cart;
+
+  // Only lower four bits matter.
+  uint8_t bank = data & 0xF;
+
+  // If the selected bank is higher than the number of banks, it loops around.
+  if (bank >= cart->cartrom_num_banks) {
+    bank = bank % cart->cartrom_num_banks;
+  }
+
+  if (bank == 0) {
+    bank++;
+  }  
+
+  cart->reg_rom_bank_low = bank;
+  cart->cart_bank_num = bank;  
+  
+  cart->cartrom_bank_n = cart->cartrom + bank * 0x4000;   
+}
+
+static uint8_t mbc_mbc2_read_extram(struct controller *controller, uint16_t address) {
+  if (controller->cart.extram_enabled) {
+    // MBC2s only have 512 addresses for extram
+    address &= 0x1FF;
+    // And only four bits per address.
+    return (controller->cart.extram_bank[address&0x1fff] & 0xF);
+  } else {
+    return 0xFF;
+  }
+}
+
+static void mbc_mbc2_write_extram(struct controller *controller, uint16_t address, uint8_t data) {
+  if (controller->cart.extram_enabled) {
+    // MBC2s only have 512 addresses for extram
+    address &= 0x1FF;
+    // And only four bits per address.
+    controller->cart.extram_bank[address&0x1fff] = (data & 0xF);
+  }
+}
+
+static void mbc_mbc2_install(struct controller *controller) {
+  int i;
+  
+  // cart bank zero
+  for( i=0x00; i<=0x3F; ++i ) {
+    controller->gb_readmem[i] = mbc_read_bank_0;
+  }
+  // cart bank n
+  for( i=0x40; i<=0x7F; ++i ) {
+    controller->gb_readmem[i] = mbc_read_bank_n;
+  }
+
+  for (i=0x00; i<=0x3F; ++i) {
+    // If bit 8 of the address is 1
+    if (i & 1) {
+      controller->gb_writemem[i] = mbc_mbc2_write_rom_bank_select;
+    } else  {
+      controller->gb_writemem[i] = mbc_write_ram_enable;
+    }
+  }
+  
+  // mbc2 have unique behaviour when accessing external ram.
+  for( i=0xA0; i<0xBF; ++i ) {
+    controller->gb_readmem[i] = mbc_mbc2_read_extram;
+  }
+  for( i=0xA0; i<=0xBF; ++i ) {
+    controller->gb_writemem[i] = mbc_mbc2_write_extram;
+  }
+}
+
 // write 2000-3FFF
 void mbc_mbc3_write_rom_bank_select( struct controller *controller, uint16_t address, uint8_t data ) {
   
@@ -235,6 +312,16 @@ void mbc_mbc3_write_rom_bank_select( struct controller *controller, uint16_t add
 //   printf( "switch cart bank num: %02X\n", cart->cart_bank_num );
 //   assert("MBC3 rom bank select: offset computation", offset <= (cart->cartromsize - 16384));
   cart->cartrom_bank_n = cart->cartrom + offset;
+}
+
+// read A000-BFFF rtc
+uint8_t mbc_mbc3_read_rtc( struct controller *controller, uint16_t address ) {
+  return 0x00;  // TODO
+}
+
+// write A000-BFFF rtc
+void mbc_mbc3_write_rtc( struct controller *controller, uint16_t address, uint8_t data ) {
+  // TODO
 }
 
 // write 4000-5FFF
@@ -292,16 +379,6 @@ void mbc_mbc3_write_ram_bank_select( struct controller *controller, uint16_t add
 
 // write 6000-7FFF
 void mbc_mbc3_write_clock_data_latch( struct controller *controller, uint16_t address, uint8_t data ) {
-  // TODO
-}
-
-// read A000-BFFF rtc
-uint8_t mbc_mbc3_read_rtc( struct controller *controller, uint16_t address ) {
-  return 0x00;  // TODO
-}
-
-// write A000-BFFF rtc
-void mbc_mbc3_write_rtc( struct controller *controller, uint16_t address, uint8_t data ) {
   // TODO
 }
 
@@ -430,14 +507,14 @@ static void mbc_mbc5_write_rom_bank_select_upper(struct controller *controller, 
   cart->cartrom_bank_n = cart->cartrom + bank * 0x4000;  
 }
 
-void mbc_mbc5_write_ram_bank_select(struct controller *controller, uint16_t address, uint8_t data) {
+static void mbc_mbc5_write_ram_bank_select(struct controller *controller, uint16_t address, uint8_t data) {
     // Only lowest 4 bits matter.
     data &= 0xF;
     controller->cart.extram_bank_num = data;
     controller->cart.extram_bank = controller->cart.extram + data * 0x2000;     
 }
 
-void mbc_mbc5_install(struct controller *controller) {
+static void mbc_mbc5_install(struct controller *controller) {
   int i;
   
   // cart bank zero
@@ -486,7 +563,7 @@ void mbc_mbc5_install(struct controller *controller) {
   }  
 }
 
-void mbc_unsupported_install(struct controller *controller) {
+static void mbc_unsupported_install(struct controller *controller) {
   printf("Transfer Pak ROM type not fully supported. Defaulting to MBC3 behaviour\n");
   mbc_mbc3_install(controller);
 }
@@ -580,12 +657,24 @@ void gb_init(struct controller *controller) {
     case 3:
       mbc_mbc1_install(controller);
       break;
+    case 5:
+    case 6:
+      mbc_mbc2_install(controller);
+      break;
     case 15:
     case 16:
     case 17:
     case 18:
     case 19:
       mbc_mbc3_install(controller);
+      break;
+    case 25:
+    case 26:
+    case 27:
+    case 28:
+    case 29:
+    case 30:            
+      mbc_mbc5_install(controller);
       break;
     default:
       mbc_unsupported_install(controller);
