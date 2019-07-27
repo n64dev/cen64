@@ -40,7 +40,6 @@
 #else
 #include <string.h>
 #include <sys/types.h>
-#include <sys/cdefs.h>
 #include <sys/time.h>
 #endif
 
