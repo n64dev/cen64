@@ -23,9 +23,10 @@ static int zero_page_fd = -1;
 // Allocates a block of (R/W/X) memory.
 void *cen64_alloc(struct cen64_mem *m, size_t size, bool exec) {
   int flags = MAP_PRIVATE;
+  int perm = PROT_READ | PROT_WRITE;
 
   if (exec)
-    flags |= PROT_EXEC;
+    perm |= PROT_EXEC;
 
   // Use MAP_ANON on OSX because it really does not
   // enjoy trying to mmap from device files...
@@ -33,8 +34,9 @@ void *cen64_alloc(struct cen64_mem *m, size_t size, bool exec) {
   flags |= MAP_ANON;
 #endif
 
-  if ((m->ptr = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC,
+  if ((m->ptr = mmap(NULL, size, perm,
     flags, zero_page_fd, 0)) == MAP_FAILED) {
+	  perror("mmap");
     return NULL;
   }
 
