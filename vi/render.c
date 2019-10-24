@@ -51,6 +51,8 @@ void gl_window_render_frame(struct vi_controller *vi, const uint8_t *buffer,
   unsigned hres, unsigned vres, unsigned hskip, unsigned type) {
   float aspect;
 
+  glClear(GL_COLOR_BUFFER_BIT);
+
   switch(type) {
     case 0:
       return;
