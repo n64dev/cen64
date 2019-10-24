@@ -83,6 +83,8 @@ int VR4300_DMFC0(struct vr4300 *vr4300,
 //
 int VR4300_DMTC0(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
+  struct vr4300_icrf_latch *icrf_latch = &vr4300->pipeline.icrf_latch;
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
   unsigned dest = GET_RD(iw);
 
   switch (dest + VR4300_REGISTER_CP0_0)
@@ -93,6 +95,10 @@ int VR4300_DMTC0(struct vr4300 *vr4300,
       return 0;
     case VR4300_CP0_REGISTER_COMPARE:
       vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x8000;
+      break;
+    case VR4300_CP0_REGISTER_STATUS:
+      icrf_latch->segment = get_segment(icrf_latch->common.pc, rt);
+      exdc_latch->segment = get_default_segment();
       break;
   }
 
