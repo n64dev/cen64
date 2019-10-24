@@ -227,6 +227,11 @@ int write_pi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   }
 
   else {
+    if (pi->regs[PI_STATUS_REG] & PI_STATUS_IS_BUSY) {
+      pi->regs[PI_STATUS_REG] |= PI_STATUS_ERROR;
+      return 0;
+    }
+
     pi->regs[reg] &= ~dqm;
     pi->regs[reg] |= word;
 
