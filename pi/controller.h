@@ -26,6 +26,19 @@ enum pi_register {
 extern const char *pi_register_mnemonics[NUM_PI_REGISTERS];
 #endif
 
+enum pi_status {
+  PI_STATUS_DMA_BUSY = 1 << 0,
+  PI_STATUS_IO_BUSY = 1 << 1,
+  PI_STATUS_ERROR = 1 << 2,
+  PI_STATUS_INTERRUPT = 1 << 3,
+  PI_STATUS_IS_BUSY = PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY
+};
+
+enum pi_status_write {
+  PI_STATUS_RESET_CONTROLLER = 1 << 0,
+  PI_STATUS_CLEAR_INTERRUPT = 1 << 1
+};
+
 #define FLASHRAM_SIZE 0x20000
 
 enum flashram_mode {
