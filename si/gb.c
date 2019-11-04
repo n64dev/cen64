@@ -20,19 +20,6 @@ static const uint16_t EXTRAM_SIZE_CODE_ADDRESS = 0x0149;
 void cart_reset_mbc(struct controller *controller);
 void cart_default_cleanup();
 
-static uintmax_t power(unsigned x, unsigned y) {
-  uintmax_t z = 1;
-  uintmax_t base = x;
-  while (y) {
-    if (y & 1) {  // or y%2
-      z *= base;
-    }
-    y >>= 1; // or y /= 2
-    base *= base;
-  }
-  return z;
-}
-
 static uint8_t mbc_read_ff( struct controller *controller, uint16_t address )
 {
   return 0xff;
@@ -612,7 +599,8 @@ void gb_init(struct controller *controller) {
 
   uint8_t rom_size_code = cart->cartrom_bank_zero[ROM_SIZE_CODE_ADDRESS];
   if (rom_size_code <= 8) {
-    cart->cartrom_num_banks = power(2, rom_size_code + 1);
+    // powers of 2
+    cart->cartrom_num_banks = 1 << (rom_size_code + 1);
   } else {
     switch(rom_size_code) {
       case 0x52: 
