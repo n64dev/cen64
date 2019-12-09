@@ -39,8 +39,8 @@ cen64_cold void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *s
 uint64_t vr4300_get_register(struct vr4300 *vr4300, size_t i);
 uint64_t vr4300_get_pc(struct vr4300 *vr4300);
 
-int read_mi_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_mi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int read_mi_regs(struct vr4300 *vr4300, uint32_t address, uint32_t *word);
+int write_mi_regs(struct vr4300 *vr4300, uint32_t address, uint32_t word, uint32_t dqm);
 
 void clear_rcp_interrupt(struct vr4300 *vr4300, enum rcp_interrupt_mask mask);
 void signal_rcp_interrupt(struct vr4300 *vr4300, enum rcp_interrupt_mask mask);
