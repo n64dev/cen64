@@ -209,6 +209,7 @@ void rsp_vstore_group4(struct rsp *rsp, uint32_t addr, unsigned element,
   uint16_t *regp, rsp_vect_t reg, rsp_vect_t dqm);
 
 #include "arch/x86_64/rsp/clamp.h"
+#include "arch/x86_64/rsp/transpose.h"
 #include "arch/x86_64/rsp/vabs.h"
 #include "arch/x86_64/rsp/vadd.h"
 #include "arch/x86_64/rsp/vaddc.h"

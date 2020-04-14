@@ -161,8 +161,32 @@ cen64_flatten static inline void rsp_df_stage(struct rsp *rsp) {
 
   addr = request->addr & 0xFFF;
 
+  // Scalar unit DMEM access.
+  if (request->type == RSP_MEM_REQUEST_INT_MEM) {
+    uint32_t rdqm = request->packet.p_int.rdqm;
+    uint32_t wdqm = request->packet.p_int.wdqm;
+    uint32_t data = request->packet.p_int.data;
+    unsigned rshift = request->packet.p_int.rshift;
+    uint32_t word;
+
+    memcpy(&word, rsp->mem + addr, sizeof(word));
+
+    word = byteswap_32(word);
+    dfwb_latch->result.result = rdqm & (((int32_t) word) >> rshift);
+    word = byteswap_32((word & ~wdqm) | (data & wdqm));
+
+    memcpy(rsp->mem + addr, &word, sizeof(word));
+  }
+  // Transposed vector unit DMEM access.
+  else if (request->type == RSP_MEM_REQUEST_TRANSPOSE) {
+    unsigned element = request->packet.p_transpose.element;
+    unsigned vt = request->packet.p_transpose.vt;
+
+    exdf_latch->request.packet.p_transpose.transpose_func(
+      rsp, addr, element, vt);
+  }
   // Vector unit DMEM access.
-  if (request->type != RSP_MEM_REQUEST_INT_MEM) {
+  else {
     uint16_t *regp = rsp->cp2.regs[request->packet.p_vect.dest].e;
     unsigned element = request->packet.p_vect.element;
     rsp_vect_t reg, dqm;
@@ -179,22 +203,6 @@ cen64_flatten static inline void rsp_df_stage(struct rsp *rsp) {
       rsp, addr, element, regp, reg, dqm);
   }
 
-  // Scalar unit DMEM access.
-  else {
-    uint32_t rdqm = request->packet.p_int.rdqm;
-    uint32_t wdqm = request->packet.p_int.wdqm;
-    uint32_t data = request->packet.p_int.data;
-    unsigned rshift = request->packet.p_int.rshift;
-    uint32_t word;
-
-    memcpy(&word, rsp->mem + addr, sizeof(word));
-
-    word = byteswap_32(word);
-    dfwb_latch->result.result = rdqm & (((int32_t) word) >> rshift);
-    word = byteswap_32((word & ~wdqm) | (data & wdqm));
-
-    memcpy(rsp->mem + addr, &word, sizeof(word));
-  }
 }
 
 // Writeback stage.
