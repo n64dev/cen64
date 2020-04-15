@@ -256,6 +256,7 @@ set(ARCH_X86_64_SOURCES
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vdivh.c
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/rsp.c
   ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/vrsq.c
+  ${PROJECT_SOURCE_DIR}/arch/x86_64/rsp/transpose.c
 )
 
 set(BUS_SOURCES

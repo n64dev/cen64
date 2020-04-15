@@ -162,6 +162,23 @@ static inline uint32_t byteswap_32(uint32_t word) {
 #endif
 }
 
+#ifdef __GNUC__
+__attribute__((pure))
+#endif
+static inline uint16_t byteswap_16(uint16_t hword) {
+#ifdef BIG_ENDIAN_HOST
+  return hword;
+#elif defined(_MSC_VER)
+  return _byteswap_ushort(hword);
+#elif defined(__GNUC__)
+  return __builtin_bswap16(hword);
+#else
+  return
+  ((((hword) >> 8) & 0x00FF) | \
+    (((hword) <<  8) & 0xFF00));
+#endif
+}
+
 // Return from simulation function.
 struct bus_controller;
 
