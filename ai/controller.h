@@ -13,8 +13,6 @@
 #include "common.h"
 #include "ai/context.h"
 
-struct bus_controller *bus;
-
 enum ai_register {
 #define X(reg) reg,
 #include "ai/registers.md"

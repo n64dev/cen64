@@ -14,8 +14,6 @@
 
 #define MAX_RDRAM_SIZE 0x800000U
 
-struct bus_controller *bus;
-
 enum rdram_register {
 #define X(reg) reg,
 #include "ri/rdram_registers.md"

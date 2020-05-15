@@ -15,8 +15,6 @@
 #include "device/sha1.h"
 #include "os/common/rom_file.h"
 
-struct bus_controller *bus;
-
 enum dd_register {
 #define X(reg) reg,
 #include "dd/registers.md"

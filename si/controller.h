@@ -14,8 +14,6 @@
 #include "si/pak.h"
 #include "dd/controller.h"
 
-struct bus_controller *bus;
-
 enum si_register {
 #define X(reg) reg,
 #include "si/registers.md"

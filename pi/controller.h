@@ -13,8 +13,6 @@
 #include "common.h"
 #include "os/common/save_file.h"
 
-struct bus_controller *bus;
-
 enum pi_register {
 #define X(reg) reg,
 #include "pi/registers.md"

@@ -18,8 +18,6 @@
 #include "gl_window.h"
 #include "timer.h"
 
-struct bus_controller *bus;
-
 enum vi_register {
 #define X(reg) reg,
 #include "vi/registers.md"
