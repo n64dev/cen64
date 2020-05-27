@@ -469,7 +469,19 @@ void VR4300_SYSC(struct vr4300 *vr4300) {
 
   vr4300_ex_fault(vr4300, VR4300_FAULT_SYSC);
   vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
-  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | 0x20,
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (8 << 2),
+    status, epc, 0x180);
+}
+
+// BRPT: Breakpoint exception
+void VR4300_BRPT(struct vr4300 *vr4300) {
+  struct vr4300_latch *common = &vr4300->pipeline.exdc_latch.common;
+  uint32_t cause, status;
+  uint64_t epc;
+
+  vr4300_ex_fault(vr4300, VR4300_FAULT_BRPT);
+  vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (9 << 2),
     status, epc, 0x180);
 }
 

@@ -406,6 +406,15 @@ int VR4300_BGTZ_BGTZL_BLEZ_BLEZL(
 }
 
 //
+// BREAK
+//
+int VR4300_BREAK(struct vr4300 *vr4300,
+  uint32_t unused(iw), uint64_t unused(rs), uint64_t unused(rt)) {
+  VR4300_BRPT(vr4300);
+  return 1;
+}
+
+//
 // CACHE
 //
 cen64_cold static int vr4300_cacheop_unimplemented(
