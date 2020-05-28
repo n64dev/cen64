@@ -2,6 +2,8 @@ notifications:
   email: false
 
 language: c
+dist: bionic
+osx_image: xcode10.1
 
 branches:
   only:
