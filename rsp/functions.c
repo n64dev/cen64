@@ -481,7 +481,6 @@ void RSP_LTV_STV(struct rsp *rsp,
   unsigned op = iw >> 29 & 0x1;
 
   exdf_latch->request.addr = rs + (sign_extend_6(iw) << 4);
-  exdf_latch->request.packet.p_vect.element = GET_EL(iw);
   exdf_latch->request.type = RSP_MEM_REQUEST_TRANSPOSE;
 
   exdf_latch->request.packet.p_transpose.vt = GET_VT(iw) & 0x18;
