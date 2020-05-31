@@ -97,7 +97,15 @@ int cen64_main(int argc, const char **argv) {
 
   if (cart.size >= 0x40 && (cart_info = cart_db_get_entry(cart.ptr)) != NULL) {
     printf("Detected cart: %s[%s] - %s\n", cart_info->rom_id, cart_info->regions, cart_info->description);
-    switch (cart_info->save_type) {
+
+    enum cart_db_save_type save_type = cart_info->save_type;
+    if (strcmp(cart_info->rom_id,"NK4") == 0) {
+      // Special case for Japanese Kirby 64, which has different save types for different revisions
+      uint8_t* rom = cart.ptr;
+      if(rom[0x3e] == 'J' && rom[0x3f] < 2) save_type = CART_DB_SAVE_TYPE_SRAM_256KBIT;
+    }
+
+    switch (save_type) {
       case CART_DB_SAVE_TYPE_EEPROM_4KBIT:
         if (options.eeprom_path == NULL) {
           printf("Warning: cart saves to 4kbit EEPROM, but none specified (see -eep4k)\n");
