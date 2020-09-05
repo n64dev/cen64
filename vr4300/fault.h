@@ -26,6 +26,7 @@ enum vr4300_fault_id {
 extern const char *vr4300_fault_mnemonics[NUM_VR4300_FAULTS];
 
 cen64_cold void VR4300_BRPT(struct vr4300 *vr4300);
+cen64_cold void VR4300_TRAP(struct vr4300 *vr4300);
 cen64_cold void VR4300_CPU(struct vr4300 *vr4300);
 cen64_cold void VR4300_DADE(struct vr4300 *vr4300);
 cen64_cold void VR4300_DCB(struct vr4300 *vr4300);
