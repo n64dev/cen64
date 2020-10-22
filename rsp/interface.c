@@ -144,11 +144,6 @@ int read_sp_regs2(void *opaque, uint32_t address, uint32_t *word) {
 int write_sp_mem(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   struct rsp *rsp = (struct rsp *) opaque;
   unsigned offset = address & 0x1FFC;
-  uint32_t orig_word;
-
-  memcpy(&orig_word, rsp->mem + offset, sizeof(orig_word));
-  orig_word = byteswap_32(orig_word) & ~dqm;
-  word = orig_word | word;
 
   // Update opcode cache.
   if (offset & 0x1000) {
