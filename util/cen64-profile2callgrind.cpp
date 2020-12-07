@@ -130,11 +130,11 @@ int main(int argc, char **argv) {
 
 	fprintf(out, "# callgrind format\n");
 	fprintf(out, "cmd: %s\n", argv[2]);
-	fprintf(out, "events: instructions\n\n");
+	fprintf(out, "events: instructions l1d-misses\n\n");
 
 	fprintf(out, "ob=%s\n\n", argv[2]);
 
-	uint64_t summary = 0;
+	uint64_t summary = 0, l1d_summary = 0;
 
 	// We have a list of functions, now turn the samples into C line info
 	f = fopen(argv[1], "r");
@@ -142,11 +142,12 @@ int main(int argc, char **argv) {
 
 	while (fgets(buf, PATH_MAX, f)) {
 		uint32_t addr;
-		uint64_t num;
-		if (sscanf(buf, "%x %lu", &addr, &num) != 2)
+		uint64_t num, l1d_num;
+		if (sscanf(buf, "%x %lu %lu", &addr, &num, &l1d_num) != 3)
 			die("Malformed profile file\n");
 
 		summary += num;
+		l1d_summary += l1d_num;
 
 		found = false;
 		bfd_map_over_sections(bin, findsym, &addr);
@@ -161,20 +162,20 @@ int main(int argc, char **argv) {
 			}
 
 			fprintf(out, "fn=%s\n", funcname);
-			fprintf(out, "%u %lu\n\n", lineno, num);
+			fprintf(out, "%u %lu %lu\n\n", lineno, num, l1d_num);
 		} else {
 			fprintf(out, "fl=??\n");
 			map<uint32_t, string>::const_iterator it = funcs.lower_bound(addr);
 			it--;
 			fprintf(out, "fn=%s\n", it->second.c_str());
 
-			fprintf(out, "0 %lu\n\n", num);
+			fprintf(out, "0 %lu %lu\n\n", num, l1d_num);
 		}
 	}
 
 	bfd_close(bin);
 
-	fprintf(out, "totals: %lu\n", summary);
+	fprintf(out, "totals: %lu %lu\n", summary, l1d_summary);
 
 	fclose(f);
 	fclose(out);

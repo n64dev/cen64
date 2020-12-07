@@ -151,10 +151,11 @@ void device_destroy(struct cen64_device *device, const char *cart_path) {
 
     uint32_t i;
     for (i = 0; i < 8 * 1024 * 1024; i++) {
-      uint64_t sample = get_profile_sample(device->vr4300, i);
-      if (sample < 10)
+      const uint64_t sample = get_profile_sample(device->vr4300, i);
+      const uint64_t l1d_sample = get_profile_sample(device->vr4300, i + (8 * 1024 * 1024));
+      if (sample < 10 && l1d_sample < 10)
         continue;
-      fprintf(f, "%x %lu\n", i + 0x80000000, sample);
+      fprintf(f, "%x %lu %lu\n", i + 0x80000000, sample, l1d_sample);
     }
 
     fclose(f);
