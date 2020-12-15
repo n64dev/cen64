@@ -69,6 +69,9 @@ int VR4300_DMFC0(struct vr4300 *vr4300,
   else if (vr4300_cp0_reg_masks[src] == 0x0000000000000BADULL)
     exdc_latch->result = vr4300->regs[VR4300_REGISTER_CP0_0 + 7];
 
+  else if (src + VR4300_REGISTER_CP0_0 == VR4300_CP0_REGISTER_PRID)
+    exdc_latch->result = 0xb22; // Hardcoded most common revision N64
+
   else {
     exdc_latch->result = mask_reg(src,
       vr4300->regs[VR4300_REGISTER_CP0_0 + src]);
@@ -166,6 +169,9 @@ int VR4300_MFC0(struct vr4300 *vr4300,
 
   else if (vr4300_cp0_reg_masks[src] == 0x0000000000000BADULL)
     exdc_latch->result = (int32_t) vr4300->regs[VR4300_REGISTER_CP0_0 + 7];
+
+  else if (src + VR4300_REGISTER_CP0_0 == VR4300_CP0_REGISTER_PRID)
+    exdc_latch->result = 0xb22; // Hardcoded most common revision N64
 
   else {
     exdc_latch->result = (int32_t) mask_reg(src,
@@ -294,4 +300,3 @@ int VR4300_TLBWR(struct vr4300 *vr4300,
 void vr4300_cp0_init(struct vr4300 *vr4300) {
   tlb_init(&vr4300->cp0.tlb);
 }
-
