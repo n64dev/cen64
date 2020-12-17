@@ -48,7 +48,7 @@ struct bus_controller {
 
 cen64_cold int bus_init(struct bus_controller *bus, int dd_present);
 
-// General-purpose accesssor functions.
+// General-purpose accessor functions.
 cen64_flatten cen64_hot int bus_read_word(const struct bus_controller *bus,
   uint32_t address, uint32_t *word);
 
