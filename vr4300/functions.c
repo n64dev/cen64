@@ -482,6 +482,9 @@ cen64_cold static int vr4300_cacheop_dc_wb_invalidate(
       bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
 
+    if (vr4300->regs[VR4300_CP0_REGISTER_LLADDR] == paddr >> 4)
+      vr4300->regs[VR4300_CP0_REGISTER_LLADDR] = 0;
+
     line->metadata &= ~0x2;
     return DCACHE_ACCESS_DELAY;
   }
@@ -543,6 +546,9 @@ cen64_cold static int vr4300_cacheop_dc_hit_wb_invalidate(
       bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
 
+    if (vr4300->regs[VR4300_CP0_REGISTER_LLADDR] == paddr >> 4)
+      vr4300->regs[VR4300_CP0_REGISTER_LLADDR] = 0;
+
     line->metadata &= ~0x1;
     return DCACHE_ACCESS_DELAY;
   }
@@ -569,6 +575,9 @@ cen64_cold static int vr4300_cacheop_dc_hit_wb(
     for (i = 0; i < 4; i++)
       bus_write_word(vr4300->bus, bus_address + i * 4,
         data[i ^ (WORD_ADDR_XOR >> 2)], ~0);
+
+    if (vr4300->regs[VR4300_CP0_REGISTER_LLADDR] == paddr >> 4)
+      vr4300->regs[VR4300_CP0_REGISTER_LLADDR] = 0;
 
     // TODO: Technically, it's clean now...
     line->metadata &= ~0x2;
@@ -1122,6 +1131,69 @@ cen64_hot int VR4300_LOAD_STORE(struct vr4300 *vr4300,
 
   exdc_latch->dest = ~sel_mask & GET_RT(iw);
   exdc_latch->result = 0;
+  return 0;
+}
+
+//
+// LL
+// SC
+//
+// TODO/FIXME: Check for unaligned addresses.
+//
+int VR4300_LOAD_STORE_CONDITIONAL(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  const uint64_t sel_mask = (int64_t) (int32_t) (iw << 2) >> 32; // 0 for load, -1 for store
+
+  const uint64_t address = rs + (int64_t) (int16_t) iw;
+  const uint64_t dqm = ~0ULL & ~sel_mask; // sign-extend
+
+  exdc_latch->request.vaddr = address & ~0x3;
+  exdc_latch->request.data = dqm | (sel_mask & rt);
+  exdc_latch->request.wdqm = (uint32_t) sel_mask;
+  exdc_latch->request.postshift = 0;
+  exdc_latch->request.access_type = VR4300_ACCESS_WORD;
+  exdc_latch->request.type = sel_mask ?
+                             VR4300_BUS_REQUEST_WRITE_CONDITIONAL :
+                             VR4300_BUS_REQUEST_READ_CONDITIONAL;
+  exdc_latch->request.size = 4;
+
+  exdc_latch->dest = ~sel_mask & GET_RT(iw);
+  exdc_latch->result = 0;
+
+  if (sel_mask)
+    exdc_latch->request.sc_reg = GET_RT(iw);
+
+  return 0;
+}
+
+//
+// LLD
+// SCD
+//
+// TODO/FIXME: Check for unaligned addresses.
+//
+int VR4300_LD_SD_CONDITIONAL(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+  struct vr4300_exdc_latch *exdc_latch = &vr4300->pipeline.exdc_latch;
+  uint64_t sel_mask = (int64_t) (int32_t) (iw << 2) >> 32;
+
+  exdc_latch->request.vaddr = rs + (int64_t) (int16_t) iw;
+  exdc_latch->request.data = ~sel_mask | (sel_mask & rt);
+  exdc_latch->request.wdqm = sel_mask;
+  exdc_latch->request.postshift = 0;
+  exdc_latch->request.access_type = VR4300_ACCESS_DWORD;
+  exdc_latch->request.type = sel_mask ?
+                             VR4300_BUS_REQUEST_WRITE_CONDITIONAL :
+                             VR4300_BUS_REQUEST_READ_CONDITIONAL;
+  exdc_latch->request.size = 8;
+
+  exdc_latch->dest = ~sel_mask & GET_RT(iw);
+  exdc_latch->result = 0;
+
+  if (sel_mask)
+    exdc_latch->request.sc_reg = GET_RT(iw);
+
   return 0;
 }
 

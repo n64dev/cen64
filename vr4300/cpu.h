@@ -64,8 +64,9 @@ enum vr4300_register {
   VR4300_REGISTER_CP1_27, VR4300_REGISTER_CP1_28, VR4300_REGISTER_CP1_29,
   VR4300_REGISTER_CP1_30, VR4300_REGISTER_CP1_31,
 
-  // Miscellanious registers.
+  // Miscellaneous registers.
   VR4300_REGISTER_HI, VR4300_REGISTER_LO,
+  VR4300_REGISTER_LLBIT,
   VR4300_CP1_FCR0, VR4300_CP1_FCR31,
 
   // Pipeline cycle type flag.
