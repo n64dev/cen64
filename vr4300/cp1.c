@@ -1449,5 +1449,5 @@ int VR4300_CP1_TRUNC_W(struct vr4300 *vr4300,
 // Initializes the coprocessor.
 void vr4300_cp1_init(struct vr4300 *vr4300) {
   fpu_set_state(FPU_ROUND_NEAREST | FPU_MASK_EXCPS);
+  vr4300->regs[VR4300_CP1_FCR0] = 0xa00; // hardcoded fpu version of both 0xb22 and 0xb10 N64s
 }
-
