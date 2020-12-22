@@ -1060,6 +1060,9 @@ int VR4300_DSRLV(struct vr4300 *vr4300,
 //
 int VR4300_INVALID(struct vr4300 *vr4300,
   uint32_t iw, uint64_t unused(rs), uint64_t unused(rt)) {
+
+  VR4300_RI(vr4300);
+
 #ifndef NDEBUG
   struct vr4300_rfex_latch *rfex_latch = &vr4300->pipeline.rfex_latch;
 
