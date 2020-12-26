@@ -66,7 +66,7 @@ int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus, bool profilin
   vr4300->mi_regs[MI_INIT_MODE_REG] = 0x80;
 
   if (profiling)
-    vr4300->profile_samples = calloc(8 * 1024 * 1024, sizeof(uint64_t));
+    vr4300->profile_samples = calloc(2 * 8 * 1024 * 1024, sizeof(uint64_t));
   else
     vr4300->profile_samples = NULL;
 

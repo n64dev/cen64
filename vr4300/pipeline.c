@@ -298,6 +298,12 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
           request->paddr = paddr;
           exdc_latch->cached = cached;
 
+          if (vr4300->profile_samples) {
+            uint32_t idx = exdc_latch->common.pc - 0x80000000;
+            idx &= (8 * 1024 * 1024) - 1;
+            vr4300->profile_samples[idx + (8 * 1024 * 1024)]++;
+          }
+
           // Miss: stall for one cycle, then move to the DCM phase.
           vr4300->pipeline.cycles_to_stall = 0;
           vr4300->regs[PIPELINE_CYCLE_TYPE] = 6;
@@ -316,6 +322,13 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
 
         request->paddr = paddr;
         exdc_latch->cached = cached;
+
+        if (vr4300->profile_samples) {
+          uint32_t idx = exdc_latch->common.pc - 0x80000000;
+          idx &= (8 * 1024 * 1024) - 1;
+          vr4300->profile_samples[idx + (8 * 1024 * 1024)]++;
+        }
+
         VR4300_DCM(vr4300);
         return 1;
       }
