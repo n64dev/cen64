@@ -428,7 +428,7 @@ int VR4300_BREAK(struct vr4300 *vr4300,
 // TNEI
 //
 int VR4300_TEQ_TNE(struct vr4300 *vr4300,
-  uint32_t unused(iw), uint64_t rs, uint64_t rt) {
+  uint32_t iw, uint64_t rs, uint64_t rt) {
 
   bool is_ne = iw >> 1 & 0x1;
   bool cmp = rs == rt;
@@ -441,7 +441,7 @@ int VR4300_TEQ_TNE(struct vr4300 *vr4300,
 }
 
 int VR4300_TEQI_TNEI(struct vr4300 *vr4300,
-  uint32_t unused(iw), uint64_t rs, uint64_t rt) {
+  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) iw;
 
   bool is_ne = iw >> 17 & 0x1;
@@ -455,7 +455,7 @@ int VR4300_TEQI_TNEI(struct vr4300 *vr4300,
 }
 
 int VR4300_TGE_TLT(struct vr4300 *vr4300,
-  uint32_t unused(iw), uint64_t rs, uint64_t rt) {
+  uint32_t iw, uint64_t rs, uint64_t rt) {
 
   bool is_lt = iw >> 1 & 0x1;
   bool cmp = (int64_t)rs >= (int64_t)rt;
@@ -468,7 +468,7 @@ int VR4300_TGE_TLT(struct vr4300 *vr4300,
 }
 
 int VR4300_TGEI_TLTI(struct vr4300 *vr4300,
-  uint32_t unused(iw), uint64_t rs, uint64_t rt) {
+  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) iw;
 
   bool is_lt = iw >> 17 & 0x1;
@@ -482,7 +482,7 @@ int VR4300_TGEI_TLTI(struct vr4300 *vr4300,
 }
 
 int VR4300_TGEIU_TLTIU(struct vr4300 *vr4300,
-  uint32_t unused(iw), uint64_t rs, uint64_t rt) {
+  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
   int64_t imm = (int16_t) iw;
 
   bool is_lt = iw >> 17 & 0x1;
@@ -496,7 +496,7 @@ int VR4300_TGEIU_TLTIU(struct vr4300 *vr4300,
 }
 
 int VR4300_TGEU_TLTU(struct vr4300 *vr4300,
-  uint32_t unused(iw), uint64_t rs, uint64_t rt) {
+  uint32_t iw, uint64_t rs, uint64_t rt) {
 
   bool is_lt = iw >> 1 & 0x1;
   bool cmp = rs >= rt;
