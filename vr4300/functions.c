@@ -415,6 +415,100 @@ int VR4300_BREAK(struct vr4300 *vr4300,
 }
 
 //
+// TEQ
+// TGE
+// TGEI
+// TGEIU
+// TGEU
+// TLT
+// TLTI
+// TLTIU
+// TLTU
+// TNE
+// TNEI
+//
+int VR4300_TEQ_TNE(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+
+  bool is_ne = iw >> 1 & 0x1;
+  bool cmp = rs == rt;
+
+  if (cmp != is_ne) {
+    VR4300_TRAP(vr4300);
+  }
+
+  return 0;
+}
+
+int VR4300_TEQI_TNEI(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
+  int64_t imm = (int16_t) iw;
+
+  bool is_ne = iw >> 17 & 0x1;
+  bool cmp = rs == (uint64_t)imm;
+
+  if (cmp != is_ne) {
+    VR4300_TRAP(vr4300);
+  }
+
+  return 0;
+}
+
+int VR4300_TGE_TLT(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+
+  bool is_lt = iw >> 1 & 0x1;
+  bool cmp = (int64_t)rs >= (int64_t)rt;
+
+  if (cmp != is_lt) {
+    VR4300_TRAP(vr4300);
+  }
+
+  return 0;
+}
+
+int VR4300_TGEI_TLTI(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
+  int64_t imm = (int16_t) iw;
+
+  bool is_lt = iw >> 17 & 0x1;
+  bool cmp = (int64_t)rs >= imm;
+
+  if (cmp != is_lt) {
+    VR4300_TRAP(vr4300);
+  }
+
+  return 0;
+}
+
+int VR4300_TGEIU_TLTIU(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t unused(rt)) {
+  int64_t imm = (int16_t) iw;
+
+  bool is_lt = iw >> 17 & 0x1;
+  bool cmp = rs >= (uint64_t)imm;
+
+  if (cmp != is_lt) {
+    VR4300_TRAP(vr4300);
+  }
+
+  return 0;
+}
+
+int VR4300_TGEU_TLTU(struct vr4300 *vr4300,
+  uint32_t iw, uint64_t rs, uint64_t rt) {
+
+  bool is_lt = iw >> 1 & 0x1;
+  bool cmp = rs >= rt;
+
+  if (cmp != is_lt) {
+    VR4300_TRAP(vr4300);
+  }
+
+  return 0;
+}
+
+//
 // CACHE
 //
 cen64_cold static int vr4300_cacheop_unimplemented(
