@@ -497,6 +497,18 @@ void VR4300_TRAP(struct vr4300* vr4300) {
     status, epc, 0x180);
 }
 
+// RI: Reserved Instruction exception
+void VR4300_RI(struct vr4300* vr4300) {
+  struct vr4300_latch *common = &vr4300->pipeline.exdc_latch.common;
+  uint32_t cause, status;
+  uint64_t epc;
+
+  vr4300_ex_fault(vr4300, VR4300_FAULT_RI);
+  vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (10 << 2),
+    status, epc, 0x180);
+}
+
 // WAT: Watch exception.
 void VR4300_WAT(struct vr4300 *vr4300) {
   struct vr4300_pipeline *pipeline = &vr4300->pipeline;
