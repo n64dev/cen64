@@ -267,6 +267,7 @@ set(BUS_SOURCES
 
 set(COMMON_SOURCES
   ${PROJECT_SOURCE_DIR}/common/debug.c
+  ${PROJECT_SOURCE_DIR}/common/hash_table.c
   ${PROJECT_SOURCE_DIR}/common/one_hot.c
   ${PROJECT_SOURCE_DIR}/common/reciprocal.c
 )
