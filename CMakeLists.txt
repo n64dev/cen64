@@ -285,6 +285,11 @@ set(DEVICE_SOURCES
   ${PROJECT_SOURCE_DIR}/device/sha1.c
 )
 
+set(GDB_SOURCES
+  ${PROJECT_SOURCE_DIR}/gdb/gdb.c
+  ${PROJECT_SOURCE_DIR}/gdb/protocol.c
+)
+
 set(OS_SOURCES
   ${PROJECT_SOURCE_DIR}/os/common/gl_hints.c
   ${PROJECT_SOURCE_DIR}/os/common/input.c
@@ -438,6 +443,7 @@ add_executable(cen64
   ${COMMON_SOURCES}
   ${DD_SOURCES}
   ${DEVICE_SOURCES}
+  ${GDB_SOURCES}
   ${OS_SOURCES}
   ${PI_SOURCES}
   ${RDP_SOURCES}
