@@ -55,11 +55,5 @@ cen64_flatten cen64_hot int bus_read_word(const struct bus_controller *bus,
 cen64_flatten cen64_hot int bus_write_word(struct bus_controller *bus,
   uint32_t address, uint32_t word, uint32_t dqm);
 
-// For asserting and deasserting RCP interrupts.
-enum rcp_interrupt_mask;
-
-int raise_rcp_interrupt(struct bus_controller *bus,
-  enum rcp_interrupt_mask mask);
-
 #endif
 

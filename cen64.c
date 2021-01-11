@@ -16,6 +16,7 @@
 #include "device/options.h"
 #include "device/sha1.h"
 #include "device/sha1_sums.h"
+#include "gdb/gdb.h"
 #include "os/common/alloc.h"
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
@@ -179,6 +180,8 @@ int cen64_main(int argc, const char **argv) {
     }
   }
 
+
+
   // Allocate memory for and create the device.
   if (cen64_alloc(&cen64_device_mem, sizeof(*device), false) == NULL) {
     printf("Failed to allocate enough memory for a device.\n");
@@ -197,9 +200,20 @@ int cen64_main(int argc, const char **argv) {
     }
 
     else {
+      struct gdb* debugger = NULL;
+
+      if (options.debugger_addr) {
+        debugger = gdb_alloc();
+        gdb_init(debugger, device, options.debugger_addr);
+      }
+
       device->multithread = options.multithread;
       status = run_device(device, options.no_video);
       device_destroy(device, options.cart_path);
+
+      if (debugger) {
+        gdb_destroy(debugger);
+      }
     }
 
     cen64_free(&cen64_device_mem);

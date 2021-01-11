@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "bus/address.h"
+#include "bus/controller.h"
 #include "vr4300/cpu.h"
 #include "vr4300/interface.h"
 #ifdef _WIN32
@@ -190,3 +191,52 @@ uint64_t get_profile_sample(struct vr4300 const *vr4300, size_t i)
     return vr4300->profile_samples[i];
 }
 
+bool vr4300_read_word_vaddr(struct vr4300 *vr4300, uint64_t vaddr, uint32_t* result) {
+  if (vaddr & 0x3) {
+    // must be aligned
+    return false;
+  }
+
+  const struct segment* segment = get_segment(vaddr, vr4300->regs[VR4300_CP0_REGISTER_STATUS]);
+
+  if (!segment) {
+    return false;
+  }
+
+  uint32_t paddr;
+  bool cached;
+
+  if (segment->mapped) {
+    unsigned asid = vr4300->regs[VR4300_CP0_REGISTER_ENTRYHI] & 0xFF;
+    unsigned select, tlb_miss, index;
+    uint32_t page_mask;
+
+    tlb_miss = tlb_probe(&vr4300->cp0.tlb, vaddr, asid, &index);
+    page_mask = vr4300->cp0.page_mask[index];
+    select = ((page_mask + 1) & vaddr) != 0;
+
+    if (unlikely(tlb_miss || !(vr4300->cp0.state[index][select] & 2))) {
+      return false;
+    }
+
+    cached = ((vr4300->cp0.state[index][select] & 0x38) != 0x10);
+    paddr = (vr4300->cp0.pfn[index][select]) | (vaddr & page_mask);
+  } else {
+    paddr = vaddr - segment->offset;
+    cached = segment->cached;
+  }
+
+  if (cached) {
+    struct vr4300_dcache_line* line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr);
+
+    if (line) {
+      memcpy(result, line->data + ((paddr & 0xf) ^ WORD_ADDR_XOR), sizeof(uint32_t));
+    } else {
+      bus_read_word(vr4300->bus, paddr, result);
+    }
+  } else {
+    bus_read_word(vr4300->bus, paddr, result);
+  }
+
+  return true;
+}

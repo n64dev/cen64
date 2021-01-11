@@ -267,6 +267,7 @@ set(BUS_SOURCES
 
 set(COMMON_SOURCES
   ${PROJECT_SOURCE_DIR}/common/debug.c
+  ${PROJECT_SOURCE_DIR}/common/hash_table.c
   ${PROJECT_SOURCE_DIR}/common/one_hot.c
   ${PROJECT_SOURCE_DIR}/common/reciprocal.c
 )
@@ -282,6 +283,11 @@ set(DEVICE_SOURCES
   ${PROJECT_SOURCE_DIR}/device/netapi.c
   ${PROJECT_SOURCE_DIR}/device/options.c
   ${PROJECT_SOURCE_DIR}/device/sha1.c
+)
+
+set(GDB_SOURCES
+  ${PROJECT_SOURCE_DIR}/gdb/gdb.c
+  ${PROJECT_SOURCE_DIR}/gdb/protocol.c
 )
 
 set(OS_SOURCES
@@ -364,6 +370,7 @@ set(VR4300_SOURCES
   ${PROJECT_SOURCE_DIR}/vr4300/cpu.c
   ${PROJECT_SOURCE_DIR}/vr4300/dcache.c
   ${PROJECT_SOURCE_DIR}/vr4300/decoder.c
+  ${PROJECT_SOURCE_DIR}/vr4300/debug.c
   ${PROJECT_SOURCE_DIR}/vr4300/fault.c
   ${PROJECT_SOURCE_DIR}/vr4300/functions.c
   ${PROJECT_SOURCE_DIR}/vr4300/icache.c
@@ -436,6 +443,7 @@ add_executable(cen64
   ${COMMON_SOURCES}
   ${DD_SOURCES}
   ${DEVICE_SOURCES}
+  ${GDB_SOURCES}
   ${OS_SOURCES}
   ${PI_SOURCES}
   ${RDP_SOURCES}

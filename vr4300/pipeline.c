@@ -522,6 +522,8 @@ void vr4300_cycle_(struct vr4300 *vr4300) {
     if (vr4300_wb_stage(vr4300))
       return;
 
+    vr4300_debug_check_breakpoints(&vr4300->debug, vr4300_get_pc(vr4300));
+
     if (vr4300_dc_stage(vr4300))
       return;
 

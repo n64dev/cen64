@@ -349,3 +349,6 @@ int device_debug_spin(struct cen64_device *device) {
   return 0;
 }
 
+cen64_cold void device_connect_debugger(struct cen64_device *device, void* break_handler_data, vr4300_debug_break_handler break_handler) {
+  vr4300_connect_debugger(device->vr4300, break_handler_data, break_handler);
+}
