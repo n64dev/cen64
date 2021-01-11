@@ -365,6 +365,7 @@ set(VR4300_SOURCES
   ${PROJECT_SOURCE_DIR}/vr4300/cpu.c
   ${PROJECT_SOURCE_DIR}/vr4300/dcache.c
   ${PROJECT_SOURCE_DIR}/vr4300/decoder.c
+  ${PROJECT_SOURCE_DIR}/vr4300/debug.c
   ${PROJECT_SOURCE_DIR}/vr4300/fault.c
   ${PROJECT_SOURCE_DIR}/vr4300/functions.c
   ${PROJECT_SOURCE_DIR}/vr4300/icache.c

@@ -14,7 +14,9 @@
 #include "vr4300/cp0.h"
 #include "vr4300/cp1.h"
 #include "vr4300/dcache.h"
+#include "vr4300/debug.h"
 #include "vr4300/icache.h"
+#include "vr4300/interface.h"
 #include "vr4300/opcodes.h"
 #include "vr4300/pipeline.h"
 
@@ -23,6 +25,7 @@ struct bus_controller;
 enum vr4300_signals {
   VR4300_SIGNAL_FORCEEXIT = 0x000000001,
   VR4300_SIGNAL_COLDRESET = 0x000000002,
+  VR4300_SIGNAL_BREAK = 0x000000004,
 };
 
 enum vr4300_register {
@@ -103,6 +106,8 @@ struct vr4300 {
   struct vr4300_icache icache;
 
   uint64_t *profile_samples;
+
+  struct vr4300_debug debug;
 };
 
 struct vr4300_stats {
@@ -112,7 +117,6 @@ struct vr4300_stats {
   unsigned long opcode_counts[NUM_VR4300_OPCODES];
 };
 
-cen64_cold int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus, bool profiling);
 cen64_cold void vr4300_print_summary(struct vr4300_stats *stats);
 
 cen64_flatten cen64_hot void vr4300_cycle_(struct vr4300 *vr4300);

@@ -24,6 +24,15 @@ enum rcp_interrupt_mask {
 struct vr4300;
 struct vr4300_stats;
 
+enum vr4300_debug_break_reason {
+  VR4300_DEBUG_BREAK_REASON_NONE,
+  VR4300_DEBUG_BREAK_REASON_BREAKPOINT,
+  VR4300_DEBUG_BREAK_REASON_EXCEPTION,
+  VR4300_DEBUG_BREAK_REASON_PAUSE,
+};
+
+typedef void (*vr4300_debug_break_handler)(void* data, enum vr4300_debug_break_reason reason);
+
 cen64_cold struct vr4300* vr4300_alloc();
 cen64_cold void vr4300_free(struct vr4300*);
 
@@ -39,6 +48,8 @@ cen64_cold void vr4300_cycle_extra(struct vr4300 *vr4300, struct vr4300_stats *s
 uint64_t vr4300_get_register(struct vr4300 *vr4300, size_t i);
 uint64_t vr4300_get_pc(struct vr4300 *vr4300);
 
+bool vr4300_read_word_vaddr(struct vr4300 *vr4300, uint64_t vaddr, uint32_t* result);
+
 int read_mi_regs(struct vr4300 *vr4300, uint32_t address, uint32_t *word);
 int write_mi_regs(struct vr4300 *vr4300, uint32_t address, uint32_t word, uint32_t dqm);
 
@@ -50,6 +61,11 @@ void signal_dd_interrupt(struct vr4300 *vr4300);
 
 uint64_t get_profile_sample(struct vr4300 const *vr4300, size_t i);
 int has_profile_samples(struct vr4300 const *vr4300);
+
+cen64_cold void vr4300_signal_break(struct vr4300 *vr4300);
+cen64_cold void vr4300_set_breakpoint(struct vr4300 *vr4300, uint64_t at);
+cen64_cold void vr4300_remove_breakpoint(struct vr4300 *vr4300, uint64_t at);
+cen64_cold void vr4300_connect_debugger(struct vr4300 *vr4300, void* break_handler_data, vr4300_debug_break_handler break_handler);
 
 #endif
 
