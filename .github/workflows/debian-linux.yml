@@ -2,15 +2,13 @@ name: debian-linux
 
 on:
   push:
-    branches:
-    - main
-    - master
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Installing Dependencies
       run: |
         sudo apt-get update
