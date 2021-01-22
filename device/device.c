@@ -29,6 +29,15 @@
 #include <setjmp.h>
 #include <limits.h>
 
+#ifdef _MSC_VER
+#include <stdlib.h>
+#ifndef PATH_MAX
+#define PATH_MAX _MAX_PATH
+#endif
+#endif
+
+
+
 cen64_cold int angrylion_rdp_init(struct cen64_device *device);
 cen64_cold static int device_debug_spin(struct cen64_device *device);
 cen64_cold static int device_multithread_spin(struct cen64_device *device);

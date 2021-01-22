@@ -66,8 +66,12 @@ typedef char bool;
 #define CEN64_COMPILER "MSVC 2012"
 #elif _MSC_VER < 1900
 #define CEN64_COMPILER "MSVC 2013"
-#elif _MSC_VER < 2000
+#elif _MSC_VER < 1910
 #define CEN64_COMPILER "MSVC 2014"
+#elif _MSC_VER < 1920
+#define CEN64_COMPILER "MSVC 2017"
+#elif _MSC_VER < 2000
+#define CEN64_COMPILER "MSVC 2019"
 #else
 #define CEN64_COMPILER "MSVC"
 #endif
@@ -141,6 +145,9 @@ typedef char bool;
 #define ntohll(x) __builtin_bswap64(x)
 #endif
 #endif
+#else
+#define htonll(x) _byteswap_uint64(x)
+#define ntohll(x) _byteswap_uint64(x)
 #endif
 
 #ifdef __GNUC__
