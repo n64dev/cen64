@@ -10,6 +10,7 @@ cmake_minimum_required(VERSION 2.8)
 project(cen64 C)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 if(APPLE)
   find_package(OpenGLXQuartz REQUIRED)
