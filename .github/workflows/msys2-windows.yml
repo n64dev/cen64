@@ -1,0 +1,89 @@
+name: msys2-windows
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          { msystem: MINGW64, arch: x86_64, extensions: AVX },
+          { msystem: MINGW64, arch: x86_64, extensions: Native }
+        ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: temp
+          fetch-depth: 0
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            curl
+            p7zip
+            git
+            sed
+            base-devel
+            mingw-w64-${{ matrix.arch }}-cmake
+            mingw-w64-${{ matrix.arch }}-toolchain
+          update: true
+
+      - name: Move Checkout
+        run: |
+          Copy-Item -Path ".\temp" -Destination "C:\_" -Recurse
+          New-Item -Path "C:\_" -Name "build" -ItemType "directory"
+
+      - name: Get OpenAL
+        shell: msys2 {0}
+        run: |
+          curl -SL -o openal-soft.zip https://openal-soft.org/openal-binaries/openal-soft-1.21.0-bin.zip
+          7z x openal-soft.zip
+          cd openal-soft-1.21.0-bin
+          ls
+          mkdir /C/_/openal/
+          mkdir /C/_/openal/include/
+          cp -R ./include/AL/. /C/_/openal/include/
+          mkdir /C/_/openal/lib/
+          cp -R ./libs/Win64/. /C/_/openal/lib/
+          cp -R ./bin/Win64/soft_oal.dll /C/_/build/OpenAL32.dll
+          cd ..
+
+      - name: Correct pthread to allow static
+        shell: msys2 {0}
+        run: |
+          sed -z 's/#else\n#define WINPTHREAD_API __declspec(dllimport)/#else\n#define WINPTHREAD_API/' /mingw64/x86_64-w64-mingw32/include/pthread.h
+
+      - name: Build iconv static lib
+        shell: msys2 {0}
+        run: |
+          curl -SL http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz | tar -xz -C .
+          cd libiconv-1.16
+          ./configure --prefix=/mingw64/local --disable-shared --enable-static
+          make
+          make install-strip
+          cd ..
+
+      - name: Build CEN64
+        shell: msys2 {0}
+        run: |
+          cd /C/_
+          cd build
+          cmake -DCMAKE_FIND_LIBRARY_SUFFIXES='.a' -DICONV_INCLUDE_DIR:PATH=/mingw64/local/include -DICONV_LIBRARIES:FILEPATH=/mingw64/local/lib/libiconv.a -DOPENAL_INCLUDE_DIR:PATH=/C/_/openal/include -DOPENAL_LIBRARY:FILEPATH=/C/_/openal/lib/libOpenAL32.dll.a -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchains/mingw64-${{ matrix.arch }}.cmake -DCEN64_ARCH_SUPPORT:STRING=${{ matrix.extensions }} -DCMAKE_BUILD_TYPE=Release -G 'Unix Makefiles' ..
+          make VERBOSE=1 -j4
+
+      - name: "Upload executable"
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-${{ matrix.arch }}-${{ matrix.extensions }}
+          path: C:/_/build/*.exe
+
+      - name: "Upload dll"
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-${{ matrix.arch }}-${{ matrix.extensions }}
+          path: C:/_/build/*.dll
