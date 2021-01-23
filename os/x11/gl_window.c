@@ -187,9 +187,7 @@ int cen64_gl_window_thread(struct cen64_device *device) {
       //}
 
       // Did we get a UI event?
-      if (FD_ISSET(vi->window->pipefds[0], &ready_to_read)) {
-        read(vi->window->pipefds[0], &window, sizeof(window));
-
+      if (FD_ISSET(vi->window->pipefds[0], &ready_to_read) && read(vi->window->pipefds[0], &window, sizeof(window)) > 0) {
         cen64_mutex_lock(&window->render_mutex);
 
         gl_window_render_frame(vi, window->frame_buffer,

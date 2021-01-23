@@ -451,7 +451,7 @@ int run_device(struct cen64_device *device, bool no_video) {
     return 1;
   }
 
-  cen64_thread_setname(thread, "device");
+  cen64_thread_setname(&thread, "device");
 
   if (!no_video)
     cen64_gl_window_thread(device);
