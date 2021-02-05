@@ -41,13 +41,16 @@ struct si_controller {
   uint8_t input[4];
   struct eeprom eeprom;
   struct controller controller[4];
+
+  FILE* m64_fp; // Mupen64 movie file
 };
 
 cen64_cold int si_init(struct si_controller *si, struct bus_controller *bus,
   const uint8_t *pif_rom, const uint8_t *cart_rom,
   const struct dd_variant *dd_variant,
   uint8_t *eeprom, size_t eeprom_size,
-  const struct controller *controller);
+  const struct controller *controller,
+  FILE* m64_fp);
 
 int read_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t *word);
 int write_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);

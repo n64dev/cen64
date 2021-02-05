@@ -44,7 +44,8 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
   const uint8_t *pif_rom, const uint8_t *cart_rom,
   const struct dd_variant *dd_variant,
   uint8_t *eeprom, size_t eeprom_size,
-  const struct controller *controller) {
+  const struct controller *controller,
+  FILE* m64_fp) {
   uint32_t cic_seed;
 
   si->bus = bus;
@@ -82,6 +83,9 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
 
   // controllers
   memcpy(si->controller, controller, sizeof(struct controller) * 4);
+
+  // Mupen64 movie file
+  si->m64_fp = m64_fp;
 
   return 0;
 }
@@ -147,33 +151,13 @@ int pif_perform_command(struct si_controller *si,
           if (likely(bus->vi->window)) {
             cen64_mutex_lock(&bus->vi->window->event_mutex);
 
-            static FILE* m64 = NULL;
-            static bool give_up_m64 = false;
-            if (m64 || (!m64 && !give_up_m64)) {
-              if (!m64) {
-                m64 = fopen("cont.m64", "rb");
-                if (m64) {
-                  uint8_t header[0x400];
-                  int n = fread(header, 1, sizeof header, m64);
-                  if (n == sizeof header) {
-                    printf("Playing back m64:\n");
-                    printf("  ROM name: %.32s (crc %X, region %X)\n",
-                           header+0xC4,
-                           *(uint32_t*)(header+0xE4),
-                           *(uint16_t*)(header+0xE8));
-                    printf("  Author: %.222s\n", header+0x222);
-                    printf("  Description: %.256s\n", header+0x300);
-                  } else {
-                    printf("Bad m64!\n");
-                    fclose(m64), m64 = NULL;
-                    give_up_m64 = true;
-                  }
-                } else {
-                  give_up_m64 = true;
-                }
+            if (si->m64_fp != NULL) {
+              fread(si->input, 1, 4, si->m64_fp);
+              if (feof(si->m64_fp) || ferror(si->m64_fp)) {
+                fclose(si->m64_fp);
+                si->m64_fp = NULL;
+                printf("Movie playback finished.\n");
               }
-
-              if (m64) fread(si->input, 1, 4, m64);
             }
             
             memcpy(recv_buf, si->input, sizeof(si->input));
