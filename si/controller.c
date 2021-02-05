@@ -146,7 +146,38 @@ int pif_perform_command(struct si_controller *si,
 
           if (likely(bus->vi->window)) {
             cen64_mutex_lock(&bus->vi->window->event_mutex);
+
+            static FILE* m64 = NULL;
+            static bool give_up_m64 = false;
+            if (m64 || (!m64 && !give_up_m64)) {
+              if (!m64) {
+                m64 = fopen("cont.m64", "rb");
+                if (m64) {
+                  uint8_t header[0x400];
+                  int n = fread(header, 1, sizeof header, m64);
+                  if (n == sizeof header) {
+                    printf("Playing back m64:\n");
+                    printf("  ROM name: %.32s (crc %X, region %X)\n",
+                           header+0xC4,
+                           *(uint32_t*)(header+0xE4),
+                           *(uint16_t*)(header+0xE8));
+                    printf("  Author: %.222s\n", header+0x222);
+                    printf("  Description: %.256s\n", header+0x300);
+                  } else {
+                    printf("Bad m64!\n");
+                    fclose(m64), m64 = NULL;
+                    give_up_m64 = true;
+                  }
+                } else {
+                  give_up_m64 = true;
+                }
+              }
+
+              if (m64) fread(si->input, 1, 4, m64);
+            }
+            
             memcpy(recv_buf, si->input, sizeof(si->input));
+            
             cen64_mutex_unlock(&bus->vi->window->event_mutex);
           }
 
