@@ -50,8 +50,8 @@ uint64_t vr4300_get_pc(struct vr4300 *vr4300);
 
 bool vr4300_read_word_vaddr(struct vr4300 *vr4300, uint64_t vaddr, uint32_t* result);
 
-int read_mi_regs(void *opaque, uint32_t address, uint32_t *word);
-int write_mi_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm);
+int read_mi_regs(struct vr4300 *vr4300, uint32_t address, uint32_t *word);
+int write_mi_regs(struct vr4300 *vr4300, uint32_t address, uint32_t word, uint32_t dqm);
 
 void clear_rcp_interrupt(struct vr4300 *vr4300, enum rcp_interrupt_mask mask);
 void signal_rcp_interrupt(struct vr4300 *vr4300, enum rcp_interrupt_mask mask);
