@@ -40,7 +40,7 @@ unsigned tlb_probe(const struct cen64_tlb *tlb,
   for (i = 0; i < 32; i += 8) {
     __m128i check_l, check_h, vpn_check;
     __m128i check_a, check_g, asid_check;
-    __m128i check, check_v;
+    __m128i check;
 
     __m128i page_mask_l = _mm_load_si128((__m128i*) (tlb->page_mask.data + i + 0));
     __m128i page_mask_h = _mm_load_si128((__m128i*) (tlb->page_mask.data + i + 4));
@@ -63,10 +63,6 @@ unsigned tlb_probe(const struct cen64_tlb *tlb,
 
     // Match only on VPN match && (asid match || global)
     check = _mm_and_si128(vpn_check, asid_check);
-
-    // Match only on all of the above >= 1 valid bit set.
-    check_v = _mm_loadl_epi64((__m128i*) (tlb->valid + i));
-    check = _mm_and_si128(check, check_v);
 
     if ((one_hot_idx = _mm_movemask_epi8(check)) != 0) {
       *index = i + cen64_one_hot_lut[one_hot_idx & 0xFF];
