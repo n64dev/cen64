@@ -345,6 +345,7 @@ void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss, unsigned inv, unsigned mo
 
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (type << 2),
     status, epc, offs);
+  vr4300_debug_exception(&vr4300->debug);
 }
 
 // IADE: Instruction address error exception.
