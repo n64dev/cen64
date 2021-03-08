@@ -11,6 +11,7 @@
 #ifndef __vr4300_interface_h__
 #define __vr4300_interface_h__
 #include "common.h"
+#include "common/debug_hooks.h"
 
 enum rcp_interrupt_mask {
   MI_INTR_SP = 0x01,
@@ -23,15 +24,6 @@ enum rcp_interrupt_mask {
 
 struct vr4300;
 struct vr4300_stats;
-
-enum vr4300_debug_break_reason {
-  VR4300_DEBUG_BREAK_REASON_NONE,
-  VR4300_DEBUG_BREAK_REASON_BREAKPOINT,
-  VR4300_DEBUG_BREAK_REASON_EXCEPTION,
-  VR4300_DEBUG_BREAK_REASON_PAUSE,
-};
-
-typedef void (*vr4300_debug_break_handler)(void* data, enum vr4300_debug_break_reason reason);
 
 cen64_cold struct vr4300* vr4300_alloc();
 cen64_cold void vr4300_free(struct vr4300*);
@@ -65,7 +57,7 @@ int has_profile_samples(struct vr4300 const *vr4300);
 cen64_cold void vr4300_signal_break(struct vr4300 *vr4300);
 cen64_cold void vr4300_set_breakpoint(struct vr4300 *vr4300, uint64_t at);
 cen64_cold void vr4300_remove_breakpoint(struct vr4300 *vr4300, uint64_t at);
-cen64_cold void vr4300_connect_debugger(struct vr4300 *vr4300, void* break_handler_data, vr4300_debug_break_handler break_handler);
+cen64_cold void vr4300_connect_debugger(struct vr4300 *vr4300, void* break_handler_data, debug_break_handler break_handler);
 
 #endif
 

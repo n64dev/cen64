@@ -13,6 +13,7 @@
 #include "rsp/cp2.h"
 #include "rsp/cpu.h"
 #include "rsp/decoder.h"
+#include "rsp/interface.h"
 #include "rsp/opcodes.h"
 #include "rsp/pipeline.h"
 #include "rsp/rsp.h"
@@ -215,10 +216,13 @@ static inline void rsp_wb_stage(struct rsp *rsp) {
 // Advances the processor pipeline by one clock.
 void rsp_cycle_(struct rsp *rsp) {
   rsp_wb_stage(rsp);
+
   rsp_df_stage(rsp);
 
   rsp->pipeline.exdf_latch.result.dest = RSP_REGISTER_R0;
   rsp->pipeline.exdf_latch.request.type = RSP_MEM_REQUEST_NONE;
+
+  debug_check_breakpoints(&rsp->debug, rsp_get_pc(rsp));
 
   rsp_v_ex_stage(rsp);
   rsp_ex_stage(rsp);

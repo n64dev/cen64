@@ -67,7 +67,7 @@ cen64_cold struct cen64_device *device_create(struct cen64_device *device,
 cen64_cold void device_exit(struct bus_controller *bus);
 cen64_cold void device_run(struct cen64_device *device);
 
-cen64_cold void device_connect_debugger(struct cen64_device *device, void* break_handler_data, vr4300_debug_break_handler break_handler);
+cen64_cold void device_connect_debugger(struct cen64_device *device, void* break_handler_data, debug_break_handler break_handler);
 
 #endif
 

@@ -231,12 +231,11 @@ bool vr4300_read_word_vaddr(struct vr4300 *vr4300, uint64_t vaddr, uint32_t* res
 
     if (line) {
       memcpy(result, line->data + ((paddr & 0xf) ^ WORD_ADDR_XOR), sizeof(uint32_t));
+      return true;
     } else {
-      bus_read_word(vr4300->bus, paddr, result);
+      return bus_read_word(vr4300->bus, paddr, result) != 0;
     }
   } else {
-    bus_read_word(vr4300->bus, paddr, result);
+    return bus_read_word(vr4300->bus, paddr, result) != 0;
   }
-
-  return true;
 }

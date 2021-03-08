@@ -11,6 +11,7 @@
 #include "gdb/protocol.h"
 #include "gdb/gdb.h"
 #include "vr4300/cpu.h"
+#include "rsp/interface.h"
 
 #include <inttypes.h>
 
@@ -25,10 +26,21 @@
 #include <unistd.h>
 #endif
 
+#define GDB_GLOBAL_THREAD_ID   1
+#define GDB_RSP_THEAD_ID      2
+
 #define GDB_GET_EXC_CODE(cause) (((cause) >> 2) & 0x1f)
 #define GDB_TRANSLATE_PC(pc)    ((uint64_t)(pc) | 0xFFFFFFFF00000000ULL)
-#define GDB_GLOBAL_THREAD_ID 1
 #define GDB_STR_STARTS_WITH(str, const_str) (strncmp(str, const_str, sizeof const_str - 1) == 0)
+
+#define GDB_RSP_MEMORY_BASE  0x04000000
+#define GDB_RSP_INSTRUCTION_BASE  0x04001000
+#define GDB_RSP_INSTRUCTION_END  0x04002000
+#define GDB_RSP_INSTRUCTION_SIZE 0x1000
+
+// not standard just used to allow GDB to access vector registers
+#define GDB_RSP_VREG_BASE 0x04020000
+#define GDB_RSP_VREG_LEN   512
 
 static int gdb_signals[32] = {
   2, // SIGINT
@@ -64,6 +76,34 @@ static int gdb_signals[32] = {
   0, // reserved
   0, // reserved
 };
+
+bool gdb_is_rsp_addr(uint64_t addr) {
+  return addr >= GDB_RSP_MEMORY_BASE && addr < GDB_RSP_INSTRUCTION_END;
+}
+
+bool gdb_is_rsp_instruction(uint64_t addr) {
+  return (addr & 0xFFFFFFFF) < GDB_RSP_INSTRUCTION_SIZE;
+}
+
+bool gdb_is_rsp_register(uint64_t addr) {
+  return addr >= GDB_RSP_VREG_BASE && addr < GDB_RSP_VREG_BASE + GDB_RSP_VREG_LEN;
+}
+
+void gdb_set_breakpoint(struct cen64_device* device, uint64_t addr) {
+  if (gdb_is_rsp_instruction(addr)) {
+    rsp_set_breakpoint(&device->rsp, addr & 0xFFF);
+  } else {
+    vr4300_set_breakpoint(device->vr4300, addr);
+  }
+}
+
+void gdb_remove_breakpoint(struct cen64_device* device, uint64_t addr) {
+  if (gdb_is_rsp_instruction(addr)) {
+    rsp_remove_breakpoint(&device->rsp, addr & 0xFFF);
+  } else {
+    vr4300_remove_breakpoint(device->vr4300, addr);
+  }
+}
 
 int gdb_read_hex_digit(char character) {
   if (character >= 'a' && character <= 'f') {
@@ -108,6 +148,17 @@ char* gdb_write_hex64(char* target, uint64_t data, int data_size) {
   }
 
   return target;
+}
+
+char* gdb_write_hexstring(char* target, const char* src) {
+  while (*src) {
+    *target++ = gdb_hex_letters[(*src >> 4) & 0xF];
+    *target++ = gdb_hex_letters[(*src >> 0) & 0xF];
+    src++;
+  }
+
+  return target;
+
 }
 
 int gdb_apply_checksum(char* message) {
@@ -207,7 +258,7 @@ void gdb_handle_v(struct gdb* gdb, const char* command_start, const char *comman
   }
 }
 
-void gdb_reply_registers(struct gdb* gdb) {
+void gdb_reply_vr4300_registers(struct gdb* gdb) {
   char* current = gdb->output_buffer;
   *current++ = '$';
 
@@ -236,6 +287,43 @@ void gdb_reply_registers(struct gdb* gdb) {
   gdb_send(gdb);
 }
 
+void gdb_reply_rsp_registers(struct gdb* gdb) {
+  char* current = gdb->output_buffer;
+  *current++ = '$';
+
+  // R0
+  current = gdb_write_hex64(current, 0, sizeof(uint64_t));
+  for (int i = RSP_REGISTER_AT; i <= RSP_REGISTER_RA; i++) {
+    current = gdb_write_hex64(current, rsp_get_register(&gdb->device->rsp, i), sizeof(uint64_t));
+  }
+
+  current = gdb_write_hex64(current, 0, sizeof(uint64_t)); // VR4300_CP0_REGISTER_STATUS
+  current = gdb_write_hex64(current, 0, sizeof(uint64_t)); // VR4300_REGISTER_LO
+  current = gdb_write_hex64(current, 0, sizeof(uint64_t)); // VR4300_REGISTER_HI
+  current = gdb_write_hex64(current, 0, sizeof(uint64_t)); // VR4300_CP0_REGISTER_BADVADDR
+  current = gdb_write_hex64(current, 0, sizeof(uint64_t)); // VR4300_CP0_REGISTER_CAUSE
+  current = gdb_write_hex64(current,  rsp_get_pc(&gdb->device->rsp), sizeof(uint64_t));
+
+  for (int i = VR4300_REGISTER_CP1_0; i <= VR4300_REGISTER_CP1_31; i++) {
+    current = gdb_write_hex64(current, vr4300_get_register(gdb->device->vr4300, i), sizeof(uint64_t));
+  }
+
+  current = gdb_write_hex64(current, vr4300_get_register(gdb->device->vr4300, VR4300_CP1_FCR31), sizeof(uint64_t));
+
+  *current++ = '#';
+  *current++ = '\0';
+
+  gdb_send(gdb);
+}
+
+void gdb_reply_registers(struct gdb* gdb) {
+  if (gdb->flags & GDB_FLAGS_RSP_SELECTED) {
+    gdb_reply_rsp_registers(gdb);
+  } else {
+    gdb_reply_vr4300_registers(gdb);
+  }
+}
+
 void gdb_reply_memory(struct gdb* gdb, const char* command_start, const char *command_end) {
   char* current = gdb->output_buffer;
   *current++ = '$';
@@ -255,14 +343,21 @@ void gdb_reply_memory(struct gdb* gdb, const char* command_start, const char *co
   for (int curr = 0; curr < len + byteShift; curr += 4) {
     uint32_t word = 0;
     int32_t vaddr = alignedAddr + curr;
-    
-    if (!vr4300_read_word_vaddr(gdb->device->vr4300, vaddr, &word)) {
-      debug("Bad vaddr %08x\n", vaddr);
-    }
 
-    // if (curr > 0x20) {
-    //   word = curr;
-    // }
+    if ((gdb->flags & GDB_FLAGS_RSP_SELECTED) && gdb_is_rsp_instruction(vaddr)) {
+      bus_read_word(&gdb->device->bus, vaddr + GDB_RSP_INSTRUCTION_BASE, &word);
+    } else if (gdb_is_rsp_register(vaddr)) {
+      int32_t relative = (vaddr - GDB_RSP_VREG_BASE) / sizeof(uint16_t);
+      int32_t registerIndex = relative / 8;
+      int32_t elementIndex = relative % 8;
+
+      word = ((int32_t)gdb->device->rsp.cp2.regs[registerIndex].e[elementIndex] << 16) | 
+        (int32_t)gdb->device->rsp.cp2.regs[registerIndex].e[elementIndex + 1];
+    } else if (gdb_is_rsp_addr(vaddr)) {
+      bus_read_word(&gdb->device->bus, vaddr, &word);
+    } else {
+      vr4300_read_word_vaddr(gdb->device->vr4300, vaddr, &word);
+    }
 
     current = gdb_write_hex64(current, word, sizeof(uint32_t));
   }
@@ -296,7 +391,7 @@ void gdb_handle_packet(struct gdb* gdb, const char* command_start, const char* c
       gdb_send_literal(gdb, "$#00");
       break;
     case '?':
-      gdb_send_stop_reply(gdb, false);
+      gdb_send_stop_reply(gdb, false, DEBUG_SOURCE_VR4300);
       break;
     case 'g':
       gdb_reply_registers(gdb);
@@ -315,9 +410,9 @@ void gdb_handle_packet(struct gdb* gdb, const char* command_start, const char* c
         uint64_t addr = GDB_TRANSLATE_PC(gdb_parse_hex(&command_start[3], 4));
 
         if (*command_start == 'z') {
-          vr4300_remove_breakpoint(gdb->device->vr4300, addr);
+          gdb_remove_breakpoint(gdb->device, addr);
         } else {
-          vr4300_set_breakpoint(gdb->device->vr4300, addr);
+          gdb_set_breakpoint(gdb->device, addr);
         }
 
         return gdb_send_literal(gdb, "$OK#9a");
@@ -331,15 +426,22 @@ void gdb_handle_packet(struct gdb* gdb, const char* command_start, const char* c
   }
 }
 
-cen64_cold void gdb_send_stop_reply(struct gdb* gdb, bool is_breakpoint) {
+cen64_cold void gdb_send_stop_reply(struct gdb* gdb, bool is_breakpoint, enum debug_source source) {
   char* current = gdb->output_buffer;
   int exc_code;
 
-  if (is_breakpoint) {
+  if (source == DEBUG_SOURCE_RSP) {
+    gdb->flags |= GDB_FLAGS_RSP_SELECTED;
     exc_code = 9;
   } else {
-    exc_code = GDB_GET_EXC_CODE(vr4300_get_register(gdb->device->vr4300, VR4300_CP0_REGISTER_CAUSE));
+    gdb->flags &= ~GDB_FLAGS_RSP_SELECTED;
+    if (is_breakpoint) {
+      exc_code = 9;
+    } else {
+      exc_code = GDB_GET_EXC_CODE(vr4300_get_register(gdb->device->vr4300, VR4300_CP0_REGISTER_CAUSE));
+    }
   }
+
   current += sprintf(current, "$T%02x", gdb_signals[exc_code]);
   if (is_breakpoint) {
     current += sprintf(current, "swbreak:");
@@ -347,5 +449,6 @@ cen64_cold void gdb_send_stop_reply(struct gdb* gdb, bool is_breakpoint) {
   current += sprintf(current, "thread:%d;", GDB_GLOBAL_THREAD_ID);
   *current++ = '#';
   *current++ = '\0';
+
   gdb_send(gdb);
 }
