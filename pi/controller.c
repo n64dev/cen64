@@ -55,11 +55,11 @@ void pi_cycle_(struct pi_controller *pi) {
 // Copies data from RDRAM to the PI
 static int pi_dma_read(struct pi_controller *pi) {
   uint32_t dest = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFE;
-  uint32_t source = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
+  uint32_t source = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFF8;
   uint32_t length = (pi->regs[PI_RD_LEN_REG] & 0xFFFFFF) + 1;
 
-  if (length & 7)
-    length = (length + 7) & ~7;
+  if (length & 1)
+    length = (length + 1) & ~1;
 
   // SRAM and FlashRAM
   if (dest >= 0x08000000 && dest < 0x08010000) {
@@ -84,12 +84,12 @@ static int pi_dma_read(struct pi_controller *pi) {
 
 // Copies data from the the PI into RDRAM.
 static int pi_dma_write(struct pi_controller *pi) {
-  uint32_t dest = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
+  uint32_t dest = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFF8;
   uint32_t source = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFE;
   uint32_t length = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF) + 1;
 
-  if (length & 7)
-    length = (length + 7) & ~7;
+  if (length & 1)
+    length = (length + 1) & ~1;
 
   if (pi->bus->dd->ipl_rom && (source & 0x06000000) == 0x06000000) {
     source &= 0x003FFFFF;
