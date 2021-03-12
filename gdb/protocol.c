@@ -222,7 +222,7 @@ void gdb_reply_registers(struct gdb* gdb) {
   current = gdb_write_hex64(current, vr4300_get_register(gdb->device->vr4300, VR4300_REGISTER_HI), sizeof(uint64_t));
   current = gdb_write_hex64(current, vr4300_get_register(gdb->device->vr4300, VR4300_CP0_REGISTER_BADVADDR), sizeof(uint64_t));
   current = gdb_write_hex64(current, vr4300_get_register(gdb->device->vr4300, VR4300_CP0_REGISTER_CAUSE), sizeof(uint64_t));
-  current += sprintf(current, "%08x%08x", 0, (int32_t)vr4300_get_pc(gdb->device->vr4300));
+  current = gdb_write_hex64(current, vr4300_get_pc(gdb->device->vr4300), sizeof(uint64_t));
 
   for (int i = VR4300_REGISTER_CP1_0; i <= VR4300_REGISTER_CP1_31; i++) {
     current = gdb_write_hex64(current, vr4300_get_register(gdb->device->vr4300, i), sizeof(uint64_t));
