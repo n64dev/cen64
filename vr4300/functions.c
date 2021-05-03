@@ -1209,7 +1209,7 @@ cen64_hot int VR4300_LOAD_STORE(struct vr4300 *vr4300,
   unsigned lshiftamt = (3 - request_size) << 3;
   unsigned rshiftamt = (address & 0x3) << 3;
 
-  exdc_latch->request.vaddr = address & ~(sel_mask & 0x3);
+  exdc_latch->request.vaddr = address;
   exdc_latch->request.data = dqm | (sel_mask & ((rt << lshiftamt) >> rshiftamt));
   exdc_latch->request.wdqm = ((uint32_t) sel_mask << lshiftamt) >> rshiftamt;
   exdc_latch->request.postshift = 0;
@@ -1529,7 +1529,7 @@ int VR4300_SDL_SDR(struct vr4300 *vr4300,
     dqm = mask >> shiftamt;
   }
 
-  exdc_latch->request.vaddr = address & ~0x3ULL;
+  exdc_latch->request.vaddr = address;
   exdc_latch->request.data = data;
   exdc_latch->request.wdqm = dqm;
   exdc_latch->request.access_type = VR4300_ACCESS_DWORD;
@@ -1568,7 +1568,7 @@ int VR4300_SWL_SWR(struct vr4300 *vr4300,
     dqm = mask >> shiftamt;
   }
 
-  exdc_latch->request.vaddr = address & ~0x3ULL;
+  exdc_latch->request.vaddr = address;
   exdc_latch->request.data = data;
   exdc_latch->request.wdqm = dqm;
   exdc_latch->request.access_type = VR4300_ACCESS_WORD;
