@@ -24,7 +24,7 @@ void rsp_dma_read(struct rsp *rsp) {
 
   // Force alignment.
   length = (length + 0x7) & ~0x7;
-  rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] &= ~0x3;
+  rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] &= ~0x7;
   rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] &= ~0x7;
 
   // Check length.
@@ -69,7 +69,7 @@ void rsp_dma_write(struct rsp *rsp) {
 
   // Force alignment.
   length = (length + 0x7) & ~0x7;
-  rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] &= ~0x3;
+  rsp->regs[RSP_CP0_REGISTER_DMA_CACHE] &= ~0x7;
   rsp->regs[RSP_CP0_REGISTER_DMA_DRAM] &= ~0x7;
 
   // Check length.
