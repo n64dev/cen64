@@ -343,7 +343,8 @@ rsp_vect_t RSP_VMULF_VMULU(struct rsp *rsp, uint32_t iw,
 //
 rsp_vect_t RSP_VNOP(struct rsp *rsp, uint32_t iw,
   rsp_vect_t vt_shuffle, rsp_vect_t vs, rsp_vect_t zero) {
-  return vs;
+
+  return rsp_vect_load_unshuffled_operand(rsp->cp2.regs[GET_VD(iw)].e);
 }
 
 //

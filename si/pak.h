@@ -16,6 +16,8 @@
 #include "gb.h"
 
 #define MEMPAK_SIZE 0x8000
+#define MEMPAK_NUM_PAGES 128
+#define MEMPAK_PAGE_SIZE (MEMPAK_SIZE / MEMPAK_NUM_PAGES)
 
 enum pak_type {
   PAK_NONE = 0,
