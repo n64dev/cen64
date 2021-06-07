@@ -40,8 +40,8 @@ void pi_cycle_(struct pi_controller *pi) {
     // This is a giant hack; bytes should be DMA'd slowly.
     pi->is_dma_read ? pi_dma_read(pi) : pi_dma_write(pi);
 
-    pi->regs[PI_DRAM_ADDR_REG] += bytes;
-    pi->regs[PI_CART_ADDR_REG] += bytes;
+    pi->regs[PI_DRAM_ADDR_REG] = (pi->regs[PI_DRAM_ADDR_REG] + bytes + 7) & ~7;
+    pi->regs[PI_CART_ADDR_REG] = (pi->regs[PI_CART_ADDR_REG] + bytes + 1) & ~1;
     pi->regs[PI_STATUS_REG] &= ~PI_STATUS_DMA_BUSY;
     pi->regs[PI_STATUS_REG] |= PI_STATUS_INTERRUPT;
 
@@ -55,11 +55,11 @@ void pi_cycle_(struct pi_controller *pi) {
 // Copies data from RDRAM to the PI
 static int pi_dma_read(struct pi_controller *pi) {
   uint32_t dest = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFE;
-  uint32_t source = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFF8;
+  uint32_t source = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFE;
   uint32_t length = (pi->regs[PI_RD_LEN_REG] & 0xFFFFFF) + 1;
 
-  if (length & 1)
-    length = (length + 1) & ~1;
+  if (source & 0x7)
+    length -= source & 0x7;
 
   // SRAM and FlashRAM
   if (dest >= 0x08000000 && dest < 0x08010000) {
@@ -84,12 +84,12 @@ static int pi_dma_read(struct pi_controller *pi) {
 
 // Copies data from the the PI into RDRAM.
 static int pi_dma_write(struct pi_controller *pi) {
-  uint32_t dest = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFF8;
+  uint32_t dest = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFE;
   uint32_t source = pi->regs[PI_CART_ADDR_REG] & 0xFFFFFFE;
   uint32_t length = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF) + 1;
 
-  if (length & 1)
-    length = (length + 1) & ~1;
+  if (dest & 0x7)
+    length -= dest & 0x7;
 
   if (pi->bus->dd->ipl_rom && (source & 0x06000000) == 0x06000000) {
     source &= 0x003FFFFF;
@@ -193,6 +193,15 @@ int read_pi_regs(void *opaque, uint32_t address, uint32_t *word) {
   enum pi_register reg = (offset >> 2);
 
   *word = pi->regs[reg];
+
+  if (reg == PI_WR_LEN_REG || reg == PI_RD_LEN_REG)
+    *word = 0x7F;
+
+  else if (reg == PI_CART_ADDR_REG)
+    *word &= 0xFFFFFFFE;
+
+  else if (reg == PI_DRAM_ADDR_REG)
+    *word &= 0xFFFFFE;
 
   debug_mmio_read(pi, pi_register_mnemonics[reg], *word);
   return 0;
