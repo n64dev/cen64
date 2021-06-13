@@ -92,6 +92,9 @@ int VR4300_DMTC0(struct vr4300 *vr4300,
 
   switch (dest + VR4300_REGISTER_CP0_0)
   {
+    case VR4300_CP0_REGISTER_COUNT:
+      rt <<= 1;
+      break;
     case VR4300_CP0_REGISTER_CAUSE:
       vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x0300;
       vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= rt & 0x0300;
@@ -193,6 +196,9 @@ int VR4300_MTC0(struct vr4300 *vr4300,
 
   switch (dest + VR4300_REGISTER_CP0_0)
   {
+    case VR4300_CP0_REGISTER_COUNT:
+      rt <<= 1;
+      break;
     case VR4300_CP0_REGISTER_CAUSE:
       vr4300->regs[VR4300_CP0_REGISTER_CAUSE] &= ~0x0300;
       vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= (int32_t)rt & 0x0300;

@@ -30,16 +30,18 @@ void vr4300_cycle(struct vr4300 *vr4300) {
   // Increment counters.
   vr4300->regs[VR4300_CP0_REGISTER_COUNT]++;
 
-  if ((uint32_t) (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1) ==
-    (uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COMPARE])
-    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
-
   // We're stalling for something...
   if (pipeline->cycles_to_stall > 0)
     pipeline->cycles_to_stall--;
 
   else
     vr4300_cycle_(vr4300);
+
+  if ((vr4300->regs[VR4300_CP0_REGISTER_COUNT] & 1) == 1 &&
+    (uint32_t) (vr4300->regs[VR4300_CP0_REGISTER_COUNT] >> 1) ==
+    (uint32_t) vr4300->regs[VR4300_CP0_REGISTER_COMPARE]) {
+    vr4300->regs[VR4300_CP0_REGISTER_CAUSE] |= 0x8000;
+  }
 }
 
 // Sets the opaque pointer used for external accesses.
