@@ -67,7 +67,7 @@ static inline void cen64_gl_window_destroy(cen64_gl_window window) {
 
 // Pushes a notification to the UI queue to indicate a frame is ready.
 static inline void cen64_gl_window_push_frame(cen64_gl_window window) {
-  write(window->pipefds[1], &window, sizeof(window));
+  (void)!write(window->pipefds[1], &window, sizeof(window));
 }
 
 // Sets the title of the cen64_gl_window.

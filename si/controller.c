@@ -169,6 +169,7 @@ int pif_perform_command(struct si_controller *si,
             send_buf, send_bytes, recv_buf, recv_bytes);
       else
         assert(0 && "Invalid channel for controller pak read");
+        break;
 
     // Write to controller pak
     case 0x03:
@@ -177,6 +178,7 @@ int pif_perform_command(struct si_controller *si,
             send_buf, send_bytes, recv_buf, recv_bytes);
       else
         assert(0 && "Invalid channel for controller pak write");
+        break;
 
     // EEPROM read
     case 0x04:

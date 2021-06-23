@@ -551,7 +551,6 @@ static inline int blender_2cycle(uint32_t* fr, uint32_t* fg, uint32_t* fb, int d
 static inline void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, int32_t SST, uint32_t tilenum, uint32_t cycle);
 static inline void tc_pipeline_copy(int32_t* sss0, int32_t* sss1, int32_t* sss2, int32_t* sss3, int32_t* sst, int tilenum);
 static inline void tc_pipeline_load(int32_t* sss, int32_t* sst, int tilenum, int coord_quad);
-static inline void tcclamp_generic(int32_t* S, int32_t* T, int32_t* SFRAC, int32_t* TFRAC, int32_t maxs, int32_t maxt, int32_t num);
 static inline void tcclamp_cycle(int32_t* S, int32_t* T, int32_t* SFRAC, int32_t* TFRAC, int32_t maxs, int32_t maxt, int32_t num);
 static inline void tcclamp_cycle_light(int32_t* S, int32_t* T, int32_t maxs, int32_t maxt, int32_t num);
 static inline void tcshift_cycle(int32_t* S, int32_t* T, int32_t* maxs, int32_t* maxt, uint32_t num);
@@ -602,7 +601,6 @@ static inline void restore_filter16(int* r, int* g, int* b, uint32_t fboffset, u
 static inline void restore_filter32(int* r, int* g, int* b, uint32_t fboffset, uint32_t num, uint32_t hres, uint32_t fetchstate);
 static inline void gamma_filters(int* r, int* g, int* b, int gamma_and_dither);
 static inline void adjust_brightness(int* r, int* g, int* b, int brightcoeff);
-static void clearfb16(uint16_t* fb, uint32_t width,uint32_t height);
 static void tcdiv_persp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
 static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
 static inline void tclod_4x17_to_15(int32_t scurr, int32_t snext, int32_t tcurr, int32_t tnext, int32_t previous, int32_t* lod);
@@ -649,12 +647,6 @@ struct {uint32_t shift; uint32_t add;} z_dec_table[8] = {
      {1, 0x3e000},
      {0, 0x3f000},
      {0, 0x3f800},
-};
-
-
-static void (*vi_fetch_filter_func[2])(CCVG*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) =
-{
-	vi_fetch_filter16, vi_fetch_filter32
 };
 
 static void (*fbread_func[4])(uint32_t, uint32_t*) = 
@@ -1626,7 +1618,7 @@ static inline void combiner_2cycle(int adseed, uint32_t* curpixel_cvg, int32_t* 
 
 static void precalculate_everything(void)
 {
-	int i = 0, k = 0, j = 0;
+	int i = 0, k = 0;
 
 	
 	
@@ -2414,6 +2406,7 @@ static void fetch_texel_entlut(COLOR *color, int s, int t, uint32_t tilenum)
 		}
 		break;
 	default:
+		c = 0;
 		debug("fetch_texel_entlut: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
@@ -3476,6 +3469,10 @@ static void fetch_texel_entlut_quadro(COLOR *color0, COLOR *color1, COLOR *color
 		}
 		break;
 	default:
+		c0 = 0;
+		c1 = 0;
+		c2 = 0;
+		c3 = 0;
 		debug("fetch_texel_entlut_quadro: unknown texture format %d, size %d, tilenum %d\n", tile[tilenum].format, tile[tilenum].size, tilenum);
 		break;
 	}
@@ -3885,7 +3882,6 @@ static inline void texture_pipeline_cycle(COLOR* TEX, COLOR* prev, int32_t SSS, 
 
 	int32_t maxs, maxt, invt0r, invt0g, invt0b, invt0a;
 	int32_t sfrac, tfrac, invsf, invtf;
-	int upper = 0;
 	int bilerp = cycle ? other_modes.bi_lerp1 : other_modes.bi_lerp0;
 	int convert = other_modes.convert_one && cycle;
 	COLOR t0, t1, t2, t3;
@@ -4206,7 +4202,7 @@ void render_spans_1cycle_complete(int start, int end, int tilenum, int flip)
 		g = span[i].g;
 		b = span[i].b;
 		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		z = other_modes.z_source_sel ? primitive_z : (uint32_t)span[i].z;
 		s = span[i].s;
 		t = span[i].t;
 		w = span[i].w;
@@ -4415,7 +4411,7 @@ void render_spans_1cycle_notexel1(int start, int end, int tilenum, int flip)
 		g = span[i].g;
 		b = span[i].b;
 		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		z = other_modes.z_source_sel ? primitive_z : (uint32_t)span[i].z;
 		s = span[i].s;
 		t = span[i].t;
 		w = span[i].w;
@@ -4576,7 +4572,7 @@ void render_spans_1cycle_notex(int start, int end, int tilenum, int flip)
 		g = span[i].g;
 		b = span[i].b;
 		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		z = other_modes.z_source_sel ? primitive_z : (uint32_t)span[i].z;
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -4728,7 +4724,7 @@ void render_spans_2cycle_complete(int start, int end, int tilenum, int flip)
 		g = span[i].g;
 		b = span[i].b;
 		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		z = other_modes.z_source_sel ? primitive_z : (uint32_t)span[i].z;
 		s = span[i].s;
 		t = span[i].t;
 		w = span[i].w;
@@ -4937,7 +4933,7 @@ void render_spans_2cycle_notexelnext(int start, int end, int tilenum, int flip)
 		g = span[i].g;
 		b = span[i].b;
 		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		z = other_modes.z_source_sel ? primitive_z : (uint32_t)span[i].z;
 		s = span[i].s;
 		t = span[i].t;
 		w = span[i].w;
@@ -5105,7 +5101,7 @@ void render_spans_2cycle_notexel1(int start, int end, int tilenum, int flip)
 		g = span[i].g;
 		b = span[i].b;
 		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		z = other_modes.z_source_sel ? primitive_z : (uint32_t)span[i].z;
 		s = span[i].s;
 		t = span[i].t;
 		w = span[i].w;
@@ -5261,7 +5257,7 @@ void render_spans_2cycle_notex(int start, int end, int tilenum, int flip)
 		g = span[i].g;
 		b = span[i].b;
 		a = span[i].a;
-		z = other_modes.z_source_sel ? primitive_z : span[i].z;
+		z = other_modes.z_source_sel ? primitive_z : (uint32_t)span[i].z;
 
 		x = xendsc;
 		curpixel = fb_width * i + x;
@@ -5351,13 +5347,11 @@ void render_spans_fill(int start, int end, int flip)
 	int xinc = flip ? 1 : -1;
 
 	int xstart = 0, xendsc;
-	int prevxstart;
 	int curpixel = 0;
 	int x, length;
 				
 	for (i = start; i <= end; i++)
 	{
-		prevxstart = xstart;
 		xstart = span[i].lx;
 		xendsc = span[i].rx;
 
@@ -5432,12 +5426,10 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 	}
 
 	int xstart = 0, xendsc;
-	int s = 0, t = 0, w = 0, ss = 0, st = 0, sw = 0, sss = 0, sst = 0, ssw = 0;
+	int s = 0, t = 0, w = 0, ss = 0, st = 0, sw = 0, sss = 0, sst = 0;
 	int fb_index, length;
-	int diff = 0;
 
 	uint32_t hidword = 0, lowdword = 0;
-	uint32_t hidword1 = 0, lowdword1 = 0;
 	int fbadvance = (fb_size == PIXEL_SIZE_4BIT) ? 8 : 16 >> fb_size;
 	uint32_t fbptr = 0;
 	int fbptr_advance = flip ? 8 : -8;
@@ -5509,20 +5501,20 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 				if (other_modes.dither_alpha_en)
 				{
 					currthreshold = threshold;
-					alphamask |= (((copyqword >> 24) & 0xff) >= currthreshold ? 0xC0 : 0);
+					alphamask |= (((copyqword >> 24) & 0xff) >= (uint64_t)currthreshold ? 0xC0 : 0);
 					currthreshold = ((threshold & 3) << 6) | (threshold >> 2);
-					alphamask |= (((copyqword >> 16) & 0xff) >= currthreshold ? 0x30 : 0);
+					alphamask |= (((copyqword >> 16) & 0xff) >= (uint64_t)currthreshold ? 0x30 : 0);
 					currthreshold = ((threshold & 0xf) << 4) | (threshold >> 4);
-					alphamask |= (((copyqword >> 8) & 0xff) >= currthreshold ? 0xC : 0);
+					alphamask |= (((copyqword >> 8) & 0xff) >= (uint64_t)currthreshold ? 0xC : 0);
 					currthreshold = ((threshold & 0x3f) << 2) | (threshold >> 6);
-					alphamask |= ((copyqword & 0xff) >= currthreshold ? 0x3 : 0);	
+					alphamask |= ((copyqword & 0xff) >= (uint64_t)currthreshold ? 0x3 : 0);	
 				}
 				else
 				{
-					alphamask |= (((copyqword >> 24) & 0xff) >= threshold ? 0xC0 : 0);
-					alphamask |= (((copyqword >> 16) & 0xff) >= threshold ? 0x30 : 0);
-					alphamask |= (((copyqword >> 8) & 0xff) >= threshold ? 0xC : 0);
-					alphamask |= ((copyqword & 0xff) >= threshold ? 0x3 : 0);
+					alphamask |= (((copyqword >> 24) & 0xff) >= (uint64_t)threshold ? 0xC0 : 0);
+					alphamask |= (((copyqword >> 16) & 0xff) >= (uint64_t)threshold ? 0x30 : 0);
+					alphamask |= (((copyqword >> 8) & 0xff) >= (uint64_t)threshold ? 0xC : 0);
+					alphamask |= ((copyqword & 0xff) >= (uint64_t)threshold ? 0x3 : 0);
 				}
 			}
 			else
@@ -5558,9 +5550,6 @@ void render_spans_copy(int start, int end, int tilenum, int flip)
 
 void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut)
 {
-
-
-	int localdebugmode = 0, cnt = 0;
 	int i, j;
 
 	int dsinc, dtinc;
@@ -5569,7 +5558,7 @@ void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut
 
 	int s, t;
 	int ss, st;
-	int xstart, xend, xendsc;
+	int xstart, xend;
 	int sss = 0, sst = 0;
 	int ti_index, length;
 
@@ -5630,7 +5619,6 @@ void loading_pipeline(int start, int end, int tilenum, int coord_quad, int ltlut
 	{
 		xstart = span[i].lx;
 		xend = span[i].unscrx;
-		xendsc = span[i].rx;
 		s = span[i].s;
 		t = span[i].t;
 
@@ -5814,7 +5802,6 @@ static void edgewalker_for_prims(int32_t* ewdata)
 	int j = 0;
 	int xleft = 0, xright = 0, xleft_inc = 0, xright_inc = 0;
 	int r = 0, g = 0, b = 0, a = 0, z = 0, s = 0, t = 0, w = 0;
-	int dr = 0, dg = 0, db = 0, da = 0;
 	int drdx = 0, dgdx = 0, dbdx = 0, dadx = 0, dzdx = 0, dsdx = 0, dtdx = 0, dwdx = 0;
 	int drdy = 0, dgdy = 0, dbdy = 0, dady = 0, dzdy = 0, dsdy = 0, dtdy = 0, dwdy = 0;
 	int drde = 0, dgde = 0, dbde = 0, dade = 0, dzde = 0, dsde = 0, dtde = 0, dwde = 0;
@@ -6032,13 +6019,12 @@ static void edgewalker_for_prims(int32_t* ewdata)
 			z += dzde; \
 }
 
-	int32_t maxxmx, minxmx, maxxhx, minxhx;
+	int32_t maxxmx = 0, minxmx = 0, maxxhx = 0, minxhx = 0;
 
 	int spix = 0;
 	int ycur =	yh & ~3;
 	int ldflag = (sign_dxhdy ^ flip) ? 0 : 3;
 	int invaly = 1;
-	int length = 0;
 	int32_t xrsc = 0, xlsc = 0, stickybit = 0;
 	int32_t yllimit = 0, yhlimit = 0;
 	if (yl & 0x2000)
@@ -6272,20 +6258,17 @@ static void edgewalker_for_loads(int32_t* lewdata)
 {
 	int j = 0;
 	int xleft = 0, xright = 0;
-	int xstart = 0, xend = 0;
-	int s = 0, t = 0, w = 0;
+	int xend = 0;
+	int s = 0, t = 0;
 	int dsdx = 0, dtdx = 0;
-	int dsdy = 0, dtdy = 0;
-	int dsde = 0, dtde = 0;
-	int tilenum = 0, flip = 0;
+	int dtde = 0;
+	int tilenum = 0;
 	int32_t yl = 0, ym = 0, yh = 0;
 	int32_t xl = 0, xm = 0, xh = 0;
-	int32_t dxldy = 0, dxhdy = 0, dxmdy = 0;
 
 	int commandcode = (lewdata[0] >> 24) & 0x3f;
 	int ltlut = (commandcode == 0x30);
 	int coord_quad = ltlut || (commandcode == 0x33);
-	flip = 1;
 	max_level = 0;
 	tilenum = (lewdata[0] >> 16) & 7;
 
@@ -6298,21 +6281,13 @@ static void edgewalker_for_loads(int32_t* lewdata)
 	xl = SIGN(lewdata[2], 28);
 	xh = SIGN(lewdata[3], 28);
 	xm = SIGN(lewdata[4], 28);
-	
-	dxldy = 0;
-	dxhdy = 0;
-	dxmdy = 0;
 
 	
 	s    = lewdata[5] & 0xffff0000;
 	t    = (lewdata[5] & 0xffff) << 16;
-	w    = 0;
 	dsdx = (lewdata[7] & 0xffff0000) | ((lewdata[6] >> 16) & 0xffff);
 	dtdx = ((lewdata[7] << 16) & 0xffff0000)	| (lewdata[6] & 0xffff);
-	dsde = 0;
 	dtde = (lewdata[9] & 0xffff) << 16;
-	dsdy = 0;
-	dtdy = (lewdata[8] & 0xffff) << 16;
 
 	spans_ds = dsdx & ~0x1f;
 	spans_dt = dtdx & ~0x1f;
@@ -6328,16 +6303,6 @@ static void edgewalker_for_loads(int32_t* lewdata)
 		
 	int k = 0;
 
-	int sign_dxhdy = 0;
-
-	int do_offset = 0;
-
-	int xfrac = 0;
-
-
-
-
-
 
 #define ADJUST_ATTR_LOAD()										\
 {																\
@@ -6350,19 +6315,17 @@ static void edgewalker_for_loads(int32_t* lewdata)
 			t += dtde;		\
 }
 
-	int32_t maxxmx, minxhx;
+	int32_t maxxmx = 0, minxhx = 0;
 
 	int spix = 0;
 	int ycur =	yh & ~3;
 	int ylfar = yl | 3;
 	
 	int valid_y = 1;
-	int length = 0;
-	int32_t xrsc = 0, xlsc = 0, stickybit = 0;
+	int32_t xrsc = 0, xlsc = 0;
 	int32_t yllimit = yl;
 	int32_t yhlimit = yh;
 
-	xfrac = 0;
 	xend = xright >> 16;
 
 	
@@ -7204,7 +7167,6 @@ void deduce_derivatives()
 
 	
 	int texel1_used_in_cc1 = 0, texel0_used_in_cc1 = 0, texel0_used_in_cc0 = 0, texel1_used_in_cc0 = 0;
-	int texels_in_cc0 = 0, texels_in_cc1 = 0;
 	int lod_frac_used_in_cc1 = 0, lod_frac_used_in_cc0 = 0;
 
 	if ((combiner_rgbmul_r[1] == &lod_frac) || (combiner_alphamul[1] == &lod_frac))
@@ -7228,8 +7190,6 @@ void deduce_derivatives()
 		combiner_alphamul[0] == &texel0_color.a || combiner_alphasub_a[0] == &texel0_color.a || combiner_alphasub_b[0] == &texel0_color.a || combiner_alphaadd[0] == &texel0_color.a || \
 		combiner_rgbmul_r[0] == &texel0_color.a)
 		texel0_used_in_cc0 = 1;
-	texels_in_cc0 = texel0_used_in_cc0 || texel1_used_in_cc0;
-	texels_in_cc1 = texel0_used_in_cc1 || texel1_used_in_cc1;	
 
 	
 	if (texel1_used_in_cc1)
@@ -8633,6 +8593,8 @@ static inline int finalize_spanalpha(uint32_t blend_en, uint32_t curpixel_cvg, u
 	case CVG_SAVE: 
 		finalcvg = curpixel_memcvg;
 		break;
+	default:
+		finalcvg = 0;
 	}
 
 	return finalcvg;
@@ -9509,19 +9471,6 @@ uint32_t vi_integer_sqrt(uint32_t a)
     }
     return res;
 }
-
-static void clearfb16(uint16_t* fb, uint32_t width,uint32_t height)
-{
-	uint16_t* d;
-	uint32_t j;
-	int i = width << 1;
-	for (j = 0; j < height; j++)
-	{
-		d = &fb[j*width];
-		memset(d,0,i);
-	}
-}
-
 
 static void tcdiv_nopersp(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst)
 {

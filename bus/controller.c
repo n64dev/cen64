@@ -44,7 +44,7 @@ int bus_init(struct bus_controller *bus, int dd_present) {
   static const struct bus_controller_mapping mappings[NUM_MAPPINGS] = {
     {read_ai_regs, write_ai_regs, AI_REGS_BASE_ADDRESS, AI_REGS_ADDRESS_LEN},
     {read_dp_regs, write_dp_regs, DP_REGS_BASE_ADDRESS, DP_REGS_ADDRESS_LEN},
-    {read_mi_regs, write_mi_regs, MI_REGS_BASE_ADDRESS, MI_REGS_ADDRESS_LEN},
+    {(memory_rd_function)read_mi_regs, (memory_wr_function)write_mi_regs, MI_REGS_BASE_ADDRESS, MI_REGS_ADDRESS_LEN},
     {read_pi_regs, write_pi_regs, PI_REGS_BASE_ADDRESS, PI_REGS_ADDRESS_LEN},
     {read_ri_regs, write_ri_regs, RI_REGS_BASE_ADDRESS, RI_REGS_ADDRESS_LEN},
     {read_si_regs, write_si_regs, SI_REGS_BASE_ADDRESS, SI_REGS_ADDRESS_LEN},
