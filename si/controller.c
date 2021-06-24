@@ -177,48 +177,60 @@ int pif_perform_command(struct si_controller *si,
 
     // Read from controller pak
     case 0x02:
-      if (channel < 4)
-        return controller_pak_read(&si->controller[channel],
-            send_buf, send_bytes, recv_buf, recv_bytes);
-      else
+      if (channel > 3) {
         assert(0 && "Invalid channel for controller pak read");
+        return 1;
+      }
+      return controller_pak_read(&si->controller[channel],
+        send_buf, send_bytes, recv_buf, recv_bytes);
 
     // Write to controller pak
     case 0x03:
-      if (channel < 4)
-        return controller_pak_write(&si->controller[channel],
-            send_buf, send_bytes, recv_buf, recv_bytes);
-      else
+      if (channel > 3) {
         assert(0 && "Invalid channel for controller pak write");
+        return 1;
+      }
+      return controller_pak_write(&si->controller[channel],
+        send_buf, send_bytes, recv_buf, recv_bytes);
 
     // EEPROM read
     case 0x04:
-      if (channel != 4)
+      if (channel != 4) {
         assert(0 && "Invalid channel for EEPROM read");
+        return 1;
+      }
       return eeprom_read(&si->eeprom, send_buf, send_bytes, recv_buf, recv_bytes);
 
     // EEPROM write
     case 0x05:
-      if (channel != 4)
+      if (channel != 4) {
         assert(0 && "Invalid channel for EEPROM write");
+        return 1;
+      }
       return eeprom_write(&si->eeprom, send_buf, send_bytes, recv_buf, recv_bytes);
 
     // RTC status
     case 0x06:
-      if (channel != 4)
+      if (channel != 4) {
         assert(0 && "Invalid channel for RTC status");
+        return 1;
+      }
       return rtc_status(send_buf, send_bytes, recv_buf, recv_bytes);
 
     // RTC read
     case 0x07:
-      if (channel != 4)
+      if (channel != 4) {
         assert(0 && "Invalid channel for RTC read");
+        return 1;
+      }
       return rtc_read(send_buf, send_bytes, recv_buf, recv_bytes);
 
     // RTC write
     case 0x08:
-      if (channel != 4)
+      if (channel != 4) {
         assert(0 && "Invalid channel for RTC write");
+        return 1;
+      }
       return rtc_write(send_buf, send_bytes, recv_buf, recv_bytes);
 
     // Unimplemented command:
