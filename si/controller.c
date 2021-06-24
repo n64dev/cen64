@@ -123,11 +123,6 @@ int pif_perform_command(struct si_controller *si,
 
         case 4:
           switch (si->eeprom.size) {
-            case 0: // No EEPROM present
-              recv_buf[0] = 0xFF;
-              recv_buf[1] = 0xFF;
-              recv_buf[2] = 0xFF;
-              break;
             case 0x200: // 4 kbit EEPROM
               recv_buf[0] = 0x00;
               recv_buf[1] = 0x80;
@@ -138,9 +133,6 @@ int pif_perform_command(struct si_controller *si,
               recv_buf[1] = 0xC0;
               recv_buf[2] = 0x00;
               break;
-            default: // Invalid EEPROM size
-              assert(0 && "Invalid EEPROM size.");
-              return 1;
           }
           break;
 
@@ -270,6 +262,7 @@ void pif_process(struct si_controller *si) {
 
       memcpy(send_buf, si->command + ptr, send_bytes);
       ptr += send_bytes;
+      memcpy(recv_buf, si->command + ptr, recv_bytes);
 
       result = pif_perform_command(si, channel,
         send_buf, send_bytes, recv_buf, recv_bytes);
