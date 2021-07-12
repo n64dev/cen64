@@ -116,7 +116,6 @@ static void dd_update_bm(struct dd_controller *dd);
 static void dd_write_sector(struct dd_controller *dd);
 static void dd_read_sector(struct dd_controller *dd);
 static void set_offset(struct dd_controller *dd);
-static void get_dd_time(uint8_t *out);
 
 // Initializes the DD.
 int dd_init(struct dd_controller *dd, struct bus_controller *bus,
@@ -128,6 +127,8 @@ int dd_init(struct dd_controller *dd, struct bus_controller *bus,
 
   dd->retail = true;
   dd->regs[DD_ASIC_ID_REG] = 0x00030000;
+
+  dd->rtc_offset_seconds = 0;
 
   return 0;
 }
@@ -187,21 +188,47 @@ int write_dd_regs(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 
   // Command register written: do something.
   if (reg == DD_ASIC_CMD_STATUS) {
-    uint8_t now[6];
 
     switch (word) {
+      // set time
+      case DD_CMD_SET_YEAR_MONTH:
+      case DD_CMD_SET_DAY_HOUR:
+      case DD_CMD_SET_MIN_SEC: {
+        struct time_stamp now;
+        get_local_time(&now, dd->rtc_offset_seconds);
+
+        if (word == DD_CMD_SET_YEAR_MONTH) {
+          uint8_t year = bcd2byte(dd->regs[DD_ASIC_DATA] >> 24);
+          /* 96-99 map to the 1990's, 00-95 map to 2000+ */
+          now.year = (year >= 96 ? 0 : 100) + year;
+          now.month = bcd2byte(dd->regs[DD_ASIC_DATA] >> 16);
+        } else if (word == DD_CMD_SET_DAY_HOUR) {
+          now.day = bcd2byte(dd->regs[DD_ASIC_DATA] >> 24);
+          now.hour = bcd2byte(dd->regs[DD_ASIC_DATA] >> 16);
+        } else if (word == DD_CMD_SET_MIN_SEC) {
+          now.min = bcd2byte(dd->regs[DD_ASIC_DATA] >> 24);
+          now.sec = bcd2byte(dd->regs[DD_ASIC_DATA] >> 16);
+        }
+
+        dd->rtc_offset_seconds = get_offset_seconds(&now);
+        break;
+      }
+
       // get time
       case DD_CMD_GET_YEAR_MONTH:
       case DD_CMD_GET_DAY_HOUR:
-      case DD_CMD_GET_MIN_SEC:
-        get_dd_time(now);
+      case DD_CMD_GET_MIN_SEC: {
+        struct time_stamp now;
+        get_local_time(&now, dd->rtc_offset_seconds);
+
         if (word == DD_CMD_GET_YEAR_MONTH)
-          dd->regs[DD_ASIC_DATA] = (now[0] << 24) | (now[1] << 16);
+          dd->regs[DD_ASIC_DATA] = (byte2bcd(now.year) << 24) | (byte2bcd(now.month) << 16);
         else if (word == DD_CMD_GET_DAY_HOUR)
-          dd->regs[DD_ASIC_DATA] = (now[2] << 24) | (now[3] << 16);
+          dd->regs[DD_ASIC_DATA] = (byte2bcd(now.day) << 24) | (byte2bcd(now.hour) << 16);
         else if (word == DD_CMD_GET_MIN_SEC)
-          dd->regs[DD_ASIC_DATA] = (now[4] << 24) | (now[5] << 16);
+          dd->regs[DD_ASIC_DATA] = (byte2bcd(now.min) << 24) | (byte2bcd(now.sec) << 16);
         break;
+      }
 
       case DD_CMD_SEEK_READ:
         dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA] >> 16;
@@ -573,19 +600,6 @@ void set_offset(struct dd_controller *dd) {
 
   dd->track_offset = start_offset[dd->zone] +
     tr_off * zone_sec_size[dd->zone] * SECTORS_PER_BLOCK * BLOCKS_PER_TRACK;
-}
-
-void get_dd_time(uint8_t *out) {
-  struct time_stamp now;
-  get_local_time(&now);
-
-  out[0] = byte2bcd(now.year);
-  out[1] = byte2bcd(now.month);
-  out[2] = byte2bcd(now.day);
-  out[3] = byte2bcd(now.hour);
-  out[4] = byte2bcd(now.min);
-  out[5] = byte2bcd(now.sec);
-
 }
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))

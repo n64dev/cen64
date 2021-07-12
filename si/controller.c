@@ -80,6 +80,9 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
   si->eeprom.data = eeprom;
   si->eeprom.size = eeprom_size;
 
+  // initialize RTC
+  rtc_init(&si->rtc);
+
   // controllers
   memcpy(si->controller, controller, sizeof(struct controller) * 4);
 
@@ -207,7 +210,7 @@ int pif_perform_command(struct si_controller *si,
         assert(0 && "Invalid channel for RTC status");
         return 1;
       }
-      return rtc_status(send_buf, send_bytes, recv_buf, recv_bytes);
+      return rtc_status(&si->rtc, send_buf, send_bytes, recv_buf, recv_bytes);
 
     // RTC read
     case 0x07:
@@ -215,7 +218,7 @@ int pif_perform_command(struct si_controller *si,
         assert(0 && "Invalid channel for RTC read");
         return 1;
       }
-      return rtc_read(send_buf, send_bytes, recv_buf, recv_bytes);
+      return rtc_read(&si->rtc, send_buf, send_bytes, recv_buf, recv_bytes);
 
     // RTC write
     case 0x08:
@@ -223,7 +226,7 @@ int pif_perform_command(struct si_controller *si,
         assert(0 && "Invalid channel for RTC write");
         return 1;
       }
-      return rtc_write(send_buf, send_bytes, recv_buf, recv_bytes);
+      return rtc_write(&si->rtc, send_buf, send_bytes, recv_buf, recv_bytes);
 
     // Unimplemented command:
     default:
