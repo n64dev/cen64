@@ -51,6 +51,8 @@ struct dd_controller {
   uint8_t c2s_buffer[DD_C2S_BUFFER_LEN];
   uint8_t ds_buffer[DD_DS_BUFFER_LEN];
   uint8_t ms_ram[DD_MS_RAM_LEN];
+
+  int32_t rtc_offset_seconds;
 };
 
 cen64_cold int dd_init(struct dd_controller *dd, struct bus_controller *bus,

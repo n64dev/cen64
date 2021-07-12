@@ -11,12 +11,17 @@
 #ifndef __si_rtc_h__
 #define __si_rtc_h__
 #include "common.h"
+#include "si/controller.h"
 
-int rtc_status(uint8_t *send_buf, uint8_t send_bytes,
+void rtc_init(struct rtc * rtc);
+int rtc_status(struct rtc * rtc, 
+    uint8_t *send_buf, uint8_t send_bytes,
     uint8_t *recv_buf, uint8_t recv_bytes);
-int rtc_read(uint8_t *send_buf, uint8_t send_bytes,
+int rtc_read(struct rtc * rtc, 
+    uint8_t *send_buf, uint8_t send_bytes,
     uint8_t *recv_buf, uint8_t recv_bytes);
-int rtc_write(uint8_t *send_buf, uint8_t send_bytes,
+int rtc_write(struct rtc * rtc,
+    uint8_t *send_buf, uint8_t send_bytes,
     uint8_t *recv_buf, uint8_t recv_bytes);
 
 #endif
