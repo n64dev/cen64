@@ -236,7 +236,7 @@ int pif_perform_command(struct si_controller *si,
 // Emulates the PIF operation.
 void pif_process(struct si_controller *si) {
   unsigned channel = 0;
-  int ptr = 0;
+  unsigned ptr = 0;
 
   if (si->command[0x3F] != 0x1)
     return;
@@ -255,16 +255,23 @@ void pif_process(struct si_controller *si) {
       int8_t recv_bytes = si->command[ptr++];
       uint8_t recv_buf[0x40];
       uint8_t send_buf[0x40];
-      int result;
 
       if (recv_bytes == -2)
+        break;
+
+      // SECURITY: Ensure memcpy cannot buffer overflow
+      // if send_bytes or recv_bytes exceed si->command.
+      if (
+        (ptr + send_bytes) > sizeof(si->command) ||
+        (ptr + send_bytes + recv_bytes) > sizeof(si->command)
+      )
         break;
 
       memcpy(send_buf, si->command + ptr, send_bytes);
       ptr += send_bytes;
       memcpy(recv_buf, si->command + ptr, recv_bytes);
 
-      result = pif_perform_command(si, channel,
+      int result = pif_perform_command(si, channel,
         send_buf, send_bytes, recv_buf, recv_bytes);
 
       if (result == 0) {
