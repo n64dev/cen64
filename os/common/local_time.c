@@ -1,7 +1,7 @@
 //
-// os/unix/rom_file.c
+// os/common/local_time.c
 //
-// Functions for mapping ROM images into the address space.
+// Functions for getting the current time.
 //
 // This file is subject to the terms and conditions defined in
 // 'LICENSE', which is part of this source code package.
