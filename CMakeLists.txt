@@ -307,6 +307,7 @@ set(OS_POSIX_SOURCES
 
 set(OS_WINAPI_SOURCES
   ${PROJECT_SOURCE_DIR}/os/winapi/alloc.c
+  ${PROJECT_SOURCE_DIR}/os/winapi/console.c
   ${PROJECT_SOURCE_DIR}/os/winapi/cpuid.c
   ${PROJECT_SOURCE_DIR}/os/winapi/gl_config.c
   ${PROJECT_SOURCE_DIR}/os/winapi/gl_window.c

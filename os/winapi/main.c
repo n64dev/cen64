@@ -30,20 +30,3 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
   return status;
 }
-
-// "Hides" the console window (after waiting for input).
-void hide_console(void) {
-  printf("\n");
-  system("PAUSE");
-
-  FreeConsole();
-}
-
-// "Unhides" the console window.
-void show_console(void) {
-  AllocConsole();
-
-  freopen("CONOUT$", "wb", stdout);
-  freopen("CONOUT$", "wb", stderr);
-}
-
