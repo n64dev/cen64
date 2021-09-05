@@ -21,6 +21,9 @@
 #include "os/common/rom_file.h"
 #include "os/common/save_file.h"
 #include "os/cpuid.h"
+#ifdef _WIN32
+#include "os/winapi/console.h"
+#endif
 #include "pi/is_viewer.h"
 #include "thread.h"
 #include <stdlib.h>
@@ -177,6 +180,9 @@ int cen64_main(int argc, const char **argv) {
       return EXIT_FAILURE;
     } else {
       is_in = &is;
+      #ifdef _WIN32
+      show_console();
+      #endif
     }
   }
 
