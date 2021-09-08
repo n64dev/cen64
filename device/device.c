@@ -23,6 +23,7 @@
 #include "ri/controller.h"
 #include "si/controller.h"
 #include "rsp/cpu.h"
+#include "rsp/interface.h"
 #include "thread.h"
 #include "vi/controller.h"
 #include "vr4300/interface.h"
@@ -349,6 +350,7 @@ int device_debug_spin(struct cen64_device *device) {
   return 0;
 }
 
-cen64_cold void device_connect_debugger(struct cen64_device *device, void* break_handler_data, vr4300_debug_break_handler break_handler) {
+cen64_cold void device_connect_debugger(struct cen64_device *device, void* break_handler_data, debug_break_handler break_handler) {
   vr4300_connect_debugger(device->vr4300, break_handler_data, break_handler);
+  rsp_connect_debugger(&device->rsp, break_handler_data, break_handler);
 }

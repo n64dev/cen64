@@ -22,7 +22,7 @@
 #include <unistd.h>
 #endif
 
-cen64_cold void gdb_handle_breakpoint(void* data, enum vr4300_debug_break_reason reason);
+cen64_cold void gdb_handle_breakpoint(void* data, enum debug_break_reason reason, enum debug_source source);
 
 int gdb_read(struct gdb* gdb) {
   if (gdb->pending_data >= MAX_GDB_PACKET_SIZE) {
@@ -142,7 +142,7 @@ CEN64_THREAD_RETURN_TYPE gdb_thread(void *opaque) {
   return CEN64_THREAD_RETURN_VAL;
 }
 
-cen64_cold void gdb_handle_breakpoint(void* data, enum vr4300_debug_break_reason reason) {
+cen64_cold void gdb_handle_breakpoint(void* data, enum debug_break_reason reason, enum debug_source source) {
   struct gdb* gdb = (struct gdb*)data;
 
   debug("Stopping at 0x%08x\n", (uint32_t)vr4300_get_pc(gdb->device->vr4300));
@@ -154,7 +154,7 @@ cen64_cold void gdb_handle_breakpoint(void* data, enum vr4300_debug_break_reason
     vr4300_remove_breakpoint(gdb->device->vr4300, 0xFFFFFFFF80000000ULL);
     cen64_cv_signal(&gdb->client_semaphore);
   } else {
-    gdb_send_stop_reply(gdb, reason == VR4300_DEBUG_BREAK_REASON_BREAKPOINT);
+    gdb_send_stop_reply(gdb, reason == DEBUG_BREAK_REASON_BREAKPOINT, source);
   }
 
   cen64_mutex_lock(&gdb->client_mutex);

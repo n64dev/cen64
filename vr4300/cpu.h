@@ -11,10 +11,10 @@
 #ifndef __vr4300_cpu_h__
 #define __vr4300_cpu_h__
 #include "common.h"
+#include "common/debug_hooks.h"
 #include "vr4300/cp0.h"
 #include "vr4300/cp1.h"
 #include "vr4300/dcache.h"
-#include "vr4300/debug.h"
 #include "vr4300/icache.h"
 #include "vr4300/interface.h"
 #include "vr4300/opcodes.h"
@@ -107,7 +107,7 @@ struct vr4300 {
 
   uint64_t *profile_samples;
 
-  struct vr4300_debug debug;
+  struct debug_hooks debug;
 };
 
 struct vr4300_stats {

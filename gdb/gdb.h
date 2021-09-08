@@ -20,6 +20,7 @@ enum gdb_flags {
     GDB_FLAGS_INITIAL = 0x1,
     GDB_FLAGS_CONNECTED = 0x2,
     GDB_FLAGS_PAUSED = 0x4,
+    GDB_FLAGS_RSP_SELECTED = 0x8,
 };
 
 struct gdb {

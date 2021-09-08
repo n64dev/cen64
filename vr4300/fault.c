@@ -345,7 +345,7 @@ void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss, unsigned inv, unsigned mo
 
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (type << 2),
     status, epc, offs);
-  vr4300_debug_exception(&vr4300->debug);
+  debug_exception(&vr4300->debug);
 }
 
 // IADE: Instruction address error exception.
@@ -484,7 +484,7 @@ void VR4300_BRPT(struct vr4300 *vr4300) {
   vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (9 << 2),
     status, epc, 0x180);
-  vr4300_debug_exception(&vr4300->debug);
+  debug_exception(&vr4300->debug);
 }
 
 // TRAP: Trap exception
@@ -497,7 +497,7 @@ void VR4300_TRAP(struct vr4300* vr4300) {
   vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
   vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (13 << 2),
     status, epc, 0x180);
-  vr4300_debug_exception(&vr4300->debug);
+  debug_exception(&vr4300->debug);
 }
 
 // RI: Reserved Instruction exception
@@ -524,6 +524,6 @@ void VR4300_WAT(struct vr4300 *vr4300) {
     status, epc, 0x180);
 
   vr4300_dc_fault(vr4300, VR4300_FAULT_WAT);
-  vr4300_debug_exception(&vr4300->debug);
+  debug_exception(&vr4300->debug);
 }
 

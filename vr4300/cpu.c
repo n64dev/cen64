@@ -72,7 +72,7 @@ int vr4300_init(struct vr4300 *vr4300, struct bus_controller *bus, bool profilin
   else
     vr4300->profile_samples = NULL;
 
-  vr4300_debug_init(&vr4300->debug);
+  debug_init(&vr4300->debug, DEBUG_SOURCE_VR4300);
 
   return 0;
 }
@@ -138,15 +138,15 @@ uint64_t vr4300_get_pc(struct vr4300 *vr4300) {
 }
 
 cen64_cold void vr4300_signal_break(struct vr4300 *vr4300) {
-  vr4300_debug_signal(&vr4300->debug, VR4300_DEBUG_SIGNALS_BREAK);
+  debug_signal(&vr4300->debug, DEBUG_SIGNALS_BREAK);
 }
 
 cen64_cold void vr4300_set_breakpoint(struct vr4300 *vr4300, uint64_t at) {
-  vr4300_debug_set_breakpoint(&vr4300->debug, at);
+  debug_set_breakpoint(&vr4300->debug, at);
 }
 
 cen64_cold void vr4300_remove_breakpoint(struct vr4300 *vr4300, uint64_t at) {
-  vr4300_debug_remove_breakpoint(&vr4300->debug, at);
+  debug_remove_breakpoint(&vr4300->debug, at);
 }
 
 struct vr4300* vr4300_alloc() {
@@ -156,7 +156,7 @@ struct vr4300* vr4300_alloc() {
 }
 
 cen64_cold void vr4300_free(struct vr4300* ptr) {
-    vr4300_debug_cleanup(&ptr->debug);
+    debug_cleanup(&ptr->debug);
     free(ptr);
 }
 
@@ -170,7 +170,7 @@ cen64_cold void vr4300_stats_free(struct vr4300_stats* ptr) {
     free(ptr);
 }
 
-cen64_cold void vr4300_connect_debugger(struct vr4300 *vr4300, void* break_handler_data, vr4300_debug_break_handler break_handler) {
+cen64_cold void vr4300_connect_debugger(struct vr4300 *vr4300, void* break_handler_data, debug_break_handler break_handler) {
   vr4300->debug.break_handler = break_handler;
   vr4300->debug.break_handler_data = break_handler_data;
 }
