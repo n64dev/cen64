@@ -16,6 +16,7 @@ enum cart_db_save_type {
   CART_DB_SAVE_TYPE_EEPROM_16KBIT,
   CART_DB_SAVE_TYPE_FLASH_1MBIT,
   CART_DB_SAVE_TYPE_SRAM_256KBIT,
+  CART_DB_SAVE_TYPE_SRAM_768KBIT,
 };
 
 struct cart_db_entry {

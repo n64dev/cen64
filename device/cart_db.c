@@ -18,6 +18,7 @@
 
 static const struct cart_db_entry cart_db_table[] = {
 
+  {"CDZ", "J",        CART_DB_SAVE_TYPE_SRAM_768KBIT,  "Dezaemon 3D"},
   {"CFZ", "EJ",       CART_DB_SAVE_TYPE_SRAM_256KBIT,  "F-Zero X (NTSC)"},
   {"CLB", "EJ",       CART_DB_SAVE_TYPE_EEPROM_4KBIT,  "Mario Party (NTSC)"},
   {"CP2", "J",        CART_DB_SAVE_TYPE_FLASH_1MBIT,   "Pokemon Stadium 2 (Japan)"},
