@@ -23,6 +23,7 @@ const struct cen64_options default_cen64_options = {
   NULL, // eeprom_path
   0,    // eeprom_size
   NULL, // sram_path
+  0,    // sram_size
   NULL, // flashram_path
   0,    // is_viewer_present
   NULL, // controller
@@ -122,6 +123,27 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       }
 
       options->sram_path = argv[++i];
+      options->sram_size = 0x8000;
+    }
+
+    else if (!strcmp(argv[i], "-sram256k")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-sram256k requires a path to the save file.\n\n");
+        return 1;
+      }
+
+      options->sram_path = argv[++i];
+      options->sram_size = 0x8000;
+    }
+
+    else if (!strcmp(argv[i], "-sram768k")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-sram768k requires a path to the save file.\n\n");
+        return 1;
+      }
+
+      options->sram_path = argv[++i];
+      options->sram_size = 0x18000;
     }
 
     else if (!strcmp(argv[i], "-flash")) {
@@ -279,7 +301,9 @@ void print_command_line_usage(const char *invokation_string) {
       "Save Options:\n"
       "  -eep4k <path>              : Path to 4 kbit EEPROM save.\n"
       "  -eep16k <path>             : Path to 16 kbit EEPROM save.\n"
-      "  -sram <path>               : Path to SRAM save.\n"
+      "  -sram <path>               : Path to 256 kbit SRAM save (alias of -sram256k).\n"
+      "  -sram256k <path>           : Path to 256 kbit SRAM save.\n"
+      "  -sram768k <path>           : Path to 768 kbit SRAM save.\n"
       "  -flash <path>              : Path to FlashRAM save.\n"
       "    For mempak see controller options.\n"
 
