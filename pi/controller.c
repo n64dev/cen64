@@ -65,7 +65,9 @@ static int pi_dma_read(struct pi_controller *pi) {
       uint32_t sram_bank = (dest >> 18) & 3;
       // SRAM bank capacity is 256Kbits (0x8000 bytes)
       uint32_t sram_offset = (sram_bank * 0x8000) + (dest & 0x7FFF);
-      if (sram_offset + length <= pi->sram->size)
+      // Check SRAM address boundaries to prevent contiguous access across banks
+      uint32_t sram_bank_end = (sram_offset + length - 1) / 0x8000;
+      if (sram_bank == sram_bank_end && sram_offset + length <= pi->sram->size)
         memcpy((uint8_t *) (pi->sram->ptr) + sram_offset, pi->bus->ri->ram + source, length);
     }
     // FlashRAM: Save the RDRAM destination address. Writing happens
@@ -122,7 +124,9 @@ static int pi_dma_write(struct pi_controller *pi) {
       uint32_t sram_bank = (source >> 18) & 3;
       // SRAM bank capacity is 256Kbits (0x8000 bytes)
       uint32_t sram_offset = (sram_bank * 0x8000) + (source & 0x7FFF);
-      if (sram_offset + length <= pi->sram->size)
+      // Check SRAM address boundaries to prevent contiguous access across banks
+      uint32_t sram_bank_end = (sram_offset + length - 1) / 0x8000;
+      if (sram_bank == sram_bank_end && sram_offset + length <= pi->sram->size)
         memcpy(pi->bus->ri->ram + dest, (const uint8_t *) (pi->sram->ptr) + sram_offset, length);
     }
     // FlashRAM
