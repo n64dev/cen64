@@ -21,8 +21,6 @@
   #include <windows.h>
 #endif
 
-static void rsp_status_write(struct rsp *rsp, uint32_t rt);
-
 //
 // MFC0
 //
@@ -103,7 +101,7 @@ void rsp_status_write(struct rsp *rsp, uint32_t rt) {
 
     if ((rt & SP_CLR_HALT) && (status & SP_STATUS_HALT)) {
       // Save PC around pipeline init
-      uint32_t pc = rsp->pipeline.ifrd_latch.pc;
+      uint32_t pc = rsp->pipeline.rdex_latch.common.pc;
       rsp_pipeline_init(&rsp->pipeline);
       rsp->pipeline.ifrd_latch.pc = pc;
 
@@ -115,6 +113,8 @@ void rsp_status_write(struct rsp *rsp, uint32_t rt) {
 
     if (rt & SP_CLR_BROKE)
       status &= ~SP_STATUS_BROKE;
+    else if (rt & SP_SET_BROKE)
+      status |= SP_STATUS_BROKE;
 
     if (rt & SP_CLR_INTR)
       clear_rcp_interrupt(rsp->bus->vr4300, MI_INTR_SP);
@@ -205,7 +205,9 @@ void rsp_write_cp0_reg(struct rsp *rsp, unsigned dest, uint32_t rt) {
       break;
 
     case RSP_CP0_REGISTER_SP_STATUS:
-      rsp_status_write(rsp, rt);
+      // Mask out the synthetic SP_SET_BROKE bit which is used internally
+      // but does not exist in real hardware (and has no effect if set).
+      rsp_status_write(rsp, rt & ~SP_SET_BROKE);
       break;
 
     case RSP_CP0_REGISTER_SP_RESERVED:
