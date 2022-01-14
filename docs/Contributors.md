@@ -82,8 +82,13 @@ to vectorizing some of the **RSP** instructions!
 Thank you to everyone else that's helped out in the past: <br>
 `marshallh`, `balrog`, and anyone else that I'm forgetting.
 
+---
+
+## [ElectronicsArchiver]
+
 
 <!----------------------------------------------------------------------------->
 
 [mikeryan]: https://github.com/mikeryan
 [LuigiBlood]: https://github.com/LuigiBlood
+[ElectronicsArchiver]: https://github.com/ElectronicsArchiver
