@@ -5,7 +5,7 @@
 </div>
 
 <div align = 'center'>
-    <p><b>⸢ <a href = 'https://www.cen64.com/uploads/stable/cen64-windows-x86_64.exe'>Windows</a> ⸥ ⸢ <a href = 'https://www.cen64.com/uploads/stable/cen64-debian9-x86_64'>Linux</a> ⸥ ⸢ <a href = 'https://github.com/n64dev/cen64/docs/Building.md'>Mac</a> ⸥</b></p>
+    <p><b>⸢ <a href = 'https://www.cen64.com/uploads/stable/cen64-windows-x86_64.exe'>Windows</a> ⸥ ⸢ <a href = 'https://www.cen64.com/uploads/stable/cen64-debian9-x86_64'>Linux</a> ⸥ ⸢ <a href = './docs/Building.md'>Mac</a> ⸥</b></p>
     <p><b>⸢ <a href = 'https://github-buildbot.cen64.com/builders'>BuildBot</a> ⸥</b></p>
 </div>
 
