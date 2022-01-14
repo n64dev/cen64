@@ -86,6 +86,8 @@ Thank you to everyone else that's helped out in the past: <br>
 
 ## [ElectronicsArchiver]
 
+Formatting / refactoring of documentation.
+
 
 <!----------------------------------------------------------------------------->
 
