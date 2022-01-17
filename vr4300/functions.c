@@ -1452,7 +1452,7 @@ int VR4300_SRA(struct vr4300 *vr4300,
   unsigned dest = GET_RD(iw);
   unsigned sa = iw >> 6 & 0x1F;
 
-  exdc_latch->result = (int32_t) rt >> sa;
+  exdc_latch->result = (int32_t) (rt >> sa);
   exdc_latch->dest = dest;
   return 0;
 }
@@ -1466,7 +1466,7 @@ int VR4300_SRAV(struct vr4300 *vr4300,
   unsigned dest = GET_RD(iw);
   unsigned sa = rs & 0x1F;
 
-  exdc_latch->result = (int32_t) rt >> sa;
+  exdc_latch->result = (int32_t) (rt >> sa);
   exdc_latch->dest = dest;
   return 0;
 }
