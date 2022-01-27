@@ -27,6 +27,7 @@ const struct cen64_options default_cen64_options = {
   NULL, // flashram_path
   0,    // is_viewer_present
   NULL, // controller
+  NULL, // m64_path
 #ifdef _WIN32
   false, // console
 #endif
@@ -175,6 +176,15 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       options->controller[num] = opt;
     }
 
+    else if (!strcmp(argv[i], "-m64")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-m64 requires a path to the movie file.\n\n");
+        return 1;
+      }
+
+      options->m64_path = argv[++i];
+    }
+
     // TODO: Handle this better.
     else
       break;
@@ -306,6 +316,8 @@ void print_command_line_usage(const char *invokation_string) {
       "  -sram768k <path>           : Path to 768 kbit SRAM save.\n"
       "  -flash <path>              : Path to FlashRAM save.\n"
       "    For mempak see controller options.\n"
+      "Mupen64 movie playback options:\n"
+      "  -m64 <path>                : Path to m64 movie file.\n"
 
     ,invokation_string
   );

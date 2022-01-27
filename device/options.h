@@ -28,6 +28,8 @@ struct cen64_options {
 
   struct controller *controller;
 
+  const char* m64_path;
+
 #ifdef _WIN32
   bool console;
 #endif

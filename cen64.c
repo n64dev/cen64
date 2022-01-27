@@ -56,6 +56,8 @@ int cen64_main(int argc, const char **argv) {
   struct save_file flashram;
   struct is_viewer is, *is_in = NULL;
 
+  FILE* m64_fp = NULL;
+
   if (!cart_db_is_well_formed()) {
     printf("Internal cart detection database is not well-formed.\n");
     return EXIT_FAILURE;
@@ -196,6 +198,30 @@ int cen64_main(int argc, const char **argv) {
     }
   }
 
+  if (options.m64_path) {
+    m64_fp = fopen(options.m64_path, "rb");
+    if (m64_fp != NULL) {
+      // http://tasvideos.org/EmulatorResources/Mupen/M64.html
+      uint8_t header[0x400];
+      size_t n = fread(header, 1, sizeof header, m64_fp);
+      if (n == sizeof header && memcmp(header, "M64\x1A", 4) == 0) {
+        printf("Playing back m64:\n");
+        printf("  ROM name: %.32s (crc %X, region %X)\n",
+               header+0xC4,
+               *(uint32_t*)(header+0xE4),
+               *(uint16_t*)(header+0xE8));
+        printf("  Author: %.222s\n", header+0x222);
+        printf("  Description: %.256s\n", header+0x300);
+      } else {
+        fclose(m64_fp);
+        printf("Invalid Mupen64 movie file '%s'.\n", options.m64_path);
+        return EXIT_FAILURE;
+      }
+    } else {
+      printf("Failed to open Mupen64 movie file '%s'.\n", options.m64_path);
+      return EXIT_FAILURE;
+    }
+  }
 
 
   // Allocate memory for and create the device.
@@ -209,7 +235,7 @@ int cen64_main(int argc, const char **argv) {
 
     if (device_create(device, &ddipl, dd_variant, &ddrom,
       &pifrom, &cart, &eeprom, &sram,
-      &flashram, is_in, controller,
+      &flashram, is_in, controller, m64_fp,
       options.no_audio, options.no_video, options.enable_profiling) == NULL) {
       printf("Failed to create a device.\n");
       status = EXIT_FAILURE;

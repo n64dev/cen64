@@ -44,7 +44,8 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
   const uint8_t *pif_rom, const uint8_t *cart_rom,
   const struct dd_variant *dd_variant,
   uint8_t *eeprom, size_t eeprom_size,
-  const struct controller *controller) {
+  const struct controller *controller,
+  FILE* m64_fp) {
   uint32_t cic_seed;
 
   si->bus = bus;
@@ -85,6 +86,9 @@ int si_init(struct si_controller *si, struct bus_controller *bus,
 
   // controllers
   memcpy(si->controller, controller, sizeof(struct controller) * 4);
+
+  // Mupen64 movie file
+  si->m64_fp = m64_fp;
 
   return 0;
 }
@@ -154,7 +158,18 @@ int pif_perform_command(struct si_controller *si,
 
           if (likely(bus->vi->window)) {
             cen64_mutex_lock(&bus->vi->window->event_mutex);
+
+            if (si->m64_fp != NULL) {
+              fread(si->input, 1, 4, si->m64_fp);
+              if (feof(si->m64_fp) || ferror(si->m64_fp)) {
+                fclose(si->m64_fp);
+                si->m64_fp = NULL;
+                printf("Movie playback finished.\n");
+              }
+            }
+            
             memcpy(recv_buf, si->input, sizeof(si->input));
+            
             cen64_mutex_unlock(&bus->vi->window->event_mutex);
           }
 

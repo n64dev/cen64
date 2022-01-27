@@ -44,7 +44,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   const struct rom_file *pifrom, const struct rom_file *cart,
   const struct save_file *eeprom, const struct save_file *sram,
   const struct save_file *flashram, struct is_viewer *is,
-  const struct controller *controller,
+  const struct controller *controller, FILE* m64_fp,
   bool no_audio, bool no_video, bool profiling) {
 
   // Allocate memory for VR4300
@@ -99,7 +99,7 @@ struct cen64_device *device_create(struct cen64_device *device,
   // Initialize the SI.
   if (si_init(&device->si, &device->bus, pifrom->ptr,
     cart->ptr, dd_variant, eeprom->ptr, eeprom->size,
-    controller)) {
+    controller, m64_fp)) {
     debug("create_device: Failed to initialize the SI.\n");
     return NULL;
   }
@@ -159,6 +159,10 @@ void device_destroy(struct cen64_device *device, const char *cart_path) {
     }
 
     fclose(f);
+  }
+
+  if (device->si.m64_fp != NULL) {
+    fclose(device->si.m64_fp);
   }
 }
 
