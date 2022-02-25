@@ -267,7 +267,9 @@ __m128i rsp_vect_load_and_shuffle_operand(
     case 5:
     case 6:
     case 7:
+      #ifndef _MSC_VER //TODO: needs MSVC version!
       __asm__("" : "=x"(v)); /* Do not remove. */
+      #endif
       v = _mm_insert_epi16(v, src[element - 4], 0);
       v = _mm_insert_epi16(v, src[element - 0], 1);
       v = _mm_shufflelo_epi16(v, _MM_SHUFFLE(1,1,0,0));
@@ -283,18 +285,27 @@ __m128i rsp_vect_load_and_shuffle_operand(
     case 13:
     case 14:
     case 15:
+      #ifndef _MSC_VER //TODO: needs MSVC version!
       __asm__("" : "=x"(v)); /* Do not remove. */
+      #endif
       v = _mm_insert_epi16(v, src[element - 8], 0);
       v = _mm_unpacklo_epi16(v, v);
       v = _mm_shuffle_epi32(v, _MM_SHUFFLE(0,0,0,0));
       return v;
   }
-
+#ifdef _MSC_VER
+  #ifdef NDEBUG
+  __assume(0);
+  #else
+  __debugbreak;
+  #endif
+#else
   #ifdef NDEBUG
   __builtin_unreachable();
   #else
   __builtin_trap();
   #endif
+#endif
 }
 #endif
 
@@ -379,13 +390,12 @@ void rsp_vload_group2(struct rsp *rsp, uint32_t addr, unsigned element,
     memcpy(&datalow, rsp->mem + aligned_addr_lo, sizeof(datalow));
     memcpy(&datahigh, rsp->mem + aligned_addr_hi, sizeof(datahigh));
 
-    // TODO: Get rid of GNU extensions.
-    datalow = __builtin_bswap64(datalow);
-    datahigh = __builtin_bswap64(datahigh);
+    datalow = htonll(datalow);
+    datahigh = htonll(datahigh);
     datahigh >>= ((8 - offset) << 3);
     datalow <<= (offset << 3);
     datalow = datahigh | datalow;
-    datalow = __builtin_bswap64(datalow);
+    datalow = htonll(datalow);
 
     data = _mm_loadl_epi64((__m128i *) &datalow);
   }

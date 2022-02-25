@@ -11,7 +11,9 @@
 #ifndef CEN64_OS_WINAPI_GL_COMMON
 #define CEN64_OS_WINAPI_GL_COMMON
 #include "common.h"
+#ifdef _WIN32
 #include <windows.h>
+#endif
 #include <GL/gl.h>
 #include <GL/glu.h>
 
