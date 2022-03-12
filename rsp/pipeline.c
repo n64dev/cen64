@@ -206,15 +206,21 @@ cen64_flatten static inline void rsp_df_stage(struct rsp *rsp) {
 }
 
 // Writeback stage.
-static inline void rsp_wb_stage(struct rsp *rsp) {
+static inline bool rsp_wb_stage(struct rsp *rsp) {
   const struct rsp_dfwb_latch *dfwb_latch = &rsp->pipeline.dfwb_latch;
 
-  rsp->regs[dfwb_latch->result.dest] = dfwb_latch->result.result;
+  if (dfwb_latch->result.dest == RSP_CP0_REGISTER_SP_STATUS) {
+    rsp_status_write(rsp, dfwb_latch->result.result);
+    return !(rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_HALT);
+  } else
+    rsp->regs[dfwb_latch->result.dest] = dfwb_latch->result.result;
+  return true;
 }
 
 // Advances the processor pipeline by one clock.
 void rsp_cycle_(struct rsp *rsp) {
-  rsp_wb_stage(rsp);
+  if (unlikely(!rsp_wb_stage(rsp)))
+    return;
   rsp_df_stage(rsp);
 
   rsp->pipeline.exdf_latch.result.dest = RSP_REGISTER_R0;

@@ -175,8 +175,18 @@ int write_sp_regs2(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) 
 
   debug_mmio_write(sp, sp_register_mnemonics[reg], word, dqm);
 
-  if (reg == SP_PC_REG)
+  if (reg == SP_PC_REG) {
+    // Setting the SP PC registers from the CPU basically forces the RSP to
+    // start from there, irrespective of existing pipeline stages, so we need
+    // to reset the pipeline.
+    // NOTE: this is currently broken when using multithreading if the CPU
+    // sets the PC while the RSP is running, so we just abort in this case
+    // which should not happen anyway in real world.
+    assert((rsp->regs[RSP_CP0_REGISTER_SP_STATUS] & SP_STATUS_HALT)
+      && "SP PC set while the RSP is running");
+    rsp_pipeline_init(&rsp->pipeline);
     rsp->pipeline.ifrd_latch.pc = word & 0xFFC;
+  }
 
   else
     abort();
