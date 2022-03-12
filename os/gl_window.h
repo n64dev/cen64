@@ -15,7 +15,18 @@
 #define GL_UNSIGNED_SHORT_5_5_5_1 0x8034
 #endif
 
+#ifdef linux || _WIN32
+#include <GL/glew.h>
 #include <GL/gl.h>
+
+#else
+#ifndef GL3_PROTOTYPES
+#define GL3_PROTOTYPES 1
+#endif
+
+#include <OpenGL/gl.h>
+
+#endif
 
 #define MAX_FRAME_DATA_SIZE (640 * 480 * 4)
 

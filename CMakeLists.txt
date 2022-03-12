@@ -12,7 +12,10 @@ project(cen64 C)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 
 if(APPLE)
-  find_package(OpenGLXQuartz REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(OpenGL REQUIRED)
+
   # Needed for signal.h on OS X.
   add_definitions(-D_DARWIN_C_SOURCE)
 else(APPLE)
@@ -322,6 +325,12 @@ set(OS_X11_SOURCES
   ${PROJECT_SOURCE_DIR}/os/x11/gl_window.c
 )
 
+set(OS_SDL_SOURCES
+  ${PROJECT_SOURCE_DIR}/os/sdl/gl_config.c
+  ${PROJECT_SOURCE_DIR}/os/sdl/gl_window.c
+)
+
+
 set(PI_SOURCES
   ${PROJECT_SOURCE_DIR}/pi/controller.c
   ${PROJECT_SOURCE_DIR}/pi/is_viewer.c
@@ -396,24 +405,39 @@ if (DEFINED WIN32)
     ${OS_COMMON_SOURCES}
     ${OS_WINAPI_SOURCES}
   )
-else ()
+elseif(DEFINED APPLE)
   include_directories(${PROJECT_SOURCE_DIR}/os/posix)
-  include_directories(${PROJECT_SOURCE_DIR}/os/x11)
-  include_directories(${X11_xf86vmode_INCLUDE_PATH})
+  include_directories(${PROJECT_SOURCE_DIR}/os/sdl)
+  include_directories(${SDL2_INCLUDE_DIRS})
 
   list(APPEND OS_SOURCES
     ${OS_COMMON_SOURCES}
     ${OS_POSIX_SOURCES}
-    ${OS_X11_SOURCES}
+    ${OS_SDL_SOURCES}
   )
+ else()
+ include_directories(${PROJECT_SOURCE_DIR}/os/posix)
+ include_directories(${PROJECT_SOURCE_DIR}/os/x11)
+ include_directories(${X11_xf86vmode_INCLUDE_PATH})
+
+ list(APPEND OS_SOURCES
+   ${OS_COMMON_SOURCES}
+   ${OS_POSIX_SOURCES}
+   ${OS_X11_SOURCES}
+ )
+
 endif (DEFINED WIN32)
 
 #
 # Glob all the files together.
 #
 if (DEFINED UNIX)
-  find_package(X11 REQUIRED)
-
+  if(NOT DEFINED APPLE)
+    find_package(X11 REQUIRED)
+    set(VIDEO_LIB ${X11_X11_LIB})
+  else()
+    set(VIDEO_LIB ${SDL2_LIBRARIES})
+  endif()
   if (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE -D_DEFAULT_SOURCE")
   endif (${CMAKE_C_COMPILER_ID} MATCHES GNU OR ${CMAKE_C_COMPILER_ID} MATCHES Clang OR ${CMAKE_C_COMPILER_ID} MATCHES Intel)
@@ -459,7 +483,7 @@ target_link_libraries(cen64
   ${OPENAL_LIBRARY}
   ${OPENGL_gl_LIBRARY}
   ${ICONV_LIBRARIES}
-  ${X11_X11_LIB}
+  ${VIDEO_LIB}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 

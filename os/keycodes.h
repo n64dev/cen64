@@ -12,9 +12,11 @@
 
 #ifdef _WIN32
 #include "os/windows/keycodes.h"
-
-#else
+#endif
+#ifdef linux
 #include "os/x11/keycodes.h"
+#else
+#include "os/sdl/keycodes.h"
 #endif
 
 #endif
