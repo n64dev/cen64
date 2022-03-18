@@ -13,6 +13,19 @@
 #include "cen64.h"
 #include <windows.h>
 
+bool has_console(void) {
+  DWORD procId;
+  DWORD count = GetConsoleProcessList(&procId, 1);
+  return (count >= 2);
+}
+
+void check_start_from_explorer(void) {
+  if (has_console()) return;
+  system("cmd /S /K \"echo cen64 is a command-line application, don't double-click on it! & echo: & echo Type ^\"cen64.exe^\" from this prompt to get the usage.\"");
+  exit(0);
+}
+
+
 // "Hides" the console window (after waiting for input).
 void hide_console(void) {
   printf("\n");

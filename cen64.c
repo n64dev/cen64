@@ -56,6 +56,10 @@ int cen64_main(int argc, const char **argv) {
   struct save_file flashram;
   struct is_viewer is, *is_in = NULL;
 
+#ifdef _WIN32
+  check_start_from_explorer();
+#endif
+
   if (!cart_db_is_well_formed()) {
     printf("Internal cart detection database is not well-formed.\n");
     return EXIT_FAILURE;
@@ -190,9 +194,6 @@ int cen64_main(int argc, const char **argv) {
       return EXIT_FAILURE;
     } else {
       is_in = &is;
-      #ifdef _WIN32
-      show_console();
-      #endif
     }
   }
 
