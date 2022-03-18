@@ -11,6 +11,9 @@
 #include "common.h"
 #include "options.h"
 #include "si/pak.h"
+#ifdef _WIN32
+#include "os/winapi/console.h"
+#endif
 
 static int parse_controller_options(const char *str, int *num, struct controller *opt);
 
@@ -27,9 +30,6 @@ const struct cen64_options default_cen64_options = {
   NULL, // flashram_path
   0,    // is_viewer_present
   NULL, // controller
-#ifdef _WIN32
-  false, // console
-#endif
   false, // enable_debugger
   false, // enable_profiling
   false, // multithread
@@ -43,13 +43,6 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
   int i;
 
   for (i = 0; i < argc - 1; i++) {
-#ifdef _WIN32
-    if (!strcmp(argv[i], "-console"))
-      options->console = true;
-
-    else
-#endif
-
     if (!strcmp(argv[i], "-debug")) {
       options->enable_debugger = true;
 
@@ -275,9 +268,6 @@ void print_command_line_usage(const char *invokation_string) {
   printf("%s [Options] <PIF IPL ROM Path> [Cart ROM Path]\n\n"
 
     "Options:\n"
-#ifdef _WIN32
-      "  -console                   : Creates/shows this system console window.\n"
-#endif
       "  -debug [addr][:port]       : Starts the debugger on interface:port.\n"
       "                               By default, CEN64 uses localhost:64646.\n"
       "                               NOTE: the debugger is not implemented yet.\n"

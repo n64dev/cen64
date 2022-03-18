@@ -28,10 +28,6 @@ struct cen64_options {
 
   struct controller *controller;
 
-#ifdef _WIN32
-  bool console;
-#endif
-
   bool enable_debugger;
   bool enable_profiling;
   bool multithread;
