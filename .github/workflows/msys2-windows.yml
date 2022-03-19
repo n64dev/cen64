@@ -56,7 +56,7 @@ jobs:
       - name: Correct pthread to allow static
         shell: msys2 {0}
         run: |
-          sed -z 's/#else\n#define WINPTHREAD_API __declspec(dllimport)/#else\n#define WINPTHREAD_API/' /mingw64/x86_64-w64-mingw32/include/pthread.h
+          sed -z 's/#else\n#define WINPTHREAD_API __declspec(dllimport)/#else\n#define WINPTHREAD_API/' /mingw64/include/pthread.h
 
       - name: Build iconv static lib
         shell: msys2 {0}
