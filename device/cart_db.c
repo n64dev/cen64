@@ -200,6 +200,9 @@ static const struct cart_db_entry cart_db_table[] = {
   {"NZS", "EJP",      CART_DB_SAVE_TYPE_FLASH_1MBIT,   "Legend of Zelda: Majora's Mask"},
 };
 
+static struct cart_db_entry homebrew_entry =
+  {"ED",  "EJP",      CART_DB_SAVE_TYPE_NONE,          "Homebrew ROM with header in EverDrive / Libdragon format"};
+
 static int cart_db_table_sorter(const void *a, const void *b) {
   const struct cart_db_entry *entry_a = (const struct cart_db_entry *) a;
   const struct cart_db_entry *entry_b = (const struct cart_db_entry *) b;
@@ -216,6 +219,19 @@ const struct cart_db_entry *cart_db_get_entry(const uint8_t *rom) {
     if (!strncmp(cart_db_table[i].rom_id, rom_id, 3) &&
         strchr(cart_db_table[i].regions, rom_id[3]))
       return cart_db_table + i;
+  }
+
+  if (rom_id[1] == 'E' && rom_id[2] == 'D') {
+    uint8_t config = rom[0x3f];
+    switch (config >> 4) {
+    case 1: homebrew_entry.save_type = CART_DB_SAVE_TYPE_EEPROM_4KBIT; break;
+    case 2: homebrew_entry.save_type = CART_DB_SAVE_TYPE_EEPROM_16KBIT; break;
+    case 3: homebrew_entry.save_type = CART_DB_SAVE_TYPE_SRAM_256KBIT; break;
+    case 4: homebrew_entry.save_type = CART_DB_SAVE_TYPE_SRAM_768KBIT; break;
+    case 5: homebrew_entry.save_type = CART_DB_SAVE_TYPE_FLASH_1MBIT; break;
+    case 6: homebrew_entry.save_type = CART_DB_SAVE_TYPE_SRAM_1MBIT; break;
+    }
+    return &homebrew_entry;
   }
 
   return NULL;

@@ -158,6 +158,14 @@ int cen64_main(int argc, const char **argv) {
           printf("Warning: cart saves to 768kbit SRAM, but different size specified (see -sram768k)\n");
         }
         break;
+      case CART_DB_SAVE_TYPE_SRAM_1MBIT:
+        if (options.sram_path == NULL) {
+          printf("Warning: cart saves to 1mbit SRAM, but none specified (see -sram1m)\n");
+          open_save_file(NULL, 0x20000, &sram, NULL);
+        } else if (options.sram_size != 0x20000) {
+          printf("Warning: cart saves to 1mbit SRAM, but different size specified (see -sram1m)\n");
+        }
+        break;
     }
   }
 
