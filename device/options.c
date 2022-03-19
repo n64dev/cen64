@@ -28,7 +28,7 @@ const struct cen64_options default_cen64_options = {
   NULL, // sram_path
   0,    // sram_size
   NULL, // flashram_path
-  0,    // is_viewer_present
+  0,    // is_viewer_output
   NULL, // controller
   false, // enable_debugger
   false, // enable_profiling
@@ -159,7 +159,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     }
 
     else if (!strcmp(argv[i], "-is-viewer"))
-      options->is_viewer_present = 1;
+      options->is_viewer_output = 1;
 
     else if (!strcmp(argv[i], "-controller")) {
       int num;
@@ -289,7 +289,7 @@ void print_command_line_usage(const char *invokation_string) {
       "  -headless                  : Run emulator without user-interface components.\n"
       "  -noaudio                   : Run emulator without audio.\n"
       "  -novideo                   : Run emulator without video.\n"
-      "  -is-viewer                 : IS Viewer 64 present.\n"
+      "  -is-viewer                 : Show IS Viewer 64 output.\n"
       "\n"
       "Controller Options:\n"
       "  -controller num=<1-4>      : Controller with no pak.\n"

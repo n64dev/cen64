@@ -196,16 +196,12 @@ int cen64_main(int argc, const char **argv) {
       memset(flashram.ptr, 0xFF, FLASHRAM_SIZE);
   }
 
-  if (options.is_viewer_present) {
-    if (!is_viewer_init(&is)) {
-      cen64_alloc_cleanup();
-      return EXIT_FAILURE;
-    } else {
-      is_in = &is;
-    }
+  if (!is_viewer_init(&is, options.is_viewer_output)) {
+    cen64_alloc_cleanup();
+    return EXIT_FAILURE;
+  } else {
+    is_in = &is;
   }
-
-
 
   // Allocate memory for and create the device.
   if (cen64_alloc(&cen64_device_mem, sizeof(*device), false) == NULL) {
