@@ -27,6 +27,8 @@ enum vr4300_bus_request_type {
   VR4300_BUS_REQUEST_CACHE = 4,
   VR4300_BUS_REQUEST_CACHE_IDX = 4,
   VR4300_BUS_REQUEST_CACHE_WRITE = 5,
+  VR4300_BUS_REQUEST_READ_CONDITIONAL,
+  VR4300_BUS_REQUEST_WRITE_CONDITIONAL,
 };
 
 enum vr4300_access_type {
@@ -45,6 +47,8 @@ struct vr4300_bus_request {
   enum vr4300_access_type access_type;
   enum vr4300_bus_request_type type;
   unsigned size, postshift;
+
+  unsigned char sc_reg;
 };
 
 struct vr4300_latch {

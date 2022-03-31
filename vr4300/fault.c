@@ -249,7 +249,8 @@ void VR4300_DCM(struct vr4300 *vr4300) {
       VR4300_ACCESS_DWORD ? 0x7 : 0x3;
 
     // Service a read.
-    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ) {
+    if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ ||
+        exdc_latch->request.type == VR4300_BUS_REQUEST_READ_CONDITIONAL) {
       unsigned rshiftamt = (8 - request->size) << 3;
       unsigned lshiftamt = (paddr & mask) << 3;
       uint32_t hiword, loword;
@@ -328,7 +329,8 @@ void VR4300_DTLB(struct vr4300 *vr4300, unsigned miss, unsigned inv, unsigned mo
 
   // TLB miss/invalid exceptions are either TLBL or TLBS.
   if (miss | inv)
-    type = (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE) ? 0x3: 0x2;
+    type = (exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE ||
+            exdc_latch->request.type == VR4300_BUS_REQUEST_WRITE_CONDITIONAL) ? 0x3: 0x2;
 
   // OTOH, TLB modification exceptions are TLBM.
   else

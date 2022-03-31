@@ -361,6 +361,102 @@ static int vr4300_dc_stage(struct vr4300 *vr4300) {
       line->metadata |= exdc_latch->request.type;
     }
 
+    else if (unlikely(exdc_latch->request.type > VR4300_BUS_REQUEST_CACHE_WRITE)) {
+      // ll/lld/sc/scd
+      uint64_t dword, rtemp, wtemp, wdqm;
+      unsigned shiftamt, rshiftamt, lshiftamt;
+      uint32_t s_paddr;
+
+      if (exdc_latch->request.type == VR4300_BUS_REQUEST_READ_CONDITIONAL) {
+        vr4300->regs[VR4300_REGISTER_LLBIT] = 1;
+        vr4300->regs[VR4300_CP0_REGISTER_LLADDR] = paddr >> 4;
+      } else {
+        if (!vr4300->regs[VR4300_REGISTER_LLBIT] ||
+            vr4300->regs[VR4300_CP0_REGISTER_LLADDR] != paddr >> 4) {
+          // Fail the store, set the reg to 0, write nothing to memory
+          exdc_latch->request.type = VR4300_BUS_REQUEST_NONE;
+          vr4300->regs[exdc_latch->request.sc_reg] = 0;
+          return 0; // fail is not an exception
+        } else {
+          // Successful store, set the reg to 1
+          vr4300->regs[exdc_latch->request.sc_reg] = 1;
+        }
+      }
+
+      line = vr4300_dcache_probe(&vr4300->dcache, vaddr, paddr);
+
+      if (cached) {
+        bool last_cache_was_store = dcwb_latch->last_op_was_cache_store;
+        dcwb_latch->last_op_was_cache_store = (exdc_latch->request.type ==
+          VR4300_BUS_REQUEST_WRITE_CONDITIONAL);
+
+        if (!line) {
+          request->paddr = paddr;
+          exdc_latch->cached = cached;
+
+          if (vr4300->profile_samples) {
+            uint32_t idx = exdc_latch->common.pc - 0x80000000;
+            idx &= (8 * 1024 * 1024) - 1;
+            vr4300->profile_samples[idx + (8 * 1024 * 1024)]++;
+          }
+
+          // Miss: stall for one cycle, then move to the DCM phase.
+          vr4300->pipeline.cycles_to_stall = 0;
+          vr4300->regs[PIPELINE_CYCLE_TYPE] = 6;
+          return 1;
+        }
+
+        // Cached store-to-cached operation will result in a DCB.
+        if (last_cache_was_store) {
+          VR4300_DCB(vr4300);
+          return 1;
+        }
+      }
+
+      else {
+        dcwb_latch->last_op_was_cache_store = false;
+
+        request->paddr = paddr;
+        exdc_latch->cached = cached;
+
+        if (vr4300->profile_samples) {
+          uint32_t idx = exdc_latch->common.pc - 0x80000000;
+          idx &= (8 * 1024 * 1024) - 1;
+          vr4300->profile_samples[idx + (8 * 1024 * 1024)]++;
+        }
+
+        VR4300_DCM(vr4300);
+        return 1;
+      }
+
+      s_paddr = paddr << 3;
+      paddr &= 0x8;
+
+      // Pull out the cache line data, mux stuff around
+      // to produce the output/update the cache line.
+      memcpy(&dword, line->data + paddr, sizeof(dword));
+
+      shiftamt = (s_paddr ^ (WORD_ADDR_XOR << 3)) & request->access_type;
+      rshiftamt = (8 - request->size) << 3;
+      lshiftamt = (s_paddr & (0x7 << 3));
+
+      wdqm = request->wdqm << shiftamt;
+      wtemp = (request->data << shiftamt) & wdqm;
+      rtemp = ((int64_t) (dword << lshiftamt)
+        >> rshiftamt) & request->data;
+
+      dword = (dword & ~wdqm) | wtemp;
+      dcwb_latch->result |= rtemp << request->postshift;
+      memcpy(line->data + paddr, &dword, sizeof(dword));
+
+      // We need to mark the line dirty if it's write.
+      // Metadata & 0x2 == dirty, and metadata 0x1 == valid. Map to those.
+      if (request->type == VR4300_BUS_REQUEST_READ_CONDITIONAL)
+        line->metadata |= 1;
+      else
+        line->metadata |= 2;
+    }
+
     // Not a load/store, so execute cache operation.
     else {
       unsigned delay;

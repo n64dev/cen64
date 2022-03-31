@@ -149,6 +149,7 @@ int VR4300_ERET(struct vr4300 *vr4300,
   pipeline->fault_present = true;
 
   vr4300->regs[VR4300_CP0_REGISTER_STATUS] = status;
+  vr4300->regs[VR4300_REGISTER_LLBIT] = 0;
 
   pipeline->icrf_latch.segment = get_segment(icrf_latch->pc, status);
   pipeline->exdc_latch.segment = get_default_segment();
