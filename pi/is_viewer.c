@@ -7,7 +7,7 @@
 // arbitrarily chosen
 #define IS_BUFFER_SIZE 0x200
 
-int is_viewer_init(struct is_viewer *is) {
+int is_viewer_init(struct is_viewer *is, int is_viewer_output) {
   memset(is, 0, sizeof(*is));
 
   // TODO support other addresses
@@ -17,6 +17,7 @@ int is_viewer_init(struct is_viewer *is) {
   is->buffer = calloc(IS_BUFFER_SIZE, 1);
   is->output_buffer = calloc(IS_BUFFER_SIZE, 1);
   is->output_buffer_conv = calloc(IS_BUFFER_SIZE * 3, 1);
+  is->show_output = is_viewer_output;
 
   is->cd = iconv_open("UTF-8", "EUC-JP");
 
@@ -61,7 +62,12 @@ int write_is_viewer(struct is_viewer *is, uint32_t address, uint32_t word, uint3
         memset(is->output_buffer_conv, 0, IS_BUFFER_SIZE * 3);
         iconv(is->cd, &inptr, &len, &outptr, &outlen);
 
-        printf("%s", is->output_buffer_conv);
+        if (is->show_output)
+          printf("%s", is->output_buffer_conv);
+        else if (!is->output_warning) {
+          printf("ISViewer debugging output detected and suppressed.\nRun cen64 with option -is-viewer to display it\n");
+          is->output_warning = 1;
+        }
 
         memset(is->output_buffer, 0, is->output_buffer_pos);
         is->output_buffer_pos = 0;

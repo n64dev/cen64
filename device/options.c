@@ -11,6 +11,9 @@
 #include "common.h"
 #include "options.h"
 #include "si/pak.h"
+#ifdef _WIN32
+#include "os/winapi/console.h"
+#endif
 
 static int parse_controller_options(const char *str, int *num, struct controller *opt);
 
@@ -25,11 +28,8 @@ const struct cen64_options default_cen64_options = {
   NULL, // sram_path
   0,    // sram_size
   NULL, // flashram_path
-  0,    // is_viewer_present
+  0,    // is_viewer_output
   NULL, // controller
-#ifdef _WIN32
-  false, // console
-#endif
   false, // enable_debugger
   false, // enable_profiling
   false, // multithread
@@ -43,13 +43,6 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
   int i;
 
   for (i = 0; i < argc - 1; i++) {
-#ifdef _WIN32
-    if (!strcmp(argv[i], "-console"))
-      options->console = true;
-
-    else
-#endif
-
     if (!strcmp(argv[i], "-debug")) {
       options->enable_debugger = true;
 
@@ -146,6 +139,16 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
       options->sram_size = 0x18000;
     }
 
+    else if (!strcmp(argv[i], "-sram1m")) {
+      if ((i + 1) >= (argc - 1)) {
+        printf("-sram1m requires a path to the save file.\n\n");
+        return 1;
+      }
+
+      options->sram_path = argv[++i];
+      options->sram_size = 0x20000;
+    }
+
     else if (!strcmp(argv[i], "-flash")) {
       if ((i + 1) >= (argc - 1)) {
         printf("-flash requires a path to the save file.\n\n");
@@ -156,7 +159,7 @@ int parse_options(struct cen64_options *options, int argc, const char *argv[]) {
     }
 
     else if (!strcmp(argv[i], "-is-viewer"))
-      options->is_viewer_present = 1;
+      options->is_viewer_output = 1;
 
     else if (!strcmp(argv[i], "-controller")) {
       int num;
@@ -275,9 +278,6 @@ void print_command_line_usage(const char *invokation_string) {
   printf("%s [Options] <PIF IPL ROM Path> [Cart ROM Path]\n\n"
 
     "Options:\n"
-#ifdef _WIN32
-      "  -console                   : Creates/shows this system console window.\n"
-#endif
       "  -debug [addr][:port]       : Starts the debugger on interface:port.\n"
       "                               By default, CEN64 uses localhost:64646.\n"
       "                               NOTE: the debugger is not implemented yet.\n"
@@ -289,7 +289,7 @@ void print_command_line_usage(const char *invokation_string) {
       "  -headless                  : Run emulator without user-interface components.\n"
       "  -noaudio                   : Run emulator without audio.\n"
       "  -novideo                   : Run emulator without video.\n"
-      "  -is-viewer                 : IS Viewer 64 present.\n"
+      "  -is-viewer                 : Show IS Viewer 64 output.\n"
       "\n"
       "Controller Options:\n"
       "  -controller num=<1-4>      : Controller with no pak.\n"
@@ -304,6 +304,7 @@ void print_command_line_usage(const char *invokation_string) {
       "  -sram <path>               : Path to 256 kbit SRAM save (alias of -sram256k).\n"
       "  -sram256k <path>           : Path to 256 kbit SRAM save.\n"
       "  -sram768k <path>           : Path to 768 kbit SRAM save.\n"
+      "  -sram1m <path>             : Path to 1 mbit SRAM save.\n"
       "  -flash <path>              : Path to FlashRAM save.\n"
       "    For mempak see controller options.\n"
 

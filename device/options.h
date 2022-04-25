@@ -24,13 +24,9 @@ struct cen64_options {
   const char *sram_path;
   size_t sram_size;
   const char *flashram_path;
-  int is_viewer_present;
+  int is_viewer_output;
 
   struct controller *controller;
-
-#ifdef _WIN32
-  bool console;
-#endif
 
   bool enable_debugger;
   bool enable_profiling;

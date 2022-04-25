@@ -15,11 +15,13 @@ struct is_viewer {
   uint8_t *output_buffer;
   size_t output_buffer_pos;
   uint8_t *output_buffer_conv;
+  int show_output;
+  int output_warning;
 
   iconv_t cd;
 };
 
-int is_viewer_init(struct is_viewer *is);
+int is_viewer_init(struct is_viewer *is, int show_output);
 int is_viewer_map(struct is_viewer *is, uint32_t address);
 int read_is_viewer(struct is_viewer *is, uint32_t address, uint32_t *word);
 int write_is_viewer(struct is_viewer *is, uint32_t address, uint32_t word, uint32_t dqm);

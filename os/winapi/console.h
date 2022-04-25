@@ -12,5 +12,7 @@
 
 void show_console(void);
 void hide_console(void);
+bool has_console(void);
+void check_start_from_explorer(void);
 
 #endif

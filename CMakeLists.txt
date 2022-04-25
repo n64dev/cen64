@@ -394,7 +394,6 @@ set(VR4300_SOURCES
 #
 if (DEFINED WIN32)
   include_directories(${PROJECT_SOURCE_DIR}/os/winapi)
-  set(EXTRA_OS_EXE WIN32)
   if (NOT MSVC)
     set(EXTRA_OS_LIBS mingw32 opengl32 winmm ws2_32)
   else ()

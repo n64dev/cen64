@@ -56,6 +56,10 @@ int cen64_main(int argc, const char **argv) {
   struct save_file flashram;
   struct is_viewer is, *is_in = NULL;
 
+#ifdef _WIN32
+  check_start_from_explorer();
+#endif
+
   if (!cart_db_is_well_formed()) {
     printf("Internal cart detection database is not well-formed.\n");
     return EXIT_FAILURE;
@@ -154,6 +158,14 @@ int cen64_main(int argc, const char **argv) {
           printf("Warning: cart saves to 768kbit SRAM, but different size specified (see -sram768k)\n");
         }
         break;
+      case CART_DB_SAVE_TYPE_SRAM_1MBIT:
+        if (options.sram_path == NULL) {
+          printf("Warning: cart saves to 1mbit SRAM, but none specified (see -sram1m)\n");
+          open_save_file(NULL, 0x20000, &sram, NULL);
+        } else if (options.sram_size != 0x20000) {
+          printf("Warning: cart saves to 1mbit SRAM, but different size specified (see -sram1m)\n");
+        }
+        break;
     }
   }
 
@@ -184,19 +196,12 @@ int cen64_main(int argc, const char **argv) {
       memset(flashram.ptr, 0xFF, FLASHRAM_SIZE);
   }
 
-  if (options.is_viewer_present) {
-    if (!is_viewer_init(&is)) {
-      cen64_alloc_cleanup();
-      return EXIT_FAILURE;
-    } else {
-      is_in = &is;
-      #ifdef _WIN32
-      show_console();
-      #endif
-    }
+  if (!is_viewer_init(&is, options.is_viewer_output)) {
+    cen64_alloc_cleanup();
+    return EXIT_FAILURE;
+  } else {
+    is_in = &is;
   }
-
-
 
   // Allocate memory for and create the device.
   if (cen64_alloc(&cen64_device_mem, sizeof(*device), false) == NULL) {
