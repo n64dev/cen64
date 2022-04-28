@@ -14,12 +14,7 @@
 #include <windows.h>
 #define GL_UNSIGNED_SHORT_5_5_5_1 0x8034
 #endif
-
-#ifdef linux || _WIN32
-#include <GL/glew.h>
-#include <GL/gl.h>
-
-#else
+#ifdef  __APPLE__
 #ifndef GL3_PROTOTYPES
 #define GL3_PROTOTYPES 1
 #endif

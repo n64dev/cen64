@@ -13,9 +13,10 @@
 #ifdef _WIN32
 #include "os/windows/keycodes.h"
 #endif
-#ifdef linux
+#ifdef __linux__
 #include "os/x11/keycodes.h"
-#else
+#endif
+#ifdef __APPLE__
 #include "os/sdl/keycodes.h"
 #endif
 
