@@ -13,7 +13,7 @@
 #include "gl_common.h"
 #include <stddef.h>
 
-#define CEN64_GL_SCREEN_BAD (NULL)
+#define CEN64_GL_SCREEN_BAD (-1)
 typedef int cen64_gl_screen;
 
 //
@@ -27,7 +27,8 @@ typedef int cen64_gl_screen;
 //
 static inline cen64_gl_screen cen64_gl_screen_create(
   cen64_gl_display display, int which) {
-    return 0x1234;
+    // Not used with SDL
+  return 0;
 }
 
 //

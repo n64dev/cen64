@@ -12,12 +12,10 @@
 
 #ifdef _WIN32
 #include "os/windows/keycodes.h"
-#endif
-#ifdef __linux__
-#include "os/x11/keycodes.h"
-#endif
-#ifdef __APPLE__
+#elif defined(__APPLE__)
 #include "os/sdl/keycodes.h"
+#else
+#include "os/x11/keycodes.h"
 #endif
 
 #endif
