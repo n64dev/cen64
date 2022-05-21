@@ -14,8 +14,14 @@
 #include <windows.h>
 #define GL_UNSIGNED_SHORT_5_5_5_1 0x8034
 #endif
+#ifdef  __APPLE__
+#ifndef GL3_PROTOTYPES
+#define GL3_PROTOTYPES 1
+#endif
 
-#include <GL/gl.h>
+#include <OpenGL/gl.h>
+
+#endif
 
 #define MAX_FRAME_DATA_SIZE (640 * 480 * 4)
 

@@ -97,3 +97,10 @@ Temporary Items
 # SVN #
 ######################
 .svn/
+*.bin
+debug/
+.idea/
+.vscode/
+*.sav
+bin/
+release/
