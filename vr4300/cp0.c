@@ -176,6 +176,11 @@ int VR4300_MFC0(struct vr4300 *vr4300,
   else if (src + VR4300_REGISTER_CP0_0 == VR4300_CP0_REGISTER_PRID)
     exdc_latch->result = 0xb22; // Hardcoded most common revision N64
 
+  else if (src == (VR4300_CP0_REGISTER_RANDOM - VR4300_REGISTER_CP0_0)) {
+    unsigned index = vr4300->regs[VR4300_CP0_REGISTER_WIRED] & 0x1F;
+    exdc_latch->result = rand() % (32 - index) + index;
+  }
+
   else {
     exdc_latch->result = (int32_t) mask_reg(src,
       vr4300->regs[VR4300_REGISTER_CP0_0 + src]);
@@ -242,7 +247,7 @@ int VR4300_TLBP(struct vr4300 *vr4300,
 //
 int VR4300_TLBR(struct vr4300 *vr4300,
   uint32_t iw, uint64_t rs, uint64_t rt) {
-  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_INDEX] & 0x3F;
+  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_INDEX] & 0x1F;
   uint64_t entry_hi;
 
   uint32_t page_mask = (vr4300->cp0.page_mask[index] << 1) & 0x1FFE000U;
@@ -268,7 +273,7 @@ int VR4300_TLBWI(struct vr4300 *vr4300,
   uint64_t entry_lo_0 = mask_reg(2, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO0]);
   uint64_t entry_lo_1 = mask_reg(3, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO1]);
   uint32_t page_mask = mask_reg(5, vr4300->regs[VR4300_CP0_REGISTER_PAGEMASK]);
-  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_INDEX] & 0x3F;
+  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_INDEX] & 0x1F;
 
   tlb_write(&vr4300->cp0.tlb, index, entry_hi, entry_lo_0, entry_lo_1, page_mask);
 
@@ -289,7 +294,7 @@ int VR4300_TLBWR(struct vr4300 *vr4300,
   uint64_t entry_lo_0 = mask_reg(2, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO0]);
   uint64_t entry_lo_1 = mask_reg(3, vr4300->regs[VR4300_CP0_REGISTER_ENTRYLO1]);
   uint32_t page_mask = mask_reg(5, vr4300->regs[VR4300_CP0_REGISTER_PAGEMASK]);
-  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_WIRED] & 0x3F;
+  unsigned index = vr4300->regs[VR4300_CP0_REGISTER_WIRED] & 0x1F;
 
   index = rand() % (32 - index) + index;
   tlb_write(&vr4300->cp0.tlb, index, entry_hi, entry_lo_0, entry_lo_1, page_mask);
