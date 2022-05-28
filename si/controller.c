@@ -360,8 +360,6 @@ int write_pif_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
 int write_pif_rom_and_ram(void *opaque, uint32_t address, uint32_t word, uint32_t dqm) {
   if (address >= PIF_RAM_BASE_ADDRESS)
     return write_pif_ram(opaque, address, word, dqm);
-
-  assert(0 && "Attempt to write to PIF ROM.");
   return 0;
 }
 
