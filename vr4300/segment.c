@@ -237,7 +237,6 @@ const struct segment* get_segment(uint64_t address, uint32_t cp0_status) {
   unsigned segment_mode = segment_mode_lut[cp0_status & 0xFF];
   unsigned mode_and_flags_mask = cp0_status & 0x1E;
 
-#ifndef NDEBUG
   uint64_t sexaddress = (int64_t) ((int32_t) address);
 
   char kernel = (cp0_status & 0x6) || ((cp0_status & 0x18) == 0);
@@ -249,12 +248,14 @@ const struct segment* get_segment(uint64_t address, uint32_t cp0_status) {
   char use_ux = user && (cp0_status & 0x20);
   char use_64 = use_kx | use_sx | use_ux;
 
+#ifndef NDEBUG
   // Ensure that only one of {kernel, supervisor, user} are produced.
   assert(((kernel + supervisor + user) == 1) && "Impossible situation.");
+#endif
 
   // Ensure that either 64-bit mode is used, or the address is sign-extended.
-  assert((use_64 || (sexaddress == address)) && "Invalid 32-bit address.");
-#endif
+  if(!use_64 && (sexaddress != address))
+    return NULL;
 
   // Check for useg/suseg/kuseg or xuseg/xsuseg/xkuseg first.
   seg = (const struct segment *) ((uintptr_t) USEGs + segment_mode);
