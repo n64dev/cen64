@@ -223,7 +223,14 @@ void VR4300_CPU(struct vr4300 *vr4300) {
 
 // DADE: Data address error exception.
 void VR4300_DADE(struct vr4300 *vr4300) {
-  abort(); // Hammertime!
+  struct vr4300_latch *common = &vr4300->pipeline.exdc_latch.common;
+  uint32_t cause, status;
+  uint64_t epc;
+
+  vr4300_ex_fault(vr4300, VR4300_FAULT_CPU);
+  vr4300_exception_prolog(vr4300, common, &cause, &status, &epc);
+  vr4300_exception_epilogue(vr4300, (cause & ~0xFF) | (1 << 28) | 0x10,
+    status, epc, 0x180);
 }
 
 // DCB: Data cache busy interlock.
