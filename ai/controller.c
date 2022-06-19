@@ -319,7 +319,11 @@ const uint8_t *byteswap_audio_buffer(const uint8_t *input,
 
   return ret_buf;
 #else
-#error "Unimplemented byteswap_audio_buffer!"
+  for (i = 0; i < length >> 1; ++i) {
+    output[i << 1] = input [(i << 1) + 1];
+    output[(i << 1) + 1] = input [i << 1];
+  }
+  return (const uint8_t*)output;
 #endif
 
 }
