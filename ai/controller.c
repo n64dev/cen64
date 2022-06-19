@@ -27,6 +27,8 @@ const char *ai_register_mnemonics[NUM_AI_REGISTERS] = {
 };
 #endif
 
+static cen64_align(uint8_t buf[0x40000], 16);
+
 static void ai_dma(struct ai_controller *ai);
 static const uint8_t *byteswap_audio_buffer(const uint8_t *input,
     uint8_t *output, uint32_t length);
@@ -125,7 +127,6 @@ void ai_dma(struct ai_controller *ai) {
       }
 
       if (ai->ctx.unqueued_buffers > 0) {
-        cen64_align(uint8_t buf[0x40000], 16);
         uint32_t length = ai->fifo[ai->fifo_ri].length;
         uint8_t *input = bus->ri->ram + ai->fifo[ai->fifo_ri].address;
         const uint8_t *buf_ptr = byteswap_audio_buffer(input, buf, length);
