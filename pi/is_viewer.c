@@ -4,8 +4,8 @@
 #include "common.h"
 #include "is_viewer.h"
 
-// arbitrarily chosen
-#define IS_BUFFER_SIZE 0x200
+// Minus text buffer base offset, plus NULL terminator
+#define IS_BUFFER_SIZE IS_VIEWER_ADDRESS_LEN - 0x20 + 1
 
 int is_viewer_init(struct is_viewer *is, int is_viewer_output) {
   memset(is, 0, sizeof(*is));
@@ -14,7 +14,7 @@ int is_viewer_init(struct is_viewer *is, int is_viewer_output) {
   is->base_address = IS_VIEWER_BASE_ADDRESS;
   is->len = IS_VIEWER_ADDRESS_LEN;
 
-  is->buffer = calloc(IS_BUFFER_SIZE, 1);
+  is->buffer = calloc(IS_VIEWER_ADDRESS_LEN, 1);
   is->output_buffer = calloc(IS_BUFFER_SIZE, 1);
   is->output_buffer_conv = calloc(IS_BUFFER_SIZE * 3, 1);
   is->show_output = is_viewer_output;
@@ -48,7 +48,7 @@ int write_is_viewer(struct is_viewer *is, uint32_t address, uint32_t word, uint3
 
   if (offset == 0x14) {
     if (word > 0) {
-      assert(is->output_buffer_pos + word < is->len);
+      assert(is->output_buffer_pos + word + 0x20 < is->len);
       memcpy(is->output_buffer + is->output_buffer_pos, is->buffer + 0x20, word);
       is->output_buffer_pos += word;
       is->output_buffer[is->output_buffer_pos] = '\0';
