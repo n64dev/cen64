@@ -4,8 +4,12 @@
 #include "common.h"
 #include "is_viewer.h"
 
+#define READ_HEAD 0x04
+#define WRITE_HEAD 0x14
+#define BUFFER 0x20
+
 // Minus text buffer base offset, plus NULL terminator
-#define IS_BUFFER_SIZE IS_VIEWER_ADDRESS_LEN - 0x20 + 1
+#define IS_BUFFER_SIZE IS_VIEWER_ADDRESS_LEN - BUFFER + 1
 
 int is_viewer_init(struct is_viewer *is, int is_viewer_output) {
   memset(is, 0, sizeof(*is));
@@ -47,37 +51,52 @@ int write_is_viewer(struct is_viewer *is, uint32_t address, uint32_t word, uint3
   assert(offset + 4 <= is->len);
 
   if (offset == 0x14) {
-    if (word > 0) {
-      assert(is->output_buffer_pos + word + 0x20 < is->len);
-      memcpy(is->output_buffer + is->output_buffer_pos, is->buffer + 0x20, word);
-      is->output_buffer_pos += word;
-      is->output_buffer[is->output_buffer_pos] = '\0';
+    uint32_t read_head;
+    memcpy(&read_head, is->buffer + READ_HEAD, sizeof(read_head));
+    read_head = byteswap_32(read_head);
 
-      // once a full line is present, convert the output from EUC to UTF-8
-      if (memchr(is->output_buffer, '\n', is->output_buffer_pos)) {
-        char *inptr = (char *)is->output_buffer;
-        size_t len = strlen(inptr);
-        size_t outlen = 3 * len;
-        char *outptr = (char *)is->output_buffer_conv;
-        memset(is->output_buffer_conv, 0, IS_BUFFER_SIZE * 3);
-        iconv(is->cd, &inptr, &len, &outptr, &outlen);
+    uint32_t write_head;
+    memcpy(&write_head, is->buffer + WRITE_HEAD, sizeof(write_head));
+    write_head = byteswap_32(write_head);
 
-        if (is->show_output)
-          printf("%s", is->output_buffer_conv);
-        else if (!is->output_warning) {
-          printf("ISViewer debugging output detected and suppressed.\nRun cen64 with option -is-viewer to display it\n");
-          is->output_warning = 1;
-        }
-
-        memset(is->output_buffer, 0, is->output_buffer_pos);
-        is->output_buffer_pos = 0;
-      }
+    uint32_t count;
+    if (word < read_head) {
+      // Ring buffer has wrapped
+      uint32_t first_half = (IS_VIEWER_ADDRESS_LEN - BUFFER) - read_head;
+      memcpy(is->output_buffer, is->buffer + BUFFER + read_head, first_half);
+      memcpy(is->output_buffer + first_half, is->buffer + BUFFER, word);
+      count = first_half + word;
+    } else {
+      // Fast path: string is in sequential memory
+      count = word - read_head;
+      memcpy(is->output_buffer, is->buffer + BUFFER + read_head, count);
     }
-    memset(is->buffer + 0x20, 0, word);
-  } else {
-    word = byteswap_32(word);
-    memcpy(is->buffer + offset, &word, sizeof(word));
+    is->output_buffer[count] = '\0';
+
+    // once a full line is present, convert the output from EUC to UTF-8
+    if (memchr(is->output_buffer, '\n', count)) {
+      char *inptr = (char *)is->output_buffer;
+      size_t len = count;
+      size_t outlen = 3 * len;
+      char *outptr = (char *)is->output_buffer_conv;
+      memset(is->output_buffer_conv, 0, IS_BUFFER_SIZE * 3 + 1);
+      iconv(is->cd, &inptr, &len, &outptr, &outlen);
+
+      if (is->show_output)
+        printf("%s", is->output_buffer_conv);
+      else if (!is->output_warning) {
+        printf("ISViewer debugging output detected and suppressed.\nRun cen64 with option -is-viewer to display it\n");
+        is->output_warning = 1;
+      }
+
+      // Update read head
+      read_head = byteswap_32(word);
+      memcpy(is->buffer + READ_HEAD, &read_head, sizeof(read_head));
+    }
   }
+
+  word = byteswap_32(word);
+  memcpy(is->buffer + offset, &word, sizeof(word));
 
   return 0;
 }
