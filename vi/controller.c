@@ -122,14 +122,14 @@ void vi_cycle(struct vi_controller *vi) {
       window->frame_type = 0;
 
     // Copy the frame data into a temporary buffer.
-    copy_size = sizeof(bus->ri->ram) - (vi->regs[VI_ORIGIN_REG] & 0xFFFFFF);
+    copy_size = sizeof(bus->ri->ram) - (vi->regs[VI_ORIGIN_REG] & MAX_RDRAM_SIZE_MASK);
 
     if (copy_size > sizeof(vi->window->frame_buffer))
       copy_size = sizeof(vi->window->frame_buffer);
 
     memcpy(&bus, vi, sizeof(bus));
     memcpy(vi->window->frame_buffer,
-      bus->ri->ram + (vi->regs[VI_ORIGIN_REG] & 0xFFFFFF),
+      bus->ri->ram + (vi->regs[VI_ORIGIN_REG] & MAX_RDRAM_SIZE_MASK),
       copy_size);
 
     cen64_mutex_unlock(&vi->window->render_mutex);

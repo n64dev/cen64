@@ -13,6 +13,7 @@
 #include "common.h"
 
 #define MAX_RDRAM_SIZE 0x800000U
+#define MAX_RDRAM_SIZE_MASK (MAX_RDRAM_SIZE - 1U)
 
 enum rdram_register {
 #define X(reg) reg,
