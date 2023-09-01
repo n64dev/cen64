@@ -12,7 +12,7 @@ jobs:
     - name: Install Dependencies
       uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: freeglut3 freeglut3-dev libglew1.5 libglew1.5-dev libglu1-mesa libglu1-mesa-dev libgl1-mesa-glx libgl1-mesa-dev libpulse-dev libalut-dev mesa-common-dev libopenal-dev
+        packages: freeglut3 freeglut3-dev libglew libglew-dev libglu1-mesa libglu1-mesa-dev libgl1-mesa-glx libgl1-mesa-dev libpulse-dev libalut-dev mesa-common-dev libopenal-dev
         version: 1.0
 
     - name: Build
