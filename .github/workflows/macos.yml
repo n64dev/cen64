@@ -1,0 +1,27 @@
+name: macos
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      uses: tecolicom/actions-use-homebrew-tools@v1
+      with:
+        tools: freeglut glew mesa openal-soft
+
+    - name: Build
+      run: |
+        mkdir build && cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make VERBOSE=1 -j4
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: cen64 MacOS
+        path: ./build/cen64
