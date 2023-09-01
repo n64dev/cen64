@@ -8,14 +8,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Installing Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y freeglut3 freeglut3-dev libglew1.5 libglew1.5-dev libglu1-mesa libglu1-mesa-dev libgl1-mesa-glx libgl1-mesa-dev libpulse-dev libalut-dev mesa-common-dev libopenal-dev
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: freeglut3 freeglut3-dev libglew1.5 libglew1.5-dev libglu1-mesa libglu1-mesa-dev libgl1-mesa-glx libgl1-mesa-dev libpulse-dev libalut-dev mesa-common-dev libopenal-dev
+        version: 1.0
 
     - name: Build
       run: |
         mkdir build && cd build
         cmake -DCMAKE_BUILD_TYPE=Release ..
         make VERBOSE=1 -j4
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: cen64 Debian
+        path: ./build/cen64
