@@ -12,7 +12,7 @@ jobs:
     - name: Install Dependencies
       uses: tecolicom/actions-use-homebrew-tools@v1
       with:
-        tools: freeglut glew mesa openal-soft
+        tools: freeglut glew mesa openal-soft sdl2
 
     - name: Build
       run: |
