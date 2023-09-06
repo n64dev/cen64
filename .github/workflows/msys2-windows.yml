@@ -15,7 +15,7 @@ jobs:
           { msystem: MINGW64, arch: x86_64, extensions: Native }
         ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           path: temp
           fetch-depth: 0
