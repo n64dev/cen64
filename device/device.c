@@ -224,7 +224,7 @@ CEN64_THREAD_RETURN_TYPE run_rcp_thread(void *opaque) {
 }
 
 CEN64_THREAD_RETURN_TYPE run_vr4300_thread(void *opaque) {
-  cen64_thread_setname(NULL, "vr4300");
+  cen64_thread_setname((cen64_thread)NULL, "vr4300");
   struct cen64_device *device = (struct cen64_device *) opaque;
 
   while (likely(device->running)) {

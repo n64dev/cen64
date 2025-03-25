@@ -483,7 +483,7 @@ int run_device(struct cen64_device *device, bool no_video) {
 }
 
 CEN64_THREAD_RETURN_TYPE run_device_thread(void *opaque) {
-  cen64_thread_setname(NULL, "device");
+  cen64_thread_setname((cen64_thread)NULL, "device");
   struct cen64_device *device = (struct cen64_device *) opaque;
 
   device_run(device);
