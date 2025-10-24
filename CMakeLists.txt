@@ -6,7 +6,7 @@
 # 'LICENSE', which is part of this source code package.
 #
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.15)
 project(cen64 C)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
@@ -480,7 +480,7 @@ add_executable(cen64
 target_link_libraries(cen64
 	${EXTRA_OS_LIBS}
   ${OPENAL_LIBRARY}
-  ${OPENGL_gl_LIBRARY}
+  ${OPENGL_LIBRARY}
   ${ICONV_LIBRARIES}
   ${VIDEO_LIB}
   ${CMAKE_THREAD_LIBS_INIT}
