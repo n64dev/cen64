@@ -1,19 +1,18 @@
-name: debian-linux
+name: macos
 
 on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
 
     - name: Install Dependencies
-      uses: awalsh128/cache-apt-pkgs-action@latest
+      uses: tecolicom/actions-use-homebrew-tools@v1
       with:
-        packages: freeglut3 freeglut3-dev libglew-dev libglu1-mesa libglu1-mesa-dev libgl1-mesa-glx libgl1-mesa-dev libpulse-dev libalut-dev mesa-common-dev libopenal-dev
-        version: 1.0
+        tools: freeglut glew mesa openal-soft sdl2
 
     - name: Build
       run: |
@@ -24,5 +23,5 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: cen64 Debian
+        name: cen64 MacOS
         path: ./build/cen64
