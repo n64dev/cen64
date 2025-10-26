@@ -79,7 +79,7 @@ bool gdb_parse_packet(const char* input, int len, const char** command_start, co
 }
 
 CEN64_THREAD_RETURN_TYPE gdb_thread(void *opaque) {
-  cen64_thread_setname(NULL, "gdb");
+  cen64_thread_setname((cen64_thread)NULL, "gdb");
   struct gdb *gdb = (struct gdb *) opaque;
 
   cen64_mutex_lock(&gdb->client_mutex);

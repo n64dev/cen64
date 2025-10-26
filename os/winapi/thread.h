@@ -57,7 +57,7 @@ static inline int cen64_thread_join(cen64_thread *t) {
 //
 // Windows isn't supported for the moment.
 //
-static inline int cen64_thread_setname(cen64_thread *t, const char *name) {
+static inline int cen64_thread_setname(cen64_thread t, const char *name) {
   return ENOSYS;
 }
 

@@ -45,9 +45,9 @@ static inline int cen64_thread_join(cen64_thread *t) {
 #ifdef __APPLE__
 int pthread_setname_np(const char*);
 #elif __NETBSD__
-int pthread_setname_np(cen64_thread*, const char*, const char*);
+int pthread_setname_np(cen64_thread, const char*, const char*);
 #else
-int pthread_setname_np(cen64_thread*, const char*);
+int pthread_setname_np(cen64_thread, const char*);
 #endif
 
 // Sets the name of the thread to a specific value
@@ -56,7 +56,7 @@ int pthread_setname_np(cen64_thread*, const char*);
 // If you call it at the wrong time or your OS doesn't support custom thread names
 // the return value will be non-zero.
 // If cen64_thread is not set the name of the current thread will be changed.
-static inline int cen64_thread_setname(cen64_thread *t, const char *name) {
+static inline int cen64_thread_setname(cen64_thread t, const char *name) {
   #ifdef __APPLE__
     if (t == NULL)
       return pthread_setname_np(name);
