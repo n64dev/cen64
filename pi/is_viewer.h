@@ -5,7 +5,7 @@
 
 // IS Viewer
 #define IS_VIEWER_BASE_ADDRESS    0x13FF0000
-#define IS_VIEWER_ADDRESS_LEN     0x00001000
+#define IS_VIEWER_ADDRESS_LEN     0x00010000
 
 struct is_viewer {
   uint32_t base_address;
@@ -13,7 +13,6 @@ struct is_viewer {
 
   uint8_t *buffer;
   uint8_t *output_buffer;
-  size_t output_buffer_pos;
   uint8_t *output_buffer_conv;
   int show_output;
   int output_warning;
