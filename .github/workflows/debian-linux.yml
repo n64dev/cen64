@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
 
     - name: Install Dependencies
       uses: awalsh128/cache-apt-pkgs-action@latest
@@ -22,7 +22,7 @@ jobs:
         make VERBOSE=1 -j4
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
         name: cen64 Debian
         path: ./build/cen64

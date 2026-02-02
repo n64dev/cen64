@@ -15,7 +15,7 @@ jobs:
           { msystem: MINGW64, arch: x86_64, extensions: Native }
         ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           path: temp
           fetch-depth: 0
@@ -77,13 +77,13 @@ jobs:
           make VERBOSE=1 -j4
 
       - name: "Upload executable"
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v6
         with:
           name: windows-${{ matrix.arch }}-${{ matrix.extensions }}
           path: C:/_/build/*.exe
 
       - name: "Upload dll"
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v6
         with:
           name: windows-${{ matrix.arch }}-${{ matrix.extensions }}
           path: C:/_/build/*.dll
