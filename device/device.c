@@ -283,7 +283,7 @@ int device_multithread_spin(struct cen64_device *device) {
   }
 
 
-  cen64_thread_setname(vr4300_thread, "vr4300");
+  cen64_thread_setname(&vr4300_thread, "vr4300");
 
   run_rcp_thread(device);
 
