@@ -196,7 +196,7 @@ cen64_cold bool gdb_init(struct gdb* gdb, struct cen64_device* device, const cha
   addr.sin_port = htons((unsigned short)port);
 
   int flag = 1;  
-  if (-1 == setsockopt(gdb->socket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag))) {
+  if (-1 == setsockopt(gdb->socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&flag, sizeof(flag))) {
     printf("debugger error: could not open port %d\n", (int)port);
     return false;
   }

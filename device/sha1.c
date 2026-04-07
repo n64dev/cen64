@@ -49,7 +49,7 @@
 #ifdef _WIN32
 #define BYTE_ORDER_IS_LITTLE_ENDIAN
 
-static inline bcopy(const uint8_t *src, uint8_t *dest, size_t len) {
+static inline void bcopy(const uint8_t *src, uint8_t *dest, size_t len) {
   size_t i;
 
   for (i = 0; i < len; i++)

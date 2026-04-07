@@ -11,8 +11,6 @@
 #include "common.h"
 
 #ifdef _WIN32
-#include <winsock2.h>
-#include <windows.h>
 #include <ws2tcpip.h>
 #else
 #include <netdb.h>
@@ -197,7 +195,7 @@ int netapi_debug_handle_request(int sfd, struct cen64_device *device,
   resp.length = htonl(length);
 
   memcpy(buf, &resp, sizeof(resp));
-  send(sfd, buf, length, 0);
+  send(sfd, (char *)buf, length, 0);
   return 0;
 }
 
@@ -207,7 +205,7 @@ int netapi_debug_wait(int sfd, struct cen64_device *device) {
   uint8_t buf[576];
 
   // Pull and process the header.
-  recv(sfd, &req, sizeof(req), 0);
+  recv(sfd, (char *)&req, sizeof(req), 0);
 
   if (ntohl(req.magic) != NETAPI_DEBUG_MAGIC ||
     ntohl(req.length) > sizeof(buf)) {
@@ -217,13 +215,13 @@ int netapi_debug_wait(int sfd, struct cen64_device *device) {
     req.length = htonl(sizeof(req));
     req.type = htonl(NETAPI_DEBUG_ERROR);
 
-    send(sfd, &req, sizeof(req), 0);
+    send(sfd, (char *)&req, sizeof(req), 0);
     return -1;
   }
 
   // Pull the body of the request, if any.
   if (ntohl(req.length) > sizeof(req))
-    recv(sfd, buf, ntohl(req.length) - sizeof(req), 0);
+    recv(sfd, (char *)buf, ntohl(req.length) - sizeof(req), 0);
 
   return netapi_debug_handle_request(sfd, device, &req, buf);
 }
