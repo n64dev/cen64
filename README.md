@@ -58,24 +58,33 @@ To build on Fedora 29, do: `sudo dnf install cmake make mesa-libGL-devel openal-
 
 To build for Windows on Fedora 29, do: `sudo dnf install cmake make mingw64-{gcc,iconv,openal}`
 
-To build for Windows on Windows XP..10, do:
-1. Install MSYS 1.0.11: https://sourceforge.net/projects/mingw/files/MSYS/Base/msys-core/msys-1.0.11/MSYS-1.0.11.exe/download
-* Say yes to post install
-* Say no to mingw is installed
-* Press enter a few times to finish the install
-2. Download latest UCRT runtime GCC pack (Tested With GCC 13.1.0 + LLVM/Clang/LLD/LLDB 16.0.2 + MinGW-w64 11.0.0 (UCRT) - release 1) & Extract contents of "mingw64" directory to "MSYS\mingw" directory: https://winlibs.com/
-3. Copy "MSYS\mingw\bin\mingw32-make.exe" to "MSYS\mingw\bin\make.exe"
-4. Extract OpenAL "bin, libs, include" directories to "MSYS\mingw\x86_64-w64-mingw32" directory: https://openal-soft.org/openal-binaries/openal-soft-1.23.1-bin.zip
-5. Extract iconv to "MSYS\home\username\libiconv" directory (Where "username" is your windows username folder created from the MSYS installation): https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz
-6. Run MSYS & type "cd libiconv" Enter, followed by "./configure --disable-shared" Enter, followed by "make install" Enter
-7. Extract CMake "bin, doc, man, share" directories to "MSYS" directory: https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4-win64-x64.zip
-8. Extract CEN64 source to "MSYS\home\username\cen64" directory: https://github.com/n64dev/cen64
-9. Run MSYS & type "cd cen64" Enter, followed by "cmake-gui" Enter
-10. Add the "MSYS/home/username/cen64" directory to "Browse Source..." & "Browse Build...", then Generate MSYS compatible files:
-* Add OpenAL "MSYS/mingw/x86_64-w64-mingw32/include/AL" as "OPENAL/OPENAL_INCLUDE_DIR" & "MSYS/mingw/x86_64-w64-mingw32/lib/libOpenAL32.dll.a" as "OPENAL/OPENAL_LIBRARY" (if they are not found)
-* Make sure to use libiconv static lib (Not DLL) "MSYS/local/lib/libiconv.a" as "ICONV/ICONV_LIBRARIES"
-* Select "Native" as "Ungrouped Entries/CEN64_ARCH_SUPPORT" & make sure "Ungrouped Entries/VR4300_BUSY_WAIT_DETECTION" is ticked for fastest emulation speed
-11. Click "Configure" then click "Generate" to get the makefiles, then quit cmake-gui, & type "make" Enter
+To build for Windows on Windows 10 (1809+) and Windows 11, do:
+
+1. Install [MSYS2](https://www.msys2.org/).  After installation, a terminal with the UCRT64 environment will open.
+* If this window is closed, it can be reopened by either accessing the start menu and clicking on `MSYS2/MSYS2 [env name]`, or by navigating to MSYS2's installation path (the default installation path is `C:\msys2`) and double clicking on the preferred environment (`ucrt64.exe` or `clang64.exe`).
+2. Install a compiler. It is recommended to use either UCRT64 or CLANG64 environments. See [this page](https://www.msys2.org/docs/environments) for details and differences between MSYS2 environments.
+* If you're using a UCRT64 terminal, type `pacman -S mingw-w64-ucrt-x86_64-gcc` and press enter.
+* If you're using a CLANG64 terminal, type `pacman -S mingw-w64-clang-x86_64-clang` and press enter.
+3. Install git, clone the CEN64 repo and move into the new directory:
+* `pacman -S git`
+* `git clone https://github.com/n64dev/cen64.git`
+* `cd cen64`
+  * The CEN64 repo will be in `[MSYS2 install dir]\home\[your username]\cen64`.
+4. Install dependencies (choose either ucrt or clang, depending on which environment you have selected):
+* Make dependencies: `mingw-w64-[ucrt/clang]-x86_64-{cmake,ninja}`
+* Dependencies: `mingw-w64-[ucrt/clang]-x86_64-{iconv,openal}`
+5. Create a build folder, move into it, then run cmake and ninja to configure and compile CEN64:
+* `mkdir build && cd build`
+* `cmake .. -DCMAKE_BUILD_TYPE=Release`
+* `ninja` (For faster compilation, `ninja -j[number of threads]`)
+  * A CEN64 executable should be created after compilation has finished.
+6. Find all shared library dependencies, and copy each of them to the same folder cen64.exe is in. This step is needed so that CEN64 can be run outside of an MSYS2 environment.
+* `ldd cen64.exe | grep [ucrt64|clang64]` (choose the environment you compiled cen64.exe for)
+  * If `command not found` appears for either grep or ldd, `pacman -S grep ldd` 
+* For each .dll listed, `cp [/path/to/dependency.dll] .`
+7. Copy cen64.exe and each dll to a new folder of your choice. By default, the compiled CEN64 executable will be located in `C:\msys64\home\[username]\cen64\build`.
+8. Open a command prompt window (Win+R, cmd.exe) and navigate to the new folder that contains CEN64.
+9. Run CEN64.
 
 # Usage
 

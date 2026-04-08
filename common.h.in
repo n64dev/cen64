@@ -131,6 +131,11 @@ typedef char bool;
 #define WORD_ADDR_XOR 4
 #endif
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #ifndef _MSC_VER
 #ifdef BIG_ENDIAN_HOST
 #define htonll(x) (x)

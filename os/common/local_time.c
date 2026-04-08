@@ -16,7 +16,7 @@ void get_local_time(struct time_stamp *ts, int32_t offset_seconds) {
 
   struct tm tm = { 0, };
 #ifdef _WIN32
-  localtime_s(&now, &tm);
+  localtime_s(&tm, &now);
 #else
   localtime_r(&now, &tm);
 #endif
